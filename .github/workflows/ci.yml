@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.13", "3.14"]
+        python-version: ["3.14"]
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -36,7 +36,6 @@ jobs:
           args: "format --check --diff"
 
       - name: Codespell
-        if: matrix.python-version == '3.14'
         run: uv run codespell
 
   typecheck:
@@ -44,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.13", "3.14"]
+        python-version: ["3.14"]
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -67,13 +66,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python-version: "3.13"
-            ha-version: "2026.2"
           - python-version: "3.14"
-            ha-version: "2026.3"
-            ha-override: "2026.3.*"
+            ha-version: "2026.4"
+            ha-override: "2026.4.*"
           - python-version: "3.14"
-            ha-version: "2026.9"
+            ha-version: "2026.10"
 
     steps:
       - uses: actions/checkout@v7.0.1

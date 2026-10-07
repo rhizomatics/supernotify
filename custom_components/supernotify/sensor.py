@@ -40,7 +40,7 @@ class SupernotifyCounterSensor(RestoreSensor):
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_value = 0
+    _attr_native_value: int = 0
     _attr_should_poll = False
 
     def __init__(self, unique_id: str, translation_key: str) -> None:

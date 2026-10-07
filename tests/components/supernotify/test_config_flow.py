@@ -95,7 +95,9 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant, tmp_path
     assert reconfigure["type"] == FlowResultType.FORM
     assert reconfigure["step_id"] == "reconfigure"
     # pre-filled from the entry's current data
-    assert reconfigure["data_schema"]({})[CONF_TEMPLATE_PATH] == TEMPLATE_DIR
+    reconfigure_schema = reconfigure["data_schema"]
+    assert reconfigure_schema is not None
+    assert reconfigure_schema({})[CONF_TEMPLATE_PATH] == TEMPLATE_DIR
 
     custom_template_path = str(tmp_path / "templates" / "custom")
     result2 = await hass.config_entries.flow.async_configure(
@@ -351,7 +353,9 @@ async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssist
 
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "housekeeping"})
-    prefilled2 = menu_result2["data_schema"]({})
+    schema2 = menu_result2["data_schema"]
+    assert schema2 is not None
+    prefilled2 = schema2({})
     assert prefilled2[CONF_HOUSEKEEPING_TIME] == "01:02:03"
 
 

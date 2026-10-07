@@ -8,7 +8,6 @@ import sys
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
 from homeassistant.const import (
     CONF_TARGET,
 )
@@ -29,6 +28,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_by_day, summarize_notification
 from .common import ensure_list
+from .compat import vol
 from .const import (
     ATTR_CUSTOM_TARGET,
     ATTR_DATA,

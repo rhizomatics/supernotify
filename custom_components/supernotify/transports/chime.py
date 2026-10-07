@@ -5,7 +5,6 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
@@ -16,8 +15,8 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
 )
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers import config_validation as cv
-from voluptuous.humanize import humanize_error
 
+from custom_components.supernotify.compat import humanize, vol
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
@@ -566,7 +565,7 @@ def build_aliases(src_config: ConfigType) -> ConfigType:
 
     except vol.Invalid as ve:
         _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
-        _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
+        _LOGGER.error("SUPERNOTIFY %s", humanize.humanize_error(src_config, ve))
     except Exception:
         _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error")
     return dest_config
