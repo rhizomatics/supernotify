@@ -278,6 +278,17 @@ class HomeAssistantAPI:
             names.extend(a for a in reg_entry.aliases if isinstance(a, str))
         return {spoken_name(n) for n in names}
 
+    def sender_entity_ids(self, ha_context: HomeAssistantContext | None) -> list[str]:
+        """The automations and scripts whose current run carries this context, i.e. what sent a notification.
+
+        An automation or script writes its state with the context of the run it starts, and the actions
+        of that run carry the same context (a script started by an automation gets it as parent), so
+        the sender is the automation or script whose state has the context's id or its parent's"""
+        if ha_context is None:
+            return []
+        ids: set[str] = {i for i in (ha_context.id, ha_context.parent_id) if i}
+        return [s.entity_id for s in self._hass.states.async_all(("automation", "script")) if s.context.id in ids]
+
     def entity_ids_named(self, name: str) -> list[str]:
         """Entities that can be called this, see entity_spoken_names()"""
         wanted: str = spoken_name(name)
