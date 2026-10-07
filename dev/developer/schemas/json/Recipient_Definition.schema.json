@@ -1,9 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "person": {
-      "type": "string"
-    },
+    "person": {},
     "user_id": {
       "type": "string"
     },
@@ -24,9 +22,7 @@
           "properties": {
             "entity_id": {
               "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "items": {}
             },
             "device_id": {
               "type": "array",
@@ -54,9 +50,7 @@
             },
             "email": {
               "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "items": {}
             },
             "phone": {
               "type": "array",
@@ -66,15 +60,11 @@
             },
             "mobile_app_id": {
               "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "items": {}
             },
             "person_id": {
               "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "items": {}
             }
           },
           "additionalProperties": {
@@ -119,9 +109,7 @@
           "mobile_app_id": {
             "type": "string"
           },
-          "device_tracker": {
-            "type": "string"
-          },
+          "device_tracker": {},
           "enabled": {
             "type": "boolean",
             "default": true
@@ -143,9 +131,7 @@
                 "properties": {
                   "entity_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "device_id": {
                     "type": "array",
@@ -173,9 +159,7 @@
                   },
                   "email": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "phone": {
                     "type": "array",
@@ -185,15 +169,11 @@
                   },
                   "mobile_app_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "person_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 },
                 "additionalProperties": {
@@ -240,9 +220,7 @@
                 },
                 {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 },
                 {
                   "type": "object",

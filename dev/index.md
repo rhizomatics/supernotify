@@ -112,7 +112,8 @@ An alternative `supernotify.notify` action is now available that is much easier 
 - **Links** can be configured but not currently used.
 - YAML still required for Transport, Recipient, Action and additional custom Delivery
 - Versions of Home Assistant more than 6 major releases ( usually 6 months ) aren't tested against Supernotify
-- It is tested against Python 3.13 and Home Assistant 2026.2.3 (the last to support v3.13 only), this will be dropped when Home Assistant 2026.10 is released.
+- Until version v2.13.2 in October 2026, it was tested on all development and release builds against Python 3.13 and Home Assistant 2026.2.3 (the last to support v3.13 only)
+- This was dropped when Home Assistant 2026.10 was released on 7-Oct-2026, so Python 3.13 and the older versions of Home Assistant no longer have support assured by running the 2000+ tests of the test suite.
 
 ## Rhizomatics Open Source for Home Assistant
 

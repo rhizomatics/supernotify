@@ -1,14 +1,10 @@
 {
   "type": "object",
   "properties": {
-    "camera": {
-      "type": "string"
-    },
+    "camera": {},
     "alt_camera": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": {}
     },
     "alias": {
       "type": "string"
@@ -16,12 +12,8 @@
     "url": {
       "type": "string"
     },
-    "device_tracker": {
-      "type": "string"
-    },
-    "ptz_camera": {
-      "type": "string"
-    },
+    "device_tracker": {},
+    "ptz_camera": {},
     "ptz_default_preset": {
       "anyOf": [
         {

@@ -6,9 +6,7 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "action": {
-            "type": "string"
-          },
+          "action": {},
           "debug": {
             "type": "boolean"
           },
@@ -38,9 +36,7 @@
                 },
                 {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 },
                 {
                   "type": "object",
@@ -57,9 +53,7 @@
                 "properties": {
                   "entity_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "device_id": {
                     "type": "array",
@@ -87,9 +81,7 @@
                   },
                   "email": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "phone": {
                     "type": "array",
@@ -99,15 +91,11 @@
                   },
                   "mobile_app_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "person_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 },
                 "additionalProperties": {
@@ -227,8 +215,7 @@
           "conditions": {
             "type": "array",
             "items": {
-              "nullable": true,
-              "type": "string"
+              "nullable": true
             }
           },
           "transport": {
@@ -304,9 +291,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "person": {
-            "type": "string"
-          },
+          "person": {},
           "user_id": {
             "type": "string"
           },
@@ -327,9 +312,7 @@
                 "properties": {
                   "entity_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "device_id": {
                     "type": "array",
@@ -357,9 +340,7 @@
                   },
                   "email": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "phone": {
                     "type": "array",
@@ -369,15 +350,11 @@
                   },
                   "mobile_app_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   },
                   "person_id": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 },
                 "additionalProperties": {
@@ -422,9 +399,7 @@
                 "mobile_app_id": {
                   "type": "string"
                 },
-                "device_tracker": {
-                  "type": "string"
-                },
+                "device_tracker": {},
                 "enabled": {
                   "type": "boolean",
                   "default": true
@@ -446,9 +421,7 @@
                       "properties": {
                         "entity_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "device_id": {
                           "type": "array",
@@ -476,9 +449,7 @@
                         },
                         "email": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "phone": {
                           "type": "array",
@@ -488,15 +459,11 @@
                         },
                         "mobile_app_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "person_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         }
                       },
                       "additionalProperties": {
@@ -543,9 +510,7 @@
                       },
                       {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       {
                         "type": "object",
@@ -579,9 +544,7 @@
           "id": {
             "type": "string"
           },
-          "icon": {
-            "type": "string"
-          },
+          "icon": {},
           "name": {
             "type": "string"
           }
@@ -613,16 +576,13 @@
           "conditions": {
             "type": "array",
             "items": {
-              "nullable": true,
-              "type": "string"
+              "nullable": true
             }
           },
           "media": {
             "type": "object",
             "properties": {
-              "camera_entity_id": {
-                "type": "string"
-              },
+              "camera_entity_id": {},
               "camera_delay": {
                 "type": "integer"
               },
@@ -643,9 +603,7 @@
               "snapshot_url": {
                 "type": "string"
               },
-              "snapshot_image_path": {
-                "type": "string"
-              },
+              "snapshot_image_path": {},
               "jpeg_opts": {
                 "type": "object",
                 "additionalProperties": true
@@ -679,9 +637,7 @@
                       "properties": {
                         "entity_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "device_id": {
                           "type": "array",
@@ -709,9 +665,7 @@
                         },
                         "email": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "phone": {
                           "type": "array",
@@ -721,15 +675,11 @@
                         },
                         "mobile_app_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "person_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         }
                       },
                       "additionalProperties": {
@@ -776,9 +726,7 @@
                       },
                       {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       {
                         "type": "object",
@@ -818,9 +766,7 @@
           "delivery_defaults": {
             "type": "object",
             "properties": {
-              "action": {
-                "type": "string"
-              },
+              "action": {},
               "debug": {
                 "type": "boolean"
               },
@@ -850,9 +796,7 @@
                     },
                     {
                       "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
+                      "items": {}
                     },
                     {
                       "type": "object",
@@ -869,9 +813,7 @@
                     "properties": {
                       "entity_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "device_id": {
                         "type": "array",
@@ -899,9 +841,7 @@
                       },
                       "email": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "phone": {
                         "type": "array",
@@ -911,15 +851,11 @@
                       },
                       "mobile_app_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "person_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       }
                     },
                     "additionalProperties": {
@@ -1039,8 +975,7 @@
               "conditions": {
                 "type": "array",
                 "items": {
-                  "nullable": true,
-                  "type": "string"
+                  "nullable": true
                 }
               }
             },
@@ -1119,14 +1054,10 @@
       "items": {
         "type": "object",
         "properties": {
-          "camera": {
-            "type": "string"
-          },
+          "camera": {},
           "alt_camera": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": {}
           },
           "alias": {
             "type": "string"
@@ -1134,12 +1065,8 @@
           "url": {
             "type": "string"
           },
-          "device_tracker": {
-            "type": "string"
-          },
-          "ptz_camera": {
-            "type": "string"
-          },
+          "device_tracker": {},
+          "ptz_camera": {},
           "ptz_default_preset": {
             "anyOf": [
               {
@@ -1232,12 +1159,10 @@
       "default": {}
     },
     "template_path": {
-      "default": "supernotify/templates",
-      "type": "string"
+      "default": "supernotify/templates"
     },
     "media_path": {
-      "default": "supernotify/media",
-      "type": "string"
+      "default": "supernotify/media"
     },
     "media_url_prefix": {
       "type": "string",
@@ -1247,8 +1172,7 @@
       "type": "object",
       "properties": {
         "file_path": {
-          "default": "supernotify/archive",
-          "type": "string"
+          "default": "supernotify/archive"
         },
         "enabled": {
           "type": "boolean",
@@ -1281,13 +1205,9 @@
           "default": "supernotification"
         },
         "event_selection": {
-          "type": "object",
-          "additionalProperties": true,
           "default": 0
         },
         "diagnostics": {
-          "type": "object",
-          "additionalProperties": true,
           "default": 16
         },
         "debug": {
@@ -1304,8 +1224,7 @@
       "type": "object",
       "properties": {
         "housekeeping_time": {
-          "default": "00:00:01",
-          "type": "string"
+          "default": "00:00:01"
         },
         "media_storage_days": {
           "type": "integer",

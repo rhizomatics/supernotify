@@ -24,9 +24,7 @@
                     "properties": {
                       "entity_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "device_id": {
                         "type": "array",
@@ -54,9 +52,7 @@
                       },
                       "email": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "phone": {
                         "type": "array",
@@ -66,15 +62,11 @@
                       },
                       "mobile_app_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       "person_id": {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       }
                     },
                     "additionalProperties": {
@@ -121,9 +113,7 @@
                     },
                     {
                       "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
+                      "items": {}
                     },
                     {
                       "type": "object",
@@ -188,16 +178,12 @@
     },
     "recipients": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": {}
     },
     "media": {
       "type": "object",
       "properties": {
-        "camera_entity_id": {
-          "type": "string"
-        },
+        "camera_entity_id": {},
         "camera_delay": {
           "type": "integer"
         },
@@ -218,9 +204,7 @@
         "snapshot_url": {
           "type": "string"
         },
-        "snapshot_image_path": {
-          "type": "string"
-        },
+        "snapshot_image_path": {},
         "jpeg_opts": {
           "type": "object",
           "additionalProperties": true
@@ -308,9 +292,7 @@
           },
           {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": {}
           },
           {
             "type": "object",

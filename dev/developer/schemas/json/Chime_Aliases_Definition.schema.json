@@ -55,9 +55,7 @@
                       },
                       {
                         "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
+                        "items": {}
                       },
                       {
                         "type": "object",
@@ -77,9 +75,7 @@
                       "properties": {
                         "entity_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "device_id": {
                           "type": "array",
@@ -107,9 +103,7 @@
                         },
                         "email": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "phone": {
                           "type": "array",
@@ -119,15 +113,11 @@
                         },
                         "mobile_app_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         },
                         "person_id": {
                           "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
+                          "items": {}
                         }
                       },
                       "additionalProperties": {
@@ -166,9 +156,6 @@
       "default": {}
     }
   },
-  "required": [
-    "chime_aliases"
-  ],
   "additionalProperties": false,
   "title": "Chime Aliases Definition",
   "$id": "https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json",

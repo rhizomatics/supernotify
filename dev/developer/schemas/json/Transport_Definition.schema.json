@@ -15,9 +15,7 @@
     "delivery_defaults": {
       "type": "object",
       "properties": {
-        "action": {
-          "type": "string"
-        },
+        "action": {},
         "debug": {
           "type": "boolean"
         },
@@ -47,9 +45,7 @@
               },
               {
                 "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "items": {}
               },
               {
                 "type": "object",
@@ -66,9 +62,7 @@
               "properties": {
                 "entity_id": {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 },
                 "device_id": {
                   "type": "array",
@@ -96,9 +90,7 @@
                 },
                 "email": {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 },
                 "phone": {
                   "type": "array",
@@ -108,15 +100,11 @@
                 },
                 "mobile_app_id": {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 },
                 "person_id": {
                   "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                  "items": {}
                 }
               },
               "additionalProperties": {
@@ -236,8 +224,7 @@
         "conditions": {
           "type": "array",
           "items": {
-            "nullable": true,
-            "type": "string"
+            "nullable": true
           }
         }
       },
