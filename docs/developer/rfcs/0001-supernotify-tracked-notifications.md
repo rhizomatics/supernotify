@@ -100,7 +100,8 @@ data:
   extra_data:
     mobile_push_notification_tag: appliance_01M4AHCN
     mobile_push_clear_notification: true
----
+```
+```yaml
 # 2. tell everyone
 action: supernotify.notify
 data:
@@ -112,13 +113,30 @@ Proposed, the whole cycle is:
 
 ```yaml
 action: supernotify.notify
-data: {message: Oven started, title: Oven, tracking_id: appliance_01M4AHCN, phase: start, icon: mdi:stove}
----
+data:
+  message: Oven started
+  title: Oven
+  tracking_id: appliance_01M4AHCN
+  phase: start,
+  icon: mdi:stove
+```
+```yaml
 action: supernotify.notify
-data: {message: 40% complete, title: Oven, tracking_id: appliance_01M4AHCN, phase: update, progress: 40, finish_at: "2026-10-07T11:15:00+01:00"}
----
+data:
+  message: 40% complete
+  title: Oven
+  tracking_id: appliance_01M4AHCN
+  phase: update
+  progress: 40
+  finish_at: "2026-10-07T11:15:00+01:00"
+```
+```yaml
 action: supernotify.notify
-data: {message: Oven is finished, title: Oven, tracking_id: appliance_01M4AHCN, phase: end}
+data:
+  message: Oven is finished
+  title: Oven
+  tracking_id: appliance_01M4AHCN
+  phase: end
 ```
 
 An aborted cycle sends `phase: cancel` with no message. Targets and deliveries are added to any of these only when the user picked some.
