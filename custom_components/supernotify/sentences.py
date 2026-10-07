@@ -83,6 +83,11 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
         ],
         # "mute ... until I say" is left to snooze_until, so it doesn't match both
         "silence": ["(silence|mute) [all] [my] notifications", "silence [all] [my] notifications until I say"],
+        # the way out when an alert that is meant to be critical keeps going off
+        "silence_everything": [
+            "(silence|mute) [all] [my] notifications (even|including) [the] critical [ones|alerts|notifications]",
+            "(silence|mute) [all] [my] notifications [and] critical [ones|alerts|notifications] too",
+        ],
         "resume": [
             "(unsnooze|unmute|resume) [all] [my] notifications",
             "turn [all] [my] notifications back on",
@@ -119,6 +124,9 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             ),
         ],
         "silence": ["(silenzia|zittisci|disattiva) [tutte] [le] [mie] notifiche [finché non lo dico|fino a nuovo ordine]"],
+        "silence_everything": [
+            "(silenzia|zittisci|disattiva) [tutte] [le] [mie] notifiche (anche|comprese) [quelle] critiche",
+        ],
         "resume": [
             "(riattiva|ripristina|riprendi) [tutte] [le] [mie] notifiche",
             "(riaccendi|rimetti) [tutte] [le] [mie] notifiche",
@@ -147,6 +155,8 @@ RESPONSES: dict[str, dict[str, str]] = {
         "resumed_all": "Turned all notifications{about} back on",
         "silenced_yours": "Silenced your notifications{about} until you turn them back on",
         "silenced_all": "Silenced all notifications{about} until you turn them back on",
+        "silenced_everything_yours": "Silenced your notifications, critical ones too, until you turn them back on",
+        "silenced_everything_all": "Silenced all notifications, critical ones too, until you turn them back on",
         "snoozed_yours": "Snoozed your notifications{about} until {until}",
         "snoozed_all": "Snoozed all notifications{about} until {until}",
         "about": " for {tag}",
@@ -181,6 +191,8 @@ RESPONSES: dict[str, dict[str, str]] = {
         "resumed_all": "Ho riattivato tutte le notifiche{about}",
         "silenced_yours": "Ho silenziato le tue notifiche{about} finché non le riattivi",
         "silenced_all": "Ho silenziato tutte le notifiche{about} finché non le riattivi",
+        "silenced_everything_yours": "Ho silenziato le tue notifiche, anche quelle critiche, finché non le riattivi",
+        "silenced_everything_all": "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi",
         "snoozed_yours": "Ho posticipato le tue notifiche{about} fino alle {until}",
         "snoozed_all": "Ho posticipato tutte le notifiche{about} fino alle {until}",
         "about": " di {tag}",
@@ -277,6 +289,8 @@ async def async_respond(
         return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(hours=1), subject)
     if command == "silence":
         return _snooze(engine, CommandType.SILENCE, context, language)
+    if command == "silence_everything":
+        return _snooze(engine, CommandType.SILENCE, context, language, everything=True)
     if command == "resume":
         return _snooze(engine, CommandType.NORMAL, context, language, subject=subject)
     return _say(language, "unknown_command", command=command)
@@ -379,14 +393,20 @@ def _snooze(
     language: str,
     snooze_for: dt.timedelta | None = None,
     subject: Subject | None = None,
+    everything: bool = False,
 ) -> str:
     """Snooze, silence or resume everything, or a camera or tag, for the person asking, or for everyone
     if they aren't known"""
     person_id: str | None = engine.context.people_registry.person_id_for_user_id(context.user_id)
     recipient_type = RecipientType.USER if person_id else RecipientType.EVERYONE
     # "silence" said at bedtime with nothing named still lets critical alerts through - nobody saying it
-    # means the smoke alarm too. Resuming clears both kinds, so a snooze of everything can still be undone.
-    target_type: TargetType = subject.target_type if subject else GlobalTargetType.NONCRITICAL
+    # means the smoke alarm too, so critical ones are held back only when asked for ("even critical").
+    # Resuming clears both kinds, so a snooze of everything can still be undone.
+    target_type: TargetType
+    if subject:
+        target_type = subject.target_type
+    else:
+        target_type = GlobalTargetType.EVERYTHING if everything else GlobalTargetType.NONCRITICAL
     engine.context.snoozer.register_snooze(
         cmd, target_type, subject.target if subject else None, recipient_type, person_id, snooze_for, reason="Voice command"
     )
@@ -402,7 +422,7 @@ def _snooze(
     if cmd == CommandType.NORMAL:
         return _say(language, f"resumed_{whose}", about=about)
     if cmd == CommandType.SILENCE:
-        return _say(language, f"silenced_{whose}", about=about)
+        return _say(language, f"silenced_everything_{whose}" if everything else f"silenced_{whose}", about=about)
     until = dt_util.as_local(dt_util.now() + (snooze_for or engine.context.snoozer.snooze_period))
     return _say(language, f"snoozed_{whose}", about=about, until=_clock(until, language))
 

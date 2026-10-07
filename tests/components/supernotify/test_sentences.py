@@ -693,3 +693,47 @@ async def test_spoken_resume_undoes_a_snooze_of_everything(hass: HomeAssistant) 
 
     assert response == "Turned all notifications back on"
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_spoken_silence_even_critical_holds_back_critical(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "silence_everything", {}, Context())
+
+    assert response == "Silenced all notifications, critical ones too, until you turn them back on"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+    assert engine.context.snoozer.is_global_snooze(PRIORITY_CRITICAL)
+
+
+async def test_spoken_silence_even_critical_for_person_asking_then_resume(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    asker = Context(user_id=JEY_USER_ID)
+
+    assert await async_respond(engine, "silence_everything", {}, asker) == (
+        "Silenced your notifications, critical ones too, until you turn them back on"
+    )
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.recipient_type == RecipientType.USER
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+
+    assert await async_respond(engine, "resume", {}, asker) == "Turned your notifications back on"
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_italian_silence_even_critical(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "silence_everything", {}, Context(), "it")
+
+    assert response == "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+
+
+def test_silence_even_critical_sentences_in_every_language() -> None:
+    for language, commands in SENTENCES.items():
+        assert commands["silence_everything"], language
+        assert all("critic" in sentence for sentence in commands["silence_everything"]), language
+        assert "silenced_everything_yours" in RESPONSES[language]
+        assert "silenced_everything_all" in RESPONSES[language]

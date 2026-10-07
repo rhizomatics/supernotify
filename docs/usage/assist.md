@@ -133,6 +133,7 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Snooze notifications until *15:30*"                     | Snoozes all but critical until then, today or tomorrow |
 | "Snooze notifications for *driveway* until *6am*"        | Snoozes only notifications [tagged](snoozing.md#snoozing-by-tag) *driveway* |
 | "Silence notifications"                                  | Silences all but critical until turned back on |
+| "Silence notifications even critical ones"               | Silences everything, critical included, until turned back on |
 | "Turn my notifications back on"                          | Undoes the snooze or silence                  |
 | "Resume notifications for *driveway*"                    | Undoes the snooze or silence for *driveway*   |
 | "What was the last notification"                         | Says what it was, and what it was sent via, or why it wasn't sent |
@@ -143,7 +144,9 @@ if two do, the agent asks which one you mean.
 Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to
 a recipient, otherwise for everyone.
 They hold back everything but `critical` notifications, so saying "silence notifications" at bedtime
-never silences a smoke alarm. To hold back critical ones too, use the `supernotify.snooze` action with
+never silences a smoke alarm. When an alert that's meant to be critical keeps going off, say
+"silence notifications even critical ones" (or "including critical", "and critical ones too") to hold
+back critical ones as well; from an automation or button, use the `supernotify.silence` action with
 `scope: everything`. Turning notifications back on undoes both.
 
 "For *driveway*" works with any of the snooze sentences, for minutes, an hour, until a time, or until
@@ -184,6 +187,7 @@ comes back in Italian:
 | "Posticipa le notifiche fino alle *15:30*"                    | Snoozes all but critical until then, today or tomorrow |
 | "Posticipa le notifiche del *vialetto* fino alle *6*"         | Snoozes only notifications [tagged](snoozing.md#snoozing-by-tag) *vialetto* |
 | "Silenzia le notifiche"                                       | Silences all but critical until turned back on |
+| "Silenzia le notifiche anche quelle critiche"                 | Silences everything, critical included, until turned back on |
 | "Riattiva le mie notifiche"                                   | Undoes the snooze or silence                  |
 | "Riattiva le notifiche del *vialetto*"                        | Undoes the snooze or silence for *vialetto*   |
 | "Qual è stata l'ultima notifica"                              | Says what it was, and what it was sent via, or why it wasn't sent |
