@@ -528,3 +528,22 @@ async def test_unsnooze_tag_that_no_longer_matches(hass: HomeAssistant) -> None:
 
     assert result["success"] is True
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_leaves_critical_unless_everything_asked(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    await _call(hass, "supernotify__snooze", {"action": "silence"})
+
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.NONCRITICAL
+
+
+async def test_unsnooze_undoes_both_global_snoozes(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "everything"})
+    await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "transport", "name": "generic"})
+
+    await _call(hass, "supernotify__snooze", {"action": "unsnooze"})
+
+    assert [s.target for s in engine.context.snoozer.snoozes.values()] == ["generic"]
