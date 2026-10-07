@@ -313,11 +313,20 @@ class Snoozer:
             )
 
     def purge_snoozes(self) -> None:
-        to_del: list[str] = [k for k, v in self.snoozes.items() if not v.active()]
+        to_del: list[str] = [k for k, v in self.snoozes.items() if not v.active() or self._mobile_app_gone(v)]
         for k in to_del:
             del self.snoozes[k]
         if to_del:
             self._persist()
+
+    def _mobile_app_gone(self, snooze: Snooze) -> bool:
+        """A snooze on a mobile device whose notify action no longer exists, e.g. re-paired under a new name"""
+        return (
+            snooze.target_type == QualifiedTargetType.MOBILE
+            and isinstance(snooze.target, str)
+            and self.hass_api is not None
+            and not self.hass_api.mobile_app_action_exists(snooze.target)
+        )
 
     def clear(self) -> int:
         cleared: int = len(self.snoozes)

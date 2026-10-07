@@ -163,6 +163,7 @@ class SupernotifyEngine:
         # Every entity - switches, binary_sensors and counters - is a real platform entity, added
         # once this method returns (see __init__.py), and keeps its own state current
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
+        self.context.hass_api.subscribe_mobile_app_changes(self.async_mobile_apps_changed)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -426,6 +427,11 @@ class SupernotifyEngine:
         self.context.snoozer.handle_command_event(event, self.context.people_registry.enabled_recipients())
 
     @callback
+    async def async_mobile_apps_changed(self) -> None:
+        _LOGGER.info("SUPERNOTIFY Mobile app devices changed, rediscovering")
+        self.context.people_registry.refresh_mobile_devices()
+        self.context.snoozer.purge_snoozes()
+
     async def async_nightly_tasks(self, now: dt.datetime) -> None:
         _LOGGER.info("SUPERNOTIFY Housekeeping starting as scheduled at %s", now)
         await self.context.archive.cleanup()
