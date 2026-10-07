@@ -360,6 +360,9 @@ class Snoozer:
 
         return inscope_snoozes
 
+    def has_tag_snooze(self) -> bool:
+        return any(s.active() and s.target_type == QualifiedTargetType.TAG for s in self.snoozes.values())
+
     def is_global_snooze(self, priority: str = PRIORITY_MEDIUM) -> bool:
         for snooze in self.snoozes.values():
             if snooze.active() and snooze.recipient_type == RecipientType.EVERYONE:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.core import Event
+from homeassistant.core import Context, Event
 
 from custom_components.supernotify.const import ATTR_ACTION, CONF_MOBILE_APP_ID, CONF_MOBILE_DEVICES, CONF_PERSON
 from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType
@@ -95,6 +95,48 @@ async def test_tag_snooze_matches_friendly_name_and_scenario(hass: HomeAssistant
     assert not _delivered(by_scenario)
     assert not _delivered(await _send(ctx, "Vehicle at the gate", camera_entity_id="camera.front"))
     assert _delivered(await _send(ctx, "Something else"))
+
+
+async def test_tag_snooze_matches_the_sending_automation(hass: HomeAssistant) -> None:
+    """The automation whose run carries the notification's context is a tag, by entity_id or name"""
+    run = Context()
+    other = Context()
+    hass.states.async_set("automation.thermostat_offline", "on", {"friendly_name": "Thermostat Offline"}, context=run)
+    hass.states.async_set("automation.garage_closed", "on", {"friendly_name": "Garage Closed"}, context=other)
+    ctx = TestingContext(homeassistant=hass, yaml=YAML, services={"notify": ["smtp"]})
+    await ctx.test_initialize()
+    ctx.snoozer.register_snooze(
+        CommandType.SNOOZE, QualifiedTargetType.TAG, "automation.thermostat_offline", RecipientType.EVERYONE, None, None
+    )
+
+    offline = Notification(ctx, message="Bathroom thermostat offline", ha_context=run)
+    await offline.initialize()
+    await offline.deliver()
+    assert not _delivered(offline)
+    assert offline.senders() == ["automation.thermostat_offline"]
+
+    garage = Notification(ctx, message="Garage closed", ha_context=other)
+    await garage.initialize()
+    await garage.deliver()
+    assert _delivered(garage)
+    assert _delivered(await _send(ctx, "Sent by hand, no context"))
+
+
+async def test_tag_snooze_matches_a_script_started_by_an_automation(hass: HomeAssistant) -> None:
+    """A script's run has the automation's context as parent: both are senders, by name too"""
+    automation_run = Context()
+    script_run = Context(parent_id=automation_run.id)
+    hass.states.async_set("automation.hourly", "on", {"friendly_name": "Hourly"}, context=automation_run)
+    hass.states.async_set("script.chime", "on", {"friendly_name": "Hour Chime"}, context=script_run)
+    ctx = TestingContext(homeassistant=hass, yaml=YAML, services={"notify": ["smtp"]})
+    await ctx.test_initialize()
+    ctx.snoozer.register_snooze(CommandType.SNOOZE, QualifiedTargetType.TAG, "hour chime", RecipientType.EVERYONE, None, None)
+
+    uut = Notification(ctx, message="Ten o'clock", ha_context=script_run)
+    await uut.initialize()
+    await uut.deliver()
+    assert not _delivered(uut)
+    assert sorted(uut.senders()) == ["automation.hourly", "script.chime"]
 
 
 async def test_user_tag_snooze_only_silences_that_user(hass: HomeAssistant) -> None:

@@ -5,6 +5,8 @@ As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlie
 It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
 
 ## ✨ Enhancements
+### Snoozing
+- A `TAG` snooze also matches the automation or script that sent the notification, by `entity_id`, name or alias, so any notification raised by an automation can be paused on its own (*pause garage closed for an hour*) without adding `entity_id` to the notify call. The sender is found from the call's context, and a script started by an automation counts both.
 ### Mobile
 - If a mobile app is removed, its action goes away - this used to lead
 to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
