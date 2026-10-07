@@ -529,7 +529,7 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     assert len(delivered_chimes) == 1
 
     # type: ignore
-    call_record: dict[str, Any] = delivered_chimes[0]["calls"][0]
+    call_record: Any = delivered_chimes[0]["calls"][0]
     del call_record["elapsed"]
     ts = dt.datetime.fromisoformat(call_record["timestamp"])
     assert (dt.datetime.now(tz=dt.UTC) - ts).total_seconds() < 60

@@ -503,8 +503,8 @@ async def test_fix_flow_merges_archive_options_onto_existing_entry(hass: HomeAss
 
 
 async def test_python_313_raises_deprecation_issue(hass: HomeAssistant) -> None:
-    """Running under Python 3.13 raises a non-fixable warning about the upcoming drop of
-    Python 3.13 support (see README.md's "MAJOR CHANGE v2" section)."""
+    """Running under Python 3.13 raises a non-fixable warning that Python 3.13 support
+    has been dropped."""
     with patch("sys.version_info", (3, 13, 2, "final", 0)):
         async_check_python_version(hass)
 

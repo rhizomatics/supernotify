@@ -995,9 +995,9 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery(person
     await uut.initialize()
     await uut.deliver()
 
-    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
-    personal_delivery_context.people_registry.people["person.bob"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
-    personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once()  # type: ignore[attr-defined,union-attr]
+    personal_delivery_context.people_registry.people["person.bob"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]
+    personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]
 
 
 async def test_record_result_notifies_recipient_notify_entity_once_however_many_deliveries_reach_them() -> None:
@@ -1036,7 +1036,7 @@ async def test_record_result_passes_calling_context_to_recipient_notify_entity(
     await uut.initialize()
     await uut.deliver()
 
-    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once_with(  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once_with(  # type: ignore[attr-defined,union-attr]
         calling_context
     )
 
@@ -1107,7 +1107,7 @@ async def test_delivery_provenance_records_each_source() -> None:
             "loud": {"delivery": {"chime": {"enabled": True}}},
         },
         transport_types=ALL_TRANSPORT_TYPES,
-        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item] # ty: ignore[invalid-argument-type]
+        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item]
     )
     await ctx.test_initialize()
 
@@ -1144,7 +1144,7 @@ async def test_delivery_provenance_skips_scenario_disable_of_unselected_delivery
         transports=TRANSPORTS,
         scenarios={"quiet": {"delivery": {".*": {"enabled": False}}}},
         transport_types=ALL_TRANSPORT_TYPES,
-        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item] # ty: ignore[invalid-argument-type]
+        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item]
     )
     await ctx.test_initialize()
 

@@ -13,7 +13,7 @@ When the following versions fall out of the 6-month ago window for testing, here
 
 ### 2026.2
 
-Remove Py3.13 compatibility and testing
+Remove Py3.13 compatibility - testing dropped with the 2026.10 release, code workarounds such as `RecipientNotifyEntity` left for a cooling off period
 Pillow >=12.1 - switch to get_flattened_data
 
 ### 2026.8
@@ -196,8 +196,8 @@ Still to do:
 
 - Gather beta feedback on how well agents choose and fill in the tools, and how often the sentences are understood, then decide what to keep and whether to leave beta.
 - The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so on older HA, still
-  allowed by the `hacs.json` minimum of 2025.12.2, the tools just don't appear. Pin down the release and
-  say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+  allowed by the `hacs.json` minimum of 2026.4.0, the tools just don't appear. Pin down the release and
+  say so in the docs.
 - Sentences in other languages, registered for the language being spoken. Each needs wording from a native speaker, and the replies translated too.
 - More sentences, if the feedback asks for them, such as snoozing one delivery or camera.
 - The help tool searches the latest documentation, which can differ from the installed release. mike

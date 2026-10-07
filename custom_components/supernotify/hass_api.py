@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -22,6 +21,8 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.util import slugify
+
+from .compat import vol
 
 if TYPE_CHECKING:
     import asyncio
@@ -500,7 +501,7 @@ class HomeAssistantAPI:
             service_objs: dict[str, Service] = self._hass.services.async_services_for_domain(domain)
             if service_objs:
                 for service, domain_obj in service_objs.items():
-                    if domain_obj.job and domain_obj.job.target:
+                    if domain_obj.job is not None:
                         target = domain_obj.job.target
                         bound_self = getattr(target, "__self__", None)
                         target_module: str | None = bound_self.__module__ if bound_self is not None else target.__module__

@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.setup import async_setup_component
 
@@ -40,6 +40,9 @@ async def setup_smtp(hass: HomeAssistant, extra_config: dict | None = None) -> N
             # HA >= 2026.x: smtp notify is set up via a config entry import flow
             stack.enter_context(patch("homeassistant.components.smtp.config_flow.validate_input", return_value={}))
             stack.enter_context(patch("homeassistant.components.smtp.helpers.SmtpClient.connect"))
+            # HA >= 2026.10: setting up the config entry connects using aiosmtplib
+            stack.enter_context(patch("homeassistant.components.smtp.SMTP.__aenter__", AsyncMock()))
+            stack.enter_context(patch("homeassistant.components.smtp.SMTP.__aexit__", AsyncMock()))
         else:
             # older HA: smtp notify is a legacy discovered notify platform
             stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"))
