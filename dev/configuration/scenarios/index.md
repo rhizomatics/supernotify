@@ -151,14 +151,14 @@ Individual deliveries can be overridden, including the content of the messages u
 
 ## Using Scenarios to Suppress Notifications
 
-Using `required_scenarios`, a notification can be generated that will only be delivered if one of the listed scenarios has an active condition.
+Using `require_scenarios`, a notification can be generated that will only be delivered if one of the listed scenarios has an active condition.
 
 ```yaml
   - action: supernotify.notify
     data:
         title: Hallway PIR
         message: Somebody in the hall
-        required_scenarios:
+        require_scenarios:
           - nobody_home
 ```
 
