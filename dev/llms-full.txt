@@ -2695,6 +2695,12 @@ recipients:
 
 If for some odd reason auto-discover doesn't find a device, you can enable it by listing it under `mobile_devices` in a similar way (`enabled` defaults to `True`).
 
+### Missing Mobile Apps
+
+At start up, each enabled mobile device of a recipient is checked for a matching `notify.mobile_app_XXXX` action. If there isn't one, for example because the phone was replaced or the Home Assistant app removed from it, a repair is raised in Home Assistant. Remove the device from Home Assistant, or disable it as above, to clear the repair, or ignore the repair in Home Assistant if the device is only away for a while.
+
+A notification that includes a device with no action still goes to all the other targets. The device is snoozed for a day, and the failed call is listed in the [archived notification](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md).
+
 ## Sending Notifications
 
 This means you can do multi-channel notification with a single reference to a `person` entity in a notification, and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate in each notification. This is all it takes:
