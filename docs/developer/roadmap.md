@@ -160,8 +160,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-Companion HACS components, with working term [Auto Notifier](./rfcs/0003-auto_notifier.md), starting with an [MVP](./rfcs/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/frigate_auto_notifier.md).
-The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/0003-auto_notifier_support.md) though expected to be refined after the MVP.
+Companion HACS components, with working term [Auto Notifier](./rfcs/0003-auto_notifier.md), starting with an [MVP](./rfcs/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/0006-frigate_auto_notifier.md).
+The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/0003a-auto_notifier_support.md) though expected to be refined after the MVP.
 
 ### UI
 

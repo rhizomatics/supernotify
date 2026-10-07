@@ -168,5 +168,5 @@ These four stand on their own and would have prevented or exposed the oven failu
 
 ## References
 - [Auto Notifier](./0003-auto_notifier.md) - The Auto Notifier design doc
-- [Auto Notifier Support](./auto_notifier_support.md) - Speculative version of this RFC prior to first real use
+- [Auto Notifier Support](./0003a-auto_notifier_support.md) - Speculative version of this RFC prior to first real use
 - [Live Activities and Live Updates](https://companion.home-assistant.io/docs/notifications/live-activities)

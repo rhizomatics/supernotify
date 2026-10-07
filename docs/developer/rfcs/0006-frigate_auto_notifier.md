@@ -1,4 +1,4 @@
-# Frigate SuperNotifier
+# Frigate Auto Notifier
 
 One of the first [Auto Notifiers](./0003-auto_notifier.md): a new module (with optional separate HACS custom component for visibility) that replaces the
 [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications)
@@ -99,7 +99,7 @@ Remaining profile settings, with the fix recipe:
 
 ## Changes needed in Supernotify
 
-See [Auto Notifier Support](./auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are
+See [Auto Notifier Support](./0003a-auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are
 snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and
 live view changes.
 
