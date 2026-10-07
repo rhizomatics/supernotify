@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 
 from homeassistant.core import Context, Event
 
-from custom_components.supernotify.const import ATTR_ACTION
+from custom_components.supernotify.const import ATTR_ACTION, CONF_MOBILE_APP_ID, CONF_MOBILE_DEVICES, CONF_PERSON
 from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snoozer
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -199,6 +199,78 @@ async def test_user_snooze_everything_only_silences_that_user(hass: HomeAssistan
     uut = await _send(ctx, "Hello everyone")
     assert _delivered(uut)
     assert uut.deliveries["email"][EnvelopeOutcome.SUCCESS][0].target.email == ["jane@macunit.org"]  # type: ignore
+
+
+async def _mobile_ctx() -> TestingContext:
+    ctx = TestingContext(
+        recipients=[
+            {
+                CONF_PERSON: "person.bob_mctest",
+                CONF_MOBILE_DEVICES: [
+                    {CONF_MOBILE_APP_ID: "mobile_app_bob_phone"},
+                    {CONF_MOBILE_APP_ID: "mobile_app_bob_watch"},
+                ],
+            },
+            {CONF_PERSON: "person.jane_macunit", CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_jane_phone"}]},
+        ],
+        services={"notify": ["mobile_app_bob_phone", "mobile_app_bob_watch", "mobile_app_jane_phone"]},
+    )
+    await ctx.test_initialize()
+    # as registered by mobile_push when a send to the watch fails
+    ctx.snoozer.register_snooze(
+        CommandType.SNOOZE,
+        target_type=QualifiedTargetType.MOBILE,
+        target="mobile_app_bob_watch",
+        recipient_type=RecipientType.USER,
+        recipient="person.bob_mctest",
+        snooze_for=timedelta(days=1),
+        reason="Action Failure",
+    )
+    return ctx
+
+
+async def test_mobile_snooze_drops_device_resolved_from_a_person() -> None:
+    ctx = await _mobile_ctx()
+
+    for target in (None, ["person.bob_mctest", "person.jane_macunit"]):
+        # a different message each time, so the second isn't suppressed as a duplicate
+        uut = Notification(ctx, message=f"Hello {target}", target=target)
+        await uut.initialize()
+        await uut.deliver()
+        envelope = first_envelope(uut, "mobile_push")
+        assert envelope.target.mobile_app_ids == ["mobile_app_bob_phone", "mobile_app_jane_phone"]
+        # the person survives target resolution, only the snoozed device goes
+        assert envelope.target.person_ids == ["person.bob_mctest", "person.jane_macunit"]
+
+
+async def test_mobile_snooze_drops_device_resolved_from_a_delivery_override() -> None:
+    ctx = await _mobile_ctx()
+
+    uut = Notification(ctx, message="Hello", action_data={"delivery": {"mobile_push": {"target": "person.bob_mctest"}}})
+    await uut.initialize()
+    await uut.deliver()
+    envelope = first_envelope(uut, "mobile_push")
+    assert envelope.target.mobile_app_ids == ["mobile_app_bob_phone"]
+    assert envelope.target.person_ids == ["person.bob_mctest"]
+
+
+async def test_mobile_snooze_on_every_device_of_a_person_suppresses_only_that_person() -> None:
+    ctx = await _mobile_ctx()
+    ctx.snoozer.register_snooze(
+        CommandType.SNOOZE,
+        target_type=QualifiedTargetType.MOBILE,
+        target="mobile_app_bob_phone",
+        recipient_type=RecipientType.USER,
+        recipient="person.bob_mctest",
+        snooze_for=timedelta(days=1),
+    )
+
+    uut = Notification(ctx, message="Hello")
+    await uut.initialize()
+    await uut.deliver()
+    envelope = first_envelope(uut, "mobile_push")
+    assert envelope.target.mobile_app_ids == ["mobile_app_jane_phone"]
+    assert envelope.target.person_ids == ["person.jane_macunit"]
 
 
 def test_snooze_target_with_underscores() -> None:

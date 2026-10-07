@@ -1340,7 +1340,12 @@ class Notification(ArchivableObject):
         for person_id in target.person_ids:
             recipient: Recipient | None = self.people_registry.people.get(person_id)
             if recipient and recipient.enabled:
-                recipient_target = recipient.target(delivery.name)
+                # the person's own mobile devices only appear now, after the snooze filter has run on
+                # the action's targets, so a snoozed device is dropped here - the person stays in the
+                # target, as the link back to who is being notified
+                recipient_target = self.context.snoozer.filter_mobile_app_ids(
+                    recipient.target(delivery.name), self.priority, delivery
+                )
                 if recipient_target.target_specific_data:
                     additional.append(recipient_target)
                 else:
