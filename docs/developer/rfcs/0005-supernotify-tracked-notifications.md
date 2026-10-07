@@ -111,6 +111,8 @@ data:
 
 Proposed, the whole cycle is:
 
+<!-- docs-check: allow-keys tracking_id phase icon progress finish_at -->
+
 ```yaml
 action: supernotify.notify
 data:
