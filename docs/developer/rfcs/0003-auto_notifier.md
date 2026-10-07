@@ -1,10 +1,6 @@
-# Packages
+# RFC 0001: Auto Notifier Packages
 
-(provisional name for implementation - could be `bundles`, or `presets`, need to be not overlap with known Home Assistant terms like blueprint)
-
-## Feedback
-
-[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)
+2026-10-07 · Jey Burrows · Status: draft
 
 ## Problem
 
@@ -479,3 +475,8 @@ Sounds good. A few things worth knowing for the first real run:
 - Sweeper process to close live activity bars after a grace period if the appliance end signal hasn't been received
   - Also notify a warning that the appliance is either stuck or home assistant issue preventing closure
 - Nicer transition to without->with Supernotify, so not losing any config or at least been given the choice and explained the effect
+
+
+## Feedback
+
+[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)

@@ -133,7 +133,7 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Silence notifications"                                  | Silences everything until turned back on      |
 | "Turn my notifications back on"                          | Undoes the snooze or silence                  |
 | "Resume notifications for *driveway*"                    | Undoes the snooze or silence for *driveway*   |
-| "What was the last notification"                         | Says what it was, and what sent it            |
+| "What was the last notification"                         | Says what it was, and what it was sent via, or why it wasn't sent |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message.
 A recipient can be named by their full name, alias, or just their first name when no one else shares it -
@@ -181,7 +181,7 @@ comes back in Italian:
 | "Silenzia le notifiche"                                       | Silences everything until turned back on      |
 | "Riattiva le mie notifiche"                                   | Undoes the snooze or silence                  |
 | "Riattiva le notifiche del *vialetto*"                        | Undoes the snooze or silence for *vialetto*   |
-| "Qual è stata l'ultima notifica"                              | Says what it was, and what sent it            |
+| "Qual è stata l'ultima notifica"                              | Says what it was, and what it was sent via, or why it wasn't sent |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and
 "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for

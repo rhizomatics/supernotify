@@ -414,7 +414,45 @@ async def test_last_notification(hass: HomeAssistant) -> None:
 
     response = await async_respond(engine, "last", {}, Context())
 
-    assert response.endswith(": washing machine finished. Sent by chat")
+    assert response.endswith(": washing machine finished. Sent via chat")
+
+
+async def test_last_notification_not_delivered(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    await async_respond(engine, "silence", {}, Context())
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because notifications were snoozed or silenced")
+    assert calls == []
+
+
+async def test_last_notification_was_a_dupe(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    await engine.async_send_message("night motion in hall")
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because it was a duplicate")
+    assert len(calls) == 1
+
+
+async def test_last_notification_with_nothing_to_send_it(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+    engine.context.delivery_registry._deliveries.clear()
+
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because nothing is set up to send it")
+    assert calls == []
+    response = await async_respond(engine, "last", {}, Context(), "it")
+    assert response.endswith(": night motion in hall. Non è stata inviata perché niente è configurato per inviarla")
 
 
 async def test_unknown_command(hass: HomeAssistant) -> None:
@@ -612,7 +650,7 @@ async def test_italian_last_notification(hass: HomeAssistant) -> None:
     response = await async_respond(engine, "last", {}, Context(), "it")
 
     assert response.startswith("Alle ")
-    assert response.endswith(": lavatrice finita. Inviata da chat")
+    assert response.endswith(": lavatrice finita. Inviata tramite chat")
 
 
 async def test_unknown_language_answers_in_english(hass: HomeAssistant) -> None:

@@ -1,3 +1,7 @@
+# RFC 0002: Deliveries and Transport Overhaul
+
+2026-09-10 · Jey Burrows · Status: Complete
+
 # Deliveries and Transports
 
 See also [Principles](../principles.md).

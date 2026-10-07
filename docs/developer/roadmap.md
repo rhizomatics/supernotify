@@ -127,7 +127,7 @@ Might be scope for having 'real time' deliveries sequenced ahead of async ones, 
 
 ### Extended UI Configuration
 
-Second and further phases identified at [ConfigFlow](./rfcs/configflow_approach.md)
+Second and further phases identified at [ConfigFlow](./rfcs/0001-configflow_approach.md)
 
 ### Respond to Dynamic Home Assistant Changes
 
@@ -160,8 +160,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-Companion HACS components, with working term [Auto Notifier](./rfcs/auto_notifier.md), starting with an [MVP](./rfcs/auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/frigate_auto_notifier.md).
-The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/auto_notifier_support.md) though expected to be refined after the MVP.
+Companion HACS components, with working term [Auto Notifier](./rfcs/0003-auto_notifier.md), starting with an [MVP](./rfcs/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/frigate_auto_notifier.md).
+The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/0003-auto_notifier_support.md) though expected to be refined after the MVP.
 
 ### UI
 
@@ -171,7 +171,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/auto_notifier.md)
+- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/0001-auto_notifier.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 
@@ -259,10 +259,10 @@ Fields like `message_html`,`spoken_message`,`priority` are treated inconsistentl
 
 ## Completed Roadmap
 
-- [ConfigFlow](./rfcs/configflow_approach.md)
+- [ConfigFlow](./rfcs/0001-configflow_approach.md)
    - v2.0.0
    - Partially completed, basic YAML only
-- [Deliveries and Transports](./rfcs/deliveries_and_transports.md)
+- [Deliveries and Transports](./rfcs/0002-deliveries_and_transports.md)
    - v2.5.0
 - Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
    - v2.8.0

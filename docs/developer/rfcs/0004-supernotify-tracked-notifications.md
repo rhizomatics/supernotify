@@ -1,4 +1,4 @@
-# RFC 0001: Tracked notifications in Supernotify
+# RFC 0002: Tracked notifications in Supernotify
 
 2026-10-07 · Jey Burrows · Status: draft
 
@@ -167,6 +167,6 @@ These four stand on their own and would have prevented or exposed the oven failu
 - [ ] **Old Phones** - Older phones in the house won't get activity bar and may get annoying behaviour instead, or maybe only some people get some live activities
 
 ## References
-- [Auto Notifier](./auto_notifier.md) - The Auto Notifier design doc
+- [Auto Notifier](./0003-auto_notifier.md) - The Auto Notifier design doc
 - [Auto Notifier Support](./auto_notifier_support.md) - Speculative version of this RFC prior to first real use
 - [Live Activities and Live Updates](https://companion.home-assistant.io/docs/notifications/live-activities)

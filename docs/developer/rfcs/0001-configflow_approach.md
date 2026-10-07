@@ -1,3 +1,7 @@
+# RFC 0001: Config Flow Migration
+
+2026-08-06 · Jey Burrows · Status: Initial Phases Complete
+
 # ConfigFlow Implementation Approach
 
 ## Goals
@@ -72,7 +76,7 @@ Breakdown:
 ### Third
 
 * Upgrade to Gold level quality.
-* Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](./deliveries_and_transports.md).
+* Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](./0002-deliveries_and_transports.md).
   - Transport is the primary ConfigFlow object, not Delivery: every auto-configurable Transport is implicitly also a Delivery of the same name (Design Decision 1), so a Transport options page covers the common case without a separate Delivery step.
   - Delivery only needs its own ConfigFlow entry for the advanced case of more than one preset per Transport (e.g. a low-priority and high-priority chime) - Principle #3, Design Decision 2.
   - Prerequisite engine change, ahead of or alongside the UI work rather than part of it: merge the `DELIVERY_SCHEMA` extensions back into `DELIVERY_CONFIG_SCHEMA` (Design Decision 1), so there's a single config shape to expose instead of two.

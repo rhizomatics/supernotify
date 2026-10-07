@@ -24,6 +24,7 @@ from .schema import EnvelopeOutcome
 
 if TYPE_CHECKING:
     from .engine import SupernotifyEngine
+    from .notification import Notification
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,8 +153,18 @@ RESPONSES: dict[str, dict[str, str]] = {
         "unknown_tag": "I can't find a scenario or entity called {tag}, so nothing was changed",
         "which_camera": "{tag} could be {cameras}. Say which one",
         "no_last": "There haven't been any notifications since Home Assistant started",
-        "last_sent": "At {when}: {message}. Sent by {sent}",
-        "last_not_sent": "At {when}: {message}. It wasn't sent by anything",
+        "last_sent": "At {when}: {message}. Sent via {sent}",
+        "last_not_sent": "At {when}: {message}. It wasn't sent{why}",
+        "why_no_delivery": " because nothing is set up to send it",
+        "why_error": " because of an error",
+        "why_snoozed": " because notifications were snoozed or silenced",
+        "why_dupe": " because it was a duplicate",
+        "why_no_scenario": " because a scenario it needs wasn't active",
+        "why_priority": " because of its priority",
+        "why_delivery_condition": " because its conditions weren't met",
+        "why_occupancy": " because of who was home",
+        "why_transport_disabled": " because the transport is switched off",
+        "why_no_target": " because there was nobody to send it to",
         "unknown_command": "Supernotify doesn't know the command {command}",
     },
     "it": {
@@ -176,8 +187,18 @@ RESPONSES: dict[str, dict[str, str]] = {
         "unknown_tag": "Non trovo nessuno scenario o entità chiamato {tag}, quindi non ho cambiato niente",
         "which_camera": "{tag} può essere {cameras}. Dimmi quale",
         "no_last": "Non ci sono state notifiche da quando Home Assistant si è avviato",
-        "last_sent": "Alle {when}: {message}. Inviata da {sent}",
-        "last_not_sent": "Alle {when}: {message}. Non è stata inviata da nessun canale",
+        "last_sent": "Alle {when}: {message}. Inviata tramite {sent}",
+        "last_not_sent": "Alle {when}: {message}. Non è stata inviata{why}",
+        "why_no_delivery": " perché niente è configurato per inviarla",
+        "why_error": " a causa di un errore",
+        "why_snoozed": " perché le notifiche erano posticipate o silenziate",
+        "why_dupe": " perché era un duplicato",
+        "why_no_scenario": " perché uno scenario richiesto non era attivo",
+        "why_priority": " per via della sua priorità",
+        "why_delivery_condition": " perché le sue condizioni non erano soddisfatte",
+        "why_occupancy": " per via di chi era in casa",
+        "why_transport_disabled": " perché il transport è disattivato",
+        "why_no_target": " perché non c'era nessuno a cui inviarla",
         "unknown_command": "Supernotify non conosce il comando {command}",
     },
 }
@@ -397,4 +418,17 @@ def _last(engine: SupernotifyEngine, language: str) -> str:
     sent = [name for name, outcomes in notification.deliveries.items() if outcomes.get(EnvelopeOutcome.SUCCESS)]
     if sent:
         return _say(language, "last_sent", when=when, message=notification.message, sent=", ".join(sent))
-    return _say(language, "last_not_sent", when=when, message=notification.message)
+    return _say(language, "last_not_sent", when=when, message=notification.message, why=_why_not_sent(notification, language))
+
+
+def _why_not_sent(notification: Notification, language: str) -> str:
+    """Why nothing was sent, or nothing to add when there's no plain way to say it"""
+    if notification.failed:
+        return _say(language, "why_error")
+    if not notification.deliveries and not notification._skip_reasons:
+        return _say(language, "why_no_delivery")
+    for reason in notification._skip_reasons:
+        key: str = f"why_{reason.lower()}"
+        if key in RESPONSES[DEFAULT_LANGUAGE]:
+            return _say(language, key)
+    return ""
