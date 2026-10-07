@@ -1,4 +1,8 @@
-# Package Support
+# RFC 0003a: Auto Notifier Packages
+
+2026-10-07 · Jey Burrows · Status: draft
+
+# Appendix - Anticipated Changes
 
 Changes anticipated in Supernotify before any production [Auto Notifier](./0003-auto_notifier.md) is released, collected from the proposed packages:
 [Frigate](./0006-frigate_auto_notifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
