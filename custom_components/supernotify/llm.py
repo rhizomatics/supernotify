@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
-import voluptuous as vol
 from homeassistant.components.llm import LLMTools  # type: ignore[import-not-found,unused-ignore]  # HA < 2026.x on py3.13
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,6 +28,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import DOMAIN
 from .archive import summarize_notification
+from .compat import vol
 from .const import (
     ATTR_DELIVERY,
     ATTR_DRY_RUN,

@@ -23,7 +23,7 @@
 
 ### 重大变更 v2
 
->> 当 Home Assistant 2026.10 发布后，将不再支持 Python 3.13 以及 2026.3.0（首个仅支持 v3.14 的版本）之前的 Home Assistant 版本。Supernotify 将继续针对较旧的兼容 Home Assistant 版本进行测试。
+>> 自 Home Assistant 2026.10 发布起，已不再支持 Python 3.13 以及 2026.3.0（首个仅支持 v3.14 的版本）之前的 Home Assistant 版本。Supernotify 将继续针对较旧的兼容 Home Assistant 版本进行测试。
 
 >> SuperNotify 的 `2.0.0` 版本迁移到了原生的 Home Assistant UI 配置方式（"ConfigFlow"）。如果你已经使用简单配置，系统会自动为你完成迁移，无需任何 YAML。
 
