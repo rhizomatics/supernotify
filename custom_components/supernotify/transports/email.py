@@ -16,10 +16,8 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 import aiofiles
-import voluptuous as vol
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -37,6 +35,7 @@ from homeassistant.util.ssl import create_client_context
 import custom_components.supernotify
 from custom_components.supernotify import const
 from custom_components.supernotify.common import CallRecord
+from custom_components.supernotify.compat import vol
 from custom_components.supernotify.const import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -100,6 +99,11 @@ NULL_RETURN_PATH = "<>"
 # connection is configured here. "server" is smtp-specific; the rest match generic
 # homeassistant.const keys already imported above.
 HA_SMTP_DOMAIN = "smtp"
+# Duplicates of the constants in `homeassistant.components.smtp.const`, to be kept aligned with it,
+# since importing from there loads the smtp integration and so needs its `aiosmtplib` requirement,
+# which is only installed where the smtp integration is in use
+CONF_SERVER = "server"
+CONF_SENDER_NAME = "sender_name"
 
 IMPORTANCE_HEADER_MAP: dict[str, str] = {
     const.PRIORITY_CRITICAL: "high",

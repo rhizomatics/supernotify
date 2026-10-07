@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
 from anyio import Path
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ENABLED, CONF_NAME
@@ -23,6 +22,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import ARCHIVE_DIR, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from .compat import vol
 from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,

@@ -16,9 +16,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 
+from custom_components.supernotify.compat import vol
 from custom_components.supernotify.model import SelectionRule
 
 OPTION_SIMPLIFY_TEXT = "simplify_text"

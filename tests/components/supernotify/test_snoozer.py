@@ -147,7 +147,7 @@ def test_purge_expired_snoozes() -> None:
 def test_register_snooze_unknown_cmd() -> None:
     uut = Snoozer()
     uut.register_snooze(
-        "BADCMD",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        "BADCMD",  # type: ignore[arg-type]
         GlobalTargetType.EVERYTHING,
         None,
         RecipientType.EVERYONE,
