@@ -107,7 +107,9 @@ async def _call(hass: HomeAssistant, tool: str, args: dict[str, Any], user_id: s
     # conversation integration for that needs hassil and the rest of the voice stack
     api = await _api(hass, user_id)
     found = next(t for t in api.tools if t.name == tool)
-    return dict(await found.async_call(hass, llm.ToolInput(tool_name=tool, tool_args=args), api.llm_context))
+    result = await found.async_call(hass, llm.ToolInput(tool_name=tool, tool_args=args), api.llm_context)
+    assert isinstance(result, dict)
+    return result
 
 
 def _supernotify_tools(api: llm.APIInstance) -> set[str]:

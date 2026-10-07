@@ -89,7 +89,7 @@ async def test_mobile_push_only_has_arm_when_alarm_disarmed(fixture, hass: HomeA
     assert len(uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
     envelope: Envelope = uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
     assert envelope.delivery_name == "mobile_push"
-    assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]  # ty: ignore[not-subscriptable]
+    assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]
         {"action": "ALARM_PANEL_RESET", "title": "Arm Alarm Panel for at Home", "icon": "sfsymbols:bell"},
         {"action": "ALARM_PANEL_AWAY", "title": "Arm Alarm Panel for Going Away", "icon": "sfsymbols:airplane"},
     ]
@@ -107,7 +107,7 @@ async def test_mobile_push_only_has_disarm_when_alarm_armed(fixture, hass: HomeA
     assert len(uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
     envelope: Envelope = uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
     assert envelope.delivery_name == "mobile_push"
-    assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]  # ty: ignore[not-subscriptable]
+    assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]
         {"action": "ALARM_PANEL_DISARM", "title": "Disarm Alarm Panel", "icon": "sfsymbols:bell.slash"},
         {"action": "ALARM_PANEL_RESET", "title": "Arm Alarm Panel for at Home", "icon": "sfsymbols:bell"},
     ]

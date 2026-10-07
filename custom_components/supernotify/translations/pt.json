@@ -483,8 +483,8 @@
             "description": "A migração automática para uma chave YAML de nível superior `supernotify:` não pôde ser concluída: {reason}. Mova você mesmo as definições de entrega, transportes, cenários, destinatários, câmeras, grupos de ação, links e soneca do bloco `notify: - platform: supernotify` para uma chave de nível superior `supernotify:` (por exemplo, `supernotify: !include supernotify.yaml`), depois remova o bloco antigo e reinicie o Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "O suporte a Python 3.13 termina em breve",
-            "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixará de suportar Python 3.13 (e versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 for lançado - a partir daí, esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
+            "title": "O suporte a Python 3.13 terminou",
+            "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixou de ser testado com Python 3.13 (e com versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 foi lançado. Pode continuar a funcionar, mas isso já não é verificado, e esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
         },
         "recipient_binary_sensor_deprecated": {
             "title": "Os sensores binários de destinatário serão removidos",

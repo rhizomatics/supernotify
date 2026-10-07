@@ -268,7 +268,7 @@ class TelegramTransport(Transport):
         # are not currently supported by this transport.
         try:
             chat_id: int = int(cast("str | int", raw_target))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             _LOGGER.warning("SUPERNOTIFY telegram: chat_id %r is not numeric (expected int)", raw_target)
             self.record_error(f"chat_id {raw_target!r} not numeric", "deliver")
             return False

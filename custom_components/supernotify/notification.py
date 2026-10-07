@@ -9,16 +9,15 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
 
 import homeassistant.util.dt as dt_util
-import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from voluptuous import humanize
 
 from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
 
 from .archive import ArchivableObject
 from .common import ensure_list, nullable_ensure_list, sanitize, spoken_name
+from .compat import humanize, vol
 from .const import (
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,

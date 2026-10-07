@@ -23,7 +23,7 @@
 
 ### MODIFICA IMPORTANTE v2
 
->> Il supporto per Python 3.13 e per le versioni di Home Assistant precedenti alla 2026.3.0 (la prima a supportare solo la v3.14) verrà interrotto con il rilascio di Home Assistant 2026.10. Supernotify continuerà a essere testato con le versioni compatibili precedenti di Home Assistant.
+>> Il supporto per Python 3.13 e per le versioni di Home Assistant precedenti alla 2026.3.0 (la prima a supportare solo la v3.14) è stato interrotto con il rilascio di Home Assistant 2026.10. Supernotify continuerà a essere testato con le versioni compatibili precedenti di Home Assistant.
 
 >> La versione `2.0.0` di SuperNotify passa a una configurazione nativa tramite l'interfaccia di Home Assistant ('ConfigFlow'). Se hai già una configurazione semplice esistente, tutto verrà migrato automaticamente per te e non sarà necessario alcun YAML.
 

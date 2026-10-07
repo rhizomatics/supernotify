@@ -103,10 +103,10 @@ def _coerce_int(value: Any) -> int | None:  # ruff: ignore[any-type]
         return None
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         try:
             return int(float(value))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 

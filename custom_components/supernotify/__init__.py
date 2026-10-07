@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
 from homeassistant.const import CONF_NAME, SERVICE_RELOAD, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -13,6 +12,8 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util import slugify
+
+from .compat import vol
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry

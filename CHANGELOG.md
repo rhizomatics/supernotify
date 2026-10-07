@@ -1,4 +1,8 @@
-# Unreleased
+# v2.14.0
+
+## 🚨 Breaking changes
+As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlier is no longer assured now that 2026.10 is released.
+It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
 
 ## ✨ Enhancements
 ### Snoozing
@@ -8,6 +12,9 @@
 to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
   -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a snooze if it can to quiet repeat failures
 - Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
+
+## 📝 Other changes
+- Home Assistant compatibility for testing moved to 2026.4->2026.10 range
 
 # v2.13.2
 

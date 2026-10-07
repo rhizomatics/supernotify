@@ -35,18 +35,10 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import get_scheduled_timer_handles
 from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
     INSTANCES,
+    HASocketBlockedError,
     long_repr_strings,
 )
 from pytest_httpserver import HTTPServer
-
-try:
-    # Only present on pytest-homeassistant-custom-component>=0.13.348 (our python>=3.14.2 pin).
-    # Older pins (python<3.14.2) don't check socket usage in verify_cleanup at all.
-    from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
-        HASocketBlockedError,
-    )
-except ImportError:
-    HASocketBlockedError = None  # type: ignore
 
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import DupeChecker
