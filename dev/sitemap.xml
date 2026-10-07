@@ -341,6 +341,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0007-quick_selectors/</loc>
+        <lastmod>2026-10-07</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/es/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
