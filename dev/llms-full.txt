@@ -1254,6 +1254,7 @@ A `TAG` snooze covers every notification that a word or name like *driveway* app
 - the name of one of the notification's scenarios, whether applied by the automation or selected by its conditions
 - the `entity_id`, object_id, friendly name or an alias of the entity in the notification's `entity_id` data, as the Frigate blueprint sends, or of its `media` camera
 - the object_id then the domain, so *driveway camera* matches `camera.driveway`
+- the `entity_id`, object_id, friendly name or an alias of the automation or script that sent it, so *garage closed* covers every notification from `automation.garage_closed` - nothing needs adding to the notify call. The sender is the automation or script whose current run carries the notification's context (a script started by an automation counts both)
 
 Case, underscores and extra spaces are ignored, so *unknown vehicle* matches the `unknown_vehicle` scenario. The tag is matched as each notification is sent, so if a scenario and a camera are both called *driveway*, both are covered.
 
