@@ -77,6 +77,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# what the schema fills in for fields a supernotify.notify call left out
+_NOTIFY_ACTION_DEFAULTS: dict[str, Any] = NOTIFY_ACTION_SCHEMA({})
+
 
 def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
     """Migrate a notify.supernotify-shaped payload sent to supernotify.notify.
@@ -103,9 +106,11 @@ def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
         lifted = {k: v for k, v in nested.items() if k in ACTION_DATA_FIELDS and k != ATTR_DATA}
         passthrough = {k: v for k, v in nested.items() if k not in ACTION_DATA_FIELDS}
         passthrough.update(nested.get(ATTR_DATA) or {})
-        # explicit top-level values win, but the schema fills empty defaults (action_groups: [] etc)
-        # for absent ones, so an empty top-level value must not shadow a lifted one
-        data = lifted | {k: v for k, v in data.items() if k != ATTR_DATA and (v or k not in lifted)}
+        # explicit top-level values win, but the schema fills defaults (action_groups: [], dry_run: live etc)
+        # for absent ones, so an empty or default top-level value must not shadow a lifted one
+        data = lifted | {
+            k: v for k, v in data.items() if k != ATTR_DATA and (k not in lifted or (v and v != _NOTIFY_ACTION_DEFAULTS.get(k)))
+        }
         if passthrough:
             data[ATTR_DATA] = passthrough
     return data

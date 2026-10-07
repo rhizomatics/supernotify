@@ -661,6 +661,27 @@ def test_lift_legacy_nested_data_top_level_wins_and_flattens_inner_data() -> Non
     }
 
 
+def test_lift_legacy_nested_data_schema_default_does_not_shadow_lifted_dry_run() -> None:
+    """Regression for #265: the schema fills a truthy `dry_run: live` default at top level"""
+    lifted = lift_legacy_nested_data(NOTIFY_ACTION_SCHEMA({"data": {"dry_run": "simulate", "priority": "critical"}}))
+    assert lifted["dry_run"] == "simulate"
+    assert lifted["priority"] == "critical"
+
+
+async def test_notify_action_nested_legacy_dry_run_sends_nothing(hass: HomeAssistant) -> None:
+    """Regression for #265: `dry_run: simulate` left inside `data:` was reported as lifted but sent for real"""
+    calls = await _dupe_setup(hass)
+
+    result = await hass.services.async_call(
+        DOMAIN, "notify", {"message": "alarm", "data": {"dry_run": "simulate"}}, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+
+    assert calls == []
+    assert result is not None
+    assert result["dry_run"] == "simulate"
+
+
 def test_lift_legacy_nested_data_no_supernotify_fields_untouched() -> None:
     payload = {"priority": "low", "data": {"ttl": 5, "colour": "red"}}
     assert lift_legacy_nested_data(payload) == payload

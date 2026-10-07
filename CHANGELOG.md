@@ -2,7 +2,12 @@
 
 ## 🐛 Bug fixes
 ### Assist
-- The answer to "What was the last notification" no longer says *It wasn't sent by anything* when no delivery went out, which read as though nothing had raised the notification. It now says it wasn't sent and why, for example because it was a duplicate or notifications were snoozed
+- The answer to "What was the last notification" no longer says *It wasn't sent by anything* when no delivery went out, which read as though nothing had raised the notification. It now says it wasn't sent and why, for example because it was a duplicate or notifications were snoozed. Fixed and regression test.
+### Simulate
+- If `data` was provided in old `notify` platform style big lump, and auto-migrated to Supernotify's current form, `dry_run` could be lost. Fixed and regression test.
+## 📚 Documentation
+- Re-organized developer RFCs proposals
+- New doc test for schema used inside examples, and a few minor fixes
 
 # v2.13.1
 
