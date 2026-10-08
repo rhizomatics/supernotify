@@ -95,7 +95,7 @@ included in the stub, so run `pyscript.generate_stubs` again after changing them
     Pyscript 2.1.0 only recognises its own two section names, so the Supernotify fields grouped under
     *Multimedia*, *Scenarios* and *Advanced* are missing from the stub and the IDE will report
     them as unknown arguments, and fields taking a list are shown as taking a single value.
-    They all work when the script runs. A fix for this has been proposed to Pyscript.
+    They all work when the script runs. A fix for this has been [proposed to Pyscript](https://github.com/custom-components/pyscript/pull/878).
 
 ### Typed helpers
 
