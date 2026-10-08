@@ -9,6 +9,8 @@
 # Nothing here is imported on your own machine. Supernotify runs inside Home
 # Assistant, so the block that uses `hass` is sent there whole, imports and
 # all, and its names are used from the prompt as if they were local.
+#
+# You will need to run `ha-repl trust` first before this plugin will be activated
 
 from typing import TYPE_CHECKING
 
