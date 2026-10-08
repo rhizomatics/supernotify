@@ -745,8 +745,8 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
         (
             "Samsung",
             PRIORITY_CRITICAL,
-            {"priority": "normal", "ttl": 60},
-            {"ttl": 60, "priority": "normal", "channel": "alarm_stream"},
+            {"ttl": 60},
+            {"ttl": 60, "priority": "high", "channel": "alarm_stream"},
         ),
         (
             "Samsung",
