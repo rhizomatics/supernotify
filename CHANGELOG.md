@@ -5,7 +5,8 @@ As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlie
 It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
 
 ## ✨ Enhancements
-### Assist
+
+### Assist
 - Snoozing requests don't stop critical notifications, unless the instruction explicit asks to snooze 'even critical'
 ### Snoozing
 - A `TAG` snooze also matches the automation or script that sent the notification
