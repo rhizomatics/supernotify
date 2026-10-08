@@ -76,6 +76,7 @@ dev=[
     "types-pillow",
     "types-pyyaml>=6.0.12.20260906,<7.0.0.0",
     "types-beautifulsoup4",
+    "homeassistant_repl" # optional developer shell
 ]
 docs=[
     "mkdocs-materialx[imaging]",
@@ -119,7 +120,7 @@ override-dependencies = [
 
 ]
 exclude-newer = "5 days"
-exclude-newer-package = { ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
+exclude-newer-package = { homeassistant_repl="1 days",ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
 add-bounds = "major"
 
 [tool.ruff]

@@ -313,7 +313,9 @@ class Scenario:
             error: str | None = None
             try:
                 # note: basic template syntax within conditions already validated by voluptuous checks
-                self.conditions = await self.hass_api.build_conditions(self.conditions_config, strict=True, validate=True)
+                self.conditions = await self.hass_api.build_conditions(
+                    self.conditions_config, strict=True, validate=True, name=self.name
+                )
             except vol.Invalid as vi:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"

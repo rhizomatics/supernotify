@@ -1,8 +1,11 @@
 # v2.14.0
 
 ## 🚨 Breaking changes
+### Python 3.13 and Home Assistant versions 2026.3 and earlier
 As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlier is no longer assured now that 2026.10 is released.
 It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
+### Scenario and Delivery Conditions
+These are now evaluated more thoroughly at start-up, so you may find old overlooked condition errors raising repairs, these are likely to be real problems in the logic.
 
 ## ✨ Enhancements
 
@@ -28,6 +31,9 @@ to stack traces in logs and the entire notification mapped as an error even if o
 
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
+- Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.
+- Entities used in scenario or delivery conditions that aren't known to Home Assistant at start-up are logged as warnings. These aren't repairs, and don't disable the scenario or delivery, since the entity may belong to an integration that hasn't loaded yet.
+- Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than breaking the validation since the integration that provided the entities might start after Supernotify
 
 ## 📚 Documentation
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
