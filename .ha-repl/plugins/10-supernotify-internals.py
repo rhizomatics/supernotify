@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     # run time, which is the point, hence the noqa.
     from typing import Any
 
-    from _ha_repl import MODE, hass, obj  # noqa: TC004
+    from homeassistant_repl.plugin import MODE, hass, obj  # noqa: TC004
 
     from custom_components.supernotify import SupernotifyConfigEntry
 

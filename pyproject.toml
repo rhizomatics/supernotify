@@ -76,6 +76,7 @@ dev=[
     "types-pillow",
     "types-pyyaml>=6.0.12.20260906,<7.0.0.0",
     "types-beautifulsoup4",
+    "homeassistant_repl" # optional developer shell
 ]
 docs=[
     "mkdocs-materialx[imaging]",
