@@ -23,7 +23,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.const import CONF_NAME
@@ -31,6 +30,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
 from . import DOMAIN, async_reload_yaml_config_and_entries
+from .compat import vol
 from .config_flow import extract_legacy_data, extract_legacy_options
 from .const import (
     CONF_ACTION_GROUPS,
@@ -45,13 +45,9 @@ from .const import (
 from .schema import SUPERNOTIFY_YAML_SCHEMA
 
 if TYPE_CHECKING:
+    # only for type checking, since RepairsFlowResult isn't exported on every supported HA version
+    from homeassistant.components.repairs import RepairsFlowResult
     from homeassistant.core import HomeAssistant
-    from homeassistant.data_entry_flow import FlowResult
-
-    # RepairsFlowResult isn't exported on every supported HA version (it's just
-    # FlowResult[FlowContext, str] under the hood) - FlowResult itself is a much older, more
-    # stable export, so use that directly rather than depending on the alias's presence.
-    RepairsFlowResult = FlowResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,14 +147,14 @@ def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str,
 
 
 def async_check_python_version(hass: HomeAssistant) -> None:
-    """Raise (or clear) a non-fixable warning once Python 3.13 support is on borrowed time.
+    """Raise (or clear) a non-fixable warning that Python 3.13 is no longer supported.
 
-    Support for Python 3.13 (and Home Assistant versions before 2026.3.0) is dropped when
-    Home Assistant 2026.10 is released - see README.md's "MAJOR CHANGE v2" section. Called from
+    Support for Python 3.13 (and Home Assistant versions before 2026.3.0) was dropped when
+    Home Assistant 2026.10 was released - see README.md's "Known Limitations" section. Called from
     async_setup on every start, so upgrading the underlying Python interpreter clears the issue
     automatically without needing a fix flow.
     """
-    if sys.version_info >= (3, 14):
+    if sys.version_info >= (3, 14):  # noqa: UP036
         ir.async_delete_issue(hass, DOMAIN, PYTHON_313_DEPRECATED_ISSUE_ID)
     else:
         python_version = "{}.{}.{}".format(*sys.version_info[:3])

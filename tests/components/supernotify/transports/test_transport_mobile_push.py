@@ -30,7 +30,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.schema import DeliveryOutcome, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import service_call
@@ -239,7 +239,7 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config
     context = unmocked_config
     delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}}
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]
     context.configure_for_tests([uut])
     await context.initialize()
     e: Envelope = Envelope(
@@ -740,8 +740,14 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
     ("manufacturer", "priority", "data", "expected"),
     [
         ("Samsung", PRIORITY_CRITICAL, {}, {"ttl": 0, "priority": "high", "channel": "alarm_stream"}),
+        # the companion app's own data elements are left as given
         ("Samsung", PRIORITY_CRITICAL, {"channel": "alarm"}, {"ttl": 0, "priority": "high", "channel": "alarm"}),
-        ("Samsung", PRIORITY_CRITICAL, {"mobile_push_critical_channel": False}, {"ttl": 0, "priority": "high"}),
+        (
+            "Samsung",
+            PRIORITY_CRITICAL,
+            {"priority": "normal", "ttl": 60},
+            {"ttl": 60, "priority": "normal", "channel": "alarm_stream"},
+        ),
         (
             "Samsung",
             PRIORITY_CRITICAL,
@@ -775,3 +781,38 @@ async def test_android_critical_sounds_through_do_not_disturb(
     sent = e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
     assert {k: sent[k] for k in ("ttl", "priority", "channel") if k in sent} == expected
     assert not any(k.startswith("mobile_push_") for k in sent)
+
+
+async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> None:
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients=[
+            {
+                CONF_PERSON: "person.bidey_in",
+                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
+            },
+        ],
+        deliveries={"push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}},
+        viable_transport_types=[MobilePushTransport],
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, message="hello there", target="person.bidey_in", action_data={"delivery": ["push"]})
+    await uut.initialize()
+    await uut.deliver()
+
+    assert len(calls) == 1
+    assert uut.outcome() == DeliveryOutcome.SUCCESS
+    assert uut.error_count == 0
+    envelope = uut.delivered_envelopes[0]
+    assert envelope.delivery_error is None
+    assert envelope.failed_calls[0].exception == "Action notify.mobile_app_nophone not found"
+    # gone rather than unreachable, so a repair says so, instead of a snooze hiding it
+    assert ctx.snoozer.snoozes == {}
+    from homeassistant.helpers import issue_registry as ir
+
+    issues = [i for (domain, i) in ir.async_get(hass).issues if domain == DOMAIN and "mobile_app" in i]
+    assert issues == ["recipient_bidey_in_mobile_app_mobile_app_nophone_not_found"]

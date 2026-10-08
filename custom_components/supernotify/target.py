@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar
 
-import voluptuous as vol
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -18,6 +17,7 @@ from homeassistant.core import valid_entity_id
 from homeassistant.helpers.redact import partial_redact
 
 from .common import ensure_list
+from .compat import vol
 from .const import (
     ATTR_EMAIL,
     ATTR_MOBILE_APP_ID,
@@ -253,7 +253,7 @@ class Target:
     @classmethod
     def is_email(cls, target: str) -> bool:
         try:
-            return vol.Email()(target) is not None  # type: ignore[call-arg] # ty: ignore[missing-argument]
+            return vol.Email()(target) is not None  # type: ignore[call-arg]
         except vol.Invalid:
             return False
 

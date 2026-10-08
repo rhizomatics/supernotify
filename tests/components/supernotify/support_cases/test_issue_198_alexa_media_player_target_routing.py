@@ -31,7 +31,7 @@ class FakeAlexaMediaNotifyService:
         if call.service in self.registered_targets:
             target = [self.registered_targets[call.service]]
         else:
-            target = call.data.get("target")
+            target = call.data.get("target")  # type: ignore[assignment]
         self.calls.append({"service": call.service, "target": target})
 
 
@@ -96,7 +96,7 @@ async def support_case_fixture(hass: HomeAssistant):
           media_auto_pause: false
 """,
     )
-    ctx.fake_alexa_service = svc  # type: ignore[attr-defined] # ty: ignore[unresolved-attribute]
+    ctx.fake_alexa_service = svc  # type: ignore[attr-defined]
     await ctx.test_initialize()
     return ctx
 
@@ -111,7 +111,7 @@ async def test_kitchen_delivery_calls_generic_service_with_kitchen_target(suppor
     call = envelope.calls[0]  # type: ignore
     assert call.domain == "notify"
     assert call.action == "alexa_media", "should resolve to the generic, target-respecting service, not a per-device alias"
-    assert call.action_data["target"] == ["media_player.kitchen_echo"]  # type: ignore[index] # ty: ignore[not-subscriptable]
+    assert call.action_data["target"] == ["media_player.kitchen_echo"]  # type: ignore[index]
 
     assert support_case_fixture.fake_alexa_service.calls == [
         {"service": "alexa_media", "target": ["media_player.kitchen_echo"]}
@@ -133,7 +133,7 @@ async def test_bedroom_and_office_deliveries_route_to_their_own_targets(support_
         envelope = uut.deliveries[delivery][EnvelopeOutcome.SUCCESS][0]  # type: ignore
         call = envelope.calls[0]  # type: ignore
         assert call.action == "alexa_media"
-        assert call.action_data["target"] == [entity_id]  # type: ignore[index]  # ty: ignore[not-subscriptable]
+        assert call.action_data["target"] == [entity_id]  # type: ignore[index]
 
     assert [c["service"] for c in support_case_fixture.fake_alexa_service.calls] == ["alexa_media", "alexa_media"]
     assert [c["target"] for c in support_case_fixture.fake_alexa_service.calls] == [

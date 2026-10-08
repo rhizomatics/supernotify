@@ -4,13 +4,36 @@
   You're not viewing the latest version.
 
 <a href="{{ '../' ~ base_url }}">
- Given this value for the href attribute, the link will always redirect to the root of your site, which will then redirect to the latest version. This ensures that older versions of your site do not depend on a specific alias, e.g. latest, to allow for changing the alias later on without breaking earlier versions.
+ This site uses versioned pages, so a different set of docs consistent with each released version.
 
 <strong>
 Click here to go to latest.
 </strong>
 </a>
 
+{% endblock %}
+
+{% block extrahead %}
+  {#- One static social card per language, in place of the social plugin's card per page -#}
+  {% if page %}
+  {% set card_title = config.site_name if page.is_homepage else (page.meta.title or page.title) | striptags ~ " - " ~ config.site_name %}
+  {% set card_description = page.meta.description or config.site_description %}
+  {% set card_lang = page.url.split("/")[0] %}
+  {% set card_suffix = "-" ~ card_lang if card_lang in ["de", "es", "fr", "hi", "it", "ja", "nl", "pl", "pt", "zh-Hans"] else "" %}
+  {% set card_image = config.site_url.rstrip("/") ~ "/assets/images/social-card" ~ card_suffix ~ ".png" %}
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ card_title }}">
+  <meta property="og:description" content="{{ card_description }}">
+  <meta property="og:image" content="{{ card_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ card_title }}">
+  <meta name="twitter:description" content="{{ card_description }}">
+  <meta name="twitter:image" content="{{ card_image }}">
+  {% endif %}
 {% endblock %}
 
 {% block content %}

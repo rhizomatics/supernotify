@@ -23,7 +23,7 @@
 
 ### ALTERAÇÃO IMPORTANTE v2
 
->> O suporte para Python 3.13 e para versões do Home Assistant anteriores à 2026.3.0 (a primeira a suportar apenas a v3.14) será descontinuado quando o Home Assistant 2026.10 for lançado. O Supernotify continuará a ser testado com versões compatíveis mais antigas do Home Assistant.
+>> O suporte para Python 3.13 e para versões do Home Assistant anteriores à 2026.3.0 (a primeira a suportar apenas a v3.14) foi descontinuado quando o Home Assistant 2026.10 foi lançado. O Supernotify continuará a ser testado com versões compatíveis mais antigas do Home Assistant.
 
 >> A versão `2.0.0` do SuperNotify passa a usar uma configuração nativa da interface do Home Assistant ('ConfigFlow'). Se já tiver uma configuração simples, tudo será migrado automaticamente por si e não será necessário YAML.
 
@@ -49,7 +49,7 @@ Supernotify é um componente personalizado disponível através do [Home Assista
 
 ## Documentação
 
-Experimente o [Início Rápido](https://supernotify.rhizomatics.org.uk/getting_started/), a explicação dos [conceitos fundamentais](https://supernotify.rhizomatics.org.uk/pt/concepts/) e os [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponíveis. [Notificando](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra como chamar o Supernotify a partir de automações ou da página de ferramentas do desenvolvedor.
+Experimente o [Início Rápido](https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/), a explicação dos [conceitos fundamentais](https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/basic_concepts/) e os [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponíveis. [Notificando](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra como chamar o Supernotify a partir de automações ou da página de ferramentas do desenvolvedor.
 
 Há muitas [receitas](https://supernotify.rhizomatics.org.uk/recipes/) com exemplos de configuração, ou navegue por [tags](https://supernotify.rhizomatics.org.uk/tags/).
 

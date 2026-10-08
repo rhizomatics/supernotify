@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -17,15 +16,18 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.util import slugify
 
+from .compat import vol
+
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable
+    from collections.abc import Awaitable, Callable, Iterable
 
     import aiohttp
     from anyio import Path
@@ -50,8 +52,9 @@ from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.components.trace.util import async_store_trace
+from homeassistant.const import ATTR_DOMAIN, ATTR_SERVICE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED
 from homeassistant.core import Context as HomeAssistantContext
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import Event, HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import ConditionError, ConditionErrorContainer, HomeAssistantError, IntegrationError
 from homeassistant.helpers import condition as condition_helper
 from homeassistant.helpers import device_registry as dr
@@ -80,6 +83,8 @@ ATTR_APP_VERSION = "app_version"
 ATTR_DEVICE_NAME = "device_name"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
+
+MOBILE_APP_DOMAIN = "mobile_app"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -211,8 +216,40 @@ class HomeAssistantAPI:
                 _LOGGER.error("SUPERNOTIFY Failed to unsubscribe: %s", e)
         _LOGGER.debug("SUPERNOTIFY Disconnection complete")
 
-    def subscribe_event(self, event: EventType | str, callback: Callable) -> None:
+    def subscribe_event(self, event: EventType[Any] | str, callback: Callable) -> None:
         self.unsubscribes.append(self._hass.bus.async_listen(event, callback))
+
+    def subscribe_mobile_app_changes(self, on_change: Callable[[], Awaitable[None]], cooldown: float = 10) -> None:
+        """Call `on_change` once things settle after a mobile_app device, or its notify action, comes or goes
+
+        Re-pairing or renaming a phone changes its notify action, and HA registers that action a
+        little after the device itself, so both kinds of change are debounced into one call
+        """
+        debouncer: Debouncer = Debouncer(self._hass, _LOGGER, cooldown=cooldown, immediate=False, function=on_change)
+
+        @callback
+        def on_device(event: Event) -> None:
+            device_id: str | None = event.data.get("device_id")
+            if event.data.get("action") == "remove":
+                relevant: bool = device_id in self._mobile_apps_by_device_id
+            else:
+                dev_reg: DeviceRegistry | None = self._device_registry()
+                device = dev_reg.async_get(device_id) if dev_reg and device_id else None
+                relevant = device is not None and any(i and i[0] == MOBILE_APP_DOMAIN for i in device.identifiers)
+            if relevant:
+                debouncer.async_schedule_call()
+
+        @callback
+        def on_service(event: Event) -> None:
+            if event.data.get(ATTR_DOMAIN) == "notify" and str(event.data.get(ATTR_SERVICE, "")).startswith(
+                f"{MOBILE_APP_DOMAIN}_"
+            ):
+                debouncer.async_schedule_call()
+
+        self.subscribe_event(dr.EVENT_DEVICE_REGISTRY_UPDATED, on_device)
+        self.subscribe_event(EVENT_SERVICE_REGISTERED, on_service)
+        self.subscribe_event(EVENT_SERVICE_REMOVED, on_service)
+        self.unsubscribes.append(debouncer.async_cancel)
 
     def subscribe_state(self, entity_ids: str | Iterable[str], callback: Callable) -> None:
         self.unsubscribes.append(async_track_state_change_event(self._hass, entity_ids, callback))
@@ -234,6 +271,11 @@ class HomeAssistantAPI:
 
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)
+
+    def mobile_app_action_exists(self, mobile_app_id: str) -> bool:
+        """Whether a mobile app can be notified, by its notify action or its notify entity"""
+        action: str = mobile_app_id.removeprefix("notify.")
+        return self.has_service("notify", action) or self.get_state(f"notify.{action}") is not None
 
     def entity_ids_for_domain(self, domain: str) -> list[str]:
         return self._hass.states.async_entity_ids(domain)
@@ -277,6 +319,17 @@ class HomeAssistantAPI:
         if reg_entry:
             names.extend(a for a in reg_entry.aliases if isinstance(a, str))
         return {spoken_name(n) for n in names}
+
+    def sender_entity_ids(self, ha_context: HomeAssistantContext | None) -> list[str]:
+        """The automations and scripts whose current run carries this context, i.e. what sent a notification.
+
+        An automation or script writes its state with the context of the run it starts, and the actions
+        of that run carry the same context (a script started by an automation gets it as parent), so
+        the sender is the automation or script whose state has the context's id or its parent's"""
+        if ha_context is None:
+            return []
+        ids: set[str] = {i for i in (ha_context.id, ha_context.parent_id) if i}
+        return [s.entity_id for s in self._hass.states.async_all(("automation", "script")) if s.context.id in ids]
 
     def entity_ids_named(self, name: str) -> list[str]:
         """Entities that can be called this, see entity_spoken_names()"""
@@ -500,7 +553,7 @@ class HomeAssistantAPI:
             service_objs: dict[str, Service] = self._hass.services.async_services_for_domain(domain)
             if service_objs:
                 for service, domain_obj in service_objs.items():
-                    if domain_obj.job and domain_obj.job.target:
+                    if domain_obj.job is not None:
                         target = domain_obj.job.target
                         bound_self = getattr(target, "__self__", None)
                         target_module: str | None = bound_self.__module__ if bound_self is not None else target.__module__
@@ -689,6 +742,9 @@ class HomeAssistantAPI:
             is_fixable=is_fixable,
         )
 
+    def delete_issue(self, issue_id: str) -> None:
+        ir.async_delete_issue(self._hass, DOMAIN, issue_id)
+
     def mobile_app_by_tracker(self, device_tracker: str) -> TrackedDeviceDetails | None:
         return self._mobile_apps_by_tracker.get(device_tracker)
 
@@ -709,9 +765,14 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to discover devices for - no entity registry found")
             return
 
+        # rebuilt from scratch, so a device that has gone, or been re-paired under a new name, goes too
+        self._mobile_apps_by_tracker.clear()
+        self._mobile_apps_by_app_id.clear()
+        self._mobile_apps_by_device_id.clear()
+        self._mobile_apps_by_user_id.clear()
         found: int = 0
         complete: int = 0
-        for mobile_app_info in self.discover_devices("mobile_app"):
+        for mobile_app_info in self.discover_devices(MOBILE_APP_DOMAIN):
             try:
                 mobile_app_id: str = f"mobile_app_{slugify(mobile_app_info.device_name)}"
                 device_tracker: str | None = None

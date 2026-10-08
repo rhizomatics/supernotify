@@ -16,6 +16,7 @@ from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
 
 ROOT = Path(__file__).parents[3]
 ACTION = "supernotify.notify"
+NOTIFY_FIELDS: frozenset[str] = frozenset(str(key) for key in NOTIFY_ACTION_SCHEMA.validators[-1].schema)
 # a sanity floor, so a parsing regression can't silently turn this into a test of nothing
 MIN_EXAMPLES = 20
 
@@ -124,3 +125,24 @@ def test_docs_example_does_not_use_legacy_nested_data(payload: dict[str, Any]) -
     # unpruned: only keys matter here, and a templated value must not hide the key it belongs to
     if lift_legacy_nested_data(payload) != payload:  # not an assert - diffing large payloads can crash xdist workers
         pytest.fail("Supernotify fields belong at top level, not inside `data:`")
+
+
+def _allowed_keys(example_id: str) -> set[str]:
+    """Keys a doc lets through for all its examples, with `<!-- docs-check: allow-keys key1 key2 -->`"""
+    text = (ROOT / example_id.split(":", maxsplit=1)[0]).read_text()
+    return {
+        key
+        for match in re.finditer(r"docs-check: allow-keys ([\w ,]+)", text)
+        for key in re.split(r"[ ,]+", match.group(1))
+        if key
+    }
+
+
+@pytest.mark.parametrize(("payload", "allowed"), [pytest.param(p.values[0], _allowed_keys(p.id), id=p.id) for p in EXAMPLES])
+def test_docs_example_has_no_unknown_keys(payload: dict[str, Any], allowed: set[str]) -> None:
+    """The action lets unknown keys through, so a misspelt one in an example is silently ignored by anyone copying it"""
+    unknown = sorted(set(payload) - NOTIFY_FIELDS - allowed)
+    if unknown:
+        pytest.fail(
+            f"docs example has keys supernotify.notify doesn't know: {unknown}. Fix, or allow with docs-check: allow-keys"
+        )

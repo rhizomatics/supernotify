@@ -209,6 +209,11 @@ class Recipient:
             c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])
         }
         self.disabled_mobile_app_ids: list[str] = [k for k, v in self.mobile_devices.items() if not v.get(CONF_ENABLED, True)]
+        # as configured, to start again from each time the discovered devices are refreshed
+        self._configured_mobile_devices: dict[str, dict[str, str | list[str] | None]] = {
+            k: dict(v) for k, v in self.mobile_devices.items()
+        }
+        self._mobile_app_issues: set[str] = set()
         _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict(redact=True))
 
     def initialize(self, people_registry: PeopleRegistry) -> None:
@@ -218,6 +223,30 @@ class Recipient:
             self._target.extend(ATTR_EMAIL, self.email)
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
+        self.resolve_mobile_devices(people_registry)
+        if not self.user_id or not self.alias:
+            attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
+            if attrs:
+                if attrs.get(ATTR_USER_ID) and isinstance(attrs.get(ATTR_USER_ID), str):
+                    self.user_id = attrs.get(ATTR_USER_ID)
+                if attrs.get(ATTR_ALIAS) and isinstance(attrs.get(ATTR_ALIAS), str):
+                    self.alias = attrs.get(ATTR_ALIAS)
+                if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
+                    self.alias = attrs.get(ATTR_FRIENDLY_NAME)
+                _LOGGER.debug("SUPERNOTIFY Person attrs found for %s: %s,%s", self.entity_id, self.alias, self.user_id)
+            else:
+                _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
+        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict(redact=True))
+
+    def on_notification(self, context: Context | None = None) -> None:
+        # Record that a notification has occurred for this person
+        if self.notify_entity is not None:
+            self.notify_entity.record_notification(context)
+
+    def resolve_mobile_devices(self, people_registry: PeopleRegistry) -> None:
+        """The configured mobile devices plus those discovered now - again whenever one is re-paired or renamed"""
+        previous: list[str] = list(self.mobile_devices)
+        self.mobile_devices = {k: dict(v) for k, v in self._configured_mobile_devices.items()}
         if self.mobile_discovery:
             # a known user_id (explicitly configured, or already backfilled below from a prior
             # initialize()) resolves devices directly, without needing a Person entity at all
@@ -246,26 +275,30 @@ class Recipient:
                 )
             else:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
+        self._target.remove(ATTR_MOBILE_APP_ID, previous)
         if self.mobile_devices:
             self._target.extend(ATTR_MOBILE_APP_ID, list(self.enabled_mobile_devices.keys()))
-        if not self.user_id or not self.alias:
-            attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
-            if attrs:
-                if attrs.get(ATTR_USER_ID) and isinstance(attrs.get(ATTR_USER_ID), str):
-                    self.user_id = attrs.get(ATTR_USER_ID)
-                if attrs.get(ATTR_ALIAS) and isinstance(attrs.get(ATTR_ALIAS), str):
-                    self.alias = attrs.get(ATTR_ALIAS)
-                if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
-                    self.alias = attrs.get(ATTR_FRIENDLY_NAME)
-                _LOGGER.debug("SUPERNOTIFY Person attrs found for %s: %s,%s", self.entity_id, self.alias, self.user_id)
-            else:
-                _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
-        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict(redact=True))
+        self.check_mobile_actions(people_registry.hass_api)
 
-    def on_notification(self, context: Context | None = None) -> None:
-        # Record that a notification has occurred for this person
-        if self.notify_entity is not None:
-            self.notify_entity.record_notification(context)
+    def check_mobile_actions(self, hass_api: HomeAssistantAPI) -> None:
+        """Raise a repair for an enabled mobile device with no notify action, and clear it once that's resolved"""
+        missing: set[str] = set()
+        for mobile_app_id in self.enabled_mobile_devices:
+            action: str = mobile_app_id.removeprefix("notify.")
+            if not hass_api.mobile_app_action_exists(action):
+                issue_id: str = f"recipient_{self.name}_mobile_app_{action}_not_found"
+                missing.add(issue_id)
+                if issue_id not in self._mobile_app_issues:
+                    _LOGGER.warning("SUPERNOTIFY No notify action found for %s mobile device %s", self.entity_id, action)
+                hass_api.raise_issue(
+                    issue_id,
+                    issue_key="recipient_mobile_app_not_found",
+                    issue_map={"recipient": self.entity_id, "mobile_app": action},
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/people/",
+                )
+        for issue_id in self._mobile_app_issues - missing:
+            hass_api.delete_issue(issue_id)
+        self._mobile_app_issues = missing
 
     @property
     def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:
@@ -395,6 +428,13 @@ class PeopleRegistry:
             recipient.initialize(self)
 
             self.people[recipient.entity_id] = recipient
+
+    def refresh_mobile_devices(self) -> None:
+        """Rediscover every recipient's mobile devices, after one was added, removed, re-paired or renamed"""
+        self.hass_api.build_mobile_app_cache()
+        for recipient in self.people.values():
+            recipient.resolve_mobile_devices(self)
+            self.async_refresh_entity(recipient.name)
 
     def register_entity(self, name: str, entity: SupernotifyRecipientBinarySensor) -> None:
         """Called by SupernotifyRecipientBinarySensor.async_added_to_hass()."""

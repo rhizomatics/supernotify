@@ -13,7 +13,7 @@ When the following versions fall out of the 6-month ago window for testing, here
 
 ### 2026.2
 
-Remove Py3.13 compatibility and testing
+Remove Py3.13 compatibility - testing dropped with the 2026.10 release, code workarounds such as `RecipientNotifyEntity` left for a cooling off period
 Pillow >=12.1 - switch to get_flattened_data
 
 ### 2026.8
@@ -94,6 +94,10 @@ Revisit the HTML template, review if more than 1 needed, and ways to make it mor
 
 Add a target category to allow auto inclusion
 
+### Alert
+
+Review integration with `alert` - align live activities where possible with its behaviour and syntax, add recipe, make sure it works well with `notifiers`.
+
 ## Delivery and Target Selection
 
 ### Inclusion Default
@@ -127,7 +131,7 @@ Might be scope for having 'real time' deliveries sequenced ahead of async ones, 
 
 ### Extended UI Configuration
 
-Second and further phases identified at [ConfigFlow](./rfcs/configflow_approach.md)
+Second and further phases identified at [ConfigFlow](./rfcs/0001-configflow_approach.md)
 
 ### Respond to Dynamic Home Assistant Changes
 
@@ -160,7 +164,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-See [Packages](./rfcs/packages.md), starting with [Frigate SuperNotifier](./rfcs/frigate_supernotifier.md). The Supernotify changes needed first are in [Package Support](./rfcs/package_support.md).
+Companion HACS components, with working term [Auto Notifier](./rfcs/0003-auto_notifier.md), starting with an [MVP](./rfcs/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/0006-frigate_auto_notifier.md).
+The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/0003a-auto_notifier_support.md) though expected to be refined after the MVP.
 
 ### UI
 
@@ -170,7 +175,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Packages](./rfcs/packages.md)
+- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/0001-auto_notifier.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 
@@ -191,8 +196,8 @@ Still to do:
 
 - Gather beta feedback on how well agents choose and fill in the tools, and how often the sentences are understood, then decide what to keep and whether to leave beta.
 - The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so on older HA, still
-  allowed by the `hacs.json` minimum of 2025.12.2, the tools just don't appear. Pin down the release and
-  say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+  allowed by the `hacs.json` minimum of 2026.4.0, the tools just don't appear. Pin down the release and
+  say so in the docs.
 - Sentences in other languages, registered for the language being spoken. Each needs wording from a native speaker, and the replies translated too.
 - More sentences, if the feedback asks for them, such as snoozing one delivery or camera.
 - The help tool searches the latest documentation, which can differ from the installed release. mike
@@ -256,12 +261,14 @@ Its possible these are really the same thing as options, but lacking the documen
 
 Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
 
+Entire missed deliveries are tracked but not missed targets. Most transports are fire and forget so don't know a target has failed - mobile_push is one that does if the `action` has gone away, and it is an important transport. This would include tracking in the logs and archived notification a list of failed targets, with reasons, and also flagging the entire delivery as 'partial' if an explicitly requested mobile_app couldn't be reached ( notification would be a `success` if multiple implicit targets generated and 1 of them failed)
+
 ## Completed Roadmap
 
-- [ConfigFlow](./rfcs/configflow_approach.md)
+- [ConfigFlow](./rfcs/0001-configflow_approach.md)
    - v2.0.0
    - Partially completed, basic YAML only
-- [Deliveries and Transports](./rfcs/deliveries_and_transports.md)
+- [Deliveries and Transports](./rfcs/0002-deliveries_and_transports.md)
    - v2.5.0
 - Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
    - v2.8.0

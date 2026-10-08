@@ -313,11 +313,20 @@ class Snoozer:
             )
 
     def purge_snoozes(self) -> None:
-        to_del: list[str] = [k for k, v in self.snoozes.items() if not v.active()]
+        to_del: list[str] = [k for k, v in self.snoozes.items() if not v.active() or self._mobile_app_gone(v)]
         for k in to_del:
             del self.snoozes[k]
         if to_del:
             self._persist()
+
+    def _mobile_app_gone(self, snooze: Snooze) -> bool:
+        """A snooze on a mobile device whose notify action no longer exists, e.g. re-paired under a new name"""
+        return (
+            snooze.target_type == QualifiedTargetType.MOBILE
+            and isinstance(snooze.target, str)
+            and self.hass_api is not None
+            and not self.hass_api.mobile_app_action_exists(snooze.target)
+        )
 
     def clear(self) -> int:
         cleared: int = len(self.snoozes)
@@ -359,6 +368,9 @@ class Snoozer:
                         _LOGGER.warning("SUPERNOTIFY Unhandled target type %s", snooze.target_type)
 
         return inscope_snoozes
+
+    def has_tag_snooze(self) -> bool:
+        return any(s.active() and s.target_type == QualifiedTargetType.TAG for s in self.snoozes.values())
 
     def is_global_snooze(self, priority: str = PRIORITY_MEDIUM) -> bool:
         for snooze in self.snoozes.values():
@@ -423,15 +435,26 @@ class Snoozer:
 
                 recipients.remove(ATTR_PERSON_ID, recipients_to_remove)
 
-            if snooze.target_type == QualifiedTargetType.MOBILE:
-                to_remove: list[str] = []
-                for recipient in recipients.mobile_app_ids:
-                    if recipient == snooze.target:
-                        _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.std_recipient(), snooze.target)
-                        to_remove.append(recipient)
-                if to_remove:
-                    recipients.remove(ATTR_MOBILE_APP_ID, to_remove)
-        return recipients
+        return self.filter_mobile_app_ids(recipients, priority, delivery)
+
+    def filter_mobile_app_ids(self, target: Target, priority: str, delivery: Delivery) -> Target:
+        """Drop snoozed mobile devices, leaving everything else - person_ids included - in place
+
+        Applied to the action's own targets, and again to each recipient's addresses as the
+        person is resolved, since that's the first point a person's mobile devices are known
+        """
+        snoozed: set[str] = {
+            str(s.target)
+            for s in self.current_snoozes(priority, delivery)
+            if s.target_type == QualifiedTargetType.MOBILE and s.target
+        }
+        if not snoozed:
+            return target
+        to_remove: list[str] = [m for m in target.mobile_app_ids if m.removeprefix("notify.") in snoozed]
+        if not to_remove:
+            return target
+        _LOGGER.debug("SUPERNOTIFY Snoozing mobile devices %s", to_remove)
+        return target - Target({ATTR_MOBILE_APP_ID: to_remove})
 
 
 def _snoozes_subject(snooze: Snooze, camera_entity_id: str | None, tags: set[str] | None) -> bool:

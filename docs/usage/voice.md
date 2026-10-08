@@ -81,13 +81,13 @@ or use the generic delivery overrides
 There are also options to combine the title into the message, or drop it out altogether that may work better for you
 
 ```yaml
-  - action: supernotify.notify
-    data:
-        title: Home Security
-        message: Somebody has triggered the motion detector at the front porch
-        # any transport, like a voice assistant, that only looks at `message` will prefix
-        # the message with the title. Alternatively, `use_title` uses only the title
-        message_usage: combine_title
+delivery:
+  alexa_announce:
+    transport: alexa_devices
+    options:
+      # any transport, like a voice assistant, that only looks at `message` will prefix
+      # the message with the title. Alternatively, `use_title` uses only the title
+      message_usage: combine_title
 ```
 
 ### Noises

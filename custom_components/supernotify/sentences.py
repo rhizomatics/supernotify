@@ -24,6 +24,7 @@ from .schema import EnvelopeOutcome
 
 if TYPE_CHECKING:
     from .engine import SupernotifyEngine
+    from .notification import Notification
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +83,11 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
         ],
         # "mute ... until I say" is left to snooze_until, so it doesn't match both
         "silence": ["(silence|mute) [all] [my] notifications", "silence [all] [my] notifications until I say"],
+        # the way out when an alert that is meant to be critical keeps going off
+        "silence_everything": [
+            "(silence|mute) [all] [my] notifications (even|including) [the] critical [ones|alerts|notifications]",
+            "(silence|mute) [all] [my] notifications [and] critical [ones|alerts|notifications] too",
+        ],
         "resume": [
             "(unsnooze|unmute|resume) [all] [my] notifications",
             "turn [all] [my] notifications back on",
@@ -118,6 +124,9 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             ),
         ],
         "silence": ["(silenzia|zittisci|disattiva) [tutte] [le] [mie] notifiche [finché non lo dico|fino a nuovo ordine]"],
+        "silence_everything": [
+            "(silenzia|zittisci|disattiva) [tutte] [le] [mie] notifiche (anche|comprese) [quelle] critiche",
+        ],
         "resume": [
             "(riattiva|ripristina|riprendi) [tutte] [le] [mie] notifiche",
             "(riaccendi|rimetti) [tutte] [le] [mie] notifiche",
@@ -146,14 +155,26 @@ RESPONSES: dict[str, dict[str, str]] = {
         "resumed_all": "Turned all notifications{about} back on",
         "silenced_yours": "Silenced your notifications{about} until you turn them back on",
         "silenced_all": "Silenced all notifications{about} until you turn them back on",
+        "silenced_everything_yours": "Silenced your notifications, critical ones too, until you turn them back on",
+        "silenced_everything_all": "Silenced all notifications, critical ones too, until you turn them back on",
         "snoozed_yours": "Snoozed your notifications{about} until {until}",
         "snoozed_all": "Snoozed all notifications{about} until {until}",
         "about": " for {tag}",
         "unknown_tag": "I can't find a scenario or entity called {tag}, so nothing was changed",
         "which_camera": "{tag} could be {cameras}. Say which one",
         "no_last": "There haven't been any notifications since Home Assistant started",
-        "last_sent": "At {when}: {message}. Sent by {sent}",
-        "last_not_sent": "At {when}: {message}. It wasn't sent by anything",
+        "last_sent": "At {when}: {message}. Sent via {sent}",
+        "last_not_sent": "At {when}: {message}. It wasn't sent{why}",
+        "why_no_delivery": " because nothing is set up to send it",
+        "why_error": " because of an error",
+        "why_snoozed": " because notifications were snoozed or silenced",
+        "why_dupe": " because it was a duplicate",
+        "why_no_scenario": " because a scenario it needs wasn't active",
+        "why_priority": " because of its priority",
+        "why_delivery_condition": " because its conditions weren't met",
+        "why_occupancy": " because of who was home",
+        "why_transport_disabled": " because the transport is switched off",
+        "why_no_target": " because there was nobody to send it to",
         "unknown_command": "Supernotify doesn't know the command {command}",
     },
     "it": {
@@ -170,14 +191,26 @@ RESPONSES: dict[str, dict[str, str]] = {
         "resumed_all": "Ho riattivato tutte le notifiche{about}",
         "silenced_yours": "Ho silenziato le tue notifiche{about} finché non le riattivi",
         "silenced_all": "Ho silenziato tutte le notifiche{about} finché non le riattivi",
+        "silenced_everything_yours": "Ho silenziato le tue notifiche, anche quelle critiche, finché non le riattivi",
+        "silenced_everything_all": "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi",
         "snoozed_yours": "Ho posticipato le tue notifiche{about} fino alle {until}",
         "snoozed_all": "Ho posticipato tutte le notifiche{about} fino alle {until}",
         "about": " di {tag}",
         "unknown_tag": "Non trovo nessuno scenario o entità chiamato {tag}, quindi non ho cambiato niente",
         "which_camera": "{tag} può essere {cameras}. Dimmi quale",
         "no_last": "Non ci sono state notifiche da quando Home Assistant si è avviato",
-        "last_sent": "Alle {when}: {message}. Inviata da {sent}",
-        "last_not_sent": "Alle {when}: {message}. Non è stata inviata da nessun canale",
+        "last_sent": "Alle {when}: {message}. Inviata tramite {sent}",
+        "last_not_sent": "Alle {when}: {message}. Non è stata inviata{why}",
+        "why_no_delivery": " perché niente è configurato per inviarla",
+        "why_error": " a causa di un errore",
+        "why_snoozed": " perché le notifiche erano posticipate o silenziate",
+        "why_dupe": " perché era un duplicato",
+        "why_no_scenario": " perché uno scenario richiesto non era attivo",
+        "why_priority": " per via della sua priorità",
+        "why_delivery_condition": " perché le sue condizioni non erano soddisfatte",
+        "why_occupancy": " per via di chi era in casa",
+        "why_transport_disabled": " perché il transport è disattivato",
+        "why_no_target": " perché non c'era nessuno a cui inviarla",
         "unknown_command": "Supernotify non conosce il comando {command}",
     },
 }
@@ -256,6 +289,8 @@ async def async_respond(
         return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(hours=1), subject)
     if command == "silence":
         return _snooze(engine, CommandType.SILENCE, context, language)
+    if command == "silence_everything":
+        return _snooze(engine, CommandType.SILENCE, context, language, everything=True)
     if command == "resume":
         return _snooze(engine, CommandType.NORMAL, context, language, subject=subject)
     return _say(language, "unknown_command", command=command)
@@ -358,15 +393,25 @@ def _snooze(
     language: str,
     snooze_for: dt.timedelta | None = None,
     subject: Subject | None = None,
+    everything: bool = False,
 ) -> str:
     """Snooze, silence or resume everything, or a camera or tag, for the person asking, or for everyone
     if they aren't known"""
     person_id: str | None = engine.context.people_registry.person_id_for_user_id(context.user_id)
     recipient_type = RecipientType.USER if person_id else RecipientType.EVERYONE
-    target_type: TargetType = subject.target_type if subject else GlobalTargetType.EVERYTHING
+    # "silence" said at bedtime with nothing named still lets critical alerts through - nobody saying it
+    # means the smoke alarm too, so critical ones are held back only when asked for ("even critical").
+    # Resuming clears both kinds, so a snooze of everything can still be undone.
+    target_type: TargetType
+    if subject:
+        target_type = subject.target_type
+    else:
+        target_type = GlobalTargetType.EVERYTHING if everything else GlobalTargetType.NONCRITICAL
     engine.context.snoozer.register_snooze(
         cmd, target_type, subject.target if subject else None, recipient_type, person_id, snooze_for, reason="Voice command"
     )
+    if cmd == CommandType.NORMAL and not subject:
+        engine.context.snoozer.register_snooze(cmd, GlobalTargetType.EVERYTHING, None, recipient_type, person_id, None)
     whose = "yours" if person_id else "all"
     about: str = ""
     if subject:
@@ -377,7 +422,7 @@ def _snooze(
     if cmd == CommandType.NORMAL:
         return _say(language, f"resumed_{whose}", about=about)
     if cmd == CommandType.SILENCE:
-        return _say(language, f"silenced_{whose}", about=about)
+        return _say(language, f"silenced_everything_{whose}" if everything else f"silenced_{whose}", about=about)
     until = dt_util.as_local(dt_util.now() + (snooze_for or engine.context.snoozer.snooze_period))
     return _say(language, f"snoozed_{whose}", about=about, until=_clock(until, language))
 
@@ -397,4 +442,17 @@ def _last(engine: SupernotifyEngine, language: str) -> str:
     sent = [name for name, outcomes in notification.deliveries.items() if outcomes.get(EnvelopeOutcome.SUCCESS)]
     if sent:
         return _say(language, "last_sent", when=when, message=notification.message, sent=", ".join(sent))
-    return _say(language, "last_not_sent", when=when, message=notification.message)
+    return _say(language, "last_not_sent", when=when, message=notification.message, why=_why_not_sent(notification, language))
+
+
+def _why_not_sent(notification: Notification, language: str) -> str:
+    """Why nothing was sent, or nothing to add when there's no plain way to say it"""
+    if notification.failed:
+        return _say(language, "why_error")
+    if not notification.deliveries and not notification._skip_reasons:
+        return _say(language, "why_no_delivery")
+    for reason in notification._skip_reasons:
+        key: str = f"why_{reason.lower()}"
+        if key in RESPONSES[DEFAULT_LANGUAGE]:
+            return _say(language, key)
+    return ""

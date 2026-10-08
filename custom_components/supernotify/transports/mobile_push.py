@@ -432,11 +432,19 @@ class MobilePushTransport(Transport):
                 clear_action_data = dict(action_data)
                 clear_action_data["message"] = "clear_notification"
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=clear_action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=clear_action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
             else:
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
 
             if success:
@@ -445,12 +453,22 @@ class MobilePushTransport(Transport):
                 simple_target = (
                     mobile_target if not Target.is_notify_entity(mobile_target) else mobile_target.replace("notify.", "")
                 )
-                _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
+                # a device whose notify action has gone (removed, or re-paired under another name)
+                # won't come back by waiting, so it gets a repair rather than a snooze that hides it
+                action_gone: bool = not self.context.hass_api.mobile_app_action_exists(simple_target)
+                if action_gone:
+                    _LOGGER.warning("SUPERNOTIFY No notify action for %s, raising a repair", simple_target)
+                else:
+                    _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
                 if self.people_registry:
                     # tie the mobile device back to a recipient for the snoozing API
                     for recipient in self.people_registry.enabled_recipients():
                         for md in recipient.mobile_devices:
-                            if md in (simple_target, mobile_target):
+                            if md not in (simple_target, mobile_target):
+                                continue
+                            if action_gone:
+                                recipient.check_mobile_actions(self.context.hass_api)
+                            else:
                                 self.context.snoozer.register_snooze(
                                     CommandType.SNOOZE,
                                     target_type=QualifiedTargetType.MOBILE,

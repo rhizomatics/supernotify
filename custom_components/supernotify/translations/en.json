@@ -558,8 +558,8 @@
             "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "Python 3.13 support ending soon",
-            "description": "This Home Assistant instance is running Python {python_version}. Supernotify drops support for Python 3.13 (and Home Assistant versions before 2026.3.0) once Home Assistant 2026.10 is released - after that, this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
+            "title": "Python 3.13 no longer supported",
+            "description": "This Home Assistant instance is running Python {python_version}. Supernotify stopped testing against Python 3.13 (and Home Assistant versions before 2026.3.0) when Home Assistant 2026.10 was released. It may continue to work, but this is no longer verified, and this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
         },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",
@@ -588,6 +588,10 @@
         "delivery_invalid_action": {
             "title": "Delivery Has Invalid Action",
             "description": "The delivery {delivery} has an invalid action {action}"
+        },
+        "recipient_mobile_app_not_found": {
+            "title": "Mobile App Not Found for Recipient",
+            "description": "Recipient {recipient} has a mobile device {mobile_app}, but there is no `notify.{mobile_app}` action in Home Assistant, so notifications can't reach it. If the device or its Home Assistant app has gone, remove it from Home Assistant, or disable it in the recipient's `mobile_devices`. Ignore this repair if the device is only away temporarily."
         },
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",

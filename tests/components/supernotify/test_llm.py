@@ -107,7 +107,9 @@ async def _call(hass: HomeAssistant, tool: str, args: dict[str, Any], user_id: s
     # conversation integration for that needs hassil and the rest of the voice stack
     api = await _api(hass, user_id)
     found = next(t for t in api.tools if t.name == tool)
-    return dict(await found.async_call(hass, llm.ToolInput(tool_name=tool, tool_args=args), api.llm_context))
+    result = await found.async_call(hass, llm.ToolInput(tool_name=tool, tool_args=args), api.llm_context)
+    assert isinstance(result, dict)
+    return result
 
 
 def _supernotify_tools(api: llm.APIInstance) -> set[str]:
@@ -526,3 +528,22 @@ async def test_unsnooze_tag_that_no_longer_matches(hass: HomeAssistant) -> None:
 
     assert result["success"] is True
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_leaves_critical_unless_everything_asked(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    await _call(hass, "supernotify__snooze", {"action": "silence"})
+
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.NONCRITICAL
+
+
+async def test_unsnooze_undoes_both_global_snoozes(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "everything"})
+    await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "transport", "name": "generic"})
+
+    await _call(hass, "supernotify__snooze", {"action": "unsnooze"})
+
+    assert [s.target for s in engine.context.snoozer.snoozes.values()] == ["generic"]

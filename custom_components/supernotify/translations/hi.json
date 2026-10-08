@@ -442,6 +442,10 @@
             "title": "डिलीवरी की क्रिया अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य क्रिया {action} है"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "प्राप्तकर्ता के लिए मोबाइल ऐप नहीं मिला",
+            "description": "प्राप्तकर्ता {recipient} के पास मोबाइल डिवाइस {mobile_app} है, लेकिन Home Assistant में `notify.{mobile_app}` क्रिया नहीं है, इसलिए सूचनाएँ उस तक नहीं पहुँच सकतीं। यदि डिवाइस या उसका Home Assistant ऐप अब नहीं है, तो उसे Home Assistant से हटाएँ, या प्राप्तकर्ता के `mobile_devices` में उसे अक्षम करें। यदि डिवाइस केवल अस्थायी रूप से अनुपलब्ध है तो इस मरम्मत को अनदेखा करें।"
+        },
         "delivery_invalid_condition": {
             "title": "डिलीवरी की शर्त अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है: {exception}"
@@ -479,8 +483,8 @@
             "description": "एक टॉप-लेवल `supernotify:` YAML कुंजी में स्वचालित माइग्रेशन पूरा नहीं हो सका: {reason}। डिलीवरी, परिवहन, परिदृश्य, प्राप्तकर्ता, कैमरा, क्रिया समूह, लिंक और स्नूज़ सेटिंग्स को `notify: - platform: supernotify` ब्लॉक से स्वयं एक टॉप-लेवल `supernotify:` कुंजी में ले जाएं (उदाहरण के लिए `supernotify: !include supernotify.yaml`), फिर पुराने ब्लॉक को हटा दें और Home Assistant को पुनः आरंभ करें।"
         },
         "python_313_deprecated": {
-            "title": "Python 3.13 का समर्थन जल्द ही समाप्त हो रहा है",
-            "description": "यह Home Assistant इंस्टेंस Python {python_version} पर चल रहा है। जब Home Assistant 2026.10 जारी होगा, तब Supernotify Python 3.13 (और 2026.3.0 से पहले के Home Assistant संस्करणों) के लिए समर्थन समाप्त कर देगा - उसके बाद, अंतर्निहित Python वातावरण को Python 3.14 या उससे नए संस्करण में अपग्रेड किए बिना इस इंस्टेंस पर Supernotify के आगे के अपडेट इंस्टॉल नहीं किए जा सकेंगे।"
+            "title": "Python 3.13 का समर्थन समाप्त हो गया है",
+            "description": "यह Home Assistant इंस्टेंस Python {python_version} पर चल रहा है। Home Assistant 2026.10 के जारी होने के बाद से Supernotify का Python 3.13 (और 2026.3.0 से पहले के Home Assistant संस्करणों) पर परीक्षण बंद कर दिया गया है। यह आगे भी काम कर सकता है, लेकिन अब इसकी पुष्टि नहीं की जाती, और अंतर्निहित Python वातावरण को Python 3.14 या उससे नए संस्करण में अपग्रेड किए बिना इस इंस्टेंस पर Supernotify के आगे के अपडेट इंस्टॉल नहीं किए जा सकेंगे।"
         },
         "recipient_binary_sensor_deprecated": {
             "title": "प्राप्तकर्ता बाइनरी सेंसर हटा दिए जाएंगे",

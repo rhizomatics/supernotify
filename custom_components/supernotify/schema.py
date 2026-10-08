@@ -4,7 +4,6 @@ import re
 from collections.abc import Callable
 from enum import IntFlag, StrEnum, auto
 
-import voluptuous as vol
 from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
@@ -31,6 +30,7 @@ from homeassistant.helpers.typing import TemplateVarsType
 
 from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
 
+from .compat import vol
 from .const import (
     ATTR_ACTION,
     ATTR_ACTION_GROUPS,
@@ -247,7 +247,7 @@ def validate_scenario_names(scenarios: dict) -> dict:
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
     cv.TARGET_FIELDS
     | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg] # ty: ignore[missing-argument]
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),
         vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
         vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
         vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),

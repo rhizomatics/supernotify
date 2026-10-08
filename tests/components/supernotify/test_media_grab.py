@@ -531,7 +531,7 @@ async def test_snap_image_entity_no_entity(unmocked_hass_api: HomeAssistantAPI, 
 
 
 async def test_snap_image_entity_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]
     result = await snap_image_entity(mock_hass_api, "image.broken", tmp_aiopath, "n1")
     assert result is None
 
@@ -552,7 +552,7 @@ async def test_snap_camera_no_camera_component(unmocked_hass_api: HomeAssistantA
 
 
 async def test_snap_camera_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]
     result = await snap_camera(mock_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
     assert result is None
 
@@ -661,7 +661,7 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
     buf = BytesIO()
     image.save(buf, "jpeg")
     bitmap = buf.getvalue()
-    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined] # ty:ignore[unresolved-attribute]
+    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined]
     output_path = tmp_aiopath / "image" / "out.jpg"
     result = await write_image_from_bitmap(mock_hass_api, bitmap, output_path, ReprocessOption.ALWAYS)
     assert result is not None
@@ -671,7 +671,7 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
 async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
     """Image.open failing on corrupt/non-image bytes falls back to a generic "img"
     extension rather than propagating the exception."""
-    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]
     result = await _detect_image_ext(mock_hass_api, b"not an image")
     assert result == "img"
 
@@ -1030,7 +1030,7 @@ async def test_media_storage_initialize_null_url_prefix_skips_http_registration(
     """media_url_prefix=None: hass_api.register_web_path must not be called."""
     uut = MediaStorage(str(tmp_aiopath), media_url_prefix=None, days=7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]
 
 
 async def test_media_storage_initialize_with_url_prefix_registers_http_path(
@@ -1039,4 +1039,4 @@ async def test_media_storage_initialize_with_url_prefix_registers_http_path(
     """media_url_prefix set: hass_api.register_web_path is called once with correct args."""
     uut = MediaStorage(str(tmp_aiopath), "/supernotify-media", 7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]

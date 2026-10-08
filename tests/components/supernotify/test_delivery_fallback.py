@@ -231,3 +231,30 @@ async def test_fallback_list_on_the_delivery_switch(hass: HomeAssistant) -> None
     assert google is not None
     assert alexa.attributes["fallback"] == ["google", "push"]
     assert "fallback" not in google.attributes
+
+
+async def test_missing_action_is_an_error_without_a_stack_trace(hass: HomeAssistant) -> None:
+    calls = await _setup(hass, {"gone": _delivery("test.gone"), "push": _delivery("test.a")})
+
+    result = await _notify(hass, delivery=["gone", "push"])
+
+    assert len(calls["a"]) == 1
+    assert result["outcome"] == "error"
+    envelope = result["deliveries"]["gone"]["error"][0]
+    assert envelope["delivery_error"] == ["Action test.gone not found"]
+    assert envelope["failedcalls"][0]["exception"] == "Action test.gone not found"
+
+
+async def test_fallback_used_when_the_delivery_action_is_missing(hass: HomeAssistant) -> None:
+    calls = await _setup(
+        hass,
+        {
+            "alexa": _delivery("test.gone", fallback=["google"]),
+            "google": _delivery("test.b", inclusion="fallback"),
+        },
+    )
+
+    result = await _notify(hass, delivery=["alexa"])
+
+    assert len(calls["b"]) == 1
+    assert "success" in result["deliveries"]["google"]

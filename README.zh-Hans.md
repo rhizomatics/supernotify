@@ -23,7 +23,7 @@
 
 ### 重大变更 v2
 
->> 当 Home Assistant 2026.10 发布后，将不再支持 Python 3.13 以及 2026.3.0（首个仅支持 v3.14 的版本）之前的 Home Assistant 版本。Supernotify 将继续针对较旧的兼容 Home Assistant 版本进行测试。
+>> 自 Home Assistant 2026.10 发布起，已不再支持 Python 3.13 以及 2026.3.0（首个仅支持 v3.14 的版本）之前的 Home Assistant 版本。Supernotify 将继续针对较旧的兼容 Home Assistant 版本进行测试。
 
 >> SuperNotify 的 `2.0.0` 版本迁移到了原生的 Home Assistant UI 配置方式（"ConfigFlow"）。如果你已经使用简单配置，系统会自动为你完成迁移，无需任何 YAML。
 
@@ -49,7 +49,7 @@ Supernotify 是通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**
 
 ## 文档
 
-请查阅[快速入门](https://supernotify.rhizomatics.org.uk/getting_started/)、[核心概念](https://supernotify.rhizomatics.org.uk/zh-Hans/concepts/)说明以及可用的[传输适配器](https://supernotify.rhizomatics.org.uk/transports/)。[发送通知](https://supernotify.rhizomatics.org.uk/usage/notifying/)介绍了如何从自动化或开发者工具操作页面调用 Supernotify。
+请查阅[快速入门](https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/)、[核心概念](https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/basic_concepts/)说明以及可用的[传输适配器](https://supernotify.rhizomatics.org.uk/transports/)。[发送通知](https://supernotify.rhizomatics.org.uk/usage/notifying/)介绍了如何从自动化或开发者工具操作页面调用 Supernotify。
 
 还有许多包含示例配置的[使用示例](https://supernotify.rhizomatics.org.uk/recipes/)，也可按[标签](https://supernotify.rhizomatics.org.uk/tags/)浏览。
 

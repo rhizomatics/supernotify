@@ -6,11 +6,12 @@ import datetime as dt
 import json
 import pathlib
 import threading
-from typing import TYPE_CHECKING, TextIO
+from typing import Any, TextIO
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -19,9 +20,6 @@ from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.archive import _filename_period
 
 from .hass_setup_lib import assert_json_round_trip
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
 
 
 def _write_archive_entry(
@@ -103,7 +101,7 @@ async def test_enquire_archive_list(hass: HomeAssistant, tmp_path: pathlib.Path)
         _write_archive_entry(tmp_path, nid, base + dt.timedelta(minutes=i))
 
     await _setup(hass, str(tmp_path))
-    response = await hass.services.async_call(DOMAIN, "enquire_archive", {}, blocking=True, return_response=True)
+    response: Any = await hass.services.async_call(DOMAIN, "enquire_archive", {}, blocking=True, return_response=True)
     assert response["count"] == 3
     assert [e["id"] for e in response["notifications"]] == ["ccc", "bbb", "aaa"]
     assert_json_round_trip(response, label="enquire_archive_list")
@@ -128,7 +126,7 @@ async def test_enquire_archive_outcome_filter(hass: HomeAssistant, tmp_path: pat
     _write_archive_entry(tmp_path, "ok2", base + dt.timedelta(minutes=2), outcome="SUCCESS")
 
     await _setup(hass, str(tmp_path))
-    response = await hass.services.async_call(
+    response: Any = await hass.services.async_call(
         DOMAIN, "enquire_archive", {"outcome": "SUCCESS"}, blocking=True, return_response=True
     )
     assert response["count"] == 2
@@ -145,7 +143,7 @@ async def test_enquire_archive_outcome_filter_real_case(hass: HomeAssistant, tmp
 
     await _setup(hass, str(tmp_path))
     for selector_value, expected in (("ERROR", ["er1"]), ("PARTIAL_DELIVERY", ["pd1"]), ("success", ["ok1"])):
-        response = await hass.services.async_call(
+        response: Any = await hass.services.async_call(
             DOMAIN, "enquire_archive", {"outcome": selector_value}, blocking=True, return_response=True
         )
         assert [e["id"] for e in response["notifications"]] == expected
@@ -187,8 +185,9 @@ async def test_enquire_archive_verbosity(hass: HomeAssistant, tmp_path: pathlib.
 
     await _setup(hass, str(tmp_path))
 
-    async def enquire(**data: str) -> dict:
+    async def enquire(**data: str) -> dict[str, Any]:
         response = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        assert isinstance(response, dict)
         assert_json_round_trip(response, label="enquire_archive_verbosity")
         return response
 
@@ -223,7 +222,7 @@ async def test_enquire_archive_period(hass: HomeAssistant, tmp_path: pathlib.Pat
     await _setup(hass, str(tmp_path))
 
     async def ids(**data: str) -> set[str]:
-        response = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        response: Any = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
         return {e["id"] for e in response["notifications"]}
 
     assert await ids(period="last_hour") == {"mins"}
@@ -250,7 +249,7 @@ async def test_enquire_archive_only_opens_files_in_range(hass: HomeAssistant, tm
 
     # the scan runs in the executor with the builtin open
     with patch("custom_components.supernotify.archive.open", wraps=open, create=True) as tracked_open:
-        response = await hass.services.async_call(
+        response: Any = await hass.services.async_call(
             DOMAIN,
             "enquire_archive",
             {"after": (now - dt.timedelta(hours=6)).isoformat(), "before": (now - dt.timedelta(hours=4)).isoformat()},
@@ -277,7 +276,9 @@ async def test_enquire_archive_reads_files_off_the_event_loop(hass: HomeAssistan
         return open(path, encoding=encoding)
 
     with patch("custom_components.supernotify.archive.open", side_effect=tracked, create=True):
-        response = await hass.services.async_call(DOMAIN, "enquire_archive", {"limit": 10}, blocking=True, return_response=True)
+        response: Any = await hass.services.async_call(
+            DOMAIN, "enquire_archive", {"limit": 10}, blocking=True, return_response=True
+        )
     assert sorted(e["id"] for e in response["notifications"]) == ["one", "three", "two"]
     assert threads
     assert hass.loop_thread_id not in threads

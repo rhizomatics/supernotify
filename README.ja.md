@@ -23,7 +23,7 @@
 
 ### 重要な変更 v2
 
->> Python 3.13 および Home Assistant 2026.3.0（v3.14のみをサポートする最初のバージョン）より前のバージョンのサポートは、Home Assistant 2026.10 のリリースに伴い終了します。Supernotifyは引き続き、互換性のある古いバージョンのHome Assistantに対してテストされます。
+>> Python 3.13 および Home Assistant 2026.3.0（v3.14のみをサポートする最初のバージョン）より前のバージョンのサポートは、Home Assistant 2026.10 のリリースに伴い終了しました。Supernotifyは引き続き、互換性のある古いバージョンのHome Assistantに対してテストされます。
 
 >> SuperNotify の `2.0.0` は、ネイティブの Home Assistant UI 設定（「ConfigFlow」）に移行します。既存のシンプルな設定がある場合、すべて自動的に移行され、YAML は不要になります。
 
@@ -49,7 +49,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 ## ドキュメント
 
-[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/ja/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
+[はじめに](https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/basic_concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
 
 サンプル設定を含む多くの[レシピ](https://supernotify.rhizomatics.org.uk/recipes/)もあります。[タグ](https://supernotify.rhizomatics.org.uk/tags/)で絞り込むこともできます。
 

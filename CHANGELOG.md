@@ -1,3 +1,65 @@
+# v2.14.0
+
+## 🚨 Breaking changes
+As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlier is no longer assured now that 2026.10 is released.
+It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
+
+## ✨ Enhancements
+
+### Assist
+- Snoozing requests don't stop critical notifications, unless the instruction explicit asks to snooze 'even critical'
+### Snoozing
+- A `TAG` snooze also matches the automation or script that sent the notification
+  - Matches by `entity_id`, name or alias
+  - Any notification raised by an automation can be paused on its own (*pause garage closed for an hour*) without adding `entity_id` to the notify call.
+  - The sender is found from the call's context, and a script started by an automation counts both.
+### Mobile
+- Mobile apps are updated now as they are added and removed, not only when the component starts up
+- If a mobile app is removed, its action goes away - this used to lead
+to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
+  -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a repair to remove the device
+- Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
+
+## 🐛 Bug fixes
+- Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
+
+## 📚 Documentation
+- Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
+
+## 📝 Other changes
+- Home Assistant compatibility for testing moved to 2026.4->2026.10 range
+
+# v2.13.2
+
+## 🐛 Bug fixes
+
+### Assist
+- The answer to "What was the last notification" no longer says *It wasn't sent by anything* when no delivery went out, which read as though nothing had raised the notification. It now says it wasn't sent and why, for example because it was a duplicate or notifications were snoozed. Fixed and regression test.
+
+### Simulate
+- If `data` was provided in old `notify` platform style big lump, and auto-migrated to Supernotify's current form, `dry_run` could be lost. Fixed and regression test.
+
+## 📚 Documentation
+- Re-organized developer RFCs proposals
+- New doc test for schema used inside examples, and a few minor fixes
+- Social cards slimmed down, now one card per language, and single translated ones improved
+
+# v2.13.1
+
+## ✨ Enhancements
+- Every envelope is now finger printed with a hash, and this is used to make sure there are no double deliveries if mis-configured, or if there's a new fallback delivery
+
+## 📚 Documentation
+- *Getting Started* and *Concepts* pages now replaced by an expanded **Quick Start** section, and concepts split into *Basic* and *Advanced*, and full translations for the entire section
+- New recipe - [Someone at the Door](./recipes/someone_at_the_door.md)
+- Recipes page now has improved navigation
+- New [Frequently Asked Questions](./faqs.md)
+- Stub re-direct pages to make it easier for agents to find help and reference material despite the versioned setup
+
+
+## 📝 Other changes
+- Automated build fixed to use correct old version of Home Assistant to ensure the target 6 month range (currently back to Python 3.13 support) is tested
+
 # v2.13.0
 
 ## ✨ Enhancements
@@ -463,7 +525,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/rfcs/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/rfcs/0002-deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -720,7 +782,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](developer/rfcs/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](developer/rfcs/0001-configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.

@@ -10,4 +10,4 @@ Documentation is available at https://supernotify.rhizomatics.org.uk with a set 
 https://supernotify.rhizomatics.org.uk/recipes/.
 
 The core concepts in the architecture are described at
-https://supernotify.rhizomatics.org.uk/concepts/, principles at https://supernotify.rhizomatics.org.uk/latest/developer/principles/ and future roadmap at https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/
+https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/, principles at https://supernotify.rhizomatics.org.uk/latest/developer/principles/ and future roadmap at https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/

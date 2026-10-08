@@ -442,6 +442,10 @@
             "title": "La entrega tiene una acción no válida",
             "description": "La entrega {delivery} tiene una acción no válida {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Aplicación móvil no encontrada para el destinatario",
+            "description": "El destinatario {recipient} tiene un dispositivo móvil {mobile_app}, pero no existe la acción `notify.{mobile_app}` en Home Assistant, por lo que las notificaciones no pueden llegarle. Si el dispositivo o su aplicación de Home Assistant ya no existe, elimínalo de Home Assistant o desactívalo en `mobile_devices` del destinatario. Ignora esta reparación si el dispositivo solo falta temporalmente."
+        },
         "delivery_invalid_condition": {
             "title": "La entrega tiene una condición no válida",
             "description": "La entrega {delivery} tiene una condición no válida {condition}: {exception}"
@@ -479,8 +483,8 @@
             "description": "La migración automática a una clave YAML de nivel superior `supernotify:` no pudo completarse: {reason}. Mueve tú mismo la configuración de entregas, transportes, escenarios, destinatarios, cámaras, grupos de acción, enlaces y snooze del bloque `notify: - platform: supernotify` a una clave de nivel superior `supernotify:` (por ejemplo, `supernotify: !include supernotify.yaml`), luego elimina el bloque antiguo y reinicia Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "El soporte de Python 3.13 finaliza pronto",
-            "description": "Esta instancia de Home Assistant está ejecutando Python {python_version}. Supernotify eliminará el soporte para Python 3.13 (y versiones de Home Assistant anteriores a 2026.3.0) cuando se publique Home Assistant 2026.10 - a partir de entonces, esta instancia no podrá instalar más actualizaciones de Supernotify hasta que el entorno de Python subyacente se actualice a Python 3.14 o posterior."
+            "title": "El soporte de Python 3.13 ha finalizado",
+            "description": "Esta instancia de Home Assistant está ejecutando Python {python_version}. Supernotify dejó de probarse con Python 3.13 (y con versiones de Home Assistant anteriores a 2026.3.0) cuando se publicó Home Assistant 2026.10. Puede que siga funcionando, pero ya no se verifica, y esta instancia no podrá instalar más actualizaciones de Supernotify hasta que el entorno de Python subyacente se actualice a Python 3.14 o posterior."
         },
         "recipient_binary_sensor_deprecated": {
             "title": "Los sensores binarios de destinatarios serán eliminados",
