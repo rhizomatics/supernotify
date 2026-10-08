@@ -204,6 +204,23 @@ enquire_archive:
             - standard
             - full
             - daily
+    priority:
+      required: false
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - value: critical
+              label: Critical
+            - value: high
+              label: High
+            - value: medium
+              label: Medium
+            - value: low
+              label: Low
+            - value: minimum
+              label: Minimum
 enquire_last_notification:
   fields:
     diagnostics:

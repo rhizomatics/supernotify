@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Nivel de detalle",
                     "description": "Cuánto devolver de cada notificación: un breve resumen de lo ocurrido, el registro archivado estándar sin la traza de depuración, o todo lo almacenado. Por defecto estándar para una lista y completo para un único 'id'. 'Recuentos por día' devuelve en su lugar los totales de cada día local, sin límite salvo que se indique uno."
+                },
+                "priority": {
+                    "name": "Prioridad",
+                    "description": "Solo notificaciones con una de estas prioridades."
                 }
             }
         }

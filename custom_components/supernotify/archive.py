@@ -67,9 +67,11 @@ def _list_entries_sync(
     after: dt.datetime | None,
     before: dt.datetime | None,
     outcome: str | None,
+    priority: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """The body of ``ArchiveDirectory.list_entries``, run in the executor as one job."""
     entries: list[dict[str, Any]] = []
+    priorities: set[str] | None = {str(p).lower() for p in priority} if priority else None
     try:
         with os.scandir(archive_path) as scan:
             files = [e for e in scan if e.name.endswith(".json") and e.name != WRITE_TEST]
@@ -93,6 +95,8 @@ def _list_entries_sync(
             if before is not None and created is not None and created > before:
                 continue
             if outcome is not None and str(data.get("outcome", "")).lower() != outcome.lower():
+                continue
+            if priorities is not None and str(data.get("priority", "")).lower() not in priorities:
                 continue
             entries.append(data)
     except Exception as exc:
@@ -289,13 +293,16 @@ class ArchiveDirectory(ArchiveDestination):
         after: dt.datetime | None = None,
         before: dt.datetime | None = None,
         outcome: str | None = None,
+        priority: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Return up to *limit* archived notifications, newest first.
 
         Optional *after* and *before* filter by the ``created`` timestamp stored in
         each archive file. Optional *outcome* keeps only notifications whose top-level
         ``outcome`` field matches, ignoring case: the archive stores the ``DeliveryOutcome``
-        value (``"success"``) and the action's selector offers ``"SUCCESS"``.
+        value (``"success"``) and the action's selector offers ``"SUCCESS"``. Optional
+        *priority* keeps only notifications with one of these priorities, also ignoring case.
+        Filters apply before *limit*, so the newest *limit* matching notifications are returned.
 
         Files are named for the minute they were created, so any that fall outside
         *after* and *before* are passed over without being opened.
@@ -305,9 +312,9 @@ class ArchiveDirectory(ArchiveDestination):
         # one executor job for the whole scan: a file at a time through aiofiles is a thread hop per
         # open and per read, seconds for a month of archive
         if self.hass_api is None:  # only a directory made outside Home Assistant, as in some tests
-            return _list_entries_sync(str(self.archive_path), limit, after, before, outcome)
+            return _list_entries_sync(str(self.archive_path), limit, after, before, outcome, priority)
         entries: list[dict[str, Any]] = await self.hass_api.create_job(
-            _list_entries_sync, str(self.archive_path), limit, after, before, outcome
+            _list_entries_sync, str(self.archive_path), limit, after, before, outcome, priority
         )
         return entries
 
@@ -505,8 +512,15 @@ def summarize_by_day(entries: list[dict[str, Any]]) -> dict[str, Any]:
     return {"days": ordered, "count": sum(day["count"] for day in ordered)}
 
 
-def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) -> dict[str, Any]:
-    """Cut an archived or live notification down to what explains what happened to it"""
+def summarize_notification(
+    engine: SupernotifyEngine, contents: dict[str, Any], include_provenance: bool = True
+) -> dict[str, Any]:
+    """Cut an archived or live notification down to what explains what happened to it.
+
+    `missed` counts the deliveries that were asked for but could not go out - the reason
+    a notification is a `partial_delivery` when nothing failed. `delivery_provenance`, why
+    each delivery was enabled or disabled, is about half of a summary: `enquire_archive`
+    leaves it out of its `summary` verbosity, the assistant tools keep it."""
     deliveries: dict[str, dict[str, Any]] = {}
     for name, outcomes in (contents.get("deliveries") or {}).items():
         if skipped := outcomes.get("skipped"):
@@ -535,6 +549,7 @@ def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) 
         "id": contents.get("id"),
         "created": contents.get("created"),
         "outcome": contents.get("outcome"),
+        "missed": contents.get("missed") or 0,
         "message": contents.get("message"),
         "title": condition_variables.get("notification_title"),
         "priority": contents.get("priority"),
@@ -544,8 +559,9 @@ def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) 
             for state, people in (contents.get("occupancy") or {}).items()
         },
         "deliveries": deliveries,
-        "delivery_provenance": contents.get("delivery_provenance") or {},
     }
+    if include_provenance:
+        result["delivery_provenance"] = contents.get("delivery_provenance") or {}
     if contents.get("unknown_names"):
         result["unknown_names"] = contents["unknown_names"]
     if contents.get("_suppression_reason"):

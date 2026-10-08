@@ -24,6 +24,11 @@ to stack traces in logs and the entire notification mapped as an error even if o
 - Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
 - Improved how `critical` priority is applied for Android mobile apps with Do Not Disturb mode
 
+### Archive
+- `enquire_archive` can filter by `priority`, one or more, ignoring case - before `limit`, so a month of archive can be searched for its few critical notifications in one call
+- The `summary` verbosity now includes `missed`, the count of deliveries asked for but not sent, so a `partial_delivery` can be explained from a summary list
+- The `summary` verbosity of `enquire_archive` leaves out `delivery_provenance`, about half its size - it is still there at `standard` and `full`
+
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
 - Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.

@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Verbosity",
                     "description": "How much of each notification to return: a short summary of what happened, the standard archived record without the debug trace, or everything stored. Defaults to standard for a list and full for a single 'id'. 'Counts per day' returns totals for each local day instead, with no limit unless one is given."
+                },
+                "priority": {
+                    "name": "Priority",
+                    "description": "Return only notifications with one of these priorities."
                 }
             }
         }

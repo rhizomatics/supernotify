@@ -165,6 +165,7 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
         vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
+        vol.Optional("priority"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -405,7 +406,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
 
         def at_verbosity(contents: dict[str, Any]) -> dict[str, Any]:
             if verbosity == VERBOSITY_SUMMARY:
-                return summarize_notification(engine, contents)
+                # delivery_provenance is about half of a summary: it stays at standard and full
+                return summarize_notification(engine, contents, include_provenance=False)
             if verbosity == VERBOSITY_STANDARD:
                 return {k: v for k, v in contents.items() if k != "debug_trace"}
             return contents
@@ -425,12 +427,15 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
         period: str | None = call.data.get("period")
+        priority: list[str] | None = call.data.get("priority") or None
         # a date/time given without a time zone is local time
         after = dt_util.as_local(dt.datetime.fromisoformat(after_raw)) if after_raw else None
         before = dt_util.as_local(dt.datetime.fromisoformat(before_raw)) if before_raw else None
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
-        entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
+        entries = await archive.archive_directory.list_entries(
+            limit=limit, after=after, before=before, outcome=outcome, priority=priority
+        )
         if daily:
             return summarize_by_day(entries)
         return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}

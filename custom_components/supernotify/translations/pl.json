@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Szczegółowość",
                     "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'. 'Liczniki dzienne' zwraca zamiast tego sumy dla każdego lokalnego dnia, bez limitu, chyba że zostanie podany."
+                },
+                "priority": {
+                    "name": "Priorytet",
+                    "description": "Tylko powiadomienia z jednym z tych priorytetów."
                 }
             }
         }
