@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Simulação",
-                    "description": "Simular calcula quais entregas seriam usadas e quem alcançariam, sem realmente enviar nada."
+                    "description": "Simular calcula quais entregas seriam usadas e quem alcançariam, sem realmente enviar nada. O modo real é o modo de funcionamento habitual."
                 },
                 "data": {
                     "name": "Dados (legado)",

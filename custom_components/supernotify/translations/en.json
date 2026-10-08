@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Simulation",
-                    "description": "Simulate works out which deliveries would be used and who they would reach, without actually sending anything. Live mode is the usual operating mode."
+                    "description": "Simulate mode works out which deliveries would be used and who they would reach, without actually sending anything. Live mode is the usual operating mode."
                 },
                 "data": {
                     "name": "Data (Legacy)",

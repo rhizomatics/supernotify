@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Simulazione",
-                    "description": "Simula calcola quali consegne verrebbero usate e chi raggiungerebbero, senza inviare realmente nulla."
+                    "description": "Simula calcola quali consegne verrebbero usate e chi raggiungerebbero, senza inviare realmente nulla. La modalità live è la normale modalità operativa."
                 },
                 "data": {
                     "name": "Dati (legacy)",

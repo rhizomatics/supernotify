@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Próba",
-                    "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek."
+                    "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek. Tryb rzeczywisty jest zwykłym trybem działania."
                 },
                 "data": {
                     "name": "Dane (przestarzałe)",

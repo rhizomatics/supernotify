@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Simulation",
-                    "description": "Simuler détermine quelles livraisons seraient utilisées et qui elles atteindraient, sans réellement rien envoyer."
+                    "description": "Simuler détermine quelles livraisons seraient utilisées et qui elles atteindraient, sans réellement rien envoyer. Le mode réel est le mode de fonctionnement habituel."
                 },
                 "data": {
                     "name": "Données (ancien)",

@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Testrun",
-                    "description": "Simuleren berekent welke bezorgingen gebruikt zouden worden en wie ze zouden bereiken, zonder daadwerkelijk iets te verzenden."
+                    "description": "Simuleren berekent welke bezorgingen gebruikt zouden worden en wie ze zouden bereiken, zonder daadwerkelijk iets te verzenden. De live-modus is de gebruikelijke werkingsmodus."
                 },
                 "data": {
                     "name": "Gegevens (verouderd)",
