@@ -4451,7 +4451,7 @@ dev = [
     { name = "codespell" },
     { name = "genbadge", extras = ["all"] },
     { name = "ha-ffmpeg" },
-    { name = "homeassistant-repl", specifier = ">=0.11.1" },
+    { name = "homeassistant-repl" },
     { name = "homeassistant-stubs" },
     { name = "icdiff" },
     { name = "mutagen" },
