@@ -293,3 +293,25 @@ async def test_call_action_missing_required_target(hass: HomeAssistant) -> None:
     assert result is False
     assert envelope.skipped == 1
     assert envelope.skip_reason == SuppressionReason.NO_TARGET
+
+
+async def test_call_action_missing_action(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """A missing action is an error with no stack trace, unless the action is for a single
+    target, when it's left to the transport to handle"""
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
+
+    envelope = Envelope(Delivery("testing", {}, uut), Notification(ctx))
+    assert await uut.call_action(envelope, "notify.gone", {"message": "hello"}) is False
+    assert envelope.error_count == 1
+    assert envelope.delivery_error == ["Action notify.gone not found"]
+    assert uut.error_count == 1
+    assert [r.exc_info for r in caplog.records if "Failed to notify" in r.message] == [None]
+
+    envelope = Envelope(Delivery("testing", {}, uut), Notification(ctx))
+    assert await uut.call_action(envelope, "notify.gone", {"message": "hello"}, single_target=True) is False
+    assert envelope.error_count == 0
+    assert envelope.delivery_error is None
+    assert envelope.failed_calls[0].exception == "Action notify.gone not found"
+    assert uut.error_count == 1

@@ -23,7 +23,7 @@
 
 ### GROTE WIJZIGING v2
 
->> Ondersteuning voor Python 3.13 en Home Assistant-versies ouder dan 2026.3.0 (de eerste versie die alleen v3.14 ondersteunt) komt te vervallen zodra Home Assistant 2026.10 wordt uitgebracht. Supernotify blijft getest worden tegen oudere compatibele Home Assistant-versies.
+>> Ondersteuning voor Python 3.13 en Home Assistant-versies ouder dan 2026.3.0 (de eerste versie die alleen v3.14 ondersteunt) is vervallen sinds de release van Home Assistant 2026.10. Supernotify blijft getest worden tegen oudere compatibele Home Assistant-versies.
 
 >> `2.0.0` van SuperNotify stapt over op een native Home Assistant UI-configuratie ('ConfigFlow'). Als je al een eenvoudige configuratie hebt, wordt alles automatisch voor je gemigreerd en is er geen YAML meer nodig.
 
@@ -49,7 +49,7 @@ Supernotify is een aangepast component beschikbaar via de [Home Assistant Commun
 
 ## Documentatie
 
-Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/nl/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
+Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/basic_concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
 
 Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voorbeeldconfiguraties, of blader op [tags](https://supernotify.rhizomatics.org.uk/tags/).
 

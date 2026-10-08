@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Simulação",
-                    "description": "Simular calcula quais entregas seriam usadas e quem alcançariam, sem realmente enviar nada."
+                    "description": "Simular calcula quais entregas seriam usadas e quem alcançariam, sem realmente enviar nada. O modo real é o modo de funcionamento habitual."
                 },
                 "data": {
                     "name": "Dados (legado)",
@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Nível de detalhe",
                     "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'. 'Contagens por dia' devolve em vez disso os totais de cada dia local, sem limite a menos que seja indicado um."
+                },
+                "priority": {
+                    "name": "Prioridade",
+                    "description": "Apenas notificações com uma destas prioridades."
                 }
             }
         }
@@ -442,6 +446,10 @@
             "title": "A entrega tem uma ação inválida",
             "description": "A entrega {delivery} tem uma ação inválida {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Aplicação móvel não encontrada para o destinatário",
+            "description": "O destinatário {recipient} tem um dispositivo móvel {mobile_app}, mas não existe a ação `notify.{mobile_app}` no Home Assistant, pelo que as notificações não o conseguem alcançar. Se o dispositivo ou a sua aplicação Home Assistant já não existir, remova-o do Home Assistant ou desative-o em `mobile_devices` do destinatário. Ignore esta reparação se o dispositivo estiver ausente apenas temporariamente."
+        },
         "delivery_invalid_condition": {
             "title": "A entrega tem uma condição inválida",
             "description": "A entrega {delivery} tem uma condição inválida {condition}: {exception}"
@@ -479,8 +487,8 @@
             "description": "A migração automática para uma chave YAML de nível superior `supernotify:` não pôde ser concluída: {reason}. Mova você mesmo as definições de entrega, transportes, cenários, destinatários, câmeras, grupos de ação, links e soneca do bloco `notify: - platform: supernotify` para uma chave de nível superior `supernotify:` (por exemplo, `supernotify: !include supernotify.yaml`), depois remova o bloco antigo e reinicie o Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "O suporte a Python 3.13 termina em breve",
-            "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixará de suportar Python 3.13 (e versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 for lançado - a partir daí, esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
+            "title": "O suporte a Python 3.13 terminou",
+            "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixou de ser testado com Python 3.13 (e com versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 foi lançado. Pode continuar a funcionar, mas isso já não é verificado, e esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
         },
         "recipient_binary_sensor_deprecated": {
             "title": "Os sensores binários de destinatário serão removidos",

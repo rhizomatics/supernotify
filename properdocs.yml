@@ -38,6 +38,40 @@ theme:
 extra:
   version:
     provider: mike
+  alternate:
+    - name: English
+      link: ./
+      lang: en
+    - name: Deutsch
+      link: de/
+      lang: de
+    - name: Español
+      link: es/
+      lang: es
+    - name: Français
+      link: fr/
+      lang: fr
+    - name: हिन्दी
+      link: hi/
+      lang: hi
+    - name: Italiano
+      link: it/
+      lang: it
+    - name: 日本語
+      link: ja/
+      lang: ja
+    - name: Nederlands
+      link: nl/
+      lang: nl
+    - name: Polski
+      link: pl/
+      lang: pl
+    - name: Português
+      link: pt/
+      lang: pt
+    - name: 中文（简体）
+      link: zh-Hans/
+      lang: zh-Hans
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/rhizomatics
@@ -65,6 +99,20 @@ plugins:
         - options.md*
 
   - autorefs
+  - redirects:
+      redirect_maps:
+        getting_started.md: quick_start/index.md
+        concepts.md: quick_start/basic_concepts.md
+        de/concepts.md: de/quick_start/basic_concepts.md
+        es/concepts.md: es/quick_start/basic_concepts.md
+        fr/concepts.md: fr/quick_start/basic_concepts.md
+        hi/concepts.md: hi/quick_start/basic_concepts.md
+        it/concepts.md: it/quick_start/basic_concepts.md
+        ja/concepts.md: ja/quick_start/basic_concepts.md
+        nl/concepts.md: nl/quick_start/basic_concepts.md
+        pl/concepts.md: pl/quick_start/basic_concepts.md
+        pt/concepts.md: pt/quick_start/basic_concepts.md
+        zh-Hans/concepts.md: zh-Hans/quick_start/basic_concepts.md
   - pagetree
   - optimize
   - tags:
@@ -81,9 +129,9 @@ plugins:
         and scenario, with configuration in YAML or the UI.
 
         JSON Schemas for validating configuration are published at
-        https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json
+        https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json
         (complete YAML configuration) and
-        https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json
+        https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json
         (the notify action call). Schemas for individual objects, such as
         Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition,
         sit alongside as <Name>.schema.json.
@@ -91,8 +139,14 @@ plugins:
       sections:
         Start here:
           - index.md: Overview of what Supernotify does
-          - getting_started.md: Install, configure and send a first notification
-          - concepts.md: Core concepts - transports, deliveries, scenarios, recipients and targets
+          - quick_start/index.md: Quick Start overview
+          - quick_start/installation.md: Install from HACS and set up from the UI, with no YAML
+          - quick_start/first_notification.md: Send a first notification, to everyone, one person or the speakers
+          - quick_start/next_steps.md: What to do next - automations, a dashboard, switches, targets and recipes
+          - quick_start/basic_concepts.md: Basic concepts - targets, recipients, deliveries and priority
+          - quick_start/advanced_concepts.md: Advanced concepts - transports, deliveries, scenarios, recipients and targets
+          - quick_start/removing.md: Remove Supernotify and clean up what it leaves behind
+          - faqs.md: Frequently asked questions, with short answers
         Using Supernotify:
           - usage/*.md
         Configuration:
@@ -111,12 +165,6 @@ plugins:
         # changelog, roadmap, principles and RFCs left out - old or planned behaviour an agent would
         # take as current, and the changelog mentions everything so wins the help tool's page search
 
-  - social:
-      enabled: !ENV [CI, false]
-      cards_layout_options:
-        logo: docs/assets/images/icon.png
-        background_image: docs/assets/images/logo-dim-social-640x320.png
-        background_color: transparent
   - mike:
       alias_type: symlink
       canonical_version: latest
@@ -152,7 +200,6 @@ extra_javascript:
   - javascripts/tag_filter.js
 
 hooks:
-  - docgen/optimize_social_cards.py
   - docgen/nav_order.py
   - docgen/tagged_index.py
 

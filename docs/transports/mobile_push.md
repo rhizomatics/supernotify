@@ -61,16 +61,19 @@ A `critical` notification goes to Android phones the way the
 channel, so it sounds even with Do Not Disturb on or the phone on silent - the Android counterpart of iOS's
 `interruption-level: critical`.
 
-If the data already sets a `channel`, that channel is kept. `mobile_push_critical_channel` picks another
-one, or `false` leaves the channel alone, and `mobile_push_critical_priority` overrides `high`:
+The companion app's own `channel` and `ttl`, when set in the data, are kept as they are, so a
+critical notification can still use a channel of its own (`mobile_push_critical_priority: normal`
+changes the `high` priority):
 
 ```yaml
   - action: supernotify.notify
     data:
       message: Smoke in the kitchen
       priority: critical
-      extra_data:
-        mobile_push_critical_channel: false
+      delivery:
+        mobile_push:
+          data:
+            channel: smoke_alarm
 ```
 
 !!! tip

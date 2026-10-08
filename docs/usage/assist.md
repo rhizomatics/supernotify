@@ -88,6 +88,8 @@ you have already configured:
 The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or
 `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery,
 transport, priority, camera or [tag](snoozing.md#snoozing-by-tag).
+Unless asked to snooze everything, the agent leaves `critical` notifications coming through, and
+turning notifications back on undoes either kind.
 
 If the agent doesn't name who the snooze is for, it applies to the person asking, if Supernotify can
 match their Home Assistant user to a recipient. Otherwise it applies to everyone. See
@@ -102,7 +104,7 @@ the time, since that decides some deliveries.
 Turn on the file [archive](../configuration/archiving.md) to get a history. Without it, only the most
 recent notification since Home Assistant started is known.
 
-### Dry Run
+### Simulation (Dry Run)
 
 `supernotify__dry_run` works out which deliveries a notification would use right now, and who it
 would reach, without sending anything. It goes through exactly the same checks as a real
@@ -126,20 +128,26 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 |----------------------------------------------------------|-----------------------------------------------|
 | "Tell *Alice* that *dinner is ready*"                    | Notifies a recipient, by name or alias        |
 | "Send a message to *everyone* saying *leaving now*"      | Notifies everyone, as an automation would     |
-| "Snooze my notifications for *30* minutes"               | Snoozes everything                            |
-| "Mute all notifications for an hour"                     | Snoozes everything for an hour                |
-| "Snooze notifications until *15:30*"                     | Snoozes everything until then, today or tomorrow |
+| "Snooze my notifications for *30* minutes"               | Snoozes all but critical                      |
+| "Mute all notifications for an hour"                     | Snoozes all but critical for an hour          |
+| "Snooze notifications until *15:30*"                     | Snoozes all but critical until then, today or tomorrow |
 | "Snooze notifications for *driveway* until *6am*"        | Snoozes only notifications [tagged](snoozing.md#snoozing-by-tag) *driveway* |
-| "Silence notifications"                                  | Silences everything until turned back on      |
+| "Silence notifications"                                  | Silences all but critical until turned back on |
+| "Silence notifications even critical ones"               | Silences everything, critical included, until turned back on |
 | "Turn my notifications back on"                          | Undoes the snooze or silence                  |
 | "Resume notifications for *driveway*"                    | Undoes the snooze or silence for *driveway*   |
-| "What was the last notification"                         | Says what it was, and what sent it            |
+| "What was the last notification"                         | Says what it was, and what it was sent via, or why it wasn't sent |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message.
 A recipient can be named by their full name, alias, or just their first name when no one else shares it -
 if two do, the agent asks which one you mean.
 Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to
 a recipient, otherwise for everyone.
+They hold back everything but `critical` notifications, so saying "silence notifications" at bedtime
+never silences a smoke alarm. When an alert that's meant to be critical keeps going off, say
+"silence notifications even critical ones" (or "including critical", "and critical ones too") to hold
+back critical ones as well; from an automation or button, use the `supernotify.silence` action with
+`scope: everything`. Turning notifications back on undoes both.
 
 "For *driveway*" works with any of the snooze sentences, for minutes, an hour, until a time, or until
 I say. The reply lists the scenarios and entities *driveway* matches now. If it matches nothing, the
@@ -174,14 +182,15 @@ comes back in Italian:
 |---------------------------------------------------------------|-----------------------------------------------|
 | "Avvisa *Alice* che *la cena è pronta*"                       | Notifies a recipient, by name or alias        |
 | "Manda un messaggio a *tutti* che dice *esco adesso*"         | Notifies everyone, as an automation would     |
-| "Posticipa le mie notifiche per *30* minuti"                  | Snoozes everything                            |
-| "Metti in pausa tutte le notifiche per un'ora"                | Snoozes everything for an hour                |
-| "Posticipa le notifiche fino alle *15:30*"                    | Snoozes everything until then, today or tomorrow |
+| "Posticipa le mie notifiche per *30* minuti"                  | Snoozes all but critical                      |
+| "Metti in pausa tutte le notifiche per un'ora"                | Snoozes all but critical for an hour          |
+| "Posticipa le notifiche fino alle *15:30*"                    | Snoozes all but critical until then, today or tomorrow |
 | "Posticipa le notifiche del *vialetto* fino alle *6*"         | Snoozes only notifications [tagged](snoozing.md#snoozing-by-tag) *vialetto* |
-| "Silenzia le notifiche"                                       | Silences everything until turned back on      |
+| "Silenzia le notifiche"                                       | Silences all but critical until turned back on |
+| "Silenzia le notifiche anche quelle critiche"                 | Silences everything, critical included, until turned back on |
 | "Riattiva le mie notifiche"                                   | Undoes the snooze or silence                  |
 | "Riattiva le notifiche del *vialetto*"                        | Undoes the snooze or silence for *vialetto*   |
-| "Qual è stata l'ultima notifica"                              | Says what it was, and what sent it            |
+| "Qual è stata l'ultima notifica"                              | Says what it was, and what it was sent via, or why it wasn't sent |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and
 "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for

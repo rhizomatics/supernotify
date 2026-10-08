@@ -220,7 +220,7 @@ In this example, when an Actionable Notification is sent with action `Red Alert`
   actions:
   - action: supernotify.notify
     data:
-      apply_scenario: red_alert
+      apply_scenarios: red_alert
 ```
 
 In this example, a mobile notification goes out to notify of the dishwasher finishing, and email is switched off.

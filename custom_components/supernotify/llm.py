@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
-import voluptuous as vol
 from homeassistant.components.llm import LLMTools  # type: ignore[import-not-found,unused-ignore]  # HA < 2026.x on py3.13
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,6 +28,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import DOMAIN
 from .archive import summarize_notification
+from .compat import vol
 from .const import (
     ATTR_DELIVERY,
     ATTR_DRY_RUN,
@@ -40,7 +40,7 @@ from .const import (
     DRY_RUN_SIMULATE,
     PRIORITY_VALUES,
 )
-from .model import CommandType, QualifiedTargetType, RecipientType, TargetType
+from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, TargetType
 from .snoozer import SNOOZE_SCOPES, snooze_name_error
 
 if TYPE_CHECKING:
@@ -265,9 +265,12 @@ class SnoozeTool(SupernotifyTool):
         super().__init__(engine)
         self.parameters = vol.Schema({
             vol.Required("action"): vol.In(list(SNOOZE_ACTIONS)),
-            vol.Optional("scope", default="everything", description="What kind of notifications to snooze"): vol.In(
-                list(SNOOZE_SCOPES)
-            ),
+            vol.Optional(
+                "scope",
+                default="noncritical",
+                description="What kind of notifications to snooze. 'everything' holds back critical alerts too, "
+                "so use it only when that is asked for",
+            ): vol.In(list(SNOOZE_SCOPES)),
             vol.Optional(
                 "name",
                 description="The delivery, transport, priority or camera entity_id to snooze, when scope is one of "
@@ -309,6 +312,11 @@ class SnoozeTool(SupernotifyTool):
         minutes: int | None = args.get("minutes")
         snooze_for = dt.timedelta(minutes=minutes) if minutes else snoozer.snooze_period
         snoozer.register_snooze(cmd, scope, name, recipient_type, recipient, snooze_for, reason="Assistant")
+        if cmd == CommandType.NORMAL and isinstance(scope, GlobalTargetType):
+            # turning notifications back on undoes a snooze of everything as well as one of noncritical
+            for other in GlobalTargetType:
+                if other != scope:
+                    snoozer.register_snooze(cmd, other, None, recipient_type, recipient, None)
         snoozes: dict[str, Any] = {"snoozes": self.engine.enquire_snoozes()}
         return {"success": True, "result": snoozes}
 

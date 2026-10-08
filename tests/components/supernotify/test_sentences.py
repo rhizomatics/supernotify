@@ -17,8 +17,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import DOMAIN
-from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
-from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
+from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS, PRIORITY_CRITICAL
+from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.sentences import RESPONSES, SENTENCES, async_respond
 
 if TYPE_CHECKING:
@@ -142,7 +142,7 @@ async def test_snooze_minutes_for_person_asking(hass: HomeAssistant) -> None:
 
     assert response.startswith("Snoozed your notifications until ")
     [snooze] = engine.context.snoozer.snoozes.values()
-    assert snooze.target_type == GlobalTargetType.EVERYTHING
+    assert snooze.target_type == GlobalTargetType.NONCRITICAL
     assert snooze.recipient_type == RecipientType.USER
     assert snooze.recipient == "person.jey_burrows"
     assert snooze.snooze_until is not None
@@ -347,7 +347,7 @@ async def test_snooze_tag_then_resume(hass: HomeAssistant) -> None:
 
     assert response == "Turned your notifications for Driveway back on"
     [snooze] = engine.context.snoozer.snoozes.values()
-    assert snooze.target_type == GlobalTargetType.EVERYTHING
+    assert snooze.target_type == GlobalTargetType.NONCRITICAL
 
 
 async def test_mute_tag_until_i_say_silences_it(hass: HomeAssistant) -> None:
@@ -414,7 +414,45 @@ async def test_last_notification(hass: HomeAssistant) -> None:
 
     response = await async_respond(engine, "last", {}, Context())
 
-    assert response.endswith(": washing machine finished. Sent by chat")
+    assert response.endswith(": washing machine finished. Sent via chat")
+
+
+async def test_last_notification_not_delivered(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    await async_respond(engine, "silence", {}, Context())
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because notifications were snoozed or silenced")
+    assert calls == []
+
+
+async def test_last_notification_was_a_dupe(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    await engine.async_send_message("night motion in hall")
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because it was a duplicate")
+    assert len(calls) == 1
+
+
+async def test_last_notification_with_nothing_to_send_it(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+    engine.context.delivery_registry._deliveries.clear()
+
+    await engine.async_send_message("night motion in hall")
+
+    response = await async_respond(engine, "last", {}, Context())
+
+    assert response.endswith(": night motion in hall. It wasn't sent because nothing is set up to send it")
+    assert calls == []
+    response = await async_respond(engine, "last", {}, Context(), "it")
+    assert response.endswith(": night motion in hall. Non è stata inviata perché niente è configurato per inviarla")
 
 
 async def test_unknown_command(hass: HomeAssistant) -> None:
@@ -612,7 +650,7 @@ async def test_italian_last_notification(hass: HomeAssistant) -> None:
     response = await async_respond(engine, "last", {}, Context(), "it")
 
     assert response.startswith("Alle ")
-    assert response.endswith(": lavatrice finita. Inviata da chat")
+    assert response.endswith(": lavatrice finita. Inviata tramite chat")
 
 
 async def test_unknown_language_answers_in_english(hass: HomeAssistant) -> None:
@@ -629,3 +667,73 @@ async def test_italian_notify_asks_which_when_first_name_shared(hass: HomeAssist
 
     assert response == "Quale Jey intendi: Jey Burrows o Jey Smith?"
     assert calls == []
+
+
+async def test_spoken_silence_lets_critical_through(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    await async_respond(engine, "snooze_until", {"time": "I say"}, Context())
+
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.NONCRITICAL
+    assert engine.context.snoozer.is_global_snooze()
+    assert not engine.context.snoozer.is_global_snooze(PRIORITY_CRITICAL)
+
+
+async def test_spoken_resume_undoes_a_snooze_of_everything(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    engine.context.snoozer.register_snooze(
+        CommandType.SILENCE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, None
+    )
+    engine.context.snoozer.register_snooze(
+        CommandType.SILENCE, GlobalTargetType.NONCRITICAL, None, RecipientType.EVERYONE, None, None
+    )
+
+    response = await async_respond(engine, "resume", {}, Context())
+
+    assert response == "Turned all notifications back on"
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_spoken_silence_even_critical_holds_back_critical(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "silence_everything", {}, Context())
+
+    assert response == "Silenced all notifications, critical ones too, until you turn them back on"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+    assert engine.context.snoozer.is_global_snooze(PRIORITY_CRITICAL)
+
+
+async def test_spoken_silence_even_critical_for_person_asking_then_resume(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    asker = Context(user_id=JEY_USER_ID)
+
+    assert await async_respond(engine, "silence_everything", {}, asker) == (
+        "Silenced your notifications, critical ones too, until you turn them back on"
+    )
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.recipient_type == RecipientType.USER
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+
+    assert await async_respond(engine, "resume", {}, asker) == "Turned your notifications back on"
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_italian_silence_even_critical(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "silence_everything", {}, Context(), "it")
+
+    assert response == "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+
+
+def test_silence_even_critical_sentences_in_every_language() -> None:
+    for language, commands in SENTENCES.items():
+        assert commands["silence_everything"], language
+        assert all("critic" in sentence for sentence in commands["silence_everything"]), language
+        assert "silenced_everything_yours" in RESPONSES[language]
+        assert "silenced_everything_all" in RESPONSES[language]

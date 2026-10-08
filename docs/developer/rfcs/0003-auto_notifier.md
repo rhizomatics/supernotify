@@ -1,0 +1,482 @@
+# RFC 0003: Auto Notifier Packages
+
+2026-10-07 · Jey Burrows · Status: draft
+
+## Problem
+
+Often SuperNotify is a small part of what's needed for example setting up notifications - Frigate involves understanding blueprints using live activities for a dishwasher requires setting up multiple automations and fine tuning mobile push the blocks. The real value from SuperNotify comes when a less technical user is able to immediately start getting notifications from things like their washing machine or dishwasher of Frigate with minimal technical understanding zero knowledge of YAML and minimal automation set up.
+
+## Vision
+
+When setting up Supernotify, it checks for things that could have automatic notifications configured, and asks if want to switch those on.
+
+Each package has a detection function, which is used to discover if it can be applied, a set of default deliveries and messages (with translation keys) and the ability to customize the notification part with all the usual Supernotify options.
+
+Everything about this is ConfigFlow based, there is no YAML required, nor offered for advanced usage.
+
+The "packages" could also be selected after the fact, either directly in the main Supernotify ConfigFlow, or as "helper" objects.
+
+## Skeleton
+
+### Config Time
+
+Potential applications are discovered as entities are created within Home Assistant. So if I buy and connect a new dishwasher, it will get picked up by default, with no need to restart or even open any of the settings, unless auto-discover switched off.
+
+### Event Time
+
+- Event detection and verification
+- Notification initiation
+- Sub-event phase start and end ('pre-wash','rinse cycle') or simple phase name changes
+- Progress updates ( time, percentage ) for full event or phases
+- ETA forecast updates
+- End of event notification and clear-down ( removing the progress bar and telling everyone the dishwasher has ended are 2 separate physical notifications )
+
+## Design Decisions
+
+### Responsibilities
+
+How much of the this becomes Supernotify functionality or at least visible within Supernotify code, either for direct functional reasons, or to allow use within scenario conditions, e-mail templates etc
+
+| What       | Details | Direction |
+| ---------- | ------- | --------- |
+| **Origin** | Some times direct mapping to Home Assistant device, e.g. smart oven. Other times indirect, like a power monitor plug, or could be a combination of events and states indicating something in the real world | `data` tag and `ConditionVariable` |
+| **Cycle** | With ETA and percentage progress | `data` tag and `ConditionVariable`  |
+| **Cycle Phase** | Name, possibly its own ETA and progress measure | `data` tag and `ConditionVariable`  |
+| **Activity Bar** | Setup, clear down. Alternative implementations for other transports, e.g. section within an e-mail | `start`,`stop`,`update` long running notification for transports, immediately for Mobile Push and Persistent. No state for these within Supernotify itself |
+
+
+### Packaging
+
+#### Option 1 - Sub Package
+A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again. Packages create their own HA Context, as an automation would do, for tying together downstream calls and state changes.
+
+#### Option 2 - Add-on Component
+A thin custom component on HACS per package, better for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It could only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+
+The move into generating notifications rather than being a notification engine is another reason to have these as separate components, and keep scope uncrept within Supernotify itself.
+
+## Implementation
+
+### Changes Needed in Supernotify
+
+See [Auto Notifier Support](./0003a-auto_notifier_support.md) for the changes needed in Supernotify first.
+
+### Branding
+
+No user facing use of term 'packages'. These will be XXXX SuperNotifier components, explained as a pre-set bundle of automations and notifications
+
+## Examples
+
+### Live Notifications for Appliances
+
+If there's a connected appliance like dishwasher, it will send a start and stop [Live Activity](https://companion.home-assistant.io/docs/notifications/live-activities) notification to mobile devices with an appropriate icon. See the very basic [recipe](../../recipes/dishwasher_live_activity.md) for current usage.
+
+If the appliance has a time-remaining and/or progress quantity, these will be passed using the `progress` and `chronometer` values. If these are `unavailable` they're not sent and the simpler style prevails.
+
+At the end, there's an additional notification to mobile_push only with special text "clear_notification" that will clear the live dialog box but isn't really a notification in its own right.
+
+Where elapsed and progress are available, the notification will be periodically resent on a timer to update the bar.
+
+If the end never happens, there's a timeout where the notification is auto-cleared.
+
+#### Bosch / Home Connect
+
+Example entity IDs. An actual match would be on translation keys, since users change entity IDs.
+
+`sensor.dishwasher_operation_state` - `run`
+`sensor.dishwasher_program_progress` - 84 %
+`sensor.dishwasher_programme_finished` - `off`
+`sensor.dishwasher_remaining_program_time` - `2026-09-16T21:44:16+00:00`
+`select.dishwasher_selected_program` - `dishcare_dishwasher_program_intensiv_70`
+`number.dishwasher_start_in_relative` - 0
+
+`automation.oven_reached_temperature` - `on`
+`number.oven_target_temperature` - `unavailable`
+`sensor.oven_current_oven_cavity_temperature` - 59
+`sensor.oven_operation_state` - `inactive`
+`sensor.oven_pre_heat_finished` - `off`
+`sensor.oven_program_progress` - `unavailable` %
+`sensor.oven_programme_finished` - `off`
+`sensor.oven_remaining_program_time` - `unavailable`
+
+#### Power Monitored Appliances
+
+Non-smart appliances running on a power monitor.
+
+Potential for advanced things like learning durations and using that to estimate completion.
+
+Also smart appliances that have gaps which a power monitor might fill, like auto power-down not being notified.
+
+Example, from @lollox80
+
+```
+Dishwasher and washing machine are on power-monitoring smart plugs, and the dryer is SmartThings but stops reporting when off, so today each one is ~1,200 lines of YAML (power threshold + delay_on/delay_off state machine, cycle counters, maintenance reminders) plus an FSM blueprint.
+
+Appliance package could support two detection sources from the start: native state where the integration has one (Home Connect operation_state, SmartThings *_machine_state), and a power sensor on the appliance's plug with threshold/delay options. Without remaining time, the live notification can show elapsed time via chronometer, and later estimate the end from the average of recent cycles.
+```
+
+### Motion Sensors
+
+Home Assistant triggers have made it easier to set up automations for things like PIRs, but they still require automations with triggers and actions, and are another case where auto-detection would simplify for non-tech and expert users.
+
+The blueprint below shows how complicated it becomes when you don't want bothered by alerts if alarm is disarmed, and you want to be very bothered if the house is unoccupied.
+
+```yaml title="Real PIR Blueprint"
+blueprint:
+  name: Generic PIR alert
+  description: Take action if PIR fires
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: This sensor will trigger the actions.
+      selector:
+        entity:
+          filter:
+            device_class: motion
+            domain: binary_sensor
+
+    details:
+      name: Alert details
+      description: Details of the sensor for alert
+      default: ""
+      selector:
+        text:
+    danger:
+      name: Danger flag
+      description: Is there a potential danger or just a sheep
+      default: true
+      selector:
+        boolean:
+
+    light:
+      name: Light
+      description: Light entity to switch on
+      default: switch.library_standard_lamp
+      selector:
+        target:
+          entity:
+            domain: switch
+    camera:
+      name: CCTV Camera
+      description: Camera to show on notification
+      default: camera.courtyard
+      selector:
+        media:
+    outdoors:
+      name: Outdoors
+      description: Is in an external zone
+      default: true
+      selector:
+        boolean:
+
+variables:
+  motion_sensor: !input motion_sensor
+  details: !input details
+  danger: !input danger
+  light: !input light
+  camera: !input camera
+  outdoors: !input outdoors
+  description: "{{ details | default(state_attr(motion_sensor,'friendly_name'),true) }}"
+
+triggers:
+  - trigger: state
+    entity_id: !input motion_sensor
+    from: "off"
+    to: "on"
+
+action:
+  - choose:
+      - conditions:
+          - not:
+              - condition: state
+                entity_id: alarm_control_panel.home_alarm_control
+                state: disarmed
+          - condition: time
+            after: "22:00:00"
+            before: "06:00:00"
+          - condition: template
+            value_template: "{{ danger }}"
+        sequence:
+          # armed, dangerous, night
+          parallel:
+            - action: switch.turn_on
+              entity_id: switch.middle_bedroom_light
+            - action: switch.turn_on
+              entity_id: switch.library_standard_lamp
+            - action: switch.turn_on
+              continue_on_error: true
+              entity_id: !input light
+            - action: supernotify.notify
+              continue_on_error: true
+              data:
+                title: "Home Security: {{ description }}"
+                message: "WARNING! Night motion in {{ description }}"
+                priority: high
+                media:
+                  camera_entity_id: !input camera
+
+      - conditions:
+          - not:
+              - condition: state
+                entity_id: alarm_control_panel.home_alarm_control
+                state: disarmed
+          - condition: time
+            before: "22:00:00"
+            after: "06:00:00"
+          - condition: template
+            value_template: "{{ danger }}"
+        sequence:
+          # armed, dangerous, day
+          parallel:
+            - action: supernotify.notify
+              continue_on_error: true
+              data:
+                title: "Home Security: {{ description }}"
+                message: "WARNING! Motion in {{ description }}"
+                priority: high
+                media:
+                  camera_entity_id: !input camera
+
+      - conditions:
+          and:
+            - condition: template
+              value_template: "{{ danger and outdoors }}"
+            - not:
+                - condition: state
+                  entity_id: alarm_control_panel.home_alarm_control
+                  state: disarmed
+
+        sequence:
+          # armed, dangerous, outdoor, day or night
+          - action: supernotify.notify
+            continue_on_error: true
+            data:
+              title: "Home Security: {{ description }}"
+              message: "Warning! Outdoors motion in {{ description }}"
+              media:
+                camera_entity_id: !input camera
+
+      - conditions:
+          and:
+            - condition: template
+              value_template: "{{ danger and not outdoors}}"
+            - not:
+                - condition: state
+                  entity_id: alarm_control_panel.home_alarm_control
+                  state: disarmed
+            - condition: time
+              after: "22:00:00"
+              before: "06:00:00"
+
+        sequence:
+          # armed, dangerous, indoors, night
+          parallel:
+            - action: supernotify.notify
+              continue_on_error: true
+              data:
+                title: "Home Security: {{ description }}"
+                message: "WARNING! Indoors night motion in {{ description }}"
+                media:
+                  camera_entity_id: !input camera
+
+      - conditions:
+          condition: and
+          conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: person.joe_mctest
+                  state: home
+                - condition: state
+                  entity_id: person.jane_mctest
+                  state: home
+            - condition: template
+              value_template: "{{ not danger }}"
+            - condition: state
+              entity_id: alarm_control_panel.home_alarm_control
+              state: armed_night
+            - condition: time
+              after: "22:00:00"
+              before: "06:00:00"
+        sequence:
+          # armed at night, not dangerous, occupied
+          parallel:
+            - action: switch.turn_on
+              continue_on_error: true
+              entity_id: !input light
+            - action: supernotify.notify
+              continue_on_error: true
+              data:
+                title: "Home Security: {{ description}}"
+                message: "Night motion while occupied in {{ description }}"
+                priority: low
+                media:
+                  camera_entity_id: !input camera
+```
+
+### Frigate
+
+The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) works well, however using Blueprints is still not very non-tech friendly, a lot of the blueprint logic is doing things in clumsy YAML that are already done in Supernotify, and there are some long standing bugs like mobile groups to work around.
+
+The Frigate `package` would pick up that there's a known MQTT topic or Frigate proxy, and set up an MQTT subscription for mobile push, email and voice announce by default. It would offer everything the blueprint has, address known bugs and workarounds like faking a `notify_device` and avoiding broken images.
+
+See [Frigate SuperNotifier](./0006-frigate_supernotifier.md) for the design.
+
+
+```yaml title="Current Supernotify usage of Frigate Blueprint"
+use_blueprint:
+    path: frigate/beta.yaml
+    input:
+      camera:
+      - camera.driveway_frigate
+      notify_device: ad4dccb09ec6fd181fb01aecb8de3785
+      notify_group: supernotifier
+      critical: true
+      labels:
+      - car
+      - bicycle
+      - motorcycle
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8'
+      presence_filter:
+      - ''
+      mqtt_topic: frigate/reviews
+      ios_live_view: camera.driveway
+      base_url: https://home.23acaciaavenue.org
+      tap_action: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8'
+```
+
+Frigate could have multiple flows - regular event detection (`frigate/reviews`), GenAI events (`frigate/tracked_object_update`) with different options per camera, or using message checks or HA state to prioritize or tune delivery.
+
+```yaml title="Real Frigate Scenarios"
+  silence_frigate:
+    alias: No notification for uninteresting frigate genai
+    conditions:
+      condition: and
+      conditions:
+        - "{{'A Person, Billy' in notification_message|upper}}"
+        - "{{'A Person, Jean' in notification_message|upper}}"
+        - "{{'UNKNOWN BIRD' in notification_message|upper}}"
+        - condition: state
+          entity_id: alarm_control_panel.home_alarm_control
+          state:
+            - disarmed
+            - armed_home
+            - armed_night
+    delivery:
+      .*:
+        enabled: false
+  person_detected_disarmed:
+    alias: only chime for people when disarmed
+    delivery:
+      .*:
+        enabled: false
+    conditions:
+      condition: and
+      conditions:
+        - "{{'person was detected' in notification_message|lower }}"
+        - condition: state
+          entity_id: alarm_control_panel.home_alarm_control
+          state:
+            - disarmed
+```
+
+Live Activities would be a great fit for ongoing events in Frigate, where its possible to tie together what's happening. Though to be really useful this could be a mixture of PIRs, Frigate Events, Driveway Alarms etc and probably require some sort of AI to make sensible guess when an event ("the postman visits") starts and ends.
+
+## Questions
+
+- What does the UI look like? Does this fit into an existing HA concept?
+- Should it generate actual notifications or be entirely in code?
+  - Preference for code, since that means future releases can easily make deliver improvements for existing users
+  - Possibility for an `export` function, but advanced. Audience would be people who want their own automations, but need to get started, though that's an LLM use case nowadays
+- Are those multiple Frigate cameras, and priorities, and GenAI detections multiple packages? sub-packages?
+  - Is there a package per camera, and a separate one for the GenAI events?
+- "Packages" isn't a great name, but can't be anything that clashes with Home Assistant nomenclature
+  - "Notification Presets"?
+  - "Routines"?
+  - Reuse "Recipe" - manual recipes in the docs, automatic recipes in the code. Though recipe sounds like a set of steps for doing things yourself, this is more like buying the cake already baked and iced.
+
+## MVP
+
+This supersedes the earlier discussions on approach and implementation.
+
+Its aim is to get a basic working component that can be custom installed and get feedback working with real appliances, and if need be with beta versions of Supernotify for any tentative or fast-changing needed to that core.
+
+Repo: https://github.com/rhizomatics/appliances_supernotifications
+
+- Household appliances package
+  - Detects appliances that have an identifiable cycle
+    - Creates a 'live activity' on mobile apps for the duration of the cycle
+    - Subscribe to progress tracker and push updates to mobile apps only
+    - Also start notifications for non-mobile notification and end notification for all.
+    - Limited to Bosch/Neff HomeConnect appliances at first, and English only
+  - Separate HACS plugin
+    - Working title *Appliances Supernotifications*
+    - Separate git repo under Rhizomatics, `appliances_supernotifications`
+    - Needs supernotify to work fully
+    - Minimal non-supernotify functionality to use Notify Entities with `send_message`, no live activities, just a start and end notification to selected target
+    - Setup screen has warning if supernotify not present, info on limitations without it, and pointer to install via HACS
+    - iOS support at minimum, Android too if quick
+Supernotify changes
+ - Potentially some identifier for the cycle, and the watched device
+ - For MVP, drive everything from the packager, avoiding changes to Supernotify unless its really hacky inside the packager, and use lessons learned to refine Supernotify integration
+   - Nice adds from Supernotify
+    - High level way to start/progress/end activity bars without worrying about Android vs iOS or dupe detection interfering with progress updates or knowing about final pseudo-notifications to clear bars
+    - No need of `extra_data` and potential confusion for other transports
+State Management
+ - Longer running state to manage the live activity bars.
+   - Primarily the state is there to make sure that live activity bars on phones get closed one way or another, and also that they survive a home assistant restart or config reload
+     - Can leave this to MVP++
+     - Useful experiment to see how much can be done without any new state and any Supernotify changes
+   - If possible, state managed entirely elsewhere, however until the Mobile App supported this likely to need the 'package' plugin to support.
+   - Since there'll be multiple packages, the code to manage this state either needs a separate library, is duplicated, or hard requirement for Supernotify
+     - PROPOSED RESOLUTION - shared code to manage live activities or other long running state lives in Supernotify. State itself remains in the packager. If Supernotify not installed then all Live Activities simply not supported, so all package is doing is start and end notifications triggered entirely by the appliance integration
+Install Behavior
+ - Searches for likely entities for known platforms
+   - Re-searches whenever new entities for those platforms are added.
+   - Each appliance has a config entry
+     - On the integration home page in home assistant easy to see everything its configured to watch and disable/delete/edit.
+     - Review post-MVP if config entry or sub-entry better for these use cases
+ Settings UI
+   - Override default message and title for both start and end
+   - Allow setting explicit targets but optional
+     - Full range of targets if supernotify present
+       - Warning if targets provided and no mobile apps included [MVP++]
+     - if no targets provided, then supernotify itself does the defaulting to include all mobile apps found from Person or User recodds
+   - If supernotify present can select deliveries.
+   - If no supernotify, target list is mandatory for notify entities only
+
+### MVP Testing
+
+Sounds good. A few things worth knowing for the first real run:
+
+- **Debug logging**: the plugin only logs failures, so if nothing arrives there will be nothing in the log either. Supernotify's archive, or `supernotify.enquire_last_notification`, will show whether the start call reached it and which deliveries it picked.
+- **First appliance is manual**: after the restart, add the integration by hand and pick the dishwasher; the oven and any others should then show up as *Discovered*.
+- **What to watch on the phone**:
+  - whether the Live Activity opens on `run`;
+  - whether it updates silently at each 10%;
+  - whether the countdown matches the appliance;
+  - whether the bar clears before the "finished" notification lands.
+- **Least certain part**: the countdown. Finish time is sent as an absolute Unix timestamp with `chronometer: true`, which is based on the companion docs and is untested on a device.
+- **No dishes needed for a quick check**: setting `sensor.dishwasher_operation_state` to `run` and then `finished` in Developer Tools → States exercises the whole start and end path. Progress only updates if you also set the progress sensor.
+
+
+### MVP++
+
+- Other appliances, pick a different class or a different style vendor integration (e.g. cloud vs local), to get better stress on the solution
+  - Suggestion, Ecovacs robot vacuum
+- Power monitor use case, start live activity when the power goes over a threshold - associated with say a washing machine - and end the activity when the power drops, with grace period/rounding etc for short spikes
+- Android integration if only iOS on MVP 1
+- Warn user if explicit targets can't do live activities
+  - Implies an API or action call to Supernotify that resolves targets down to mobile app level, and also that could change thereafter
+- Configurable intermediate progress tracking for % completion
+  - ETA update
+  - Sub-cycle phase change, e.g. 'oven pre-heat', 'rinse cycle'
+- Sweeper process to close live activity bars after a grace period if the appliance end signal hasn't been received
+  - Also notify a warning that the appliance is either stuck or home assistant issue preventing closure
+- Nicer transition to without->with Supernotify, so not losing any config or at least been given the choice and explained the effect
+
+
+## Feedback
+
+[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)

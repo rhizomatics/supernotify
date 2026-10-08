@@ -6,7 +6,7 @@ Supports per-device delivery with automatic snooze on failure.
 Priority mapping (auto, overridable via push_critical_level_ios):
     critical  → iOS: interruption_level=critical
                 Android: ttl=0, priority=high, channel=alarm_stream (sounds through Do Not Disturb
-                and silent mode, unless the data already sets a `channel`)
+                and silent mode); a `ttl` or `channel` already in the data is kept
     high      → iOS: interruption_level=time-sensitive
     medium    → iOS: interruption_level=active    (default)
     low       → iOS: interruption_level=passive
@@ -20,8 +20,6 @@ New data keys (all optional):
                                       Auto-set to 0 for critical priority if not set.
     mobile_push_critical_priority   str   Android FCM priority override ("high" or "normal").
                                       Auto-set to "high" for critical priority if not set.
-    mobile_push_critical_channel    str   Android channel for critical priority, "alarm_stream" if not set.
-                                      Set to false to leave the channel alone.
     mobile_push_subtitle            str   iOS subtitle (line between title and message, iOS 10+)
     mobile_push_group               str   Notification group for visual stacking (iOS thread-id / Android group).
                                       Falls back to the camera entity id if there's a camera image,
@@ -58,6 +56,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Collection
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -203,7 +202,6 @@ class MobilePushTransport(Transport):
             "critical_ttl": raw_data.pop("mobile_push_critical_ttl", None),
             "critical_android_priority": raw_data.pop("mobile_push_critical_priority", None),
             "channel_override": raw_data.pop("mobile_push_channel_override", None),
-            "critical_channel": raw_data.pop("mobile_push_critical_channel", ANDROID_ALARM_STREAM_CHANNEL),
             "alarm_stream": raw_data.pop("mobile_push_alarm_stream", False),
             "alarm_stream_max": raw_data.pop("mobile_push_alarm_stream_max", False),
             # Android TTS
@@ -225,12 +223,14 @@ class MobilePushTransport(Transport):
         self,
         push_data: dict[str, Any],
         priority: str | None,
-        channel_given: bool = False,
+        given: Collection[str] = (),
     ) -> dict[str, Any]:
         """Apply Android-specific fields to the notification data dict.
 
-        Android fields live flat in data{}, not inside the push{} sub-dict. `channel_given` is when the
-        pass-through data already has a `channel`, which then isn't replaced.
+        Android fields live flat in data{}, not inside the push{} sub-dict. `given` are the keys
+        the pass-through data already has: the companion app's own `channel` and `ttl` are left
+        as given, rather than replaced by what critical would set (`priority` in the data is
+        SuperNotify's own, so the FCM priority is set with mobile_push_critical_priority).
         """
         android_data: dict[str, Any] = {}
         critical: bool = priority == const.PRIORITY_CRITICAL
@@ -240,13 +240,13 @@ class MobilePushTransport(Transport):
         elif push_data["alarm_stream"] or push_data["alarm_stream_max"]:
             # the companion app takes the alarm stream as a channel, not a flag of its own
             android_data["channel"] = ANDROID_ALARM_STREAM_CHANNEL
-        elif critical and push_data["critical_channel"] and not channel_given:
-            android_data["channel"] = push_data["critical_channel"]
+        elif critical and "channel" not in given:
+            android_data["channel"] = ANDROID_ALARM_STREAM_CHANNEL
 
         # FCM TTL: auto-set to 0 for critical (instant delivery, no FCM caching)
         if push_data["critical_ttl"] is not None:
             android_data["ttl"] = push_data["critical_ttl"]
-        elif priority == const.PRIORITY_CRITICAL:
+        elif critical and "ttl" not in given:
             android_data["ttl"] = ANDROID_CRITICAL_TTL
 
         # FCM priority: high for critical, so a dozing phone gets it straight away
@@ -356,7 +356,7 @@ class MobilePushTransport(Transport):
             ios_data["subtitle"] = push_data["subtitle"]
 
         # 5. Android-specific fields
-        android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority, channel_given="channel" in raw_data)
+        android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority, given=raw_data.keys())
         android_before, android_after = self._android_extra_calls(push_data, envelope.priority)
 
         # 6. Cross-platform: notification tag
@@ -461,7 +461,9 @@ class MobilePushTransport(Transport):
                 target_data.update(ios_data)
             if is_android:
                 for extra in android_before:
-                    await self.call_action(envelope, qualified_action=full_target, action_data=dict(extra), implied_target=True)
+                    await self.call_action(
+                        envelope, qualified_action=full_target, action_data=dict(extra), implied_target=True, single_target=True
+                    )
 
             action_data = envelope.core_action_data()
             action_data[ATTR_DATA] = target_data
@@ -472,11 +474,19 @@ class MobilePushTransport(Transport):
                 clear_action_data = dict(action_data)
                 clear_action_data["message"] = "clear_notification"
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=clear_action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=clear_action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
             else:
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
 
             if success and is_android:
@@ -488,12 +498,22 @@ class MobilePushTransport(Transport):
                 simple_target = (
                     mobile_target if not Target.is_notify_entity(mobile_target) else mobile_target.replace("notify.", "")
                 )
-                _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
+                # a device whose notify action has gone (removed, or re-paired under another name)
+                # won't come back by waiting, so it gets a repair rather than a snooze that hides it
+                action_gone: bool = not self.context.hass_api.mobile_app_action_exists(simple_target)
+                if action_gone:
+                    _LOGGER.warning("SUPERNOTIFY No notify action for %s, raising a repair", simple_target)
+                else:
+                    _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
                 if self.people_registry:
                     # tie the mobile device back to a recipient for the snoozing API
                     for recipient in self.people_registry.enabled_recipients():
                         for md in recipient.mobile_devices:
-                            if md in (simple_target, mobile_target):
+                            if md not in (simple_target, mobile_target):
+                                continue
+                            if action_gone:
+                                recipient.check_mobile_actions(self.context.hass_api)
+                            else:
                                 self.context.snoozer.register_snooze(
                                     CommandType.SNOOZE,
                                     target_type=QualifiedTargetType.MOBILE,
@@ -508,5 +528,7 @@ class MobilePushTransport(Transport):
             if push_data["tts_delay"]:
                 await asyncio.sleep(push_data["tts_delay"])
             for full_target, extra in tts_pending:
-                await self.call_action(envelope, qualified_action=full_target, action_data=extra, implied_target=True)
+                await self.call_action(
+                    envelope, qualified_action=full_target, action_data=extra, implied_target=True, single_target=True
+                )
         return hits > 0

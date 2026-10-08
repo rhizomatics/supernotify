@@ -23,7 +23,7 @@
 
 ### CHANGEMENT MAJEUR v2
 
->> La prise en charge de Python 3.13 et des versions de Home Assistant antérieures à 2026.3.0 (la première à ne prendre en charge que la v3.14) sera abandonnée à la sortie de Home Assistant 2026.10. Supernotify continuera d'être testé avec les versions compatibles plus anciennes de Home Assistant.
+>> La prise en charge de Python 3.13 et des versions de Home Assistant antérieures à 2026.3.0 (la première à ne prendre en charge que la v3.14) a été abandonnée à la sortie de Home Assistant 2026.10. Supernotify continuera d'être testé avec les versions compatibles plus anciennes de Home Assistant.
 
 >> La version `2.0.0` de SuperNotify passe à une configuration native via l'interface Home Assistant ('ConfigFlow'). Si vous avez déjà une configuration simple, tout sera migré automatiquement pour vous et aucun YAML ne sera nécessaire.
 
@@ -49,7 +49,7 @@ Supernotify est un composant personnalisé disponible via le [Home Assistant Com
 
 ## Documentation
 
-Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/fr/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
+Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/basic_concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
 
 Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) avec des exemples de configuration, ou parcourez par [tags](https://supernotify.rhizomatics.org.uk/tags/).
 

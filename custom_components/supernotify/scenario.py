@@ -36,13 +36,12 @@ if TYPE_CHECKING:
 
 from contextlib import contextmanager
 
-import voluptuous as vol
-
 # type: ignore[attr-defined,unused-ignore]
 from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITIONS
 
+from .compat import vol
 from .const import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
 from .model import ConditionVariables
 
@@ -314,7 +313,9 @@ class Scenario:
             error: str | None = None
             try:
                 # note: basic template syntax within conditions already validated by voluptuous checks
-                self.conditions = await self.hass_api.build_conditions(self.conditions_config, strict=True, validate=True)
+                self.conditions = await self.hass_api.build_conditions(
+                    self.conditions_config, strict=True, validate=True, name=self.name
+                )
             except vol.Invalid as vi:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"

@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "Próba",
-                    "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek."
+                    "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek. Tryb rzeczywisty jest zwykłym trybem działania."
                 },
                 "data": {
                     "name": "Dane (przestarzałe)",
@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Szczegółowość",
                     "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'. 'Liczniki dzienne' zwraca zamiast tego sumy dla każdego lokalnego dnia, bez limitu, chyba że zostanie podany."
+                },
+                "priority": {
+                    "name": "Priorytet",
+                    "description": "Tylko powiadomienia z jednym z tych priorytetów."
                 }
             }
         }
@@ -442,6 +446,10 @@
             "title": "Dostarczenie ma nieprawidłową akcję",
             "description": "Dostarczenie {delivery} ma nieprawidłową akcję {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Nie znaleziono aplikacji mobilnej dla odbiorcy",
+            "description": "Odbiorca {recipient} ma urządzenie mobilne {mobile_app}, ale w Home Assistant nie ma akcji `notify.{mobile_app}`, więc powiadomienia nie mogą do niego dotrzeć. Jeśli urządzenie lub jego aplikacja Home Assistant już nie istnieje, usuń je z Home Assistant albo wyłącz w `mobile_devices` odbiorcy. Zignoruj tę naprawę, jeśli urządzenie jest niedostępne tylko tymczasowo."
+        },
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}: {exception}"
@@ -479,8 +487,8 @@
             "description": "Automatyczna migracja do klucza YAML najwyższego poziomu `supernotify:` nie mogła zostać ukończona: {reason}. Przenieś samodzielnie ustawienia dostarczenia, transportów, scenariuszy, odbiorców, kamer, grup akcji, linków i drzemki z bloku `notify: - platform: supernotify` do klucza najwyższego poziomu `supernotify:` (na przykład `supernotify: !include supernotify.yaml`), a następnie usuń stary blok i zrestartuj Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "Wsparcie dla Pythona 3.13 wkrótce się kończy",
-            "description": "Ta instancja Home Assistant działa na Pythonie {python_version}. Supernotify zakończy wsparcie dla Pythona 3.13 (oraz wersji Home Assistant starszych niż 2026.3.0) wraz z wydaniem Home Assistant 2026.10 - po tym momencie ta instancja nie będzie mogła instalować kolejnych aktualizacji Supernotify, dopóki środowisko Pythona nie zostanie zaktualizowane do wersji 3.14 lub nowszej."
+            "title": "Wsparcie dla Pythona 3.13 zostało zakończone",
+            "description": "Ta instancja Home Assistant działa na Pythonie {python_version}. Od wydania Home Assistant 2026.10 Supernotify nie jest już testowany z Pythonem 3.13 (ani z wersjami Home Assistant starszymi niż 2026.3.0). Może nadal działać, ale nie jest to już weryfikowane, a ta instancja nie będzie mogła instalować kolejnych aktualizacji Supernotify, dopóki środowisko Pythona nie zostanie zaktualizowane do wersji 3.14 lub nowszej."
         },
         "recipient_binary_sensor_deprecated": {
             "title": "Czujniki binarne odbiorców zostaną usunięte",

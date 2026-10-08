@@ -147,7 +147,7 @@ def test_purge_expired_snoozes() -> None:
 def test_register_snooze_unknown_cmd() -> None:
     uut = Snoozer()
     uut.register_snooze(
-        "BADCMD",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        "BADCMD",  # type: ignore[arg-type]
         GlobalTargetType.EVERYTHING,
         None,
         RecipientType.EVERYONE,
@@ -346,3 +346,19 @@ def test_snoozer_export_skips_expired_snoozes() -> None:
     exported = uut.export()
     assert len(exported) == 1
     assert exported[0]["target"] == "email"
+
+
+async def test_snoozer_purge_drops_snooze_on_a_mobile_app_that_has_gone(
+    hass: HomeAssistant, unmocked_hass_api: HomeAssistantAPI
+) -> None:
+    hass.services.async_register("notify", "mobile_app_still_here", lambda _call: None)
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    for target in ("mobile_app_still_here", "mobile_app_re_paired"):
+        uut.register_snooze(
+            CommandType.SNOOZE, QualifiedTargetType.MOBILE, target, RecipientType.USER, "person.bob", timedelta(days=1)
+        )
+
+    uut.purge_snoozes()
+
+    assert [s.target for s in uut.snoozes.values()] == ["mobile_app_still_here"]

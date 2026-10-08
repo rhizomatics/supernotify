@@ -11,17 +11,23 @@ hidden_tags:
   - transport
   - echo
   - blueprint
+  - events
   - amazon
-  - apple
+  - ios
   - otlp
   - gemini
-  - camera
+  - opentelemetry
   - hikvision
+  - actionable_notifications
   - onvif
+  - targets
+  - delivery
   - sounder
   - syslog
   - remote_logger
   - ui
+  - 433mhz
+  - supernotify_cards
   - lovelace
   - autoarm
   - mobile_actions

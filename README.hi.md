@@ -23,7 +23,7 @@
 
 ### प्रमुख परिवर्तन v2
 
->> जब Home Assistant 2026.10 जारी होगा, तब Python 3.13 और 2026.3.0 (जो केवल v3.14 का समर्थन करने वाला पहला संस्करण है) से पहले के Home Assistant संस्करणों के लिए समर्थन समाप्त कर दिया जाएगा। Supernotify पुराने संगत Home Assistant संस्करणों के विरुद्ध परीक्षण जारी रखेगा।
+>> Home Assistant 2026.10 के जारी होने के साथ, Python 3.13 और 2026.3.0 (जो केवल v3.14 का समर्थन करने वाला पहला संस्करण है) से पहले के Home Assistant संस्करणों के लिए समर्थन समाप्त कर दिया गया है। Supernotify पुराने संगत Home Assistant संस्करणों के विरुद्ध परीक्षण जारी रखेगा।
 
 >> SuperNotify का `2.0.0` एक नेटिव Home Assistant UI कॉन्फ़िगरेशन ('ConfigFlow') की ओर बढ़ता है। यदि आपके पास पहले से एक सरल कॉन्फ़िगरेशन है, तो सब कुछ आपके लिए स्वचालित रूप से माइग्रेट कर दिया जाएगा और किसी YAML की आवश्यकता नहीं होगी।
 
@@ -49,7 +49,7 @@ Supernotify [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के 
 
 ## दस्तावेज़ीकरण
 
-[शुरुआत करना](https://supernotify.rhizomatics.org.uk/getting_started/), [मुख्य अवधारणाओं](https://supernotify.rhizomatics.org.uk/hi/concepts/) की व्याख्या और उपलब्ध [ट्रांसपोर्ट अडैप्टर](https://supernotify.rhizomatics.org.uk/transports/) आज़माएं।
+[शुरुआत करना](https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/), [मुख्य अवधारणाओं](https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/basic_concepts/) की व्याख्या और उपलब्ध [ट्रांसपोर्ट अडैप्टर](https://supernotify.rhizomatics.org.uk/transports/) आज़माएं।
 
 बहुत सारे [व्यंजन](https://supernotify.rhizomatics.org.uk/recipes/) उदाहरण कॉन्फ़िगरेशन के साथ उपलब्ध हैं, या [टैग](https://supernotify.rhizomatics.org.uk/tags/) द्वारा ब्राउज़ करें।
 

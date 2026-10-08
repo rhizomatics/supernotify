@@ -19,6 +19,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import (
@@ -28,6 +30,7 @@ from custom_components.supernotify.hass_api import (
     CONF_USER_ID,
     ConditionErrorLoggingAdaptor,
     HomeAssistantAPI,
+    TemplateWrapper,
     force_strict_template_mode,
 )
 from custom_components.supernotify.model import ConditionVariables, SelectionRule
@@ -115,6 +118,93 @@ async def test_strict_evaluates_detects_missing_vars(hass: HomeAssistant, valida
     condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ xotification_priority == 'critical' }}"})
     with pytest.raises(HomeAssistantError):
         await hass_api.build_conditions(condition, validate=validate, strict=True)
+
+
+@pytest.mark.parametrize(
+    argnames=("compound", "short_circuit"),
+    argvalues=[
+        ("and", "{{ notification_priority == 'low' }}"),
+        ("or", "{{ notification_priority == 'medium' }}"),
+    ],
+    ids=["and", "or"],
+)
+@pytest.mark.parametrize(
+    argnames="bad_template",
+    argvalues=["{{ alarm_control_panel.home_alarm_control == 'armed_night' }}", "{{ xotification_priority == 'critical' }}"],
+    ids=["undefined_attribute", "undefined_var"],
+)
+async def test_strict_detects_bad_template_behind_short_circuit(
+    hass: HomeAssistant, compound: str, short_circuit: str, bad_template: str
+) -> None:
+    """Regression: a bad template was only found if the default variables happened to reach it"""
+    hass_api = HomeAssistantAPI(hass)
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "not",
+        "conditions": [{"condition": compound, "conditions": [short_circuit, bad_template]}],
+    })
+    with pytest.raises(HomeAssistantError):
+        await hass_api.build_conditions(condition, validate=True, strict=True)
+
+
+async def test_strict_detects_bad_value_template_behind_short_circuit(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    hass.states.async_set("sensor.bedroom_temperature", "18")
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": [
+            "{{ notification_priority == 'low' }}",
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.bedroom_temperature",
+                "value_template": "{{ sensor.bedroom_temperature | float }}",
+                "above": 15,
+            },
+        ],
+    })
+    with pytest.raises(HomeAssistantError):
+        await hass_api.build_conditions(condition, validate=True, strict=True)
+
+
+async def test_strict_logs_unresolved_entities_without_failing(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Entities may belong to integrations not loaded yet, so can't be treated as errors"""
+    hass_api = HomeAssistantAPI(hass)
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "disarmed")
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": [
+            "{{ notification_priority == 'low' }}",
+            {"condition": "state", "entity_id": "alarm_control_panel.home_alarm_control", "state": "armed_night"},
+            {"condition": "state", "entity_id": "alarm_control_panel.typo", "state": "armed_night"},
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.not_loaded_yet",
+                "value_template": "{{ state.state | float }}",
+                "above": 15,
+            },
+        ],
+    })
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=True, strict=True, name="bedtime")
+    assert checker
+    warnings = [r.getMessage() for r in caplog.records if "unknown entity" in r.getMessage()]
+    assert len(warnings) == 2
+    assert any("bedtime" in w and "alarm_control_panel.typo" in w for w in warnings)
+    assert any("bedtime" in w and "sensor.not_loaded_yet" in w for w in warnings)
+
+
+async def test_strict_leaves_nested_templates_lax_at_runtime(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": ["{{ notification_priority == 'low' }}", "{{ notification_message is defined }}"],
+    })
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=True, strict=True)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables()) is False
+    assert not any(isinstance(v, TemplateWrapper) for c in condition[0]["conditions"] for v in c.values())
 
 
 @pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
@@ -620,7 +710,7 @@ async def test_build_conditions_raises_when_no_test_built(hass: HomeAssistant) -
 def test_evaluate_conditions_warns_on_missing_vars(hass: HomeAssistant) -> None:
     # Lines 433-434: warns and passes None through when condition_variables is None
     hass_api = HomeAssistantAPI(hass)
-    assert hass_api.evaluate_conditions(lambda variables: variables is None, None) is True  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    assert hass_api.evaluate_conditions(lambda variables: variables is None, None) is True  # type: ignore[arg-type]
 
 
 def test_evaluate_conditions_reraises_exception(hass: HomeAssistant) -> None:
@@ -845,3 +935,53 @@ async def test_disconnect_debug_log_does_not_render_unsubscribe_callables(
     assert rendered == []
     assert "SUPERNOTIFY Unsubscribing: _remove_listener" in caplog.text
     assert "SUPERNOTIFY Unsubscribing: EventBus._async_remove_listener" in caplog.text
+
+
+async def test_subscribe_mobile_app_changes_is_debounced_and_ignores_other_changes(hass: HomeAssistant) -> None:
+    from datetime import timedelta
+
+    hass_api = HomeAssistantAPI(hass)
+    on_change = AsyncMock()
+    hass_api.subscribe_mobile_app_changes(on_change, cooldown=1)
+
+    def settle() -> None:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+
+    # not a mobile app, and not a mobile app's notify action
+    register_device(hass_api, device_id="50001111222233334444555566667777", domain="unit_testing", domain_id="hub")
+    hass.services.async_register("notify", "smtp", lambda _call: None)
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    on_change.assert_not_called()
+
+    # a phone paired, with its notify action registered just after, is one change
+    device = register_mobile_app(hass_api, person="person.debounce_test", device_name="New Phone")
+    assert device is not None
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    assert on_change.await_count == 1
+
+    # and so is it going away
+    hass.services.async_remove("notify", "mobile_app_new_phone")
+    hass_api._device_registry().async_remove_device(device.id)  # type: ignore[union-attr]
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    assert on_change.await_count == 2
+
+    hass_api.disconnect()
+
+
+def test_build_mobile_app_cache_drops_a_device_that_has_gone(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    device = register_mobile_app(hass_api, person="person.gone_test", device_name="Old Phone")
+    assert device is not None
+    assert hass_api.mobile_app_by_id("mobile_app_old_phone") is not None
+
+    hass_api._device_registry().async_remove_device(device.id)  # type: ignore[union-attr]
+    hass_api.build_mobile_app_cache()
+
+    assert hass_api.mobile_app_by_id("mobile_app_old_phone") is None
+    assert hass_api.mobile_app_by_device_id(device.id) is None

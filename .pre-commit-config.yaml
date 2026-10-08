@@ -41,7 +41,7 @@ repos:
           - --show-error-context
         exclude: docgen/.*\.py
         additional_dependencies:
-          - homeassistant-stubs==2026.9.3
+          - homeassistant-stubs==2026.10.0
           - pytest-homeassistant-custom-component>=0.13.356
           - types-python-slugify>=8.0.2.20240310
           - voluptuous-stubs>=0.1.1
@@ -55,6 +55,7 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+          - homeassistant_repl
   - repo: local
     hooks:
       - id: diagram-thumbnails
@@ -64,7 +65,7 @@ repos:
         language: system
         files: ^docs/developer/diagrams/.+\.html$
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.84
+    rev: v0.0.85
     hooks:
       - id: ty
         args: [--isolated, --no-python-downloads]

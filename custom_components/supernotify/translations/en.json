@@ -141,11 +141,11 @@
                     "description": "Send even if duplicate-detection would otherwise suppress this notification."
                 },
                 "dry_run": {
-                    "name": "Dry Run",
-                    "description": "Simulate works out which deliveries would be used and who they would reach, without actually sending anything."
+                    "name": "Simulation",
+                    "description": "Simulate mode works out which deliveries would be used and who they would reach, without actually sending anything. Live mode is the usual operating mode."
                 },
                 "data": {
-                    "name": "Data (legacy)",
+                    "name": "Data (Legacy)",
                     "description": "Older name for Extra Data, kept so existing automations still show in the visual editor. Use Extra Data for new automations."
                 },
                 "timestamp": {
@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "Verbosity",
                     "description": "How much of each notification to return: a short summary of what happened, the standard archived record without the debug trace, or everything stored. Defaults to standard for a list and full for a single 'id'. 'Counts per day' returns totals for each local day instead, with no limit unless one is given."
+                },
+                "priority": {
+                    "name": "Priority",
+                    "description": "Return only notifications with one of these priorities."
                 }
             }
         }
@@ -558,8 +562,8 @@
             "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
         },
         "python_313_deprecated": {
-            "title": "Python 3.13 support ending soon",
-            "description": "This Home Assistant instance is running Python {python_version}. Supernotify drops support for Python 3.13 (and Home Assistant versions before 2026.3.0) once Home Assistant 2026.10 is released - after that, this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
+            "title": "Python 3.13 no longer supported",
+            "description": "This Home Assistant instance is running Python {python_version}. Supernotify stopped testing against Python 3.13 (and Home Assistant versions before 2026.3.0) when Home Assistant 2026.10 was released. It may continue to work, but this is no longer verified, and this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
         },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",
@@ -588,6 +592,10 @@
         "delivery_invalid_action": {
             "title": "Delivery Has Invalid Action",
             "description": "The delivery {delivery} has an invalid action {action}"
+        },
+        "recipient_mobile_app_not_found": {
+            "title": "Mobile App Not Found for Recipient",
+            "description": "Recipient {recipient} has a mobile device {mobile_app}, but there is no `notify.{mobile_app}` action in Home Assistant, so notifications can't reach it. If the device or its Home Assistant app has gone, remove it from Home Assistant, or disable it in the recipient's `mobile_devices`. Ignore this repair if the device is only away temporarily."
         },
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",

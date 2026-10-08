@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "演练",
-                    "description": "模拟会计算将使用哪些投递方式以及它们会送达给谁，而不实际发送任何内容。"
+                    "description": "模拟会计算将使用哪些投递方式以及它们会送达给谁，而不实际发送任何内容。正式发送模式是通常的运行模式。"
                 },
                 "data": {
                     "name": "数据（旧）",
@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "详细程度",
                     "description": "每条通知返回多少内容：发生情况的简短摘要、不含调试跟踪的标准归档记录，或存储的全部内容。列表默认为标准，单个 'id' 默认为完整。 '按天统计' 则返回每个本地日期的汇总，除非指定上限，否则不限数量。"
+                },
+                "priority": {
+                    "name": "优先级",
+                    "description": "仅返回具有这些优先级之一的通知。"
                 }
             }
         }
@@ -442,6 +446,10 @@
             "title": "推送的操作无效",
             "description": "推送 {delivery} 包含无效操作 {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "未找到接收人的移动应用",
+            "description": "接收人 {recipient} 有移动设备 {mobile_app}，但 Home Assistant 中没有 `notify.{mobile_app}` 操作，因此通知无法送达。如果该设备或其 Home Assistant 应用已不存在，请将其从 Home Assistant 中移除，或在接收人的 `mobile_devices` 中将其禁用。如果设备只是暂时不可用，请忽略此修复。"
+        },
         "delivery_invalid_condition": {
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}：{exception}"
@@ -479,8 +487,8 @@
             "description": "自动迁移到顶级 `supernotify:` YAML 键未能完成：{reason}。请自行将推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置从 `notify: - platform: supernotify` 块迁移到顶级 `supernotify:` 键中（例如 `supernotify: !include supernotify.yaml`），然后删除旧块并重启 Home Assistant。"
         },
         "python_313_deprecated": {
-            "title": "Python 3.13 支持即将结束",
-            "description": "此 Home Assistant 实例正在运行 Python {python_version}。当 Home Assistant 2026.10 发布后，Supernotify 将不再支持 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)——此后，除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
+            "title": "Python 3.13 支持已结束",
+            "description": "此 Home Assistant 实例正在运行 Python {python_version}。自 Home Assistant 2026.10 发布起，Supernotify 不再针对 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)进行测试。它可能仍可继续运行，但已不再经过验证；除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
         },
         "recipient_binary_sensor_deprecated": {
             "title": "接收人的二进制传感器将被移除",

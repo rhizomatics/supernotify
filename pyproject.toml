@@ -3,16 +3,12 @@ name = "supernotify"
 description = "Home Assistant custom component for unified, simplified and powerful notifications"
 readme = "README.md"
 dynamic = ["version"]
-requires-python = ">=3.13.2"
+requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant>=2026.9.0; python_full_version >= '3.14.2'",
-    "homeassistant>=2025.10.4,<2026.3.0; python_full_version < '3.14.2'",
+    "homeassistant>=2026.10.0",
     "cachetools",
     "bs4",
     "aiofiles",
-    #"pyopenssl==25.3.0", # HA issue 2026.3
-    #"requests==2.32.5" # force hass compat
-    #"cryptography==48.0.0" # removed: conflicts with HA 2026.5.x which requires 47.0.0
 ]
 
 [tool.poetry]
@@ -38,15 +34,12 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 [dependency-groups]
 dev=[
     "homeassistant-stubs",
-    "pytest==9.0.3; python_full_version >= '3.14.2'",
-    "pytest==9.0.0; python_full_version < '3.14.2'",
+    "pytest==9.0.3",
     "pytest-cov",
     "pytest-socket",
-    "pytest-homeassistant-custom-component>=0.13.356;python_full_version >= '3.14.2'",
-    "pytest-homeassistant-custom-component<0.13.348;python_full_version < '3.14.2'",
+    "pytest-homeassistant-custom-component>=0.13.356",
     "pytest-asyncio",
-    "pytest-aiohttp==1.1.1; python_full_version >= '3.14.2'",
-    "pytest-aiohttp<1.1.1; python_full_version < '3.14.2'",
+    "pytest-aiohttp==1.1.1",
     "pytest-unordered",
     "pytest-mock",
     "pytest-xdist",
@@ -56,17 +49,16 @@ dev=[
     "types-cachetools",
     "pre-commit",
     "pytest-httpserver",
-    "ruff>=0.16.0; python_full_version >= '3.14.2'",
-    "ruff<0.16.0; python_full_version < '3.14.2'",
+    "ruff>=0.16.0",
     "codespell",
     "mypy",
     "genbadge[all]",
     # generic transport testing
     "notify-events",
-    "aiontfy==0.8.2; python_full_version < '3.14.2'",
-    "aiontfy==0.8.5; python_full_version >= '3.14.2'",
-    "zeroconf==0.149.16; python_full_version < '3.14.2'",
-    "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
+    "aiontfy==0.8.5",
+    # home assistant smtp testing
+    "aiosmtplib==5.1.3",
+    "zeroconf>=0.150.1",
     # home assistant tts testing
     "mutagen",
     "ha-ffmpeg",
@@ -81,9 +73,10 @@ dev=[
     "types-python-slugify>=8.0.2.20240310",
     "voluptuous-stubs>=0.1.1",
     "types-requests>=2.33.0.20260906,<3.0.0.0",
-    "types-pillow>=10.2.0.20240822,<11.0.0.0",
+    "types-pillow",
     "types-pyyaml>=6.0.12.20260906,<7.0.0.0",
-    "types-beautifulsoup4>=4.12.0.20250516,<5.0.0.0",
+    "types-beautifulsoup4",
+    "homeassistant_repl" # optional developer shell
 ]
 docs=[
     "mkdocs-materialx[imaging]",
@@ -104,18 +97,16 @@ docs=[
     "mkdocs-meta-descriptions-plugin",
     "mike",
     "mkdocs-htmlproofer-plugin",
-    "mkdocs-llmstxt"
+    "mkdocs-llmstxt",
+    "mkdocs-redirects>=1.2.3,<2.0.0",
 ]
 
 [project.optional-dependencies]
 
 
 [tool.uv]
-# Skip the 3.14.0-3.14.1 gap: HA 2026.3+ requires >=3.14.2, so those patch
-# versions are unusable regardless.
 prerelease = "if-necessary"
 environments = [
-    "python_full_version < '3.14'",
     "python_full_version >= '3.14.2'",
 ]
 override-dependencies = [
@@ -123,22 +114,19 @@ override-dependencies = [
     # homeassistant==2026.2.3 hard-pins zeroconf==0.148.0 (exact, no range) - that version
     # carries a known CVE, so force the patched 0.149.16 instead for py3.13 (2026.9.2, used
     # for py3.14+, already requires a newer zeroconf range that isn't affected)
-    "zeroconf==0.149.16; python_full_version < '3.14.2'",
-    "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
-    "homeassistant==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant==2026.9.3; python_full_version >= '3.14.2'",
-    "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant-stubs==2026.9.3; python_full_version >= '3.14.2'",
+    "zeroconf>=0.150.1",
+    "homeassistant==2026.10.0",
+    "homeassistant-stubs==2026.10.0",
 
 ]
 exclude-newer = "5 days"
-exclude-newer-package = { ruff="2 days",homeassistant=false,homeassistant-stubs=false }
+exclude-newer-package = { homeassistant_repl="1 days",ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
 add-bounds = "major"
 
 [tool.ruff]
 line-length = 128
 indent-width = 4
-target-version = "py313"
+target-version = "py314"
 exclude = [
     ".bzr",
     ".direnv",
@@ -220,6 +208,14 @@ include = ["custom_components/supernotify","tests"]
 [tool.ty.rules]
 unused-type-ignore-comment="ignore"
 
+[[tool.ty.overrides]]
+include = ["tests/**"]
+
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
+not-subscriptable = "ignore"
+unresolved-attribute = "ignore"
+
 [tool.codespell]
 ignore-words-list = "HASS,hass,wee,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,alle,comando,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
 # Skip binary/data files, build artifacts, and non-English markdown (locale-named files and locale dirs)
@@ -251,3 +247,7 @@ addopts = [
 [[tool.mypy.overrides]]
 module = ["pytest_homeassistant_custom_component.*"]
 follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disable_error_code = ["attr-defined", "arg-type", "call-overload", "index", "union-attr"]

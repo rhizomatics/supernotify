@@ -159,7 +159,7 @@ class PushoverTransport(Transport):
                         priority_ovr,
                     )
                     priority_ovr = None
-            except (TypeError, ValueError):  # py3.13 compat
+            except TypeError, ValueError:  # py3.13 compat
                 _LOGGER.warning(
                     "SUPERNOTIFY pushover: invalid pushover_priority %r, falling back to auto mapping",
                     priority_ovr_raw,
@@ -184,7 +184,7 @@ class PushoverTransport(Transport):
             else:
                 try:
                     retry_val = int(retry_raw)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     _LOGGER.warning(
                         "SUPERNOTIFY pushover: invalid pushover_retry %r, using default %ds",
                         retry_raw,
@@ -198,7 +198,7 @@ class PushoverTransport(Transport):
             else:
                 try:
                     expire_val = int(expire_raw)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     _LOGGER.warning(
                         "SUPERNOTIFY pushover: invalid pushover_expire %r, using default %ds",
                         expire_raw,
@@ -246,7 +246,7 @@ class PushoverTransport(Transport):
         if ttl_raw is not None:
             try:
                 push_data["ttl"] = int(ttl_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning("SUPERNOTIFY pushover: invalid pushover_ttl %r, ignored", ttl_raw)
         if device:
             push_data["device"] = device

@@ -8,7 +8,6 @@ import sys
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
 from homeassistant.const import (
     CONF_TARGET,
 )
@@ -29,6 +28,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_by_day, summarize_notification
 from .common import ensure_list
+from .compat import vol
 from .const import (
     ATTR_CUSTOM_TARGET,
     ATTR_DATA,
@@ -77,6 +77,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# what the schema fills in for fields a supernotify.notify call left out
+_NOTIFY_ACTION_DEFAULTS: dict[str, Any] = NOTIFY_ACTION_SCHEMA({})
+
 
 def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
     """Migrate a notify.supernotify-shaped payload sent to supernotify.notify.
@@ -103,9 +106,11 @@ def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
         lifted = {k: v for k, v in nested.items() if k in ACTION_DATA_FIELDS and k != ATTR_DATA}
         passthrough = {k: v for k, v in nested.items() if k not in ACTION_DATA_FIELDS}
         passthrough.update(nested.get(ATTR_DATA) or {})
-        # explicit top-level values win, but the schema fills empty defaults (action_groups: [] etc)
-        # for absent ones, so an empty top-level value must not shadow a lifted one
-        data = lifted | {k: v for k, v in data.items() if k != ATTR_DATA and (v or k not in lifted)}
+        # explicit top-level values win, but the schema fills defaults (action_groups: [], dry_run: live etc)
+        # for absent ones, so an empty or default top-level value must not shadow a lifted one
+        data = lifted | {
+            k: v for k, v in data.items() if k != ATTR_DATA and (k not in lifted or (v and v != _NOTIFY_ACTION_DEFAULTS.get(k)))
+        }
         if passthrough:
             data[ATTR_DATA] = passthrough
     return data
@@ -160,6 +165,7 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
         vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
+        vol.Optional("priority"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -400,7 +406,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
 
         def at_verbosity(contents: dict[str, Any]) -> dict[str, Any]:
             if verbosity == VERBOSITY_SUMMARY:
-                return summarize_notification(engine, contents)
+                # delivery_provenance is about half of a summary: it stays at standard and full
+                return summarize_notification(engine, contents, include_provenance=False)
             if verbosity == VERBOSITY_STANDARD:
                 return {k: v for k, v in contents.items() if k != "debug_trace"}
             return contents
@@ -420,12 +427,15 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
         period: str | None = call.data.get("period")
+        priority: list[str] | None = call.data.get("priority") or None
         # a date/time given without a time zone is local time
         after = dt_util.as_local(dt.datetime.fromisoformat(after_raw)) if after_raw else None
         before = dt_util.as_local(dt.datetime.fromisoformat(before_raw)) if before_raw else None
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
-        entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
+        entries = await archive.archive_directory.list_entries(
+            limit=limit, after=after, before=before, outcome=outcome, priority=priority
+        )
         if daily:
             return summarize_by_day(entries)
         return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}

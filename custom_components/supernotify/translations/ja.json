@@ -142,7 +142,7 @@
                 },
                 "dry_run": {
                     "name": "ドライラン",
-                    "description": "シミュレートは、実際には何も送信せずに、どの配信が使用され、誰に届くかを計算します。"
+                    "description": "シミュレートは、実際には何も送信せずに、どの配信が使用され、誰に届くかを計算します。通常の動作モードはライブモードです。"
                 },
                 "data": {
                     "name": "データ (旧)",
@@ -359,6 +359,10 @@
                 "verbosity": {
                     "name": "詳細度",
                     "description": "各通知をどの程度返すか: 何が起きたかの短い要約、デバッグトレースを除いた標準のアーカイブ記録、または保存されているすべて。リストでは標準、単一の 'id' では完全が既定です。 '日別の件数' は代わりにローカル日ごとの合計を返し、上限を指定しない限り件数の上限はありません。"
+                },
+                "priority": {
+                    "name": "優先度",
+                    "description": "これらの優先度のいずれかを持つ通知のみを返します。"
                 }
             }
         }
@@ -442,6 +446,10 @@
             "title": "配信のアクションが無効です",
             "description": "配信 {delivery} には無効なアクション {action} があります"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "受信者のモバイルアプリが見つかりません",
+            "description": "受信者 {recipient} にはモバイルデバイス {mobile_app} がありますが、Home Assistant に `notify.{mobile_app}` アクションがないため、通知を届けられません。デバイスまたはその Home Assistant アプリがなくなった場合は、Home Assistant から削除するか、受信者の `mobile_devices` で無効にしてください。デバイスが一時的に利用できないだけの場合は、この修復を無視してください。"
+        },
         "delivery_invalid_condition": {
             "title": "配信の条件が無効です",
             "description": "配信 {delivery} には無効な条件 {condition} があります：{exception}"
@@ -479,8 +487,8 @@
             "description": "トップレベルの `supernotify:` YAML キーへの自動移行が完了できませんでした: {reason}。配信、トランスポート、シナリオ、受信者、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` ブロックから自分でトップレベルの `supernotify:` キー（例: `supernotify: !include supernotify.yaml`）に移動し、その後古いブロックを削除して Home Assistant を再起動してください。"
         },
         "python_313_deprecated": {
-            "title": "Python 3.13 のサポートは間もなく終了します",
-            "description": "この Home Assistant インスタンスは Python {python_version} で実行されています。Home Assistant 2026.10 のリリースに伴い、Supernotify は Python 3.13（および 2026.3.0 より前の Home Assistant バージョン）のサポートを終了します。それ以降、基盤となる Python 環境を Python 3.14 以降にアップグレードしない限り、このインスタンスは Supernotify の今後のアップデートをインストールできなくなります。"
+            "title": "Python 3.13 のサポートは終了しました",
+            "description": "この Home Assistant インスタンスは Python {python_version} で実行されています。Home Assistant 2026.10 のリリースに伴い、Supernotify は Python 3.13（および 2026.3.0 より前の Home Assistant バージョン）でのテストを終了しました。引き続き動作する可能性はありますが、検証は行われておらず、基盤となる Python 環境を Python 3.14 以降にアップグレードしない限り、このインスタンスは Supernotify の今後のアップデートをインストールできません。"
         },
         "recipient_binary_sensor_deprecated": {
             "title": "受信者のバイナリセンサーは削除されます",
