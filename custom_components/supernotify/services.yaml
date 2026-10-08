@@ -132,9 +132,9 @@ notify:
             select:
               options:
                 - value: live
-                  label: Live
+                  label: Live Run
                 - value: simulate
-                  label: Simulate
+                  label: Simulation
         data:
           selector:
             object:

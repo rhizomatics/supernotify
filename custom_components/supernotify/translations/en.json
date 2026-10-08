@@ -141,11 +141,11 @@
                     "description": "Send even if duplicate-detection would otherwise suppress this notification."
                 },
                 "dry_run": {
-                    "name": "Dry Run",
-                    "description": "Simulate works out which deliveries would be used and who they would reach, without actually sending anything."
+                    "name": "Simulation",
+                    "description": "Simulate works out which deliveries would be used and who they would reach, without actually sending anything. Live mode is the usual operating mode."
                 },
                 "data": {
-                    "name": "Data (legacy)",
+                    "name": "Data (Legacy)",
                     "description": "Older name for Extra Data, kept so existing automations still show in the visual editor. Use Extra Data for new automations."
                 },
                 "timestamp": {

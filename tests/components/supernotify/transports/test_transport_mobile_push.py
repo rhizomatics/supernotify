@@ -767,7 +767,7 @@ async def test_android_critical_sounds_through_do_not_disturb(
     priority high and the alarm_stream channel - as iOS gets interruption-level critical"""
     context = unmocked_config
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]
     context.configure_for_tests([uut])
     await context.initialize()
     e = Envelope(

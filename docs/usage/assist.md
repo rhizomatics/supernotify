@@ -104,7 +104,7 @@ the time, since that decides some deliveries.
 Turn on the file [archive](../configuration/archiving.md) to get a history. Without it, only the most
 recent notification since Home Assistant started is known.
 
-### Dry Run
+### Simulation (Dry Run)
 
 `supernotify__dry_run` works out which deliveries a notification would use right now, and who it
 would reach, without sending anything. It goes through exactly the same checks as a real
