@@ -120,7 +120,7 @@ override-dependencies = [
 
 ]
 exclude-newer = "5 days"
-exclude-newer-package = { ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
+exclude-newer-package = { homeassistant_repl="1 days",ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
 add-bounds = "major"
 
 [tool.ruff]
