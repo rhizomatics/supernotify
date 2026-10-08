@@ -25,6 +25,7 @@ to stack traces in logs and the entire notification mapped as an error even if o
 
 ## 📚 Documentation
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
+- The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
