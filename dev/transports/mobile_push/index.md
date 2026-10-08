@@ -43,6 +43,27 @@ Info
 
 This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
+## Critical on Android
+
+A `critical` notification goes to Android phones the way the [companion app documents critical notifications](https://companion.home-assistant.io/docs/notifications/critical-notifications): `ttl: 0` and `priority: high`, so a phone saving battery gets it straight away, and the `alarm_stream` channel, so it sounds even with Do Not Disturb on or the phone on silent - the Android counterpart of iOS's `interruption-level: critical`.
+
+The companion app's own `channel` and `ttl`, when set in the data, are kept as they are, so a critical notification can still use a channel of its own (`mobile_push_critical_priority: normal` changes the `high` priority):
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Smoke in the kitchen
+      priority: critical
+      delivery:
+        mobile_push:
+          data:
+            channel: smoke_alarm
+```
+
+Tip
+
+Some phones (Samsung One UI for one) also need the Home Assistant app allowed as an exception to Do Not Disturb, in the phone's own settings.
+
 ## Notification Grouping
 
 Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device (iOS thread-id / Android notification group):
