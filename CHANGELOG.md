@@ -30,6 +30,7 @@ to stack traces in logs and the entire notification mapped as an error even if o
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
+- For developers, there is now a custom plugin for the [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) developer shell, that makes live objects like `scenarios`,`engine` or `delivery_registry` available as shell variables
 
 # v2.13.2
 

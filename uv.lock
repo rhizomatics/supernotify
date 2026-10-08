@@ -15,8 +15,11 @@ exclude-newer-span = "P5D"
 [options.exclude-newer-package]
 aiohttp = false
 homeassistant = false
+homeassistant-repl = false
 homeassistant-stubs = false
 ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
+signalk-cli = false
+updates2mqtt = false
 uv = false
 
 [manifest]
