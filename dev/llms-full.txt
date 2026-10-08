@@ -570,6 +570,19 @@ days:
 count: 3100
 ```
 
+### Lighter lists from the archive
+
+`priority` keeps only notifications with one of the given priorities, across the whole range - the filter applies before `limit`. With `verbosity: summary`, each notification carries `missed`, the number of deliveries that were asked for but could not go out (why a notification with no failure is a `partial_delivery`). A summary leaves out `delivery_provenance`, why each delivery was enabled or disabled, which would be about half of it: list many notifications as summaries, then read one with `id` at `standard` or `full` to see it.
+
+```yaml
+action: supernotify.enquire_archive
+data:
+  priority: [critical, high]
+  period: last_month
+  limit: 500
+  verbosity: summary
+```
+
 # Assist and AI Agents
 
 Source: https://supernotify.rhizomatics.org.uk/latest/usage/assist/
