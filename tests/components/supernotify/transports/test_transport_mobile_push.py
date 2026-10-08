@@ -216,6 +216,8 @@ async def test_on_notify_mobile_push_with_critical_priority() -> None:
             "data": {
                 "push": {"interruption-level": "critical", "sound": {"name": "default", "critical": 1, "volume": 1.0}},
                 "ttl": 0,
+                "priority": "high",
+                "channel": "alarm_stream",
             },
         },
         blocking=False,
@@ -550,7 +552,7 @@ async def test_deliver_android_and_ios_extra_data_keys() -> None:
             "mobile_push_alarm_stream": True,
             "mobile_push_alarm_stream_max": True,
             "mobile_push_critical_ttl": 30,
-            "mobile_push_critical_priority": 5,
+            "mobile_push_critical_priority": "high",
             "mobile_push_tts_text": "speak this",
             "mobile_push_tts_locale": "en-US",
             "mobile_push_tts_engine": "com.google.android.tts",
@@ -568,10 +570,10 @@ async def test_deliver_android_and_ios_extra_data_keys() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["channel"] == "alarm"
-    assert data["alarm_stream"] is True
-    assert data["alarm_stream_max"] is True
+    assert "alarm_stream" not in data  # the companion app takes it as a channel, and the override wins here
+    assert "alarm_stream_max" not in data
     assert data["ttl"] == 30
-    assert data["priority"] == 5
+    assert data["priority"] == "high"
     assert data["tts_text"] == "speak this"
     assert data["tts_text_language"] == "en-US"
     assert data["tts_engine"] == "com.google.android.tts"
@@ -732,6 +734,53 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["image"] == "http://my.home/precomputed.jpg"
+
+
+@pytest.mark.parametrize(
+    ("manufacturer", "priority", "data", "expected"),
+    [
+        ("Samsung", PRIORITY_CRITICAL, {}, {"ttl": 0, "priority": "high", "channel": "alarm_stream"}),
+        # the companion app's own data elements are left as given
+        ("Samsung", PRIORITY_CRITICAL, {"channel": "alarm"}, {"ttl": 0, "priority": "high", "channel": "alarm"}),
+        (
+            "Samsung",
+            PRIORITY_CRITICAL,
+            {"ttl": 60},
+            {"ttl": 60, "priority": "high", "channel": "alarm_stream"},
+        ),
+        (
+            "Samsung",
+            PRIORITY_CRITICAL,
+            {"mobile_push_critical_priority": "normal"},
+            {"ttl": 0, "priority": "normal", "channel": "alarm_stream"},
+        ),
+        ("Samsung", PRIORITY_HIGH, {}, {}),
+        ("Samsung", PRIORITY_MEDIUM, {"mobile_push_alarm_stream": True}, {"channel": "alarm_stream"}),
+        ("Samsung", PRIORITY_MEDIUM, {"mobile_push_alarm_stream_max": True}, {"channel": "alarm_stream"}),
+        ("Apple", PRIORITY_CRITICAL, {}, {}),
+    ],
+)
+async def test_android_critical_sounds_through_do_not_disturb(
+    unmocked_config: Context, manufacturer: str, priority: str, data: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Critical on Android gets what the companion app documents for critical notifications - ttl 0,
+    priority high and the alarm_stream channel - as iOS gets interruption-level critical"""
+    context = unmocked_config
+    uut = MobilePushTransport(context)
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.configure_for_tests([uut])
+    await context.initialize()
+    e = Envelope(
+        Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
+        Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: priority}),
+        target=Target({"mobile_app_id": ["mobile_app_phone"]}),
+        data=data,
+    )
+    await uut.deliver(e)
+
+    sent = e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
+    assert {k: sent[k] for k in ("ttl", "priority", "channel") if k in sent} == expected
+    assert not any(k.startswith("mobile_push_") for k in sent)
 
 
 async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> None:
