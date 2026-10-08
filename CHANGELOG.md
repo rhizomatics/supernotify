@@ -21,6 +21,10 @@ to stack traces in logs and the entire notification mapped as an error even if o
 
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
+
+## 📚 Documentation
+- Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
+
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
 
