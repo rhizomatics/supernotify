@@ -10,6 +10,10 @@
 # Assistant, so the block that uses `hass` is sent there whole, imports and
 # all, and its names are used from the prompt as if they were local.
 #
+# More information at https://homeassistant-repl.rhizomatics.org.uk/
+#
+# Run locally with `uv run --with homeassistant-repl ha-repl` for the simple API mode
+#
 # You will need to run `ha-repl trust` first before this plugin will be activated
 
 from typing import TYPE_CHECKING
