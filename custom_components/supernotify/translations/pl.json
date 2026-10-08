@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "Priorytet",
                     "description": "Tylko powiadomienia z jednym z tych priorytetów."
-                },
-                "include_provenance": {
-                    "name": "Dołącz pochodzenie",
-                    "description": "Dołącz delivery_provenance, czyli dlaczego każde doręczenie zostało włączone lub wyłączone. Wyłącz, aby mniej więcej o połowę zmniejszyć listę w podsumowaniu."
                 }
             }
         }

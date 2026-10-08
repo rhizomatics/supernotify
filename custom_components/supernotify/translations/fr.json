@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "Priorité",
                     "description": "Uniquement les notifications ayant l'une de ces priorités."
-                },
-                "include_provenance": {
-                    "name": "Inclure la provenance",
-                    "description": "Inclure delivery_provenance, c'est-à-dire pourquoi chaque livraison a été activée ou désactivée. Désactiver pour réduire environ de moitié une liste en résumé."
                 }
             }
         }

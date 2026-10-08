@@ -24,7 +24,7 @@ to stack traces in logs and the entire notification mapped as an error even if o
 ### Archive
 - `enquire_archive` can filter by `priority`, one or more, ignoring case - before `limit`, so a month of archive can be searched for its few critical notifications in one call
 - The `summary` verbosity now includes `missed`, the count of deliveries asked for but not sent, so a `partial_delivery` can be explained from a summary list
-- `include_provenance: false` leaves `delivery_provenance` out of `enquire_archive` results - about half the size of a summary
+- The `summary` verbosity of `enquire_archive` leaves out `delivery_provenance`, about half its size - it is still there at `standard` and `full`
 
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.

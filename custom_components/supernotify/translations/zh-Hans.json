@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "优先级",
                     "description": "仅返回具有这些优先级之一的通知。"
-                },
-                "include_provenance": {
-                    "name": "包含来源",
-                    "description": "包含 delivery_provenance,即每个投递被启用或禁用的原因。关闭后摘要列表大约减半。"
                 }
             }
         }

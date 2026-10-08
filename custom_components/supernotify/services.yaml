@@ -221,11 +221,6 @@ enquire_archive:
               label: Low
             - value: minimum
               label: Minimum
-    include_provenance:
-      required: false
-      default: true
-      selector:
-        boolean:
 enquire_last_notification:
   fields:
     diagnostics:

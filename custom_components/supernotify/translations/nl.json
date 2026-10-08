@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "Prioriteit",
                     "description": "Alleen meldingen met een van deze prioriteiten."
-                },
-                "include_provenance": {
-                    "name": "Herkomst opnemen",
-                    "description": "delivery_provenance opnemen: waarom elke bezorging is in- of uitgeschakeld. Uitzetten om een lijst in samenvatting ongeveer te halveren."
                 }
             }
         }

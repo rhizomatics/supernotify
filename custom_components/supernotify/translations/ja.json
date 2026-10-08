@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "優先度",
                     "description": "これらの優先度のいずれかを持つ通知のみを返します。"
-                },
-                "include_provenance": {
-                    "name": "経緯を含める",
-                    "description": "delivery_provenance(各配信が有効または無効になった理由)を含めます。オフにすると要約のリストがおよそ半分になります。"
                 }
             }
         }

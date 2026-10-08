@@ -339,8 +339,7 @@ async def test_enquire_archive_priority_filter(hass: HomeAssistant, tmp_path: pa
 
 
 async def test_enquire_archive_summary_missed_and_provenance(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
-    """A summary counts the missed deliveries, and include_provenance: false leaves delivery_provenance out
-    at every verbosity."""
+    """A summary counts the missed deliveries and leaves delivery_provenance out, which standard and full keep."""
     now = dt_util.now()
     provenance = {"testing": {"enabled_by": ["default"]}, "chime": {"disabled_by": ["scenario:night"]}}
     _rewrite(
@@ -361,13 +360,10 @@ async def test_enquire_archive_summary_missed_and_provenance(hass: HomeAssistant
     summaries = {e["id"]: e for e in (await enquire(verbosity="summary"))["notifications"]}
     assert summaries["partial"]["missed"] == 2
     assert summaries["plain"]["missed"] == 0
-    assert summaries["partial"]["delivery_provenance"] == provenance
-    assert summaries["plain"]["delivery_provenance"] == {}
+    assert all("delivery_provenance" not in e for e in summaries.values())
+    assert "delivery_provenance" not in await enquire(id="partial", verbosity="summary")
 
-    for verbosity in ("summary", "standard", "full"):
-        listed = (await enquire(verbosity=verbosity, include_provenance=False))["notifications"]
-        assert all("delivery_provenance" not in e for e in listed), verbosity
-        one = await enquire(id="partial", verbosity=verbosity, include_provenance=False)
-        assert "delivery_provenance" not in one, verbosity
-    assert (await enquire(id="partial", include_provenance=False))["missed"] == 2
-    assert (await enquire(id="partial"))["delivery_provenance"] == provenance
+    for verbosity in ("standard", "full"):
+        listed = {e["id"]: e for e in (await enquire(verbosity=verbosity))["notifications"]}
+        assert listed["partial"]["delivery_provenance"] == provenance, verbosity
+        assert (await enquire(id="partial", verbosity=verbosity))["delivery_provenance"] == provenance, verbosity

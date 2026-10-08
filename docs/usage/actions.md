@@ -75,8 +75,8 @@ count: 3100
 `priority` keeps only notifications with one of the given priorities, across the whole range - the filter
 applies before `limit`. With `verbosity: summary`, each notification carries `missed`, the number of deliveries
 that were asked for but could not go out (why a notification with no failure is a `partial_delivery`).
-`include_provenance: false` leaves out `delivery_provenance`, why each delivery was enabled or disabled, which
-is about half of a summary - useful to list many notifications, then read one in full by `id`.
+A summary leaves out `delivery_provenance`, why each delivery was enabled or disabled, which would be about half
+of it: list many notifications as summaries, then read one with `id` at `standard` or `full` to see it.
 
 ```yaml
 action: supernotify.enquire_archive
@@ -85,5 +85,4 @@ data:
   period: last_month
   limit: 500
   verbosity: summary
-  include_provenance: false
 ```

@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "Priorität",
                     "description": "Nur Benachrichtigungen mit einer dieser Prioritäten."
-                },
-                "include_provenance": {
-                    "name": "Herkunft einschließen",
-                    "description": "delivery_provenance einschließen, also warum jede Zustellung aktiviert oder deaktiviert wurde. Ausschalten, um eine Liste in der Zusammenfassung etwa zu halbieren."
                 }
             }
         }

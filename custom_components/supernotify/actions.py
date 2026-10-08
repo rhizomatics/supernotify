@@ -166,7 +166,6 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
         vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
         vol.Optional("priority"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
-        vol.Optional("include_provenance", default=True): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -404,16 +403,14 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             )
         notification_id: str | None = call.data.get("id")
         verbosity: str = call.data.get("verbosity") or (VERBOSITY_FULL if notification_id else VERBOSITY_STANDARD)
-        # delivery_provenance is about half of a summary, and not needed to list notifications
-        include_provenance: bool = call.data.get("include_provenance", True)
 
         def at_verbosity(contents: dict[str, Any]) -> dict[str, Any]:
             if verbosity == VERBOSITY_SUMMARY:
-                return summarize_notification(engine, contents, include_provenance=include_provenance)
-            dropped: set[str] = set() if include_provenance else {"delivery_provenance"}
+                # delivery_provenance is about half of a summary: it stays at standard and full
+                return summarize_notification(engine, contents, include_provenance=False)
             if verbosity == VERBOSITY_STANDARD:
-                dropped.add("debug_trace")
-            return {k: v for k, v in contents.items() if k not in dropped} if dropped else contents
+                return {k: v for k, v in contents.items() if k != "debug_trace"}
+            return contents
 
         if notification_id:
             entry = await archive.archive_directory.read_entry(notification_id)

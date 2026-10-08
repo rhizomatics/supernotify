@@ -363,10 +363,6 @@
                 "priority": {
                     "name": "Priority",
                     "description": "Return only notifications with one of these priorities."
-                },
-                "include_provenance": {
-                    "name": "Include provenance",
-                    "description": "Include delivery_provenance, why each delivery was enabled or disabled. Turn off to roughly halve a list in summary."
                 }
             }
         }

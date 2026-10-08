@@ -519,7 +519,8 @@ def summarize_notification(
 
     `missed` counts the deliveries that were asked for but could not go out - the reason
     a notification is a `partial_delivery` when nothing failed. `delivery_provenance`, why
-    each delivery was enabled or disabled, is about half of a summary and can be left out."""
+    each delivery was enabled or disabled, is about half of a summary: `enquire_archive`
+    leaves it out of its `summary` verbosity, the assistant tools keep it."""
     deliveries: dict[str, dict[str, Any]] = {}
     for name, outcomes in (contents.get("deliveries") or {}).items():
         if skipped := outcomes.get("skipped"):
