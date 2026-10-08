@@ -30,6 +30,7 @@ from custom_components.supernotify.hass_api import (
     CONF_USER_ID,
     ConditionErrorLoggingAdaptor,
     HomeAssistantAPI,
+    TemplateWrapper,
     force_strict_template_mode,
 )
 from custom_components.supernotify.model import ConditionVariables, SelectionRule
@@ -117,6 +118,93 @@ async def test_strict_evaluates_detects_missing_vars(hass: HomeAssistant, valida
     condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ xotification_priority == 'critical' }}"})
     with pytest.raises(HomeAssistantError):
         await hass_api.build_conditions(condition, validate=validate, strict=True)
+
+
+@pytest.mark.parametrize(
+    argnames=("compound", "short_circuit"),
+    argvalues=[
+        ("and", "{{ notification_priority == 'low' }}"),
+        ("or", "{{ notification_priority == 'medium' }}"),
+    ],
+    ids=["and", "or"],
+)
+@pytest.mark.parametrize(
+    argnames="bad_template",
+    argvalues=["{{ alarm_control_panel.home_alarm_control == 'armed_night' }}", "{{ xotification_priority == 'critical' }}"],
+    ids=["undefined_attribute", "undefined_var"],
+)
+async def test_strict_detects_bad_template_behind_short_circuit(
+    hass: HomeAssistant, compound: str, short_circuit: str, bad_template: str
+) -> None:
+    """Regression: a bad template was only found if the default variables happened to reach it"""
+    hass_api = HomeAssistantAPI(hass)
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "not",
+        "conditions": [{"condition": compound, "conditions": [short_circuit, bad_template]}],
+    })
+    with pytest.raises(HomeAssistantError):
+        await hass_api.build_conditions(condition, validate=True, strict=True)
+
+
+async def test_strict_detects_bad_value_template_behind_short_circuit(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    hass.states.async_set("sensor.bedroom_temperature", "18")
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": [
+            "{{ notification_priority == 'low' }}",
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.bedroom_temperature",
+                "value_template": "{{ sensor.bedroom_temperature | float }}",
+                "above": 15,
+            },
+        ],
+    })
+    with pytest.raises(HomeAssistantError):
+        await hass_api.build_conditions(condition, validate=True, strict=True)
+
+
+async def test_strict_logs_unresolved_entities_without_failing(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Entities may belong to integrations not loaded yet, so can't be treated as errors"""
+    hass_api = HomeAssistantAPI(hass)
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "disarmed")
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": [
+            "{{ notification_priority == 'low' }}",
+            {"condition": "state", "entity_id": "alarm_control_panel.home_alarm_control", "state": "armed_night"},
+            {"condition": "state", "entity_id": "alarm_control_panel.typo", "state": "armed_night"},
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.not_loaded_yet",
+                "value_template": "{{ state.state | float }}",
+                "above": 15,
+            },
+        ],
+    })
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=True, strict=True, name="bedtime")
+    assert checker
+    warnings = [r.getMessage() for r in caplog.records if "unknown entity" in r.getMessage()]
+    assert len(warnings) == 2
+    assert any("bedtime" in w and "alarm_control_panel.typo" in w for w in warnings)
+    assert any("bedtime" in w and "sensor.not_loaded_yet" in w for w in warnings)
+
+
+async def test_strict_leaves_nested_templates_lax_at_runtime(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+
+    condition = cv.CONDITIONS_SCHEMA({
+        "condition": "and",
+        "conditions": ["{{ notification_priority == 'low' }}", "{{ notification_message is defined }}"],
+    })
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=True, strict=True)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables()) is False
+    assert not any(isinstance(v, TemplateWrapper) for c in condition[0]["conditions"] for v in c.values())
 
 
 @pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
