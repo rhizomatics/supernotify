@@ -55,6 +55,7 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+          - homeassistant_repl
   - repo: local
     hooks:
       - id: diagram-thumbnails

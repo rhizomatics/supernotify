@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ACTION,
+    CONF_CONDITIONS,
     CONF_DEVICE_ID,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -679,6 +680,11 @@ class HomeAssistantAPI:
             raise
         try:
             if strict:
+                # can't be an error, the entity may belong to an integration that hasn't loaded yet
+                for cond in cond_list:
+                    for entity_id in sorted(condition_helper.async_extract_entities(cond)):
+                        if self._hass.states.get(entity_id) is None:
+                            _LOGGER.warning("SUPERNOTIFY Condition for %s refers to unknown entity %s", name, entity_id)
                 force_strict_template_mode(cond_list, undo=False)
 
             test: ConditionsFunc = await condition_helper.async_conditions_from_config(
@@ -687,6 +693,21 @@ class HomeAssistantAPI:
             if test is None:
                 raise IntegrationError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
+            if strict:
+                # compound conditions short-circuit, so a nested template may never have been
+                # reached by the evaluation above - check each one on its own, unless it
+                # can't be evaluated yet for lack of its entity
+                for template_cond in nested_template_conditions(cond_list):
+                    if any(self._hass.states.get(e) is None for e in condition_helper.async_extract_entities(template_cond)):
+                        continue
+                    force_strict_template_mode([template_cond], undo=False)
+                    try:
+                        nested_test: ConditionsFunc = await condition_helper.async_conditions_from_config(
+                            self._hass, [template_cond], cast("logging.Logger", capturing_logger), name
+                        )
+                        nested_test(condition_variables.as_dict())
+                    finally:
+                        force_strict_template_mode([template_cond], undo=True)
             return test
         except Exception:
             _LOGGER.exception("SUPERNOTIFY Conditions eval failed")
@@ -1050,6 +1071,15 @@ def force_strict_template_mode(conditions: list[ConfigType], undo: bool = False)
 
     if conditions is not None:
         conditions = [wrap_template(condition, undo) for condition in conditions]
+
+
+def nested_template_conditions(conditions: list[ConfigType], nested: bool = False) -> Generator[ConfigType]:
+    """Conditions using a template, inside compound (and/or/not) conditions"""
+    for cond in conditions:
+        if isinstance(cond.get(CONF_CONDITIONS), list):
+            yield from nested_template_conditions(cond[CONF_CONDITIONS], nested=True)
+        elif nested and any(isinstance(val, Template) for val in cond.values()):
+            yield cond
 
 
 @contextmanager
