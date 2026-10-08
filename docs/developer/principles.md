@@ -69,3 +69,18 @@
 10. Entia non sunt multiplicanda praeter necessitatem.
 
     Minimize unnecessary concepts in config, and Home Assistant entities/devices/helpers.
+
+11. High Level Common Language Only
+
+![Competing Standards](https://imgs.xkcd.com/comics/standards.png)
+
+Best example of the possible dangers here are for `mobile_push`. The Home Assistant companion app doesn't genericize much across Android or Apple so many of the features need hand-crafted `data` sections to use them. Some of these features might need further tweaks based on manufacturer, model, age of OS etc.
+
+The application of this principle in the `mobile_push` case is:
+
+- Let people provide the documented android and apple `data` elements and make them work as Home Assistant document says
+- Offer *higher level functionality* that is often not mobile specific
+   - For example, priority, long-running notification, camera image
+   - Translate that to high quality android or apple `data` elements, just as they would be for email or persistence
+- Try to avoid slipping into a low level os-neutral schema
+  - If Samsung phones need an extra field to make them work, then that's probably worth including, since they are a massively popular brand, though that remains a slippery slope

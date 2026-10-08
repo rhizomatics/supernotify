@@ -14,4 +14,12 @@ description: Send out notification and control notifications from a Home Assista
 
 ## Implementation
 
-See the example YAML and instructions at [Dashboard Configuration](../configuration/dashboard.md)
+### Pre-built Dashboard
+
+If you have Supernotify Cards already installed, go to **Settings | Dashboards** in Home Assistant, and click on **Add Dashboard**. The pre-built one will appear under *Community Dashboards*
+
+![Add Pre-built Supernotify Cards Dashboard](../assets/images/add_cards_dashboard.png)
+
+### Custom YAML
+
+Example YAML and instructions to create and tune your own dashboard are at [Dashboard Configuration](../configuration/dashboard.md)

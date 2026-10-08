@@ -163,7 +163,7 @@ class SupernotifyEngine:
         # Every entity - switches, binary_sensors and counters - is a real platform entity, added
         # once this method returns (see __init__.py), and keeps its own state current
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
-        self.context.hass_api.subscribe_mobile_app_changes(self.async_mobile_apps_changed)
+        self.context.hass_api.subscribe_mobile_app_changes(self.on_mobile_app_change)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -407,7 +407,7 @@ class SupernotifyEngine:
         return [p.as_dict() for p in self.context.people_registry.people.values()]
 
     @callback
-    def on_mobile_action(self, event: Event) -> None:
+    async def on_mobile_action(self, event: Event) -> None:
         """Listen for mobile actions relevant to snooze and silence notifications
 
         Example Action:
@@ -427,7 +427,7 @@ class SupernotifyEngine:
         self.context.snoozer.handle_command_event(event, self.context.people_registry.enabled_recipients())
 
     @callback
-    async def async_mobile_apps_changed(self) -> None:
+    async def on_mobile_app_change(self) -> None:
         _LOGGER.info("SUPERNOTIFY Mobile app devices changed, rediscovering")
         self.context.people_registry.refresh_mobile_devices()
         self.context.snoozer.purge_snoozes()

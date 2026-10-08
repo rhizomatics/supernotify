@@ -693,7 +693,7 @@ async def test_on_mobile_action_ignores_non_supernotify(mock_hass: Mock) -> None
     uut = SupernotifyEngine(mock_hass)
     await uut.initialize()
     event: HassEvent = HassEvent("mobile_app_notification_action", data={"action": "OTHER_APP_ACTION"})
-    uut.on_mobile_action(event)  # should return without doing anything
+    await uut.on_mobile_action(event)  # should return without doing anything
     assert uut.context.snoozer.snoozes == {}
 
 
@@ -708,13 +708,13 @@ async def test_send_message_exception_handling(mock_hass: Mock) -> None:
     assert uut.failures == 1
 
 
-async def test_async_mobile_apps_changed_refreshes_recipients_and_purges_snoozes(mock_hass: Mock) -> None:
+async def test_on_mobile_app_change_refreshes_recipients_and_purges_snoozes(mock_hass: Mock) -> None:
     uut = SupernotifyEngine(mock_hass, recipients=RECIPIENTS)
     await uut.initialize()
     uut.context.people_registry.refresh_mobile_devices = Mock()  # type: ignore[method-assign]
     uut.context.snoozer.purge_snoozes = Mock()  # type: ignore[method-assign]
 
-    await uut.async_mobile_apps_changed()
+    await uut.on_mobile_app_change()
 
     uut.context.people_registry.refresh_mobile_devices.assert_called_once()
     uut.context.snoozer.purge_snoozes.assert_called_once()
