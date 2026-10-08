@@ -165,6 +165,8 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
         vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
+        vol.Optional("priority"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
+        vol.Optional("include_provenance", default=True): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -402,13 +404,16 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             )
         notification_id: str | None = call.data.get("id")
         verbosity: str = call.data.get("verbosity") or (VERBOSITY_FULL if notification_id else VERBOSITY_STANDARD)
+        # delivery_provenance is about half of a summary, and not needed to list notifications
+        include_provenance: bool = call.data.get("include_provenance", True)
 
         def at_verbosity(contents: dict[str, Any]) -> dict[str, Any]:
             if verbosity == VERBOSITY_SUMMARY:
-                return summarize_notification(engine, contents)
+                return summarize_notification(engine, contents, include_provenance=include_provenance)
+            dropped: set[str] = set() if include_provenance else {"delivery_provenance"}
             if verbosity == VERBOSITY_STANDARD:
-                return {k: v for k, v in contents.items() if k != "debug_trace"}
-            return contents
+                dropped.add("debug_trace")
+            return {k: v for k, v in contents.items() if k not in dropped} if dropped else contents
 
         if notification_id:
             entry = await archive.archive_directory.read_entry(notification_id)
@@ -425,12 +430,15 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
         period: str | None = call.data.get("period")
+        priority: list[str] | None = call.data.get("priority") or None
         # a date/time given without a time zone is local time
         after = dt_util.as_local(dt.datetime.fromisoformat(after_raw)) if after_raw else None
         before = dt_util.as_local(dt.datetime.fromisoformat(before_raw)) if before_raw else None
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
-        entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
+        entries = await archive.archive_directory.list_entries(
+            limit=limit, after=after, before=before, outcome=outcome, priority=priority
+        )
         if daily:
             return summarize_by_day(entries)
         return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}

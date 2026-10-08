@@ -359,6 +359,14 @@
                 "verbosity": {
                     "name": "Detailgrad",
                     "description": "Wie viel von jeder Benachrichtigung zurückgegeben wird: eine kurze Zusammenfassung des Ablaufs, der Standard-Archiveintrag ohne Debug-Trace oder alles Gespeicherte. Standard für eine Liste, vollständig für eine einzelne 'id'. 'Zählungen pro Tag' liefert stattdessen Summen für jeden lokalen Tag, ohne Limit, sofern keines angegeben ist."
+                },
+                "priority": {
+                    "name": "Priorität",
+                    "description": "Nur Benachrichtigungen mit einer dieser Prioritäten."
+                },
+                "include_provenance": {
+                    "name": "Herkunft einschließen",
+                    "description": "delivery_provenance einschließen, also warum jede Zustellung aktiviert oder deaktiviert wurde. Ausschalten, um eine Liste in der Zusammenfassung etwa zu halbieren."
                 }
             }
         }

@@ -359,6 +359,14 @@
                 "verbosity": {
                     "name": "Detailniveau",
                     "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'. 'Tellingen per dag' geeft in plaats daarvan totalen per lokale dag, zonder limiet tenzij er een is opgegeven."
+                },
+                "priority": {
+                    "name": "Prioriteit",
+                    "description": "Alleen meldingen met een van deze prioriteiten."
+                },
+                "include_provenance": {
+                    "name": "Herkomst opnemen",
+                    "description": "delivery_provenance opnemen: waarom elke bezorging is in- of uitgeschakeld. Uitzetten om een lijst in samenvatting ongeveer te halveren."
                 }
             }
         }

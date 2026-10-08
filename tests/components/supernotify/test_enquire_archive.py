@@ -298,3 +298,76 @@ async def test_filename_period_covers_creation_time(hass: HomeAssistant, time_zo
         assert period[1] - period[0] <= 3660
     assert _filename_period(".startup") is None
     assert _filename_period("unconventional.json") is None
+
+
+def _rewrite(path: pathlib.Path, **changes: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = json.loads(path.read_text())
+    payload.update(changes)
+    path.write_text(json.dumps(payload))
+    return payload
+
+
+async def test_enquire_archive_priority_filter(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """priority keeps the notifications with any of the given priorities, ignoring case, custom ones
+    included - and filters before limit, so older matches are found past newer non-matches."""
+    base = dt.datetime(2026, 10, 6, 10, 0, tzinfo=dt.UTC)
+    _rewrite(_write_archive_entry(tmp_path, "crit", base), priority="critical")
+    _rewrite(_write_archive_entry(tmp_path, "high", base + dt.timedelta(minutes=1)), priority="high")
+    _rewrite(_write_archive_entry(tmp_path, "custom", base + dt.timedelta(minutes=2)), priority=7)
+    for n in range(5):
+        _write_archive_entry(tmp_path, f"med{n}", base + dt.timedelta(minutes=10 + n))
+
+    await _setup(hass, str(tmp_path))
+
+    async def ids(**data: Any) -> set[str]:
+        response: Any = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        assert response["count"] == len(response["notifications"])
+        return {e["id"] for e in response["notifications"]}
+
+    assert await ids(priority="critical", limit=1) == {"crit"}
+    assert await ids(priority=["CRITICAL", "high"]) == {"crit", "high"}
+    assert await ids(priority="7") == {"custom"}
+    assert await ids(priority=7) == {"custom"}
+    assert await ids(priority="low") == set()
+    assert len(await ids()) == 8
+
+    daily: Any = await hass.services.async_call(
+        DOMAIN, "enquire_archive", {"verbosity": "daily", "priority": "critical"}, blocking=True, return_response=True
+    )
+    assert daily["count"] == 1
+    assert daily["days"][0]["priority"] == {"critical": 1}
+
+
+async def test_enquire_archive_summary_missed_and_provenance(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """A summary counts the missed deliveries, and include_provenance: false leaves delivery_provenance out
+    at every verbosity."""
+    now = dt_util.now()
+    provenance = {"testing": {"enabled_by": ["default"]}, "chime": {"disabled_by": ["scenario:night"]}}
+    _rewrite(
+        _write_archive_entry(tmp_path, "partial", now, outcome="partial_delivery"),
+        missed=2,
+        delivery_provenance=provenance,
+    )
+    _write_archive_entry(tmp_path, "plain", now - dt.timedelta(minutes=5))
+
+    await _setup(hass, str(tmp_path))
+
+    async def enquire(**data: Any) -> dict[str, Any]:
+        response = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        assert isinstance(response, dict)
+        assert_json_round_trip(response, label="enquire_archive_missed_provenance")
+        return response
+
+    summaries = {e["id"]: e for e in (await enquire(verbosity="summary"))["notifications"]}
+    assert summaries["partial"]["missed"] == 2
+    assert summaries["plain"]["missed"] == 0
+    assert summaries["partial"]["delivery_provenance"] == provenance
+    assert summaries["plain"]["delivery_provenance"] == {}
+
+    for verbosity in ("summary", "standard", "full"):
+        listed = (await enquire(verbosity=verbosity, include_provenance=False))["notifications"]
+        assert all("delivery_provenance" not in e for e in listed), verbosity
+        one = await enquire(id="partial", verbosity=verbosity, include_provenance=False)
+        assert "delivery_provenance" not in one, verbosity
+    assert (await enquire(id="partial", include_provenance=False))["missed"] == 2
+    assert (await enquire(id="partial"))["delivery_provenance"] == provenance

@@ -359,6 +359,14 @@
                 "verbosity": {
                     "name": "Niveau de détail",
                     "description": "Quelle part de chaque notification renvoyer : un court résumé de ce qui s'est passé, l'enregistrement archivé standard sans la trace de débogage, ou tout ce qui est stocké. Par défaut standard pour une liste et complet pour un seul 'id'. 'Comptes par jour' renvoie plutôt les totaux de chaque jour local, sans limite sauf si une limite est indiquée."
+                },
+                "priority": {
+                    "name": "Priorité",
+                    "description": "Uniquement les notifications ayant l'une de ces priorités."
+                },
+                "include_provenance": {
+                    "name": "Inclure la provenance",
+                    "description": "Inclure delivery_provenance, c'est-à-dire pourquoi chaque livraison a été activée ou désactivée. Désactiver pour réduire environ de moitié une liste en résumé."
                 }
             }
         }
