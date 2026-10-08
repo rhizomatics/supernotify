@@ -32,8 +32,7 @@ to stack traces in logs and the entire notification mapped as an error even if o
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
 - Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.
-- Entities used in scenario or delivery conditions that aren't known to Home Assistant at start-up are logged as warnings. These aren't repairs, and don't disable the scenario or delivery, since the entity may belong to an integration that hasn't loaded yet.
-- Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than breaking the validation since the integration that provided the entities might start after Supernotify
+- Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than disabling the scenario or delivery since the integration that provided the entities might start after Supernotify
 
 ## 📚 Documentation
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
