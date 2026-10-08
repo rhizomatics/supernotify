@@ -15,7 +15,7 @@ exclude-newer-span = "P5D"
 [options.exclude-newer-package]
 aiohttp = false
 homeassistant = false
-homeassistant-repl = false
+homeassistant-repl = { timestamp = "0001-01-01T00:00:00Z", span = "P1D" }
 homeassistant-stubs = false
 ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 signalk-cli = false
@@ -1698,7 +1698,7 @@ wheels = [
 
 [[package]]
 name = "homeassistant-repl"
-version = "0.11.1"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "homeassistant-api" },
@@ -1709,9 +1709,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/49/c6c329a5fd6e13a92066bfde39858d1436b1acc4d165d9c96630be00e88e/homeassistant_repl-0.11.1.tar.gz", hash = "sha256:b6c0d3474ce2710b2e1921b53675344196c159bd660bbe856a0ba8dcbe28fdb4", size = 48004, upload-time = "2026-10-08T17:28:41.184Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/64/40/dec443218c9ef34c92fa4ecc1ce6d4c325d81146bbd06298b636560549e1/homeassistant_repl-0.8.0.tar.gz", hash = "sha256:249584cc06f9bc5280c770aca96349627d5c6121f08b81a65fb6d4ab4df9b523", size = 36096, upload-time = "2026-10-07T21:06:36.148Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/c4/9644d47f88da0c173f0487e69be3f9c641768ade4628a8a91af751d3b63d/homeassistant_repl-0.11.1-py3-none-any.whl", hash = "sha256:a17625cedb8633cd3a0a0d5a30549ae340df9d0d1f8f11d5b599a078fbdda5eb", size = 55714, upload-time = "2026-10-08T17:28:39.732Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/ce/57082df9d12749285d7c6aac44267ff48aee1e62532d16047ac491c73a51/homeassistant_repl-0.8.0-py3-none-any.whl", hash = "sha256:78653dcc72b313de622f43815c507e82009ab9de7d5e43398f5fcb1966d936b9", size = 41198, upload-time = "2026-10-07T21:06:34.643Z" },
 ]
 
 [[package]]
@@ -3486,11 +3486,11 @@ wheels = [
 
 [[package]]
 name = "pyflakes"
-version = "4.0.1"
+version = "4.0.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8c/23/cf4fc43ce292ed1ae519d8873497e7944306f523d8523bd7a19274b256ca/pyflakes-4.0.1.tar.gz", hash = "sha256:cb4e721195b96e1792f3dfaefa02fb36a4f6253e899bbe0793f8aef6ed0065ef", size = 67099, upload-time = "2026-09-30T19:40:11.853Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/5e/17305a7708e22df56b332f2f4c202d0a830e9689634da2f727212d806de9/pyflakes-4.0.2.tar.gz", hash = "sha256:dcf9cfcece3d9dacc66b7dd2fa217c1a1b79e3075bf488909c15e0857203fd24", size = 67173, upload-time = "2026-10-03T21:14:01.663Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/27/be/8ca18b353cae5b95cb49b9a4273ddacae82477dcfc1be2cc17dd3bafc1d9/pyflakes-4.0.1-py2.py3-none-any.whl", hash = "sha256:1559b701962c803eadeb9c215dbac279585367b73ac12e1f0c42868785e6caad", size = 66176, upload-time = "2026-09-30T19:40:10.683Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/a8/7df0a3b4f8166c2fb7fe0195f88a0a643cfb7cd1b0430c19f74bd01771f5/pyflakes-4.0.2-py2.py3-none-any.whl", hash = "sha256:01faee1160feadfd9d58c9631a895126ba2032c2e8748e32a96ab51cbd084c6d", size = 66216, upload-time = "2026-10-03T21:13:59.732Z" },
 ]
 
 [[package]]
