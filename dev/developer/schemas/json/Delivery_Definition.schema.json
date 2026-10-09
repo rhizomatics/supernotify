@@ -247,7 +247,8 @@
       "items": {
         "type": "string"
       }
-    }
+    },
+    "notify_entity": {}
   },
   "required": [
     "transport"

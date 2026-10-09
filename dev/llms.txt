@@ -97,6 +97,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md)
 - [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md)
+- [Low Priority Rain Alert using the Alert Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md)
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md)

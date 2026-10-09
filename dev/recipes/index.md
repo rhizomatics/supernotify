@@ -23,6 +23,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
 - [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md) mqttsms
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md) scenarioconditionoccupancy
+- [Low Priority Rain Alert using the Alert Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) alertscenarionotify_entitymobile_pushweather
 - [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboard
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config

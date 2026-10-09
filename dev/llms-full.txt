@@ -1174,7 +1174,7 @@ supernotify:
         chime_tune: christmas_05
 ```
 
-## Compatibility with Notify Platform Actions
+## Notify Entities and Legacy Notify Platform Compatibility
 
 For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
 
@@ -1191,6 +1191,8 @@ Legacy notify.supernotify
             priority: high
             delivery: mobile_push
 ```
+
+A notify entity can also be made for any scenario or delivery, which is a way to get more of Supernotify from something that only takes a notify entity. Each of these, and each recipient's `notify.recipient_<name>` entity, also has a legacy action of the same name, taking the same as `notify.supernotify`, for anything that only takes the name of a `notify` action, like the Alert integration. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) and [Delivery Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#notify-entity).
 
 ## References
 
@@ -2289,6 +2291,21 @@ Deprecated
 
 The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
 
+### Notify Entity
+
+A delivery can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+Delivery with its own notify entity
+
+```yaml
+delivery:
+  family_chat:
+    transport: telegram
+    notify_entity: family_chat
+```
+
+Sending a message to `notify.family_chat` is like a `supernotify.notify` with only a message and title, and `delivery` set to this delivery. There is a `notify.family_chat` action too, which also takes `target` and `data`. If `notify.family_chat` already exists, the entity isn't created and a repair is raised. Scenarios can have one too, see [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) for more, and for how to use one from the Alert integration.
+
 ### Overrides
 
 Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
@@ -2742,6 +2759,8 @@ Example Automation Action
 
 This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` or `supernotify.notify` does, just scoped to that one recipient instead of the whole People Registry.
 
+There is also a `notify.recipient_XXXXX` action of the same name, for anything that only takes the name of a `notify` action, like the `notifiers` of the [Alert](https://www.home-assistant.io/integrations/alert/) integration.
+
 Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
 
 Note
@@ -2946,17 +2965,17 @@ This scenario could be used to select more obtrusive notifications, like email o
 
 ```yaml
 more_attention:
-        alias: time to make more of a fuss
-        conditions:
-          condition: and
-          conditions:
-            - not:
-                - condition: state
-                  entity_id: alarm_control_panel.home_alarm_control
-                  state: disarmed
-            - condition: time
-              after: "21:30:00"
-              before: "06:30:00"
+  alias: time to make more of a fuss
+  conditions:
+    condition: and
+    conditions:
+      - not:
+          - condition: state
+            entity_id: alarm_control_panel.home_alarm_control
+            state: disarmed
+      - condition: time
+        after: "21:30:00"
+        before: "06:30:00"
 ```
 
 In this example, selecting the scenario by name in a notification call switches on a set of delivery transports, which saves repetitive declaration in many notification calls. Delivery Selection is made `implicit` so not switching off any other deliveries that would have applied.
@@ -2977,6 +2996,62 @@ scenarios:
 Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification. This lasts across restarts and reloads, until the scenario's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
+
+### Notify Entity
+
+A scenario can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+Sending a message to it is like a `supernotify.notify` with only a message and title, and `apply_scenarios` set to this scenario, so it goes to the default recipients and the scenario's overrides are applied. Other scenarios still select themselves by their conditions.
+
+In this example, anything sent to `notify.its_raining_again` becomes a low priority mobile push with a rain icon.
+
+Scenario with its own notify entity
+
+```yaml
+scenarios:
+  rain:
+    alias: Its raining again
+    notify_entity: its_raining_again
+    delivery:
+      mobile_push:
+        data:
+          priority: low
+          notification_icon: mdi:weather-pouring
+```
+
+Using it in an automation
+
+```yaml
+  - action: notify.send_message
+    target:
+      entity_id: notify.its_raining_again
+    data:
+      message: Bring the washing in
+```
+
+The entity can also be one of the targets of a `supernotify.notify`, where it isn't notified itself, but has its scenario applied to that notification - or for a delivery, has its delivery added to those selected.
+
+The entity is named by the scenario's `alias`, or its name if there's none. If `notify.its_raining_again` already exists, as an entity or a `notify` action, from another integration or another `notify_entity`, the entity isn't created and a repair is raised - choose another value, or rename the other entity. Changing `notify_entity` renames the entity, and taking it away removes it.
+
+There is also a `notify.its_raining_again` action of the same name, for anything that asks for the name of a `notify` action and not a notify entity. Unlike the entity, it takes `target` and `data`, as [notify.supernotify](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#notify-entities-and-legacy-notify-platform-compatibility) does.
+
+#### With the Alert Integration
+
+Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration repeats a notification while a problem lasts. Give it the scenario's `notify_entity` as a notifier, and every alert is sent as the scenario says.
+
+configuration.yaml
+
+```yaml
+alert:
+  rain:
+    name: Its raining again
+    entity_id: binary_sensor.rain
+    repeat: 60
+    notifiers:
+      - its_raining_again
+```
+
+See the [Rain Alert Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) for the two together.
 
 ## Overriding Delivery Selection and Configuration
 
@@ -3000,6 +3075,14 @@ scenarios:
     alias: Switch on email
     delivery:
       email:
+  style_1b:
+    alias: Configure email if already enabled, but don't switch it on
+    delivery:
+      email:
+        enabled:
+        data:
+          priority: high
+
   style_2:
     alias: Switch on email
     delivery:
@@ -6200,6 +6283,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
 - [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md) mqttsms
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md) scenarioconditionoccupancy
+- [Low Priority Rain Alert using the Alert Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) alertscenarionotify_entitymobile_pushweather
 - [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboard
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
@@ -7388,6 +7472,56 @@ Pyscript 2.1.0 only recognises its own two section names, so the Supernotify fie
 ### Typed helpers
 
 The stub can only describe `media`, `delivery_control`, `actions`, `data` and the responses as `Any`, since Home Assistant actions don't publish the shape of object fields. A typed python helper module for Pyscript, with definitions for these, could be provided if there is interest - ask for it with a feature request on [GitHub Discussions](https://github.com/rhizomatics/supernotify/discussions).
+
+# Recipe - Rain Alert
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/
+
+## Purpose
+
+Get a quiet reminder on the phone while it's raining, repeated every hour until it stops, using Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration.
+
+## Implementation
+
+An alert only gives a notifier a message and a title, so what kind of notification it becomes is set in a scenario. The scenario has a `notify_entity`, which gives it a `notify.its_raining_again` entity, and an action of the same name for the alert to list in its `notifiers`. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity).
+
+Everything the alert sends has the scenario applied, which makes the mobile push low priority and gives it a rain icon. Low priority is passed on to an iPhone as a `passive` notification, which doesn't light up the screen or make a sound.
+
+## Example Configuration
+
+supernotify.yaml
+
+```yaml
+scenarios:
+  rain:
+    alias: Its raining again
+    notify_entity: its_raining_again
+    delivery:
+      mobile_push:
+        data:
+          priority: low
+          notification_icon: mdi:weather-pouring
+```
+
+configuration.yaml
+
+```yaml
+alert:
+  rain:
+    name: Its raining again
+    entity_id: binary_sensor.rain
+    repeat: 60
+    notifiers:
+      - its_raining_again
+```
+
+`mobile_push` is the standard delivery Supernotify makes when there are phones with the Home Assistant app, so there's nothing more to configure for it.
+
+## Variations
+
+- Add `done_message` to the alert to be told when the rain has stopped, which goes through the same scenario.
+- Add more deliveries to the scenario, such as a chime.
+- The same notify entity works anywhere else that takes one, like an automation's `notify.send_message`.
 
 # Recipe - Home Assistant Restart
 

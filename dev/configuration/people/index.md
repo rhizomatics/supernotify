@@ -136,6 +136,8 @@ Example Automation Action
 
 This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` or `supernotify.notify` does, just scoped to that one recipient instead of the whole People Registry.
 
+There is also a `notify.recipient_XXXXX` action of the same name, for anything that only takes the name of a `notify` action, like the `notifiers` of the [Alert](https://www.home-assistant.io/integrations/alert/) integration.
+
 Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
 
 Note
