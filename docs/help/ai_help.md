@@ -18,6 +18,14 @@ They can diagnose issues, suggest how make a notification work how you want, and
 
 In all the examples below there is no special setup, no skills or other context - they are given a simple prompt as might be the case for a new user.
 
+## Google Example
+
+Searching in Google for "what is the difference between a delivery and a scenario on supernotify" turns up this advice, with an offer to write some YAML:
+
+![Example Help from Google Search](../assets/images/google_help.png){width=700}
+
+Not all searches in Google result in AI advice, and you might have this switched off, however you should still get pointed directly at the right page in the on-line Supernotify help.
+
 ## Claude Example
 
 In this example, Claude answers one of the FAQs, how to only notify some speakers, and shows how to set up the notification.
@@ -28,13 +36,13 @@ In this example, Claude answers one of the FAQs, how to only notify some speaker
 
 ChatGPT gives decent suggestions, including workable YAML, for a common need to stop Alexa announcement after bedtime. This is a free session, without being logged in.
 
-![Example Help from ChatGPT](../assets/images/chatgpt_help.png)
+![Example Help from ChatGPT](../assets/images/chatgpt_help.png){width=700}
 
 ## Kimi Example
 
 In this example, a free [Kimi](https://kimi.ai) agent gives good advice on how to get a camera snapshot onto porch notifications.
 
-![Example Help from Kimi](../assets/images/kimi_help.png)
+![Example Help from Kimi](../assets/images/kimi_help.png){width=700}
 
 ## Assist Bot
 
