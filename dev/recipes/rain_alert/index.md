@@ -26,6 +26,8 @@ scenarios:
         data:
           priority: low
           notification_icon: mdi:weather-pouring
+      .*:
+        enabled: false
 ```
 
 configuration.yaml
@@ -42,8 +44,17 @@ alert:
 
 `mobile_push` is the standard delivery Supernotify makes when there are phones with the Home Assistant app, so there's nothing more to configure for it.
 
+### Why the `.*` is needed
+
+A scenario doesn't replace the usual choice of deliveries, it adds to it and adjusts it. The alert names no deliveries, so without the last two lines the notification goes to every delivery that is included by default - email, chimes, Alexa or whatever else is set up - and the scenario only changes how the `mobile_push` one looks.
+
+- `.*` is a pattern that matches the name of every delivery, and `enabled: false` switches off each one it matches, for this notification only.
+- `mobile_push` is still sent, because a delivery listed by its own name always wins over a pattern that also matches it.
+
+So the two together say "only mobile push". Other notifications are not affected, since the scenario is only applied to what is sent to `notify.its_raining_again`. See [Wildcard Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#wildcard-deliveries) for more on patterns.
+
 ## Variations
 
 - Add `done_message` to the alert to be told when the rain has stopped, which goes through the same scenario.
-- Add more deliveries to the scenario, such as a chime.
+- Add more deliveries to the scenario by name, such as a chime, and they are sent too.
 - The same notify entity works anywhere else that takes one, like an automation's `notify.send_message`.

@@ -15,7 +15,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) frigateptz
 - [CC All Emails](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) emailhtml_email
 - [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md)
-- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancycondition
+- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancywildcardscondition
 - [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushandroid
 - [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
 - [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushapplemacos
@@ -23,7 +23,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
 - [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md) mqttsms
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md) scenarioconditionoccupancy
-- [Low Priority Rain Alert using the Alert Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) alertscenarionotify_entitymobile_pushweather
+- [Low Priority Rain Alert using the Alert Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) alertscenarionotify_entitymobile_pushwildcardsweather
 - [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboard
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
@@ -35,4 +35,4 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) doorbellalexavoice_assistantcameramobile_pushchimeoccupancyzero_yaml_config
 - [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md) mqttsiren
 - [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) androidlivemobile_push
-- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattscameraaccessibilitytemplatecondition
+- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattswildcardscameraaccessibilitytemplatecondition
