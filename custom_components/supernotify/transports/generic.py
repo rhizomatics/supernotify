@@ -334,7 +334,11 @@ def notify_events(
     delivery: Delivery,
     priority: str | None,
 ) -> list[MiniEnvelope]:
-    """Customize `data` for notify_events integration"""
+    """Customize `data` for notify_events integration
+
+    This is a vendor notification aggregation service (https://notify.events)
+    with an old little used integration in Home Assistant
+    """
     results: list[MiniEnvelope] = []
     input_data: dict[str, Any] = dict(core_action_data)
     input_data.update(data)
