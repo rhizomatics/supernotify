@@ -21,6 +21,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .archive import NotificationArchive
 from .common import DupeChecker, spoken_name
@@ -65,6 +66,7 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
+from .schema import EnvelopeOutcome
 from .sensor import SupernotifyCounterSensor
 from .snoozer import Snoozer
 from .static_config import TRANSPORTS
@@ -254,6 +256,7 @@ class SupernotifyEngine:
         else:
             if notification.dry_run == DRY_RUN_LIVE:
                 self.last_notification = notification
+                self._record_delivery_outcomes(notification)
                 await self.context.archive.archive(notification)
                 self.context.hass_api.fire_event(
                     EVENT_NOTIFICATION,
@@ -297,6 +300,24 @@ class SupernotifyEngine:
             legacy_entity.async_write_ha_state()
         for switch in self.override_switches.values():
             switch.async_write_ha_state()
+
+    @callback
+    def _record_delivery_outcomes(self, notification: Notification) -> None:
+        """Keep on each delivery when it last sent and how this live notification went for it, and
+        show it on the delivery's switch"""
+        try:
+            now = dt_util.utcnow()
+            registry = self.context.delivery_registry
+            for name, (outcome, reason) in notification.delivery_outcomes().items():
+                delivery = registry.deliveries.get(name)
+                if delivery is None:
+                    continue
+                delivery.record_outcome(str(outcome), at=now, sent=outcome == EnvelopeOutcome.SUCCESS, skip_reason=reason)
+                switch = self.override_switches.get(f"{OVERRIDE_KIND_DELIVERY}_{name}")
+                if switch is not None:
+                    switch.async_write_ha_state()
+        except Exception:
+            _LOGGER.exception("SUPERNOTIFY Failed to record delivery outcomes for %s", notification.id)
 
     def _overridables(self, kind: str) -> Iterable[Overridable]:
         overridables: dict[str, Iterable[Overridable]] = {

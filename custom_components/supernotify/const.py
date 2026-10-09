@@ -97,6 +97,10 @@ OCCUPANCY_ONLY_OUT = "only_out"
 
 ATTR_ENABLED = "enabled"
 ATTR_OVERRIDDEN = "overridden"
+# on a delivery switch: when the delivery last sent, and how the latest live notification went for it
+ATTR_LAST_SENT_AT = "last_sent_at"
+ATTR_LAST_OUTCOME = "last_outcome"
+ATTR_LAST_SKIP_REASON = "last_skip_reason"
 ATTR_TRANSPORT_ENABLED = "transport_enabled"
 ATTR_PRIORITY = "priority"
 ATTR_ACTION = "action"
@@ -334,7 +338,14 @@ OVERRIDE_KINDS: Final[tuple[str, ...]] = (
     OVERRIDE_KIND_TRANSPORT,
 )
 # Entity state attributes too large, or changing too often, to be worth keeping in history
-DELIVERY_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({CONF_OPTIONS, CONF_DATA, CONF_TARGET})
+DELIVERY_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({
+    CONF_OPTIONS,
+    CONF_DATA,
+    CONF_TARGET,
+    ATTR_LAST_SENT_AT,
+    ATTR_LAST_OUTCOME,
+    ATTR_LAST_SKIP_REASON,
+})
 TRANSPORT_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({
     CONF_DELIVERY_DEFAULTS,
     "action_titles",

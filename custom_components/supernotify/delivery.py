@@ -24,6 +24,9 @@ from custom_components.supernotify.target import Target, TargetEntityCategory
 from .common import ensure_list
 from .const import (
     ATTR_ENABLED,
+    ATTR_LAST_OUTCOME,
+    ATTR_LAST_SENT_AT,
+    ATTR_LAST_SKIP_REASON,
     ATTR_MOBILE_APP_ID,
     ATTR_TRANSPORT_ENABLED,
     CONF_DATA,
@@ -68,6 +71,8 @@ from .options import (
 from .static_config import TRANSPORT_NAMES
 
 if TYPE_CHECKING:
+    import datetime as dt
+
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.hass_api import TrackedDeviceDetails
@@ -125,6 +130,10 @@ class Delivery(DeliveryConfig):
         self.is_fallback: bool = False
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
+        # how the latest live notification went for this delivery - see record_outcome()
+        self.last_sent_at: dt.datetime | None = None
+        self.last_outcome: str | None = None
+        self.last_skip_reason: str | None = None
         if self.options.get(OPTION_TARGET_SELECT):
             self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
         else:
@@ -391,6 +400,15 @@ class Delivery(DeliveryConfig):
         })
         return base
 
+    def record_outcome(self, outcome: str, at: dt.datetime, sent: bool = False, skip_reason: str | None = None) -> None:
+        """Keep how the latest live notification went for this delivery: `outcome` is success,
+        error or skipped, `sent` whether anything actually went out (so `last_sent_at` moves on),
+        and `skip_reason` why it was skipped or suppressed. Shown on the delivery switch."""
+        self.last_outcome = outcome
+        self.last_skip_reason = skip_reason
+        if sent:
+            self.last_sent_at = at
+
     def attributes(self) -> dict[str, Any]:
         """For exposure as entity state"""
         attrs: dict[str, Any] = {
@@ -413,6 +431,12 @@ class Delivery(DeliveryConfig):
             attrs[CONF_FALLBACK] = self.fallback
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
+        if self.last_sent_at is not None:
+            attrs[ATTR_LAST_SENT_AT] = self.last_sent_at
+        if self.last_outcome is not None:
+            attrs[ATTR_LAST_OUTCOME] = self.last_outcome
+        if self.last_skip_reason is not None:
+            attrs[ATTR_LAST_SKIP_REASON] = self.last_skip_reason
         return attrs
 
 
