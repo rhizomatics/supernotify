@@ -50,20 +50,16 @@ its also possible to directly set them, as in this example:
 ```
 
 !!! info
-    This has not been tested with Android, although both Apple and Android devices share same
-    common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
+    This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
 ## Critical on Android
 
 A `critical` notification goes to Android phones the way the
 [companion app documents critical notifications](https://companion.home-assistant.io/docs/notifications/critical-notifications):
-`ttl: 0` and `priority: high`, so a phone saving battery gets it straight away, and the `alarm_stream`
-channel, so it sounds even with Do Not Disturb on or the phone on silent - the Android counterpart of iOS's
+`ttl: 0` and `priority: high`, so a phone saving battery gets it straight away, and the `alarm_stream` channel, so it sounds even with Do Not Disturb on or the phone on silent - the Android counterpart of iOS's
 `interruption-level: critical`.
 
-The companion app's own `channel` and `ttl`, when set in the data, are kept as they are, so a
-critical notification can still use a channel of its own (`mobile_push_critical_priority: normal`
-changes the `high` priority):
+The companion app's own `channel` and `ttl`, when set in the data, are kept as they are, so a critical notification can still use a channel of its own (`mobile_push_critical_priority: normal` changes the `high` priority):
 
 ```yaml
   - action: supernotify.notify
@@ -77,18 +73,15 @@ changes the `high` priority):
 ```
 
 !!! tip
-    Some phones (Samsung One UI for one) also need the Home Assistant app allowed as an exception to
-    Do Not Disturb, in the phone's own settings.
+    Some phones (Samsung One UI for one) also need the Home Assistant app allowed as an exception to Do Not Disturb, in the phone's own settings.
 
 ## Android Commands and Spoken Text
 
 The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands)
 and TTS as the `message` of a call of their own, so Supernotify sends them that way, to Android phones only:
 `mobile_push_command_dnd` (`alarms_only`, `priority_only`, `total_silence`, `off`),
-`mobile_push_command_ringer_mode` (`normal`, `silent`, `vibrate`) and `mobile_push_command_screen_on` each
-go just before the notification, and `mobile_push_tts_text` 5 seconds after it, so the notification's own
-sound isn't cut off (`mobile_push_tts_delay` changes that, `0` for straight away) - for a `critical` notification
-on the alarm stream at full volume (`alarm_stream_max`, the app puts the volume back afterwards), since a
+`mobile_push_command_ringer_mode` (`normal`, `silent`, `vibrate`) and `mobile_push_command_screen_on` each go just before the notification, and `mobile_push_tts_text` 5 seconds after it, so the notification's own
+sound isn't cut off (`mobile_push_tts_delay` changes that, `0` for straight away) - for a `critical` notification on the alarm stream at full volume (`alarm_stream_max`, the app puts the volume back afterwards), since a
 watch's alarm volume can be too low to hear:
 
 ```yaml
@@ -106,8 +99,7 @@ watch's alarm volume can be too low to hear:
 
 ## Notification Grouping
 
-Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device
-(iOS thread-id / Android notification group):
+Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device (iOS thread-id / Android notification group):
 
 ```yaml
   - action: supernotify.notify
@@ -117,9 +109,7 @@ Set `mobile_push_group` in `extra_data:` to visually stack notifications togethe
         mobile_push_group: security
 ```
 
-If left unset, a notification with `media.camera_entity_id` is grouped under that camera's
-entity id automatically; otherwise it's left ungrouped, so it appears on its own rather than
-being stacked with unrelated notifications. Critical-priority notifications are never grouped -
+If left unset, a notification with `media.camera_entity_id` is grouped under that camera's entity id automatically; otherwise it's left ungrouped, so it appears on its own rather than being stacked with unrelated notifications. Critical-priority notifications are never grouped -
 iOS doesn't support it for them.
 
 !!! note
@@ -128,9 +118,7 @@ iOS doesn't support it for them.
 
 ## Default Delivery
 
-A default Delivery called `mobile_push` will be automatically generated for Mobile Push transport if no explicit ones
-created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then
-use configuration as below:
+A default Delivery called `mobile_push` will be automatically generated for Mobile Push transport if no explicit ones created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then use configuration as below:
 
 ```yaml
 transports:
@@ -176,14 +164,11 @@ transports:
             - iOS
 ```
 
-You can also use the device `select` options if not using auto-discovery - this will then
-limit that delivery to matching devices when they have been auto-discovered at start-up for all deliveries, or have been manually defined for recipients.
+You can also use the device `select` options if not using auto-discovery - this will then limit that delivery to matching devices when they have been auto-discovered at start-up for all deliveries, or have been manually defined for recipients.
 
 ### Explicit Targets
 
-To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same
-form used for a device under `recipients` (see [People](../configuration/people.md)) - not the
-dotted `notify.mobile_app_<device>` service-call form:
+To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same form used for a device under `recipients` (see [People](../configuration/people.md)) - not the dotted `notify.mobile_app_<device>` service-call form:
 
 ```yaml title="Fixed target on a delivery"
 delivery:
@@ -194,13 +179,7 @@ delivery:
       - mobile_app_my_phone
 ```
 
-`notify.mobile_app_my_phone` is the Notify Entity action-call form (an `entity_id` target,
-used by transports like `notify_entity` and `tts`), not a `mobile_app_id` - mobile_push doesn't
-consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the
-delivery silently falls back to its normal recipient-based target instead of the one device you
-named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback -
-without it, the configured `target:` is *added to* the recipient-resolved targets rather than
-replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
+`notify.mobile_app_my_phone` is the Notify Entity action-call form (an `entity_id` target, used by transports like `notify_entity` and `tts`), not a `mobile_app_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
 and [Targets](../usage/targets.md#target-categories)).
 
 ## References

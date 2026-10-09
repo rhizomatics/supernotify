@@ -782,7 +782,7 @@ async def test_android_critical_sounds_through_do_not_disturb(
 
 async def _deliver_to(context: Context, manufacturer: str, priority: str, data: dict[str, Any]) -> Envelope:
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]
     context.configure_for_tests([uut])
     await context.initialize()
     e = Envelope(
@@ -868,7 +868,7 @@ async def test_android_commands_for_critical_go_with_high_priority(unmocked_conf
 async def test_android_tts_waits_once_for_all_devices_and_can_go_straight_away(unmocked_config: Context) -> None:
     context = unmocked_config
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Samsung", model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Samsung", model="Phone")  # type: ignore[attr-defined]
     context.configure_for_tests([uut])
     await context.initialize()
 

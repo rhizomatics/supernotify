@@ -23,6 +23,12 @@ to stack traces in logs and the entire notification mapped as an error even if o
   -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a repair to remove the device
 - Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
 - Improved how `critical` priority is applied for Android mobile apps with Do Not Disturb mode
+- Android commands and TTS operations sent as independent calls
+  - The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands) and TTS as the `message` of a call of their own (`message: command_dnd` + `data.command`, `message: TTS` + `data.tts_text`), not as data of an ordinary notification.
+  - Now each `mobile_push_command_*` is sent as its own call **just before** the notification, so the screen is on / Do Not Disturb is off when it arrives
+  - `mobile_push_tts_text` is sent as its own `message: TTS` call **after** the notification - one wait for all the devices, 5 seconds by default, since started together the TTS cut off the notification's own sound; new `mobile_push_tts_delay` changes it (`0` for straight away). `mobile_push_tts_locale` / `_engine` go with it as `tts_text_language` / `tts_engine`
+  - for `critical`, the extra calls carry `ttl: 0` + `priority: high` like the notification (without them the TTS waited for the phone to be unlocked and was then spoken late), and the TTS goes on `media_stream: alarm_stream_max` (the app puts the volume back afterwards); otherwise `mobile_push_alarm_stream` / `_max` pick the stream
+  - Tried on a Samsung S26 Ultra
 
 ### Archive
 - `enquire_archive` can filter by `priority`, one or more, ignoring case - before `limit`, so a month of archive can be searched for its few critical notifications in one call
@@ -37,10 +43,11 @@ to stack traces in logs and the entire notification mapped as an error even if o
 ## 📚 Documentation
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
+- New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
-- For developers, there is now a custom plugin for the [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) developer shell, that makes live objects like `scenarios`,`engine` or `delivery_registry` available as shell variables
+- For developers, there is now a custom plugin for the [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) developer shell, that makes live objects like `scenarios`,`engine` or `delivery_registry` available as shell variables to acesss via Python
 
 # v2.13.2
 
