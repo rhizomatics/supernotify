@@ -28,11 +28,10 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
   - The sender is found from the call's context, and a script started by an automation counts both.
 ### Mobile
 - Mobile apps are updated now as they are added and removed, not only when the component starts up
-- If a mobile app is removed, its action goes away - this used to lead
-to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
+- If a mobile app is removed, its action goes away - this used to lead to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
   -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a repair to remove the device
 - Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
-- Improved how `critical` priority is applied for Android mobile apps with Do Not Disturb mode
+- Improved how `critical` priority is applied for Android mobile apps with *Do Not Disturb* mode
 - Android commands and TTS operations sent as independent calls
   - The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands) and TTS as the `message` of a call of their own (`message: command_dnd` + `data.command`, `message: TTS` + `data.tts_text`), not as data of an ordinary notification.
   - Now each `mobile_push_command_*` is sent as its own call **just before** the notification, so the screen is on / Do Not Disturb is off when it arrives
@@ -41,17 +40,17 @@ to stack traces in logs and the entire notification mapped as an error even if o
   - Tried on a Samsung S26 Ultra
 
 ### Archive
-- `enquire_archive` can filter by `priority`, one or more, ignoring case - before `limit`, so a month of archive can be searched for its few critical notifications in one call
+- `enquire_archive` can filter by `priority` ( one or more and case-insensitive ) before the `limit` is applied, so a month of archive can be searched for its few critical notifications in one call
 - The `summary` verbosity now includes `missed`, the count of deliveries asked for but not sent, so a `partial_delivery` can be explained from a summary list
 - The `summary` verbosity of `enquire_archive` leaves out `delivery_provenance`, about half its size - it is still there at `standard` and `full`
 
 ## 🐛 Bug fixes
-- Generic transport with `ntfy.publish` failed when `icon`, `click` or `attach` was given in `data`, these are now sent as the action expects
-- Chime sent the tone, duration and volume for a `siren` nested under a `data` key, which `siren.turn_on` rejects, so a siren chime with any of these set would fail. They are now sent as the action expects. Caught by the new automated downstream integration schema checks.
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
 - Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.
 - A scenario's `delivery` given as a single delivery name, or a list of names, was rejected as invalid configuration in YAML, though documented as a way to switch those deliveries on. Now both are accepted, as well as a mapping.
 - Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than disabling the scenario or delivery since the integration that provided the entities might start after Supernotify
+- Generic transport with `ntfy.publish` failed when `icon`, `click` or `attach` was given in `data`, these are now sent as the action expects
+- Chime sent the tone, duration and volume for a `siren` nested under a `data` key, which `siren.turn_on` rejects, so a siren chime with any of these set would fail. They are now sent as the action expects. Caught by the new automated downstream integration schema checks.
 
 
 ## 📚 Documentation
