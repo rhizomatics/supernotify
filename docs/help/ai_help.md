@@ -5,12 +5,13 @@ tags:
   - chatgpt
   - kimi
   - agent
+  - google
   - support
   - help
-title: AI Assisted Help
+title: Google and AI Assisted Help
 description: Answers to support queries
 ---
-# AI Assisted Help
+# Google and AI Assisted Help
 
 AI agents, like Claude or ChatGPT, are becoming increasingly better at giving good advice on Supernotify, helped by the documentation being setup to be accessible to them.
 
