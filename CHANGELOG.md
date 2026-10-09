@@ -63,6 +63,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
+- Test suite now over >2500 tests covering unit tests, integration tests and tests of example snippets inside the docs
 - For developers, there is now a custom plugin for the [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) developer shell, that makes live objects like `scenarios`,`engine` or `delivery_registry` available as shell variables to acesss via Python
 - Added automated tests for transports to ensure the service calls they make to downstream integrations meet the minimum and don't exceed the maximum of the integrations schemas
 
