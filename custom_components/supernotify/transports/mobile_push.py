@@ -27,15 +27,22 @@ New data keys (all optional):
     mobile_push_notification_tag    str   Notification tag for replacement (iOS) / grouping (Android)
     mobile_push_clear_notification  bool  Send clear_notification to dismiss previous same-tag notification.
                                       Requires push_notification_tag to be set.
-    mobile_push_tts_text            str   Android TTS text read aloud on device (Android 8+).
-                                      If omitted, push TTS is not activated.
+    mobile_push_tts_text            str   Android: text read aloud by the phone (Android 8+), sent as its own
+                                      `message: TTS` call after the notification, on the alarm stream at
+                                      full volume for critical. If omitted, push TTS is not activated.
+    mobile_push_tts_delay           int   Seconds between the notification and its TTS, so the notification's
+                                      own sound isn't cut off (default 5, 0 for straight away).
     mobile_push_tts_locale          str   BCP-47 language for TTS (e.g. "it-IT", "en-US").
                                       Only used when push_tts_text is set.
     mobile_push_tts_engine          str   TTS engine package (e.g. "com.google.android.tts").
                                       Only used when push_tts_text is set.
-    mobile_push_command_screen_on   bool  Android: turn on device screen on delivery (Android 8+)
-    mobile_push_command_dnd         str   Android: change Do Not Disturb ("toggle","off","on")
-    mobile_push_command_ringer_mode str   Android: change ringer mode ("silent","vibrate","normal")
+    mobile_push_command_screen_on   bool  Android: turn on device screen on delivery (Android 8+),
+                                      or "keep_screen_on"
+    mobile_push_command_dnd         str   Android: change Do Not Disturb ("alarms_only","priority_only",
+                                      "total_silence","off")
+    mobile_push_command_ringer_mode str   Android: change ringer mode ("normal","silent","vibrate")
+                                      The command_* keys are each sent as their own `message: command_...`
+                                      call before the notification, as the companion app takes them.
     mobile_push_channel_override    str   Android notification channel override (e.g. "alarm","general")
     mobile_push_alarm_stream        bool  Android: use the alarm_stream channel, which sounds through
                                       Do Not Disturb and silent mode
@@ -46,6 +53,7 @@ New data keys (all optional):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections.abc import Collection
@@ -117,6 +125,9 @@ ANDROID_CRITICAL_TTL = 0
 # documents for critical notifications, alarm_stream being what gets through Do Not Disturb
 ANDROID_CRITICAL_PRIORITY = "high"
 ANDROID_ALARM_STREAM_CHANNEL = "alarm_stream"
+# seconds between a notification and its TTS on Android - started together, the TTS cuts off the
+# notification's own sound
+ANDROID_TTS_DELAY = 5
 
 
 class MobilePushTransport(Transport):
@@ -197,6 +208,7 @@ class MobilePushTransport(Transport):
             "tts_text": raw_data.pop("mobile_push_tts_text", None),
             "tts_locale": raw_data.pop("mobile_push_tts_locale", None),
             "tts_engine": raw_data.pop("mobile_push_tts_engine", None),
+            "tts_delay": raw_data.pop("mobile_push_tts_delay", ANDROID_TTS_DELAY),
             # Android Notification Commands
             "command_screen_on": raw_data.pop("mobile_push_command_screen_on", None),
             "command_dnd": raw_data.pop("mobile_push_command_dnd", None),
@@ -243,22 +255,39 @@ class MobilePushTransport(Transport):
         elif critical:
             android_data["priority"] = ANDROID_CRITICAL_PRIORITY
 
-        # Android TTS: read message aloud on device (Android 8+)
-        if push_data["tts_text"]:
-            android_data["tts_text"] = push_data["tts_text"]
-            if push_data["tts_locale"]:
-                android_data["tts_text_language"] = push_data["tts_locale"]
-            if push_data["tts_engine"]:
-                android_data["tts_engine"] = push_data["tts_engine"]
-
-        # Notification Commands (Android 8+)
-        if push_data["command_screen_on"]:
-            android_data["command_screen_on"] = True
-        if push_data["command_dnd"]:
-            android_data["command_dnd"] = push_data["command_dnd"]
-        if push_data["command_ringer_mode"]:
-            android_data["command_ringer_mode"] = push_data["command_ringer_mode"]
         return android_data
+
+    def _android_extra_calls(
+        self, push_data: dict[str, Any], priority: str | None
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Notification commands and TTS, which the companion app takes as the `message` of a call of
+        their own rather than as notification data - commands to go before the notification, so the
+        screen is on or Do Not Disturb off when it arrives, and TTS after it."""
+        # a call without high priority can wait until the phone is unlocked - a critical's TTS would then be
+        # spoken late, maybe twice - so for critical these go as fast as the notification itself
+        urgent: dict[str, Any] = (
+            {"ttl": ANDROID_CRITICAL_TTL, "priority": ANDROID_CRITICAL_PRIORITY} if priority == const.PRIORITY_CRITICAL else {}
+        )
+        before: list[dict[str, Any]] = []
+        for key in ("command_dnd", "command_ringer_mode", "command_screen_on"):
+            value = push_data[key]
+            if value:
+                before.append({"message": key, ATTR_DATA: ({} if value is True else {"command": value}) | urgent})
+        after: list[dict[str, Any]] = []
+        if push_data["tts_text"]:
+            tts_data: dict[str, Any] = {"tts_text": push_data["tts_text"], **urgent}
+            if push_data["alarm_stream_max"] or priority == const.PRIORITY_CRITICAL:
+                # at full volume for critical - on a watch the alarm volume can be too low to hear,
+                # and the companion app puts the volume back afterwards
+                tts_data["media_stream"] = "alarm_stream_max"
+            elif push_data["alarm_stream"]:
+                tts_data["media_stream"] = ANDROID_ALARM_STREAM_CHANNEL
+            if push_data["tts_locale"]:
+                tts_data["tts_text_language"] = push_data["tts_locale"]
+            if push_data["tts_engine"]:
+                tts_data["tts_engine"] = push_data["tts_engine"]
+            after.append({"message": "TTS", ATTR_DATA: tts_data})
+        return before, after
 
     async def action_title(self, url: str, retry_timeout: int = 900) -> str | None:
         """Attempt to create a title for mobile action from the TITLE of the web page at the URL"""
@@ -328,6 +357,7 @@ class MobilePushTransport(Transport):
 
         # 5. Android-specific fields
         android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority, given=raw_data.keys())
+        android_before, android_after = self._android_extra_calls(push_data, envelope.priority)
 
         # 6. Cross-platform: notification tag
         notification_tag = push_data["notification_tag"]
@@ -403,6 +433,7 @@ class MobilePushTransport(Transport):
         clear_notification = bool(push_data["clear_notification"] and notification_tag)
         model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
         hits = 0
+        tts_pending: list[tuple[str, dict[str, Any]]] = []
 
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
@@ -415,13 +446,24 @@ class MobilePushTransport(Transport):
             # (e.g. an Android target with no android/ios fields to merge in), and that must
             # not carry over and clobber the next target's action_data
             target_data = dict(data)
+            is_android: bool = mobile_info is not None and mobile_info.manufacturer != MANUFACTURER_APPLE
             if mobile_info is None:
                 target_data.update(android_data)
                 target_data.update(ios_data)
-            elif mobile_info.manufacturer != MANUFACTURER_APPLE:  # TODO Make this os_name based
+                if android_before or android_after:
+                    # an iPhone would show a command or TTS call as a notification saying "command_dnd"
+                    _LOGGER.debug(
+                        "SUPERNOTIFY mobile_push: not sending Android commands/TTS to unknown device %s", mobile_target
+                    )
+            elif is_android:  # TODO Make this os_name based
                 target_data.update(android_data)
             else:
                 target_data.update(ios_data)
+            if is_android:
+                for extra in android_before:
+                    await self.call_action(
+                        envelope, qualified_action=full_target, action_data=dict(extra), implied_target=True, single_target=True
+                    )
 
             action_data = envelope.core_action_data()
             action_data[ATTR_DATA] = target_data
@@ -446,6 +488,9 @@ class MobilePushTransport(Transport):
                     implied_target=True,
                     single_target=True,
                 )
+
+            if success and is_android:
+                tts_pending.extend((full_target, dict(extra)) for extra in android_after)
 
             if success:
                 hits += 1
@@ -478,4 +523,12 @@ class MobilePushTransport(Transport):
                                     snooze_for=timedelta(days=1),
                                     reason="Action Failure",
                                 )
+        if tts_pending:
+            # one wait for all the devices, after every notification has gone
+            if push_data["tts_delay"]:
+                await asyncio.sleep(push_data["tts_delay"])
+            for full_target, extra in tts_pending:
+                await self.call_action(
+                    envelope, qualified_action=full_target, action_data=extra, implied_target=True, single_target=True
+                )
         return hits > 0
