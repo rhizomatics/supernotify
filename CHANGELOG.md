@@ -68,7 +68,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 - Added automated tests for transports to ensure the service calls they make to downstream integrations meet the minimum and don't exceed the maximum of the integrations schemas
 
 ## ⚠️ Deprecated
-- Using `ntfy.publish` with the Generic transport is deprecated in favour of the [ntfy transport](https://supernotify.rhizomatics.org.uk/transports/ntfy/). It carries on working, with a warning logged at start up
+- Using `ntfy.publish` with the **Generic** transport is deprecated in favour of the [ntfy transport](https://supernotify.rhizomatics.org.uk/transports/ntfy/). It carries on working, with a warning logged at start up
 
 # v2.13.2
 
