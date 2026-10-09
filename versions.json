@@ -7,14 +7,19 @@
   {
     "version": "2.14.0-beta5",
     "title": "2.14.0-beta5",
-    "aliases": [
-      "beta"
-    ]
+    "aliases": []
   },
   {
     "version": "2.14.0-beta4",
     "title": "2.14.0-beta4",
     "aliases": []
+  },
+  {
+    "version": "v2.14.0-beta6",
+    "title": "v2.14.0-beta6",
+    "aliases": [
+      "beta"
+    ]
   },
   {
     "version": "v2.14.0-beta1",
