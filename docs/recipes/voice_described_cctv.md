@@ -8,6 +8,7 @@ tags:
   - alexa
   - tts
   - echo
+  - wildcards
   - camera
   - accessibility
   - template

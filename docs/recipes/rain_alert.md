@@ -4,6 +4,7 @@ tags:
   - scenario
   - notify_entity
   - mobile_push
+  - wildcards
   - weather
   - recipe
 title: Low Priority Rain Alert using the Alert Integration
