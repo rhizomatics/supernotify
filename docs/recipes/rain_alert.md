@@ -7,8 +7,8 @@ tags:
   - wildcards
   - weather
   - recipe
-title: Low Priority Rain Alert using the Alert Integration
-description: Use a Supernotify Scenario with its own notify entity to make a Home Assistant Alert a low priority mobile push with a rain icon
+title: Alert Quietly When it Rains
+description: Use a Supernotify Scenario with its own notify entity and the Home Assistant Alert integration to send low priority mobile push notifications with a rain icon
 ---
 # Recipe - Rain Alert
 
