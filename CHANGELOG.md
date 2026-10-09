@@ -21,6 +21,13 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
   - Used as a target of `supernotify.notify`, it applies its scenario or selects its delivery on that notification
 - Every notify entity, including each recipient's `notify.recipient_<name>`, also has a legacy `notify` action of the same name, so the Alert integration can list them in `notifiers`
   - This opens up scenarios and deliveries to anything that takes a notify entity or action, see the [Alert integration example](https://supernotify.rhizomatics.org.uk/configuration/scenarios/#with-the-alert-integration)
+
+### Delivery Switch Entities
+- Now has new attributes
+  - `last_sent_at`
+  - `last_outcome`
+  - `last_skip_reason`
+
 ### Snoozing
 - A `TAG` snooze also matches the automation or script that sent the notification
   - Matches by `entity_id`, name or alias
@@ -60,6 +67,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
 - New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
 - Updated the [Targets](./usage/targets.md) documentation for the `target_usage` control
+- New developer page on using the Supernotify plugin for the [ha-repl](https://homeassistant-repl.rhizomatics.org.uk) developer shell.
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range

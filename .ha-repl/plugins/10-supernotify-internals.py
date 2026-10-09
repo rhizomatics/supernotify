@@ -3,7 +3,7 @@
 #   engine                     the SupernotifyEngine behind the config entry
 #   deliveries, scenarios,     its registries' contents, by name
 #   people
-#   last_notification, archive
+#   archive
 #   switches, binary_sensors   Supernotify's entities, from `obj` (every mode)
 #
 # Nothing here is imported on your own machine. Supernotify runs inside Home
@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     # For linters and type checkers only, and never run: what ha-repl itself
-    # provides, declared in _ha_repl.pyi beside this file. They are used at
+    # provides, declared in the `homeassistant-repl` library. They are used at
     # run time, which is the point, hence the noqa.
     from typing import Any
 
@@ -32,7 +32,6 @@ if MODE != "api":
     from custom_components.supernotify.archive import NotificationArchive
     from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
     from custom_components.supernotify.engine import SupernotifyEngine
-    from custom_components.supernotify.notification import Notification
     from custom_components.supernotify.people import PeopleRegistry, Recipient
     from custom_components.supernotify.scenario import Scenario, ScenarioRegistry
 
@@ -46,7 +45,6 @@ if MODE != "api":
     people: dict[str, Recipient] = sn_pr.people
     scenarios: dict[str, Scenario] = sn_sr.scenarios
     archive: NotificationArchive = engine.context.archive
-    last_notification: Notification | None = engine.last_notification
 
 switches = obj.find(platform="supernotify", domain="switch")
 binary_sensors = obj.find(platform="supernotify", domain="binary_sensor")
