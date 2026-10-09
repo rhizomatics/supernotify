@@ -89,14 +89,20 @@ class SchemaCase:
 
 
 def _import_schema(module: str, name: str) -> Any:  # ruff: ignore[any-type]
-    """Import a schema, stubbing out any third party library the integration needs but isn't installed"""
+    """Import a schema, stubbing out any third party library the integration needs but isn't installed
+
+    Older Home Assistant versions keep some of these schemas elsewhere, or build them in a way
+    that a stubbed library can't stand in for, and the test is skipped for those.
+    """
     while True:
         try:
             return getattr(importlib.import_module(f"homeassistant.components.{module}"), name)
         except ModuleNotFoundError as e:
             if not e.name or e.name.startswith("homeassistant."):
-                raise
+                pytest.skip(f"No {module}.{name} schema in this Home Assistant version: {e}")
             sys.modules[e.name] = MagicMock()
+        except AttributeError as e:
+            pytest.skip(f"No {module}.{name} schema in this Home Assistant version: {e}")
 
 
 async def downstream_schema(hass: HomeAssistant, domain: str, service: str) -> Any | None:  # ruff: ignore[any-type]

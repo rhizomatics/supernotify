@@ -16,6 +16,8 @@ description: Use a Supernotify Scenario with its own notify entity and the Home 
 
 Get a quiet reminder on the phone while it's raining, repeated every hour until it stops, using Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration.
 
+![Example Rain Alert](../assets/images/rain_alert.png)
+
 ## Implementation
 
 An alert only gives a notifier a message and a title, so what kind of notification it becomes is set in a scenario. The scenario has a `notify_entity`, which gives it a `notify.its_raining_again` entity, and an action of the same name for the alert to list in its `notifiers`. See
