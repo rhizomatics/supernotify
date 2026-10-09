@@ -43,6 +43,7 @@ to stack traces in logs and the entire notification mapped as an error even if o
 - Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than disabling the scenario or delivery since the integration that provided the entities might start after Supernotify
 
 ## 📚 Documentation
+- Help section improved, and with more examples of how Google and AI agents like ChatGPT, Claude, Kimi etc can give advice and write YAML
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
 - New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
