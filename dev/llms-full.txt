@@ -2326,6 +2326,22 @@ Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNot
 
 Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
 
+A delivery switch also shows what the delivery last did, from live notifications only (a dry run leaves them alone):
+
+| Attribute          | Example                        | Set when                                          |
+| ------------------ | ------------------------------ | ------------------------------------------------- |
+| `last_sent_at`     | `2026-10-04T16:42:10+00:00`    | the delivery sent something                       |
+| `last_outcome`     | `success`, `error`, `skipped`  | every live notification the delivery took part in |
+| `last_skip_reason` | `SNOOZED`, `OCCUPANCY`, `DUPE` | only with `last_outcome: skipped`                 |
+
+So a delivery that has quietly stopped going out shows up without opening the archive, for example in a template:
+
+```jinja
+{{ now() - as_datetime(state_attr('switch.supernotify_delivery_mobile_push', 'last_sent_at') or 0) > timedelta(days=3) }}
+```
+
+An `error` is only seen when the call to the action waits for its result, as with `debug: true` or a delivery with a `fallback`, the same as for the archive. These attributes start empty after a restart, and aren't kept in history.
+
 Deprecated
 
 The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
