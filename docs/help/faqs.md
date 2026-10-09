@@ -1,3 +1,11 @@
+---
+tags:
+  - faq
+  - support
+  - help
+title: Frequently Asked Questions
+description: Answers to support queries
+---
 # Frequently Asked Questions
 
 ## Target Selection
@@ -23,13 +31,3 @@ alexa_inform:
     - notify.living_room_flex_speak
     - notify.studio_speak
 ```
-
-## Other Questions
-
-**Q**: My question isn't here, and I can't get find answer in the docs.
-
-**A**: Try using an AI agent if you have one, like Claude or ChatGPT, or the Home Assistant chat bot - the Supernotify site has agent-accessible help, and can give good suggestions and even write or rewrite your YAML for you.
-
-Otherwise, ask a human at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page for general help, or the [Issues](https://github.com/rhizomatics/supernotify/issues) if you've found a bug.
-
-![Example Help from Claude](assets/images/claude_help.png){width=700}

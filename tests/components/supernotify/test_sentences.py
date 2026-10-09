@@ -455,6 +455,18 @@ async def test_last_notification_with_nothing_to_send_it(hass: HomeAssistant) ->
     assert response.endswith(": night motion in hall. Non è stata inviata perché niente è configurato per inviarla")
 
 
+async def test_help_gives_link_to_help_page(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    assert await async_respond(engine, "help", {}, Context()) == (
+        "Help for Supernotify is online at https://supernotify.rhizomatics.org.uk/help/"
+    )
+    assert await async_respond(engine, "help", {}, Context(), "it") == (
+        "L'aiuto per Supernotify è online su https://supernotify.rhizomatics.org.uk/help/"
+    )
+    assert calls == []
+
+
 async def test_unknown_command(hass: HomeAssistant) -> None:
     engine, _calls = await _setup(hass)
 

@@ -12,6 +12,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 
 ### Assist
 - Snoozing requests don't stop critical notifications, unless the instruction explicit asks to snooze 'even critical'
+- Built-in agent sentence *How do I get help on Supernotify* answers with a link to the online help page, in English and Italian
 ### Snoozing
 - A `TAG` snooze also matches the automation or script that sent the notification
   - Matches by `entity_id`, name or alias

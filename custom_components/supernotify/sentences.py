@@ -56,6 +56,7 @@ NAMED_TIMES = {"midnight": 0, "noon": 12}
 MINUTES_PREFIXES = ("the", "next", "i", "prossimi")
 # A tag starting or ending with this names a camera, as "driveway camera" or "telecamera vialetto"
 CAMERA_WORDS = {"en": "camera", "it": "telecamera"}
+HELP_URL = "https://supernotify.rhizomatics.org.uk/help/"
 
 # hassil sentence templates by language - (a|b) is a choice, [a] is optional and {slot} is a wildcard.
 # A wildcard needs fixed words between it and the next one, so the message is always introduced.
@@ -95,6 +96,12 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             "turn [all] [my] notifications for {tag} back on",
         ],
         "last": ["what was the last notification", "what notification was sent last"],
+        # speech to text often hears the name as two words
+        "help": [
+            "how (do|can) I get help (on|with|for) (supernotify|super notify)",
+            "[get] help (on|with|for) (supernotify|super notify)",
+            "(supernotify|super notify) help",
+        ],
     },
     "it": {
         "notify": [
@@ -136,6 +143,10 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             "(qual è|qual era|quale è|quale era) [stata] (l'ultima|l ultima) notifica",
             "(dimmi|leggi|ripeti) (l'ultima|l ultima) notifica",
         ],
+        "help": [
+            "come (posso avere|posso ottenere|ottengo|trovo) aiuto (per|su|con) (supernotify|super notify)",
+            "aiuto (per|su|con) (supernotify|super notify)",
+        ],
     },
 }
 
@@ -175,6 +186,7 @@ RESPONSES: dict[str, dict[str, str]] = {
         "why_occupancy": " because of who was home",
         "why_transport_disabled": " because the transport is switched off",
         "why_no_target": " because there was nobody to send it to",
+        "help": "Help for Supernotify is online at {url}",
         "unknown_command": "Supernotify doesn't know the command {command}",
     },
     "it": {
@@ -211,6 +223,7 @@ RESPONSES: dict[str, dict[str, str]] = {
         "why_occupancy": " per via di chi era in casa",
         "why_transport_disabled": " perché il transport è disattivato",
         "why_no_target": " perché non c'era nessuno a cui inviarla",
+        "help": "L'aiuto per Supernotify è online su {url}",
         "unknown_command": "Supernotify non conosce il comando {command}",
     },
 }
@@ -265,6 +278,8 @@ async def async_respond(
         return await _notify(engine, str(slots.get("name", "")), str(slots.get("message", "")), context, language)
     if command == "last":
         return _last(engine, language)
+    if command == "help":
+        return _say(language, "help", url=HELP_URL)
     tag: str | None = _tag(str(slots["tag"])) if slots.get("tag") else None
     subject: Subject | None = None
     if tag is not None:
