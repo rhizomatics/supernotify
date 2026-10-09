@@ -153,6 +153,7 @@ These four stand on their own and would have prevented or exposed the oven failu
 - **Select deliveries by transport.** Let `notify` take a transport name where it takes delivery names, so a caller never needs the enquiry.
 - **Duplicate check and counters.** Stripping digits before hashing treats a changing percentage as a repeat. A tracked update should be exempt. Whether untracked messages that differ only by a number are duplicates is worth a second look.
 - **Clear without a tag.** Mobile push logs a warning and carries on when `mobile_push_clear_notification` is set with no tag. The response should say the clear did nothing.
+- Strip out any unnecessary data in the service call, e.g. action groups
 
 ## Open questions
 
