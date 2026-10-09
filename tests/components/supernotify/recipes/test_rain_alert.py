@@ -15,10 +15,16 @@ if TYPE_CHECKING:
 async def test_rain_alert(hass: HomeAssistant) -> None:
     """https://supernotify.rhizomatics.org.uk/recipes/rain_alert/"""
     pushed: list[ServiceCall] = []
+    chatted: list[ServiceCall] = []
 
     async def _push(call: ServiceCall) -> None:
         pushed.append(call)
 
+    async def _chat(call: ServiceCall) -> None:
+        chatted.append(call)
+
+    # another delivery every notification usually goes to, which the scenario switches off
+    hass.services.async_register("testing", "chat", _chat)
     # a phone with the Home Assistant app, so there is a standard mobile_push delivery
     MockConfigEntry(domain="mobile_app", data={"device_name": "Joes Phone"}).add_to_hass(hass)
     hass.services.async_register("notify", "mobile_app_joes_phone", _push)
@@ -30,6 +36,12 @@ supernotify:
     - person: person.joe
       mobile_devices:
         - mobile_app_id: mobile_app_joes_phone
+  delivery:
+    family_chat:
+      transport: generic
+      action: testing.chat
+      target_required: never
+      inclusion: default
   scenarios:
     rain:
       alias: Its raining again
@@ -39,6 +51,8 @@ supernotify:
           data:
             priority: low
             notification_icon: mdi:weather-pouring
+        .*:
+          enabled: false
 
 alert:
   rain:
@@ -61,3 +75,4 @@ alert:
             "data": {"notification_icon": "mdi:weather-pouring", "push": {"interruption-level": "passive"}},
         }
     ]
+    assert chatted == []

@@ -100,7 +100,7 @@ A scenario can also be given a notify entity of its own, so it can be used from 
 
 Sending a message to it is like a `supernotify.notify` with only a message and title, and `apply_scenarios` set to this scenario, so it goes to the default recipients and the scenario's overrides are applied. Other scenarios still select themselves by their conditions.
 
-In this example, anything sent to `notify.its_raining_again` becomes a low priority mobile push with a rain icon.
+In this example, anything sent to `notify.its_raining_again` becomes a low priority mobile push with a rain icon. The `.*` switches off every other delivery, which would otherwise be sent as well, since a scenario adds to the deliveries a notification would have had - see the [Rain Alert Recipe](../recipes/rain_alert.md#why-the-is-needed).
 
 ```yaml title="Scenario with its own notify entity"
 scenarios:
@@ -112,6 +112,8 @@ scenarios:
         data:
           priority: low
           notification_icon: mdi:weather-pouring
+      .*:
+        enabled: false
 ```
 
 ```yaml title="Using it in an automation"
