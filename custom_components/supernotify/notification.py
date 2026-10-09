@@ -990,6 +990,31 @@ class Notification(ArchivableObject):
                 self.error_count += 1
                 self.failed += 1
 
+    def delivery_outcomes(self) -> dict[DeliveryName, tuple[EnvelopeOutcome, str | None]]:
+        """One outcome for each delivery that took part in this notification, with the reason when
+        skipped: success if any of its envelopes was delivered, else error if any failed (or the
+        delivery itself raised), else skipped - its envelopes suppressed, or none generated."""
+        outcomes: dict[DeliveryName, tuple[EnvelopeOutcome, str | None]] = {}
+        for name, results in self.deliveries.items():
+            if results.get(EnvelopeOutcome.SUCCESS):
+                outcomes[name] = (EnvelopeOutcome.SUCCESS, None)
+                continue
+            if results.get(EnvelopeOutcome.ERROR):
+                outcomes[name] = (EnvelopeOutcome.ERROR, None)
+                continue
+            reason: str | None = None
+            skipped = results.get(EnvelopeOutcome.SKIPPED)
+            if isinstance(skipped, dict):
+                reason = skipped.get("suppression_reason")
+            suppressed = results.get(EnvelopeOutcome.SUPPRESSED)
+            if not reason or reason == "None":
+                reason = next((str(e.skip_reason) for e in suppressed or [] if isinstance(e, Envelope) and e.skip_reason), None)
+            if reason == SuppressionReason.ERROR:
+                outcomes[name] = (EnvelopeOutcome.ERROR, None)
+            else:
+                outcomes[name] = (EnvelopeOutcome.SKIPPED, reason)
+        return outcomes
+
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
         minimal = not diagnostics
