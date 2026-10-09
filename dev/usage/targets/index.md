@@ -182,6 +182,45 @@ scenarios:
         camera_entity_id: camera.porch
 ```
 
+## Targets in Delivery Configuration
+
+A delivery can also have its own `target` in its configuration, or inherit one from the `delivery_defaults` of its transport. This is separate from the targets on the notification, and the delivery's `target_usage` option decides what happens when there are both.
+
+| `target_usage`   | When the delivery's own targets are used                                     | Targets on the notification |
+| ---------------- | ---------------------------------------------------------------------------- | --------------------------- |
+| `no_action`      | Only when the action call has no `target` at all. This is the default        | Used                        |
+| `no_delivery`    | Only when none of the notification's targets are usable by this delivery     | Used                        |
+| `merge_delivery` | Added, but only when the notification already has a target for this delivery | Used                        |
+| `merge_always`   | Always added                                                                 | Used                        |
+| `fixed`          | Always, and nothing else                                                     | Ignored                     |
+
+"Targets on the notification" covers everything that isn't the delivery's own: the `target` on the action call, the people it names, and the default recipients used when there's no `target`.
+
+The difference between `no_action` and `no_delivery` shows up when the notification has targets, but none this delivery can use. Here the action call has only an email address, so with the default `no_action` the siren delivery gets no target, and `no_delivery` lets it fall back to its own:
+
+configuration
+
+```yaml
+delivery:
+  hall_siren:
+    transport: chime
+    target: siren.hall
+    target_usage: no_delivery
+```
+
+action call
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target: jjh@34acacia.avenue.com
+```
+
+Similarly, `merge_delivery` only adds to a delivery that was already going to send, which suits a copy address on an email, while `merge_always` will make the delivery send even if it had nothing else to send to. Use `fixed` when the delivery should reach the same targets whatever is on the notification, including when a person is targeted.
+
+See [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) for the related `target_required` option, and the [Fixed Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md) and [Email CC](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) recipes for worked examples.
+
 ## Debugging
 
 In the archived JSON, each delivery has an `envelope` with the targets assigned to it. There's also a field `uncategorized_targets` that lists ones that couldn't be understood and were ignored, and a field `unassigned_targets` for those that could be categorized but didn't get selected by a delivery.

@@ -1449,6 +1449,45 @@ scenarios:
         camera_entity_id: camera.porch
 ```
 
+## Targets in Delivery Configuration
+
+A delivery can also have its own `target` in its configuration, or inherit one from the `delivery_defaults` of its transport. This is separate from the targets on the notification, and the delivery's `target_usage` option decides what happens when there are both.
+
+| `target_usage`   | When the delivery's own targets are used                                     | Targets on the notification |
+| ---------------- | ---------------------------------------------------------------------------- | --------------------------- |
+| `no_action`      | Only when the action call has no `target` at all. This is the default        | Used                        |
+| `no_delivery`    | Only when none of the notification's targets are usable by this delivery     | Used                        |
+| `merge_delivery` | Added, but only when the notification already has a target for this delivery | Used                        |
+| `merge_always`   | Always added                                                                 | Used                        |
+| `fixed`          | Always, and nothing else                                                     | Ignored                     |
+
+"Targets on the notification" covers everything that isn't the delivery's own: the `target` on the action call, the people it names, and the default recipients used when there's no `target`.
+
+The difference between `no_action` and `no_delivery` shows up when the notification has targets, but none this delivery can use. Here the action call has only an email address, so with the default `no_action` the siren delivery gets no target, and `no_delivery` lets it fall back to its own:
+
+configuration
+
+```yaml
+delivery:
+  hall_siren:
+    transport: chime
+    target: siren.hall
+    target_usage: no_delivery
+```
+
+action call
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target: jjh@34acacia.avenue.com
+```
+
+Similarly, `merge_delivery` only adds to a delivery that was already going to send, which suits a copy address on an email, while `merge_always` will make the delivery send even if it had nothing else to send to. Use `fixed` when the delivery should reach the same targets whatever is on the notification, including when a person is targeted.
+
+See [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) for the related `target_required` option, and the [Fixed Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md) and [Email CC](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) recipes for worked examples.
+
 ## Debugging
 
 In the archived JSON, each delivery has an `envelope` with the targets assigned to it. There's also a field `uncategorized_targets` that lists ones that couldn't be understood and were ignored, and a field `unassigned_targets` for those that could be categorized but didn't get selected by a delivery.
@@ -4657,6 +4696,10 @@ Use this transport to call *any* action, including 'legacy' Notification actions
 
 To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list.
 
+Info
+
+This transport has also been used to add some minor support for an integration that doesn't yet warrant a full scale transport. For example, this was the case for [ntfy.sh](https://ntfy.sh) before the [ntfy transport](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md) was contributed, and remains the case for the [notify.events](https://notify.events) vendor service.
+
 ### Notify Actions
 
 If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be passed in the Action (Service) Data.
@@ -4737,22 +4780,24 @@ Example Action Call
 
 Generic isn't completely a blank slate - it knows about the most common integration domains and will build a compatible Action call for them. These have a lot of variation because Home Assistant actions have a lot of variation! Generic Transports handling of these means you can create multi-channel notifications without worrying too much about the variety of `data` mappings etc.
 
-| Domain                                 | Action Data                                                                                                                                                                                                         | Target Data                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| notify ( `send_message` only)          | `message` and `title` only                                                                                                                                                                                          | `entity_id` map             |
-| notify ( other actions )               | `message` and `title` plus all `data` elements                                                                                                                                                                      | big list of all targets     |
-| input_text                             | `value` with message                                                                                                                                                                                                | `entity_id` map             |
-| switch                                 | Empty                                                                                                                                                                                                               | `entity_id` map             |
-| mqtt                                   | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined                                                         | Empty                       |
-| siren                                  | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                                                                              | `entity_id` map             |
-| light                                  | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                                                                              | `entity_id` map             |
-| rest_command                           | All of \`data                                                                                                                                                                                                       | Empty                       |
-| notify_events                          | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements                                                                                               | Empty                       |
-| ntfy (`ntfy.publish`)                  | All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
-| script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right                                                                            | `entity_id` map             |
-| script (script name as action)         | `message` and `title` plus all `data` elements                                                                                                                                                                      | `entity_id` map             |
-| tts                                    | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements                                                                                                                                      | `entity_id` map             |
-| *default*                              | `message` and `title` plus all `data` elements                                                                                                                                                                      | big list of all targets     |
+Several of these now have their own transports, and are effectively deprecated in Generic although remain working - `ntfy`,`mqtt`,`siren` (`chime` transport),`tts` and `notify` (`notify_entity` transport).
+
+| Domain                                 | Action Data                                                                                                                                                                                                                                                                                                                                                            | Target Data                 |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| notify ( `send_message` only)          | `message` and `title` only                                                                                                                                                                                                                                                                                                                                             | `entity_id` map             |
+| notify ( other actions )               | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | big list of all targets     |
+| input_text                             | `value` with message                                                                                                                                                                                                                                                                                                                                                   | `entity_id` map             |
+| switch                                 | Empty                                                                                                                                                                                                                                                                                                                                                                  | `entity_id` map             |
+| mqtt                                   | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined                                                                                                                                                                                                            | Empty                       |
+| siren                                  | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                                                                                                                                                                                                                                 | `entity_id` map             |
+| light                                  | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                                                                                                                                                                                                                                 | `entity_id` map             |
+| rest_command                           | All of \`data                                                                                                                                                                                                                                                                                                                                                          | Empty                       |
+| notify_events                          | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements                                                                                                                                                                                                                                                  | Empty                       |
+| ntfy (`ntfy.publish`)                  | **Deprecated**, use the [ntfy transport](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md), a warning is logged at start up. All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
+| script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right                                                                                                                                                                                                                               | `entity_id` map             |
+| script (script name as action)         | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | `entity_id` map             |
+| tts                                    | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements                                                                                                                                                                                                                                                                                         | `entity_id` map             |
+| *default*                              | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | big list of all targets     |
 
 Notify Events
 
