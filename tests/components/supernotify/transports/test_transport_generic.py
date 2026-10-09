@@ -7,9 +7,13 @@ try:
     from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[import-not-found,attr-defined]
 except ImportError:
     from homeassistant.components.ntfy.services import SERVICE_PUBLISH_SCHEMA  # type: ignore[no-redef,import-not-found]
+from dataclasses import replace
+
+import pytest
 from homeassistant.components.script import SCRIPT_TURN_ONOFF_SCHEMA
 from homeassistant.components.siren import TURN_ON_SCHEMA
 from homeassistant.const import CONF_ACTION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
@@ -40,6 +44,7 @@ from custom_components.supernotify.options import (
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.generic import OPTION_GENERIC_DOMAIN_STYLE, GenericTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, downstream_schema, sizes
 
 
 async def test_deliver() -> None:
@@ -796,3 +801,76 @@ async def test_notify_events() -> None:
         context=None,
         return_response=False,
     )
+
+
+SCHEMA_CASES: dict[str, SchemaCase] = {
+    "notify_entity": SchemaCase(GenericTransport, ["notify.pixel_phone"], {"notify.send_message"}),
+    "notify_legacy": SchemaCase(GenericTransport, ["+447979123456"], {"notify.custom"}, maximal_data={"sender": "Home"}),
+    "input_text": SchemaCase(
+        GenericTransport, ["input_text.last_alert"], {"input_text.set_value"}, maximal_data={"value": "Porch"}
+    ),
+    "switch": SchemaCase(GenericTransport, ["switch.buzzer"], {"switch.turn_on"}),
+    "mqtt": SchemaCase(
+        GenericTransport,
+        expected={"mqtt.publish"},
+        data={"topic": "alerts/porch"},
+        maximal_data={"payload": "on", "qos": 1, "retain": True},
+    ),
+    "tts": SchemaCase(
+        GenericTransport,
+        expected={"tts.speak"},
+        data={"entity_id": "tts.home_assistant_cloud", "media_player_entity_id": "media_player.kitchen_speakers"},
+        maximal_data={"language": "en-GB", "cache": False},
+    ),
+    "ntfy": SchemaCase(
+        GenericTransport,
+        ["notify.ntfy_alerts", "tester@example.org"],
+        {"ntfy.publish"},
+        maximal_data={
+            "tags": ["warning"],
+            "markdown": True,
+            "sequence_id": "porch-1",
+            "icon": "https://my.home/static/icon.png",
+            "click": "https://my.home/cameras/porch",
+        },
+    ),
+    "siren": SchemaCase(
+        GenericTransport,
+        ["siren.lobby"],
+        {"siren.turn_on"},
+        maximal_data={"tone": "alarm", "duration": 10, "volume_level": 0.8},
+    ),
+    "light": SchemaCase(
+        GenericTransport,
+        ["light.hall"],
+        {"light.turn_on"},
+        maximal_data={"brightness_pct": 100, "flash": "long", "color_name": "red"},
+    ),
+    "script": SchemaCase(
+        GenericTransport, ["script.alert_call"], {"script.turn_on"}, maximal_data={"variables": {"zone": "porch"}}
+    ),
+    "rest_command": SchemaCase(GenericTransport, expected={"rest_command.alert"}, maximal_data={"zone": "porch"}),
+}
+
+
+async def assert_generic_schema_usage(hass: HomeAssistant, case: SchemaCase, maximal: bool) -> None:
+    (action,) = case.expected
+    domain, service = action.split(".", 1)
+    # the action is registered with its schema, as Generic prunes the data using that
+    registered = {"action": service, "schema": await downstream_schema(hass, domain, service)}
+    case = replace(case, delivery={"action": action}, context={"services": {domain: [registered]}})
+    await assert_schema_usage(hass, case, maximal)
+
+
+@sizes
+@pytest.mark.parametrize("case", SCHEMA_CASES.values(), ids=SCHEMA_CASES.keys())
+async def test_schema_usage(hass: HomeAssistant, case: SchemaCase, maximal: bool) -> None:
+    await assert_generic_schema_usage(hass, case, maximal)
+
+
+def test_validate_action_warns_ntfy_deprecated(caplog: pytest.LogCaptureFixture) -> None:
+    from unittest.mock import Mock
+
+    uut = GenericTransport(Mock())
+    assert uut.validate_action("ntfy.publish")
+    assert "Deprecated use of ntfy.publish" in caplog.text

@@ -18,7 +18,6 @@ from homeassistant.helpers import config_validation as cv
 
 from custom_components.supernotify.compat import humanize, vol
 from custom_components.supernotify.const import (
-    ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
     CONF_DATA,
@@ -208,13 +207,13 @@ class SirenChimeTransport(MiniChimeTransport):
         envelope: Envelope | None = None,
         **_kwargs: Any,
     ) -> ActionCall | None:
-        output_data: dict[str, Any] = {ATTR_DATA: {}}
+        output_data: dict[str, Any] = {}
         if target_config.tune:
-            output_data[ATTR_DATA]["tone"] = target_config.tune
+            output_data["tone"] = target_config.tune
         if target_config.duration is not None:
-            output_data[ATTR_DATA]["duration"] = target_config.duration
+            output_data["duration"] = target_config.duration
         if target_config.volume is not None:
-            output_data[ATTR_DATA]["volume_level"] = target_config.volume
+            output_data["volume_level"] = target_config.volume
         return ActionCall(
             self.domain, "turn_on", action_data=output_data, target_data={ATTR_ENTITY_ID: target_config.entity_id}
         )

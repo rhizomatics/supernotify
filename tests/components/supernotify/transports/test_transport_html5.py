@@ -27,6 +27,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     RE_NOTIFY_ENTITY_ID,
@@ -36,6 +37,7 @@ from custom_components.supernotify.transports.html5 import (
     _URGENCY_BY_PRIORITY,
     HTML5Transport,
 )
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -816,3 +818,27 @@ async def test_deliver_call_action_failure_returns_false() -> None:
 
     assert result is False
     uut.call_action.assert_awaited_once()
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        HTML5Transport,
+        ["notify.html5_chrome_desktop"],
+        {"html5.send_message"},
+        maximal_data={
+            "html5_urgency": "high",
+            "html5_tag": "porch",
+            "html5_actions": [{"action": "open", "title": "Open", "icon": "/static/open.png"}],
+            "html5_attach_image": True,
+            "html5_icon": "/static/icon.png",
+            "html5_badge": "/static/badge.png",
+            "html5_url": "/lovelace/cameras",
+            "html5_require_interaction": True,
+            "html5_renotify": True,
+            "html5_vibrate": [200, 100, 200],
+            "html5_ttl": {"hours": 1},
+            "html5_data": {"camera": "porch"},
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

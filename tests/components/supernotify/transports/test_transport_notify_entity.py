@@ -1,5 +1,6 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_NAME, CONF_OPTIONS
+from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -22,6 +23,7 @@ from custom_components.supernotify.transports.mobile_push import MobilePushTrans
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import MockGroup, TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
@@ -140,3 +142,13 @@ async def test_doesnt_double_deliver() -> None:
     assert len(notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS]) == 1
     assert notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS][0].delivery_name == "notify_entity"  # type: ignore
     assert notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS][0].target.entity_ids == ["notify.entity_1"]  # type: ignore
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        NotifyEntityTransport,
+        ["notify.pixel_phone"],
+        {"notify.send_message"},
+    )
+    await assert_schema_usage(hass, case, maximal)

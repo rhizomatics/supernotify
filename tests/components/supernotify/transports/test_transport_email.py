@@ -51,6 +51,7 @@ from custom_components.supernotify.transports.email import (
     EmailTransport,
 )
 from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 from tests.components.supernotify.transports.transport_actions import setup_smtp, smtp_config_flow
 
 if TYPE_CHECKING:
@@ -954,3 +955,15 @@ def test_transport_schema_sender_stays_a_string() -> None:
     })
     assert isinstance(validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER], str)
     assert validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER] == "hass@example.com"
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        EmailTransport,
+        ["tester@example.org"],
+        {"notify.smtp"},
+        delivery={"action": "notify.smtp"},
+        maximal_data={"footer": "Sent by {e.delivery_name}", "data": {"sender_name": "Home"}},
+    )
+    await assert_schema_usage(hass, case, maximal)

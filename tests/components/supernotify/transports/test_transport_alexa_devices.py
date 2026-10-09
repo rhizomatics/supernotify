@@ -1,4 +1,5 @@
 from homeassistant.const import CONF_ACTION
+from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA
@@ -7,6 +8,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 DELIVERY = {
     "alexa_devices": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_ACTION: "notify.send_message"},
@@ -91,3 +93,13 @@ def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  #
         "notify.kitchen_echo",
         "group.family_room",
     ])
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        AlexaDevicesTransport,
+        ["notify.kitchen_echo_announce"],
+        {"notify.send_message"},
+    )
+    await assert_schema_usage(hass, case, maximal)

@@ -35,6 +35,7 @@ from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_mobile_app
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -924,3 +925,25 @@ async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> Non
 
     issues = [i for (domain, i) in ir.async_get(hass).issues if domain == DOMAIN and "mobile_app" in i]
     assert issues == ["recipient_bidey_in_mobile_app_mobile_app_nophone_not_found"]
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        MobilePushTransport,
+        {"mobile_app_id": ["mobile_app_new_iphone"]},
+        {"notify.mobile_app_new_iphone"},
+        maximal_data={
+            "mobile_push_subtitle": "Porch",
+            "mobile_push_critical_level": "critical",
+            "mobile_push_critical_ttl": 0,
+            "mobile_push_critical_priority": "high",
+            "mobile_push_channel_override": "alarms",
+            "mobile_push_tts_text": "Motion at the porch",
+            "mobile_push_tts_locale": "en-GB",
+            "mobile_push_command_screen_on": True,
+            "mobile_push_group": "cameras",
+            "mobile_push_notification_tag": "porch",
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

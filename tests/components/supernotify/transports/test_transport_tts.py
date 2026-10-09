@@ -19,6 +19,7 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.tts import TTSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -268,3 +269,14 @@ async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     assert call.domain == "notify"
     assert call.action == "mobile_app_bobs_phone"
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        TTSTransport,
+        ["media_player.kitchen_speakers"],
+        {"tts.speak"},
+        maximal_data={"language": "en-GB", "cache": False, "options": {"preferred_format": "wav"}},
+    )
+    await assert_schema_usage(hass, case, maximal)

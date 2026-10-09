@@ -40,6 +40,12 @@ Switch from `voluptuous` to `probatio`
 
 ## Notification Features
 
+### Quick Selectors
+
+Minimize need of scenarios and conditional logic.
+[RFC0007](rfcs/0007-quick_selectors.md)
+
+
 ### Rate Limiting
 
 Moving window quota per priority. Per delivery / scenario limits.
@@ -174,7 +180,7 @@ The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/0003a
 
 There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](../recipes/notification_dashboard.md)
 
-SignalK has nice idea of having recommended plugins, could be feature PR for HACS
+SignalK has nice idea of having recommended plugins, could be feature PR for HACS [DONE] Supernotify Cards now ships with a dashboard
 
 ### Extensibility
 

@@ -22,6 +22,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
@@ -30,6 +31,7 @@ from custom_components.supernotify.model import (
     TransportFeature,
 )
 from custom_components.supernotify.transports.lametric import LaMetricTransport
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -507,3 +509,31 @@ async def test_chart_path_service_name():
 
     _, kw = t.call_action.call_args
     assert kw["qualified_action"] == "lametric.chart"
+
+
+SCHEMA_CASES: dict[str, SchemaCase] = {
+    "message": SchemaCase(
+        LaMetricTransport,
+        expected={"lametric.message"},
+        data={"device_id": "aaaa0000bbbb1111cccc2222dddd3333"},
+        maximal_data={
+            "lametric_sound": "alarm1",
+            "lametric_icon": "a7956",
+            "lametric_cycles": 3,
+            "lametric_icon_type": "alert",
+            "lametric_simplify": True,
+        },
+    ),
+    "chart": SchemaCase(
+        LaMetricTransport,
+        expected={"lametric.chart"},
+        data={"device_id": "aaaa0000bbbb1111cccc2222dddd3333", "lametric_chart_data": [1, 2, 3, 4, 3, 2, 1]},
+        maximal_data={"lametric_sound": "alarm1", "lametric_cycles": 3, "lametric_icon_type": "alert"},
+    ),
+}
+
+
+@sizes
+@pytest.mark.parametrize("case", SCHEMA_CASES.values(), ids=SCHEMA_CASES.keys())
+async def test_schema_usage(hass: HomeAssistant, case: SchemaCase, maximal: bool) -> None:
+    await assert_schema_usage(hass, case, maximal)

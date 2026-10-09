@@ -2,6 +2,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import CONF_DATA, CONF_INCLUSION, CONF_TRANSPORT, INCLUSION_DEFAULT, TRANSPORT_MQTT
 from custom_components.supernotify.delivery import Delivery
@@ -10,6 +11,7 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked_config) -> None:  # type: ignore
@@ -333,3 +335,14 @@ async def test_explicit_call_to_standard_delivery_keeps_data_only_topic_fallback
         target=None,
         return_response=False,
     )
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        MQTTTransport,
+        {"topic": ["alerts/porch"]},
+        {"mqtt.publish"},
+        maximal_data={"payload": {"alert": "on"}, "qos": 1, "retain": True},
+    )
+    await assert_schema_usage(hass, case, maximal)

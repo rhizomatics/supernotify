@@ -1,6 +1,6 @@
 # RFC 0004: Household Appliances Auto Notifier
 
-2026-10-06 · Jey Burrows · Status: draft
+2026-10-06 · Jey Burrows · Status: In Progress
 
 ## Summary
 

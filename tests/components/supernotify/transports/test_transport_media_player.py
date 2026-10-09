@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.core import HomeAssistant
+
 from custom_components.supernotify.const import (
     ATTR_DELIVERY,
     ATTR_MEDIA,
@@ -15,6 +17,7 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.media_player import MediaPlayerTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_notify_media_image() -> None:
@@ -266,3 +269,15 @@ async def test_notify_media_generic_content_takes_priority_over_snapshot() -> No
     assert result is True
     call = context.hass.services.async_call.call_args  # type: ignore
     assert call.kwargs["service_data"]["media"]["media_content_id"] == "https://myserver/local/sounds/bell.mp3"
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        MediaPlayerTransport,
+        ["media_player.echo_show_8"],
+        {"media_player.play_media"},
+        data={"media_content_id": "https://my.home/snaps/porch.jpg"},
+        maximal_data={"media_content_type": "image", "announce": True},
+    )
+    await assert_schema_usage(hass, case, maximal)

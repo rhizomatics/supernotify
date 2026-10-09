@@ -1,10 +1,13 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_PERSISTENT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.persistent import PersistentTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_deliver() -> None:  # type: ignore
@@ -25,3 +28,13 @@ async def test_deliver() -> None:  # type: ignore
         target=None,
         return_response=False,
     )
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        PersistentTransport,
+        expected={"persistent_notification.create"},
+        maximal_data={"notification_id": "porch_alert"},
+    )
+    await assert_schema_usage(hass, case, maximal)

@@ -29,6 +29,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.model import TargetRequired, TransportFeature
 from custom_components.supernotify.transports.discord import (
@@ -36,6 +37,7 @@ from custom_components.supernotify.transports.discord import (
     _PRIORITY_PREFIX,
     DiscordTransport,
 )
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -734,3 +736,21 @@ async def test_deliver_uses_call_action_with_action_data_only() -> None:
     kwargs = uut.call_action.call_args.kwargs
     assert "action_data" in kwargs
     assert "qualified_action" not in kwargs
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        DiscordTransport,
+        {"discord_channel": ["123456789012345678"]},
+        {"notify.discord"},
+        delivery={"action": "notify.discord"},
+        maximal_data={
+            "discord_embed": {"title": "Porch", "description": "Motion", "color": 16711680},
+            "discord_attach_image": True,
+            "discord_image_urls": ["https://my.home/snaps/porch.jpg"],
+            "discord_verify_ssl": False,
+            "discord_priority_prefix": True,
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

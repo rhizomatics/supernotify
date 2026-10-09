@@ -1,6 +1,7 @@
 import string
 
 from homeassistant.const import CONF_ACTION
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_SMS
 from custom_components.supernotify.delivery import Delivery
@@ -9,6 +10,7 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.sms import SMSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_deliver() -> None:
@@ -127,3 +129,15 @@ async def test_deliver_jumbo() -> None:
         target=None,
         return_response=False,
     )
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        SMSTransport,
+        ["+447979123456"],
+        {"notify.smsify"},
+        delivery={"action": "notify.smsify"},
+        maximal_data={"data": {"sender": "Home"}},
+    )
+    await assert_schema_usage(hass, case, maximal)

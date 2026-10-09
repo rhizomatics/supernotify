@@ -29,15 +29,14 @@ tags:
 
 ## Discovery
 
-**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all
-for user-defined actions, so there's nothing for SuperNotify to discover on its own — either
-set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery
-is generated automatically once selected), or add a `generic` delivery of your own with your
-chosen `action:` directly.
+**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all for user-defined actions, so there's nothing for SuperNotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
 
 Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service' ) and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
 
 To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list.
+
+!!! info
+    This transport has also been used to add some minor support for an integration that doesn't yet warrant a full scale transport. For example, this was the case for [ntfy.sh](https://ntfy.sh) before the [ntfy transport](../transports/ntfy.md) was contributed, and remains the case for the [notify.events](https://notify.events) vendor service.
 
 ### Notify Actions
 
@@ -111,6 +110,8 @@ This can also be used in a notification call:
 
 Generic isn't completely a blank slate - it knows about the most common integration domains and will build a compatible Action call for them. These have a lot of variation because Home Assistant actions have a lot of variation! Generic Transports handling of these means you can create multi-channel notifications without worrying too much about the variety of `data` mappings etc.
 
+Several of these now have their own transports, and are effectively deprecated in Generic although remain working - `ntfy`,`mqtt`,`siren` (`chime` transport),`tts` and `notify` (`notify_entity` transport).
+
 | Domain                        | Action Data                                                                                                                                                 | Target Data             |
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
 | notify ( `send_message` only) | `message` and `title` only                                                                                                                                  | `entity_id` map         |
@@ -122,7 +123,7 @@ Generic isn't completely a blank slate - it knows about the most common integrat
 | light                         | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                      | `entity_id` map         |
 | rest_command | All of `data | Empty |
 | notify_events | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements | Empty |
-| ntfy (`ntfy.publish`) | All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
+| ntfy (`ntfy.publish`) | **Deprecated**, use the [ntfy transport](ntfy.md), a warning is logged at start up. All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
 | script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right  | `entity_id` map |
 | script (script name as action) | `message` and `title` plus all `data` elements | `entity_id` map |
 | tts | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements | `entity_id` map |

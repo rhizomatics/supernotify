@@ -21,6 +21,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     ATTR_PRIORITY,
@@ -37,6 +38,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.ntfy import NtfyTransport, _parse_delay
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # _parse_delay -- unit tests (no HA dependency)
@@ -597,3 +599,26 @@ async def test_deliver_service_exception_returns_false() -> None:
 
     assert result is False
     assert e.error_count > 0
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        NtfyTransport,
+        expected={"ntfy.publish"},
+        data={"ntfy_device_id": "aaaa0000bbbb1111cccc2222dddd3333"},
+        maximal_data={
+            "ntfy_priority": 5,
+            "ntfy_tags": ["warning", "house"],
+            "ntfy_click": "https://my.home/cameras/porch",
+            "ntfy_attach_image": True,
+            "ntfy_filename": "porch.jpg",
+            "ntfy_icon": "https://my.home/static/icon.png",
+            "ntfy_markdown": True,
+            "ntfy_delay": "00:01:00",
+            "ntfy_sequence_id": "porch-1",
+            "ntfy_email": "tester@example.org",
+            "ntfy_actions": [{"action": "view", "label": "Open", "url": "https://my.home/cameras/porch"}],
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

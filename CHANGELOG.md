@@ -45,10 +45,13 @@ to stack traces in logs and the entire notification mapped as an error even if o
 - The `summary` verbosity of `enquire_archive` leaves out `delivery_provenance`, about half its size - it is still there at `standard` and `full`
 
 ## 🐛 Bug fixes
+- Generic transport with `ntfy.publish` failed when `icon`, `click` or `attach` was given in `data`, these are now sent as the action expects
+- Chime sent the tone, duration and volume for a `siren` nested under a `data` key, which `siren.turn_on` rejects, so a siren chime with any of these set would fail. They are now sent as the action expects. Caught by the new automated downstream integration schema checks.
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
 - Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.
 - A scenario's `delivery` given as a single delivery name, or a list of names, was rejected as invalid configuration in YAML, though documented as a way to switch those deliveries on. Now both are accepted, as well as a mapping.
 - Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than disabling the scenario or delivery since the integration that provided the entities might start after Supernotify
+
 
 ## 📚 Documentation
 - Help section improved, and with more examples of how Google and AI agents like ChatGPT, Claude, Kimi etc can give advice and write YAML
@@ -56,10 +59,15 @@ to stack traces in logs and the entire notification mapped as an error even if o
 - Add a [Rain Alert recipe](https://supernotify.rhizomatics.org.uk/recipes/rain_alert/), using the Alert integration with a scenario notify entity
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
 - New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
+- Updated the [Targets](./usage/targets.md) documentation for the `target_usage` control
 
 ## 📝 Other changes
 - Home Assistant compatibility for testing moved to 2026.4->2026.10 range
 - For developers, there is now a custom plugin for the [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) developer shell, that makes live objects like `scenarios`,`engine` or `delivery_registry` available as shell variables to acesss via Python
+- Added automated tests for transports to ensure the service calls they make to downstream integrations meet the minimum and don't exceed the maximum of the integrations schemas
+
+## ⚠️ Deprecated
+- Using `ntfy.publish` with the Generic transport is deprecated in favour of the [ntfy transport](https://supernotify.rhizomatics.org.uk/transports/ntfy/). It carries on working, with a warning logged at start up
 
 # v2.13.2
 
@@ -1269,8 +1277,7 @@ or for custom notifications using *Generic* transport
   - `no_action` only uses the Delivery target if there's no target on the notification action call
   - `no_delivery` only uses the Delivery target if there's no target applicable to this delivery
   - `merge_delivery` combines the targets in the Delivery with any on the action call, only where delivery already has a target
-  - `merge_always` combines the targets in the Delivery with any on the action call, or if there's
-  no target on the notification, it defaults to the Delivery target
+  - `merge_always` combines the targets in the Delivery with any on the action call, or if there's no target on the notification, it defaults to the Delivery target
   - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
 - Entity states for Delivery and Transport now directly reflect configuration
 - `target_required` is no longer boolean (although backward compatible), and now has values `always`,`never` and `optional`.

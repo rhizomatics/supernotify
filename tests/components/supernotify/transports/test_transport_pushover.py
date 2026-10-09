@@ -32,6 +32,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     ATTR_PRIORITY,
@@ -48,6 +49,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.pushover import PushoverTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -627,3 +629,26 @@ def test_supported_features_include_message_title_images() -> None:
     assert transport.supported_features & TransportFeature.MESSAGE
     assert transport.supported_features & TransportFeature.TITLE
     assert transport.supported_features & TransportFeature.IMAGES
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        PushoverTransport,
+        expected={"notify.pushover"},
+        delivery={"action": "notify.pushover"},
+        maximal_data={
+            "pushover_priority": 2,
+            "pushover_sound": "siren",
+            "pushover_url": "https://my.home/cameras/porch",
+            "pushover_url_title": "Porch",
+            "pushover_retry": 60,
+            "pushover_expire": 600,
+            "pushover_callback": "https://my.home/api/webhook/pushover",
+            "pushover_html": True,
+            "pushover_ttl": 3600,
+            "pushover_device": "pixel",
+            "pushover_attach_image": True,
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

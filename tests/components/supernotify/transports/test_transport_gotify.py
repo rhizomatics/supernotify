@@ -28,6 +28,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_ACTION
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     ATTR_PRIORITY,
@@ -44,6 +45,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.gotify import GotifyTransport, _build_extras
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # _build_extras() - test di unita puri (nessuna dipendenza HA)
@@ -866,3 +868,22 @@ def test_default_config_target_required_never() -> None:
     ctx = _ctx()
     uut = GotifyTransport(ctx)
     assert uut.default_config.delivery_defaults.target_required == TargetRequired.NEVER
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        GotifyTransport,
+        None,
+        {"notify.gotify"},
+        delivery={"action": "notify.gotify"},
+        maximal_data={
+            "gotify_priority": 9,
+            "gotify_click": "https://my.home/cameras/porch",
+            "gotify_image_url": "https://my.home/snaps/porch.jpg",
+            "gotify_attach_image": True,
+            "gotify_markdown": True,
+            "gotify_intent_url": "homeassistant://navigate/cameras",
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)

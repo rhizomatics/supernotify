@@ -4,7 +4,7 @@ import pytest
 from homeassistant.const import (
     CONF_DEBUG,
 )
-from homeassistant.core import SupportsResponse
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import NoEntitySpecifiedError
 
 from custom_components.supernotify.const import (
@@ -30,6 +30,7 @@ from custom_components.supernotify.transports.chime import (
 )
 from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import MockGroup, TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 
 async def test_deliver() -> None:
@@ -92,7 +93,7 @@ async def test_deliver() -> None:
                 "siren",
                 "turn_on",
                 target={"entity_id": "siren.lobby"},
-                service_data={"data": {"duration": 10, "volume_level": 1, "tone": "boing_01"}},
+                service_data={"duration": 10, "volume_level": 1, "tone": "boing_01"},
             ),
             service_call(
                 "alexa_devices",
@@ -680,3 +681,43 @@ def test_build_aliases_generic_exception() -> None:
     with patch("custom_components.supernotify.transports.chime.CHIME_ALIASES_SCHEMA", side_effect=Exception("unexpected")):
         result = build_aliases({"alias": {"media_player": "tune"}})
     assert result == {}
+
+
+SCHEMA_CASES: dict[str, SchemaCase] = {
+    "switch": SchemaCase(ChimeTransport, ["switch.bell_1"], {"switch.turn_on"}),
+    "siren": SchemaCase(
+        ChimeTransport,
+        ["siren.lobby"],
+        {"siren.turn_on"},
+        maximal_data={"chime_tune": "alarm", "chime_duration": 10, "chime_volume": 0.8},
+    ),
+    "script": SchemaCase(
+        ChimeTransport,
+        ["script.doorbell"],
+        {"script.turn_on"},
+        maximal_data={"chime_tune": "ding", "chime_duration": 10, "chime_volume": 0.8},
+    ),
+    "media_player": SchemaCase(
+        ChimeTransport,
+        ["media_player.living_room"],
+        {"media_player.play_media"},
+        data={"chime_tune": "https://my.home/sounds/bell.mp3"},
+        maximal_data={"announce": True},
+    ),
+    "alexa_devices": SchemaCase(
+        ChimeTransport,
+        ["ffff0000eeee1111dddd2222cccc3333"],
+        {"alexa_devices.send_sound"},
+        data={"chime_tune": "bell_02"},
+        context={"devices": [("alexa_devices", "ffff0000eeee1111dddd2222cccc3333", False)]},
+    ),
+    "rest_command": SchemaCase(
+        ChimeTransport, ["rest_command.doorbell"], {"rest_command.doorbell"}, data={"chime_tune": "ding"}
+    ),
+}
+
+
+@sizes
+@pytest.mark.parametrize("case", SCHEMA_CASES.values(), ids=SCHEMA_CASES.keys())
+async def test_schema_usage(hass: HomeAssistant, case: SchemaCase, maximal: bool) -> None:
+    await assert_schema_usage(hass, case, maximal)

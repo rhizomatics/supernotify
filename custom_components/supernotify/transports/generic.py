@@ -11,6 +11,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from yarl import URL
 
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.const import (
@@ -100,6 +101,10 @@ class GenericTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:
+            if action == "ntfy.publish":
+                _LOGGER.warning(
+                    "SUPERNOTIFY Deprecated use of ntfy.publish with the generic transport - use the ntfy transport"
+                )
             return True
         _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
         return False
@@ -268,11 +273,16 @@ def ntfy(
     priority: str | None,
     hass_api: HomeAssistantAPI,
 ) -> list[MiniEnvelope]:
-    """Customize `data` for ntfy integration"""
+    """Customize `data` for ntfy integration
+
+    Deprecated, use the ntfy transport
+    """
     results: list[MiniEnvelope] = []
     action_data: dict[str, Any] = dict(core_action_data)
     action_data.update(data)
     action_data = hass_api.coerce_schema("ntfy", "publish", action_data)
+    # the schema coerces URLs to objects, which the action itself only accepts as strings
+    action_data = {k: str(v) if isinstance(v, URL) else v for k, v in action_data.items()}
 
     if priority and priority in PRIORITY_VALUES:
         action_data[ATTR_PRIORITY] = PRIORITY_VALUES.get(priority, 3)

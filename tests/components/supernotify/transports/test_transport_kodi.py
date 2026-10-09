@@ -27,6 +27,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.model import TargetRequired, TransportFeature
 from custom_components.supernotify.transports.kodi import (
@@ -36,6 +37,7 @@ from custom_components.supernotify.transports.kodi import (
     KodiTransport,
     _coerce_int,
 )
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -644,3 +646,14 @@ async def test_deliver_uses_call_action_with_entity_target_data() -> None:
     assert "target_data" in kwargs
     assert "qualified_action" not in kwargs
     assert "entity_id" not in kwargs["action_data"]
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        KodiTransport,
+        ["media_player.kodi_lounge"],
+        {"kodi.call_method"},
+        maximal_data={"kodi_displaytime": 8000, "kodi_icon": "warning", "kodi_attach_image": True},
+    )
+    await assert_schema_usage(hass, case, maximal)

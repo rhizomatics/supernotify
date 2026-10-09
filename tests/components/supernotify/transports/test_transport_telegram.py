@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.const import CONF_TARGET
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     ATTR_ACTIONS,
@@ -28,6 +29,7 @@ from custom_components.supernotify.transports.telegram import (
     _normalise_inline_keyboard,
 )
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -1018,3 +1020,40 @@ async def test_deliver_grab_image_raises_falls_back_to_text() -> None:
     assert call_args.args[1] == "send_message"
     service_data = call_args.kwargs["service_data"]
     assert "file" not in service_data
+
+
+SCHEMA_CASES: dict[str, SchemaCase] = {
+    "message": SchemaCase(
+        TelegramTransport,
+        {"telegram_chat_id": ["123456789"]},
+        {"telegram_bot.send_message"},
+        maximal_data={
+            "telegram_parse_mode": "html",
+            "telegram_disable_notification": True,
+            "telegram_reply_to_message_id": 42,
+            "telegram_inline_keyboard": [[{"text": "Open", "callback_data": "/open"}]],
+        },
+    ),
+    "photo": SchemaCase(
+        TelegramTransport,
+        {"telegram_chat_id": ["123456789"]},
+        {"telegram_bot.send_photo"},
+        data={"telegram_attach_image": True},
+        maximal_data={"telegram_parse_mode": "html", "telegram_disable_notification": True},
+        image=True,
+    ),
+    "document": SchemaCase(
+        TelegramTransport,
+        {"telegram_chat_id": ["123456789"]},
+        {"telegram_bot.send_document"},
+        data={"telegram_attach_image": True, "telegram_image_as_document": True},
+        maximal_data={"telegram_parse_mode": "html", "telegram_disable_notification": True},
+        image=True,
+    ),
+}
+
+
+@sizes
+@pytest.mark.parametrize("case", SCHEMA_CASES.values(), ids=SCHEMA_CASES.keys())
+async def test_schema_usage(hass: HomeAssistant, case: SchemaCase, maximal: bool) -> None:
+    await assert_schema_usage(hass, case, maximal)

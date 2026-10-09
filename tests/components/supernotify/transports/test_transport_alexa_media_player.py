@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.const import CONF_ACTION
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.delivery import Delivery
@@ -39,6 +40,7 @@ from custom_components.supernotify.transports.alexa_media_player import (
     _estimate_tts_duration,
 )
 from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 if TYPE_CHECKING:
     from custom_components.supernotify.context import Context
@@ -712,3 +714,16 @@ class TestAudioUrl:
             await t.deliver(envelope)
         assert "not https" in caplog.text
         assert 'src="http://192.168.0.10:8123/local/bell.mp3"' in t.call_action.call_args.kwargs["action_data"]["message"]
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        AlexaMediaPlayerTransport,
+        ["media_player.kitchen_echo"],
+        {"notify.alexa_media"},
+        delivery={"action": "notify.alexa_media"},
+        maximal_data={"type": "tts", "volume": 0.6, "pause_music": False, "audio_url": "https://my.home/sounds/bell.mp3"},
+        context={"entity_platforms": {"media_player.kitchen_echo": "alexa_media"}},
+    )
+    await assert_schema_usage(hass, case, maximal)

@@ -24,6 +24,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.model import TargetRequired, TransportFeature
 from custom_components.supernotify.transports.matrix import (
@@ -31,6 +32,7 @@ from custom_components.supernotify.transports.matrix import (
     _PRIORITY_PREFIX,
     MatrixTransport,
 )
+from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -608,3 +610,19 @@ async def test_deliver_uses_call_action_with_action_data_only() -> None:
     kwargs = uut.call_action.call_args.kwargs
     assert "action_data" in kwargs
     assert "qualified_action" not in kwargs
+
+
+@sizes
+async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
+    case = SchemaCase(
+        MatrixTransport,
+        {"matrix_room": ["!porch:example.org"]},
+        {"matrix.send_message"},
+        maximal_data={
+            "matrix_format": "html",
+            "matrix_thread_id": "$-abcdeghij_klmnopqrstuvwxyz123",
+            "matrix_attach_image": True,
+            "matrix_priority_prefix": True,
+        },
+    )
+    await assert_schema_usage(hass, case, maximal)
