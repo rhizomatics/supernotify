@@ -169,8 +169,9 @@ scenarios:
     delivery:
       email:
         enabled:
-        options:
-          sender_name: Your Ever Watching Assistant
+        data:
+          priority: high
+
   style_2:
     alias: Switch on email
     delivery:

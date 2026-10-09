@@ -67,6 +67,7 @@ Randomization for greetings and sounds. Sleigh bells are nice on first notificat
   - Overriding more than enabled, target and data (see also ideas on `data` improvements)
     - A scenario can't change the delivery or transport settings that matter most in a scenario:
     - options (for example target_select, message formatting, chime tune mappings)
+      - An `options` override in a scenario's delivery, for example a different email `sender_name` per scenario. Some options, `sender_name` among them, are read once when the transport starts, so would need to be resolved per notification. Part of the [options overhaul](#transport-usage-of-extra-data).
     - the delivery's priority filter
     - target_usage
     - selection_rank
