@@ -103,6 +103,7 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Turn my notifications back on"                     | Undoes the snooze or silence                                                                                                  |
 | "Resume notifications for *driveway*"               | Undoes the snooze or silence for *driveway*                                                                                   |
 | "What was the last notification"                    | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "How do I get help on Supernotify"                  | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone. They hold back everything but `critical` notifications, so saying "silence notifications" at bedtime never silences a smoke alarm. When an alert that's meant to be critical keeps going off, say "silence notifications even critical ones" (or "including critical", "and critical ones too") to hold back critical ones as well; from an automation or button, use the `supernotify.silence` action with `scope: everything`. Turning notifications back on undoes both.
 
@@ -141,6 +142,7 @@ The same commands can be given in Italian, whatever the language of the assistan
 | "Riattiva le mie notifiche"                           | Undoes the snooze or silence                                                                                                  |
 | "Riattiva le notifiche del *vialetto*"                | Undoes the snooze or silence for *vialetto*                                                                                   |
 | "Qual è stata l'ultima notifica"                      | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "Come trovo aiuto per Supernotify"                    | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for snoozing.
 

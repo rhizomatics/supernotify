@@ -15,7 +15,6 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Basic Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md): Basic concepts - targets, recipients, deliveries and priority
 - [Advanced Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md): Advanced concepts - transports, deliveries, scenarios, recipients and targets
 - [Removal](https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/index.md): Remove Supernotify and clean up what it leaves behind
-- [Frequently Asked Questions](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md): Frequently asked questions, with short answers
 
 ## Using Supernotify
 

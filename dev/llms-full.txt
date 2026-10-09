@@ -287,7 +287,7 @@ Each person Supernotify knows about has a Home Assistant `switch` entity, and so
 
 ## Notify Just Some Devices
 
-Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md) for common questions.
+Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md) for common questions.
 
 ## Tune the Settings
 
@@ -310,7 +310,7 @@ More is possible with some YAML configuration, and all of it is optional:
 
 ## Get Help
 
-Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md).
+Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md).
 
 # Basic Concepts
 
@@ -461,42 +461,6 @@ From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
 1. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. Templates may be left behind, by default in a `supernotify/templates` directory under your Home Assistant config directory unless configured otherwise. Remove this directory if needed.
-
-# Frequently Asked Questions
-
-Source: https://supernotify.rhizomatics.org.uk/latest/faqs/
-
-## Target Selection
-
-**Q**: If I define a `label_id` and an `area_id`, and in that area I have 3 devices, is the `label_id` treated as an `AND`? (so it will send to just devices in `label_id` that have `label_id`), or an `OR`, (so it sends to all devices that are in `area_id`, as well as all devices in the system that have `label_id`?)
-
-**A**: It works as an OR selector - give me all everything that is in area X OR has label Y, so all the `area_id`,`floor_id` and `label` targets all add up to one big list. This is part of the standard Home Assistant [target selectors](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) which happens outside of Supernotify, and works the same for all integrations.
-
-**Q**: How do I send a notification to only 3 of my Alexa speakers and not the rest.
-
-**A**: There are a few ways of doing this
-
-Option 1 - Use the Home Assistant [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) on the `supernotify.notify` action to pick the speakers by their **Area**, **Floor** or **Label**.
-
-Option 2 - Create a separate *Delivery* (YAML only at present) for these speakers, and list them as targets. Then when setting up notifications, pick this delivery from the list.
-
-```yaml
-alexa_inform:
-    alias: Ask all the Alexas apart from bedrooms to speak the notification
-    transport: alexa_devices
-    target:
-    - notify.kitchen_alexa_speak
-    - notify.living_room_flex_speak
-    - notify.studio_speak
-```
-
-## Other Questions
-
-**Q**: My question isn't here, and I can't get find answer in the docs.
-
-**A**: Try using an AI agent if you have one, like Claude or ChatGPT, or the Home Assistant chat bot - the Supernotify site has agent-accessible help, and can give good suggestions and even write or rewrite your YAML for you.
-
-Otherwise, ask a human at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page for general help, or the [Issues](https://github.com/rhizomatics/supernotify/issues) if you've found a bug.
 # Using Supernotify
 
 # Usage
@@ -688,6 +652,7 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Turn my notifications back on"                     | Undoes the snooze or silence                                                                                                  |
 | "Resume notifications for *driveway*"               | Undoes the snooze or silence for *driveway*                                                                                   |
 | "What was the last notification"                    | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "How do I get help on Supernotify"                  | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone. They hold back everything but `critical` notifications, so saying "silence notifications" at bedtime never silences a smoke alarm. When an alert that's meant to be critical keeps going off, say "silence notifications even critical ones" (or "including critical", "and critical ones too") to hold back critical ones as well; from an automation or button, use the `supernotify.silence` action with `scope: everything`. Turning notifications back on undoes both.
 
@@ -726,6 +691,7 @@ The same commands can be given in Italian, whatever the language of the assistan
 | "Riattiva le mie notifiche"                           | Undoes the snooze or silence                                                                                                  |
 | "Riattiva le notifiche del *vialetto*"                | Undoes the snooze or silence for *vialetto*                                                                                   |
 | "Qual è stata l'ultima notifica"                      | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "Come trovo aiuto per Supernotify"                    | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for snoozing.
 
