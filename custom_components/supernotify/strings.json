@@ -597,6 +597,10 @@
             "title": "Mobile App Not Found for Recipient",
             "description": "Recipient {recipient} has a mobile device {mobile_app}, but there is no `notify.{mobile_app}` action in Home Assistant, so notifications can't reach it. If the device or its Home Assistant app has gone, remove it from Home Assistant, or disable it in the recipient's `mobile_devices`. Ignore this repair if the device is only away temporarily."
         },
+        "notify_entity_exists": {
+            "title": "Notify Entity Already Exists",
+            "description": "The {kind} {name} has a `notify_entity`, but `{entity_id}` already exists in Home Assistant, so it hasn't been exposed as a notify entity. Choose another `notify_entity`, or rename or remove the existing entity, then reload Supernotify."
+        },
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",
             "description": "The {delivery} delivery has an invalid condition {condition}: {exception}"

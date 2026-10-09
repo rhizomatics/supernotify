@@ -40,8 +40,7 @@ Its also possible to use the same Delivery Control options to have a fully Actio
 
 ## Conditions
 
-For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
-notification by the standard Home Assistant module.
+For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of notification by the standard Home Assistant module.
 
 Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](../configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](../recipes/content_escalation.md) for an example.
 
@@ -54,23 +53,21 @@ Supernotify also adds more context variables to use in conditions, see the full 
 
 ## Examples
 
-This scenario could be used to select more obtrusive notifications, like email or Alexa announcements,
-from a combination of conditions, hence simplifying separate notification calls, and providing
-one place to tune multiple notifications.
+This scenario could be used to select more obtrusive notifications, like email or Alexa announcements, from a combination of conditions, hence simplifying separate notification calls, and providing one place to tune multiple notifications.
 
 ```yaml
 more_attention:
-        alias: time to make more of a fuss
-        conditions:
-          condition: and
-          conditions:
-            - not:
-                - condition: state
-                  entity_id: alarm_control_panel.home_alarm_control
-                  state: disarmed
-            - condition: time
-              after: "21:30:00"
-              before: "06:30:00"
+  alias: time to make more of a fuss
+  conditions:
+    condition: and
+    conditions:
+      - not:
+          - condition: state
+            entity_id: alarm_control_panel.home_alarm_control
+            state: disarmed
+      - condition: time
+        after: "21:30:00"
+        before: "06:30:00"
 ```
 
 In this example, selecting the scenario by name in a notification call switches on
@@ -97,6 +94,56 @@ This lasts across restarts and reloads, until the scenario's `enabled` value in 
 The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
 
+### Notify Entity
+
+A scenario can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+Sending a message to it is like a `supernotify.notify` with only a message and title, and `apply_scenarios` set to this scenario, so it goes to the default recipients and the scenario's overrides are applied. Other scenarios still select themselves by their conditions.
+
+In this example, anything sent to `notify.its_raining_again` becomes a low priority mobile push with a rain icon.
+
+```yaml title="Scenario with its own notify entity"
+scenarios:
+  rain:
+    alias: Its raining again
+    notify_entity: its_raining_again
+    delivery:
+      mobile_push:
+        data:
+          priority: low
+          notification_icon: mdi:weather-pouring
+```
+
+```yaml title="Using it in an automation"
+  - action: notify.send_message
+    target:
+      entity_id: notify.its_raining_again
+    data:
+      message: Bring the washing in
+```
+
+The entity can also be one of the targets of a `supernotify.notify`, where it isn't notified itself, but has its scenario applied to that notification - or for a delivery, has its delivery added to those selected.
+
+The entity is named by the scenario's `alias`, or its name if there's none. If `notify.its_raining_again` already exists, as an entity or a `notify` action, from another integration or another `notify_entity`, the entity isn't created and a repair is raised - choose another value, or rename the other entity. Changing `notify_entity` renames the entity, and taking it away removes it.
+
+There is also a `notify.its_raining_again` action of the same name, for anything that asks for the name of a `notify` action and not a notify entity. Unlike the entity, it takes `target` and `data`, as [notify.supernotify](../usage/notifying.md#notify-entities-and-legacy-notify-platform-compatibility) does.
+
+#### With the Alert Integration
+
+Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration repeats a notification while a problem lasts. Give it the scenario's `notify_entity` as a notifier, and every alert is sent as the scenario says.
+
+```yaml title="configuration.yaml"
+alert:
+  rain:
+    name: Its raining again
+    entity_id: binary_sensor.rain
+    repeat: 60
+    notifiers:
+      - its_raining_again
+```
+
+See the [Rain Alert Recipe](../recipes/rain_alert.md) for the two together.
+
 ## Overriding Delivery Selection and Configuration
 
 Each delivery section within scenario has an `enabled` value, which defaults to `true`.
@@ -117,6 +164,13 @@ scenarios:
     alias: Switch on email
     delivery:
       email:
+  style_1b:
+    alias: Configure email if already enabled, but don't switch it on
+    delivery:
+      email:
+        enabled:
+        options:
+          sender_name: Your Ever Watching Assistant
   style_2:
     alias: Switch on email
     delivery:
@@ -125,6 +179,7 @@ scenarios:
     alias: Switch on email
     delivery: email
 ```
+
 
 ## Scenario Selection at Notification
 

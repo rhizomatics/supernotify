@@ -140,6 +140,7 @@ class Notification(ArchivableObject):
             _LOGGER.warning("SUPERNOTIFY recipients key in notify action data deprecated, list recipients in target instead")
             target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
 
+        target, action_data = self.convert_exposed_notify_entities(target, action_data)
         self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
         # targeting this integration's own device is never a real target - treat it as a request to
         # also apply each default delivery's own target alongside whatever else was targeted (see
@@ -299,6 +300,39 @@ class Notification(ArchivableObject):
 
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
+
+    def convert_exposed_notify_entities(
+        self, target: list[str] | str | dict[str, Any] | None, action_data: dict[str, Any]
+    ) -> tuple[list[str] | str | dict[str, Any] | None, dict[str, Any]]:
+        """Short circuit the notify entity of a scenario or delivery given as a target, see
+        ExposedNotifyEntity in notify.py. It is taken out of the targets, and its scenario applied
+        or delivery selected just as the entity itself would, rather than the entity being called
+        and making a second notification.
+        """
+        if not target:
+            return target, action_data
+        exposed: dict[str, tuple[str, str]] = {
+            exposable.notify_entity_id: (data_key, name)
+            for data_key, configured in (
+                (ATTR_SCENARIOS_APPLY, self.context.scenario_registry.scenarios),
+                (ATTR_DELIVERY, self.delivery_registry.deliveries),
+            )
+            for name, exposable in configured.items()
+            if exposable.notify_entity_id
+        }
+        entity_ids: list[str] = ensure_list(target.get(ATTR_ENTITY_ID) if isinstance(target, dict) else target)
+        found: list[str] = [e for e in entity_ids if e in exposed]
+        if not found:
+            return target, action_data
+        remaining: list[str] = [e for e in entity_ids if e not in exposed]
+        target = {**target, ATTR_ENTITY_ID: remaining} if isinstance(target, dict) else remaining
+        action_data = dict(action_data)
+        for data_key, name in (exposed[e] for e in found):
+            if isinstance(action_data.get(data_key), dict):
+                action_data[data_key] = {name: None, **action_data[data_key]}
+            else:
+                action_data[data_key] = [*ensure_list(action_data.get(data_key)), name]
+        return target, action_data
 
     def convert_notify_entities(
         self, target: list[str] | str | dict[str, Any] | None = None

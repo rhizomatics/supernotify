@@ -119,6 +119,7 @@ from .const import (
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
     CONF_MODEL,
+    CONF_NOTIFY_ENTITY,
     CONF_OCCUPANCY,
     CONF_OPTIONS,
     CONF_PERSON,
@@ -361,6 +362,7 @@ DELIVERY_SCHEMA = vol.All(
         vol.Optional(CONF_ENABLED): cv.boolean,
         # deliveries to try in order when this one fails, see Notification._fall_back()
         vol.Optional(CONF_FALLBACK): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_NOTIFY_ENTITY): cv.slug,
     }),
 )
 
@@ -451,11 +453,15 @@ SCENARIO_SCHEMA = vol.All(
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
         vol.Optional(CONF_EXPOSE_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_NOTIFY_ENTITY): cv.slug,
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("delivery_selection"): cv.string,
-        vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
+        # a single delivery or a list of them switches those on, a mapping can also tune or restrict
+        vol.Optional(CONF_DELIVERY, default=dict): vol.Any(
+            cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}
+        ),
     }),
 )
 

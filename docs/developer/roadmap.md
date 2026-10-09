@@ -98,6 +98,8 @@ Add a target category to allow auto inclusion
 
 Review integration with `alert` - align live activities where possible with its behaviour and syntax, add recipe, make sure it works well with `notifiers`.
 
+- A scenario or delivery can be exposed as a notify entity with `notify_entity`. Alert's `notifiers` are `notify` action names and not notify entities, so every notify entity also has a `notify` action of the same name.
+
 ## Delivery and Target Selection
 
 ### Inclusion Default
@@ -262,6 +264,8 @@ Its possible these are really the same thing as options, but lacking the documen
 Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
 
 Entire missed deliveries are tracked but not missed targets. Most transports are fire and forget so don't know a target has failed - mobile_push is one that does if the `action` has gone away, and it is an important transport. This would include tracking in the logs and archived notification a list of failed targets, with reasons, and also flagging the entire delivery as 'partial' if an explicitly requested mobile_app couldn't be reached ( notification would be a `success` if multiple implicit targets generated and 1 of them failed)
+
+Scenarios can mess with targets but its complicated in config and in code, and not clear how you could use a scenario to a) add targets, b) suppress targets, c) set a fixed list of targets. Presently requires delivery level target add.
 
 ## Completed Roadmap
 

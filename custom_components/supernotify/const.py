@@ -260,6 +260,8 @@ TRANSPORT_MEDIA = "media"
 TRANSPORT_CHIME = "chime"
 TRANSPORT_GENERIC = "generic"
 TRANSPORT_NOTIFY_ENTITY = "notify_entity"
+# a scenario or delivery exposed as its own notify.<value> entity, see notify.py
+CONF_NOTIFY_ENTITY = "notify_entity"
 TRANSPORT_PERSISTENT = "persistent"
 TRANSPORT_NTFY = "ntfy"
 TRANSPORT_GOTIFY = "gotify"

@@ -450,6 +450,10 @@
             "title": "Mobiele app niet gevonden voor ontvanger",
             "description": "Ontvanger {recipient} heeft een mobiel apparaat {mobile_app}, maar er is geen actie `notify.{mobile_app}` in Home Assistant, dus meldingen kunnen het niet bereiken. Als het apparaat of de Home Assistant app ervan niet meer bestaat, verwijder het dan uit Home Assistant of schakel het uit in de `mobile_devices` van de ontvanger. Negeer deze reparatie als het apparaat slechts tijdelijk ontbreekt."
         },
+        "notify_entity_exists": {
+            "title": "Notify-entiteit bestaat al",
+            "description": "{kind} {name} heeft een `notify_entity`, maar `{entity_id}` bestaat al in Home Assistant, dus is deze niet als notify-entiteit beschikbaar gemaakt. Kies een andere `notify_entity`, of hernoem of verwijder de bestaande entiteit, en herlaad daarna Supernotify."
+        },
         "delivery_invalid_condition": {
             "title": "Bezorging heeft een ongeldige voorwaarde",
             "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}: {exception}"

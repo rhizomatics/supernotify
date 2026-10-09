@@ -450,6 +450,10 @@
             "title": "未找到接收人的移动应用",
             "description": "接收人 {recipient} 有移动设备 {mobile_app}，但 Home Assistant 中没有 `notify.{mobile_app}` 操作，因此通知无法送达。如果该设备或其 Home Assistant 应用已不存在，请将其从 Home Assistant 中移除，或在接收人的 `mobile_devices` 中将其禁用。如果设备只是暂时不可用，请忽略此修复。"
         },
+        "notify_entity_exists": {
+            "title": "Notify 实体已存在",
+            "description": "{kind} {name} 设置了 `notify_entity`，但 `{entity_id}` 已存在于 Home Assistant 中，因此未将其公开为 notify 实体。请选择其他 `notify_entity`，或者重命名或移除现有实体，然后重新加载 Supernotify。"
+        },
         "delivery_invalid_condition": {
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}：{exception}"

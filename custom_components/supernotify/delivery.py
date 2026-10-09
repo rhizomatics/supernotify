@@ -33,6 +33,7 @@ from .const import (
     CONF_INCLUSION,
     CONF_LOAD,
     CONF_MESSAGE,
+    CONF_NOTIFY_ENTITY,
     CONF_OCCUPANCY,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
@@ -117,6 +118,9 @@ class Delivery(DeliveryConfig):
         self.enabled: bool = self.config_enabled
         # deliveries to try, in order, if this one fails - see Notification._fall_back()
         self.fallback: list[str] = list(conf.get(CONF_FALLBACK) or [])
+        self.notify_entity: str | None = conf.get(CONF_NOTIFY_ENTITY)
+        # set once its notify entity is made, see exposed_notify_entities() in notify.py
+        self.notify_entity_id: str | None = None
         # set by the registry when another delivery lists this one in its `fallback:`
         self.is_fallback: bool = False
         self.conditions: ConditionsFunc | None = None

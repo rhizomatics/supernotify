@@ -212,6 +212,19 @@ Switching a delivery or transport on or off lasts across restarts and reloads, s
 !!! warning "Deprecated"
     The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
 
+### Notify Entity
+
+A delivery can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+```yaml title="Delivery with its own notify entity"
+delivery:
+  family_chat:
+    transport: telegram
+    notify_entity: family_chat
+```
+
+Sending a message to `notify.family_chat` is like a `supernotify.notify` with only a message and title, and `delivery` set to this delivery. There is a `notify.family_chat` action too, which also takes `target` and `data`. If `notify.family_chat` already exists, the entity isn't created and a repair is raised. Scenarios can have one too, see [Scenario Notify Entity](scenarios.md#notify-entity) for more, and for how to use one from the Alert integration.
+
 ### Overrides
 
 Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.

@@ -332,7 +332,7 @@ supernotify:
         chime_tune: christmas_05
 ```
 
-## Compatibility with Notify Platform Actions
+## Notify Entities and Legacy Notify Platform Compatibility
 
 For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
 
@@ -347,6 +347,8 @@ The legacy action is `notify.supernotify`, assuming you've named the platform `s
             priority: high
             delivery: mobile_push
 ```
+
+A notify entity can also be made for any scenario or delivery, which is a way to get more of Supernotify from something that only takes a notify entity. Each of these, and each recipient's `notify.recipient_<name>` entity, also has a legacy action of the same name, taking the same as `notify.supernotify`, for anything that only takes the name of a `notify` action, like the Alert integration. See [Scenario Notify Entity](../configuration/scenarios.md#notify-entity) and [Delivery Notify Entity](../configuration/deliveries.md#notify-entity).
 
 ## References
 

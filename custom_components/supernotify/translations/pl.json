@@ -450,6 +450,10 @@
             "title": "Nie znaleziono aplikacji mobilnej dla odbiorcy",
             "description": "Odbiorca {recipient} ma urządzenie mobilne {mobile_app}, ale w Home Assistant nie ma akcji `notify.{mobile_app}`, więc powiadomienia nie mogą do niego dotrzeć. Jeśli urządzenie lub jego aplikacja Home Assistant już nie istnieje, usuń je z Home Assistant albo wyłącz w `mobile_devices` odbiorcy. Zignoruj tę naprawę, jeśli urządzenie jest niedostępne tylko tymczasowo."
         },
+        "notify_entity_exists": {
+            "title": "Encja notify już istnieje",
+            "description": "{kind} {name} ma `notify_entity`, ale `{entity_id}` już istnieje w Home Assistant, więc nie udostępniono go jako encji notify. Wybierz inne `notify_entity` albo zmień nazwę istniejącej encji lub ją usuń, a następnie przeładuj Supernotify."
+        },
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}: {exception}"

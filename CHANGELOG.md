@@ -13,6 +13,13 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 ### Assist
 - Snoozing requests don't stop critical notifications, unless the instruction explicit asks to snooze 'even critical'
 - Built-in agent sentence *How do I get help on Supernotify* answers with a link to the online help page, in English and Italian
+### Notify Entities
+- Any scenario or delivery can be exposed as a Notify Entity, by adding `notify_entity` with the name to go after `notify.`
+  - A message sent to a scenario's notify entity is a default notification with that scenario applied, and to a delivery's is one with that delivery selected
+  - A repair is raised, and no entity made, if the notify entity, or a `notify` action of that name, already exists
+  - Used as a target of `supernotify.notify`, it applies its scenario or selects its delivery on that notification
+- Every notify entity, including each recipient's `notify.recipient_<name>`, also has a legacy `notify` action of the same name, so the Alert integration can list them in `notifiers`
+  - This opens up scenarios and deliveries to anything that takes a notify entity or action, see the [Alert integration example](https://supernotify.rhizomatics.org.uk/configuration/scenarios/#with-the-alert-integration)
 ### Snoozing
 - A `TAG` snooze also matches the automation or script that sent the notification
   - Matches by `entity_id`, name or alias
@@ -40,11 +47,13 @@ to stack traces in logs and the entire notification mapped as an error even if o
 ## 🐛 Bug fixes
 - Snoozing a mobile device ignored devices that had been selected via a `person` entity rather than as a direct target. Now it gets snoozed regardless of how selected.
 - Complex conditions could have invalid template conditions (with logic inside `{{` and `}}`) that wouldn't be detected if prior conditions evaluated as false. Now every `condition` within the `conditions` is separately checked in strict mode.
+- A scenario's `delivery` given as a single delivery name, or a list of names, was rejected as invalid configuration in YAML, though documented as a way to switch those deliveries on. Now both are accepted, as well as a mapping.
 - Missing or misspelled entities are also now checked as part of `conditions` validation, and will be logged rather than disabling the scenario or delivery since the integration that provided the entities might start after Supernotify
 
 ## 📚 Documentation
 - Help section improved, and with more examples of how Google and AI agents like ChatGPT, Claude, Kimi etc can give advice and write YAML
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
+- Add a [Rain Alert recipe](https://supernotify.rhizomatics.org.uk/recipes/rain_alert/), using the Alert integration with a scenario notify entity
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
 - New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
 

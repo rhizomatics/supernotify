@@ -450,6 +450,10 @@
             "title": "Aplicación móvil no encontrada para el destinatario",
             "description": "El destinatario {recipient} tiene un dispositivo móvil {mobile_app}, pero no existe la acción `notify.{mobile_app}` en Home Assistant, por lo que las notificaciones no pueden llegarle. Si el dispositivo o su aplicación de Home Assistant ya no existe, elimínalo de Home Assistant o desactívalo en `mobile_devices` del destinatario. Ignora esta reparación si el dispositivo solo falta temporalmente."
         },
+        "notify_entity_exists": {
+            "title": "La entidad notify ya existe",
+            "description": "{kind} {name} tiene un `notify_entity`, pero `{entity_id}` ya existe en Home Assistant, por lo que no se ha expuesto como entidad notify. Elige otro `notify_entity`, o renombra o elimina la entidad existente, y después recarga Supernotify."
+        },
         "delivery_invalid_condition": {
             "title": "La entrega tiene una condición no válida",
             "description": "La entrega {delivery} tiene una condición no válida {condition}: {exception}"

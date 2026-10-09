@@ -19,6 +19,7 @@ from custom_components.supernotify.people import PeopleRegistry
 from .const import (
     ATTR_MEDIA,
     CONF_EXPOSE_STATE,
+    CONF_NOTIFY_ENTITY,
     CONF_REFRESH,
     CONF_REFRESH_INTERVAL,
     PRIORITY_MEDIUM,
@@ -262,6 +263,9 @@ class Scenario:
         self.expose_state: bool = scenario_definition.get(CONF_EXPOSE_STATE, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
+        self.notify_entity: str | None = scenario_definition.get(CONF_NOTIFY_ENTITY)
+        # set once its notify entity is made, see exposed_notify_entities() in notify.py
+        self.notify_entity_id: str | None = None
         self.conditions: ConditionsFunc | None = None
         self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
         # With no conditions to evaluate, whether the scenario applies is set from outside, by
