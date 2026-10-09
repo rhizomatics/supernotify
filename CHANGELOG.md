@@ -1,7 +1,8 @@
 # v2.14.0
 
 ## 🚨 Breaking changes
-### Python 3.13 and Home Assistant versions 2026.3 and earlier
+
+### Python 3.13 and Home Assistant versions 2026.3 and earlier
 As previously indicated, support for py3.13 and Home Assistant 2026.2 and earlier is no longer assured now that 2026.10 is released.
 It may continue to work on older installations, however the build checks to verify against 2026.2/py3.13 are no longer part of the pre-release or release process.
 ### Scenario and Delivery Conditions
