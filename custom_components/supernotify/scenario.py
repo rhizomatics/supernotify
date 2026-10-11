@@ -353,7 +353,7 @@ class Scenario:
                 for delivery_name in self.delivery_registry.deliveries:
                     if re.fullmatch(name_or_pattern, delivery_name):
                         if self._delivery_selector.get(delivery_name) == delivery_name:
-                            _LOGGER.info(
+                            _LOGGER.debug(
                                 f"SUPERNOTIFY Scenario {self.name} ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
                             )
                         else:
