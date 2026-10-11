@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_llm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-11 16:31 +0000
+            created at 2026-10-11 17:29 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -883,7 +883,7 @@
     <p class="run"><span class="n"><a id="t801" href="#t801">801</a></span><span class="t">                <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">has_service</span><span class="op">(</span><span class="str">&quot;notify&quot;</span><span class="op">,</span> <span class="nam">mobile_app_id</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t802" href="#t802">802</a></span><span class="t">                    <span class="nam">notify_action</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="fst">notify.</span><span class="op">{</span><span class="nam">mobile_app_id</span><span class="op">}</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t803" href="#t803">803</a></span><span class="t">                <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t804" href="#t804">804</a></span><span class="t">                    <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">&quot;SUPERNOTIFY Unable to find notify action &lt;%s&gt;&quot;</span><span class="op">,</span> <span class="nam">mobile_app_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t804" href="#t804">804</a></span><span class="t">                    <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">&quot;SUPERNOTIFY No notify action &lt;%s&gt;, so not a notifiable mobile app&quot;</span><span class="op">,</span> <span class="nam">mobile_app_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t805" href="#t805">805</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t806" href="#t806">806</a></span><span class="t">                <span class="nam">registry_entries</span> <span class="op">=</span> <span class="nam">entity_registry</span><span class="op">.</span><span class="nam">entities</span><span class="op">.</span><span class="nam">get_entries_for_device_id</span><span class="op">(</span><span class="nam">mobile_app_info</span><span class="op">.</span><span class="nam">device_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t807" href="#t807">807</a></span><span class="t">                <span class="key">for</span> <span class="nam">reg_entry</span> <span class="key">in</span> <span class="nam">registry_entries</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -1194,7 +1194,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_llm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-11 16:31 +0000
+            created at 2026-10-11 17:29 +0000
         </p>
     </div>
 </footer>
