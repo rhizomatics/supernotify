@@ -39,6 +39,8 @@ The registry is automatically populated from all *Person* entities defined in Ho
 
 By default, all the mobile devices registered in Home Assistant are discovered and associated with the recipient.
 
+A mobile app with no `notify` action is skipped, since it can't be notified. An Apple Watch is the usual case, it registers with Home Assistant as its own mobile app, but takes its notifications by way of the paired iPhone.
+
 This can be switched off by default for everyone from the UI config:
 
 ![Configure or Reconfigure in Integrations Page](../assets/images/configure_ui.png)

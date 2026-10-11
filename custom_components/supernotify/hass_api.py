@@ -801,7 +801,7 @@ class HomeAssistantAPI:
                 if self.has_service("notify", mobile_app_id):
                     notify_action = f"notify.{mobile_app_id}"
                 else:
-                    _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
+                    _LOGGER.debug("SUPERNOTIFY No notify action <%s>, so not a notifiable mobile app", mobile_app_id)
 
                 registry_entries = entity_registry.entities.get_entries_for_device_id(mobile_app_info.device_id)
                 for reg_entry in registry_entries:

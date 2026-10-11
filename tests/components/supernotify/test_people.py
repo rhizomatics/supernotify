@@ -422,3 +422,28 @@ async def test_refresh_mobile_devices_follows_a_re_paired_phone(hass: HomeAssist
     assert list(bob.enabled_mobile_devices) == unordered("mobile_app_ipad11", "mobile_app_orologio")
     assert bob.target("mobile_push").mobile_app_ids == unordered("mobile_app_ipad11", "mobile_app_orologio")
     assert issues() == []
+
+
+async def test_discovered_mobile_device_with_no_notify_action_is_left_out(hass: HomeAssistant) -> None:
+    """An Apple Watch registers as a mobile app with no push token, so never has a notify action"""
+    from homeassistant.helpers import issue_registry as ir
+
+    ctx = TestingContext(homeassistant=hass, recipients="- person: person.test_user", components={"person": {}})
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Phone")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Watch")
+    hass.services.async_remove("notify", "mobile_app_bobs_watch")
+    await ctx.test_initialize()
+    bob: Recipient = ctx.people_registry.people["person.test_user"]
+
+    assert list(bob.mobile_devices) == ["mobile_app_bobs_phone"]
+    assert [i for (domain, i) in ir.async_get(hass).issues if domain == "supernotify" and "mobile_app" in i] == []
+
+    # picked up if its notify action turns up later
+    hass.services.async_register("notify", "mobile_app_bobs_watch", lambda _call: None)
+    ctx.people_registry.refresh_mobile_devices()
+    assert list(bob.mobile_devices) == unordered("mobile_app_bobs_phone", "mobile_app_bobs_watch")
+
+    # and no repair if a discovered device's notify action goes away again, only a configured one's
+    hass.services.async_remove("notify", "mobile_app_bobs_watch")
+    bob.check_mobile_actions(ctx.hass_api)
+    assert [i for (domain, i) in ir.async_get(hass).issues if domain == "supernotify" and "mobile_app" in i] == []

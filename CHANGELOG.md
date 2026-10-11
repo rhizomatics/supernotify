@@ -37,7 +37,8 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 - Mobile apps are updated now as they are added and removed, not only when the component starts up
 - If a mobile app is removed, its action goes away - this used to lead to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
   -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a repair to remove the device
-- Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
+- Recipients with manually configured mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
+  - Discovered mobile apps that have no `notify` action, like an Apple Watch, are left out of the recipient's mobile devices, and never raise this repair
 - Improved how `critical` priority is applied for Android mobile apps with *Do Not Disturb* mode
 - Android commands and TTS operations sent as independent calls
   - The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands) and TTS as the `message` of a call of their own (`message: command_dnd` + `data.command`, `message: TTS` + `data.tts_text`), not as data of an ordinary notification.

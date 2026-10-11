@@ -265,7 +265,9 @@ class Recipient:
                         self.mobile_devices[d.mobile_app_id] = merged
                         new_ids.append(d.mobile_app_id)
                         _LOGGER.debug("SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d.mobile_app_id)
-                    elif d.mobile_app_id is not None:
+                    elif d.mobile_app_id is not None and d.action:
+                        # a mobile app with no notify action can't be notified, and may never be,
+                        # like an Apple Watch, which registers with Home Assistant without a push token
                         self.mobile_devices[d.mobile_app_id] = d.as_dict()
                         new_ids.append(d.mobile_app_id)
                 _LOGGER.info(
@@ -281,9 +283,14 @@ class Recipient:
         self.check_mobile_actions(people_registry.hass_api)
 
     def check_mobile_actions(self, hass_api: HomeAssistantAPI) -> None:
-        """Raise a repair for an enabled mobile device with no notify action, and clear it once that's resolved"""
+        """Raise a repair for a configured, enabled mobile device with no notify action, and clear it once that's resolved
+
+        Only for the ones listed under `mobile_devices` - a discovered one has nothing for the user to repair
+        """
         missing: set[str] = set()
         for mobile_app_id in self.enabled_mobile_devices:
+            if mobile_app_id not in self._configured_mobile_devices:
+                continue
             action: str = mobile_app_id.removeprefix("notify.")
             if not hass_api.mobile_app_action_exists(action):
                 issue_id: str = f"recipient_{self.name}_mobile_app_{action}_not_found"
