@@ -15,7 +15,7 @@ exclude-newer-span = "P5D"
 [options.exclude-newer-package]
 aiohttp = false
 homeassistant = false
-homeassistant-repl = { timestamp = "0001-01-01T00:00:00Z", span = "P1D" }
+homeassistant-repl = false
 homeassistant-stubs = false
 ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 signalk-cli = false
@@ -1698,7 +1698,7 @@ wheels = [
 
 [[package]]
 name = "homeassistant-repl"
-version = "0.11.0"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "homeassistant-api" },
@@ -1709,9 +1709,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/58/9a/4185a0b216acd1e86ffae03a56eec511f47ae2b8c69828696ec050aae32a/homeassistant_repl-0.11.0.tar.gz", hash = "sha256:92a5b67833ad44829cc89870302860bc462c91ef8bd3e8a139c64e9b87e9a376", size = 47308, upload-time = "2026-10-08T16:23:56.175Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/c2/abde52eebc0625ac3bb6437e5e817144f5b8806c8237679fd9d0d32d897b/homeassistant_repl-0.12.0.tar.gz", hash = "sha256:24e4a4e4e25b87f5c9ab089fe0af77cf2be4e2c7dc22b15a0dcd356acb414194", size = 50891, upload-time = "2026-10-09T20:07:30.098Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/46/3247e1acc09b43ab698a13a31502bc7d7bf565d0a916476b7d4ab6590be1/homeassistant_repl-0.11.0-py3-none-any.whl", hash = "sha256:414d362e798e2508cf0bc1c8e324bb3f34ae6b757ed1f1046a6f14e3bec337d6", size = 54538, upload-time = "2026-10-08T16:23:54.708Z" },
+    { url = "https://files.pythonhosted.org/packages/45/48/30c1e7f835d0fccb0eb42e5e3dcccf9908e4f38965df32bec4723776082b/homeassistant_repl-0.12.0-py3-none-any.whl", hash = "sha256:f26d1529efe21ee9a5bbd006db944874419bd069d2031c804e689d09d18742a5", size = 57337, upload-time = "2026-10-09T20:07:28.677Z" },
 ]
 
 [[package]]
