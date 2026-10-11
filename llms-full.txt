@@ -121,7 +121,8 @@ An alternative `supernotify.notify` action is now available that is much easier 
 - **Links** can be configured but not currently used.
 - YAML still required for Transport, Recipient, Action and additional custom Delivery
 - Versions of Home Assistant more than 6 major releases ( usually 6 months ) aren't tested against Supernotify
-- It is tested against Python 3.13 and Home Assistant 2026.2.3 (the last to support v3.13 only), this will be dropped when Home Assistant 2026.10 is released.
+- Until version v2.13.2 in October 2026, it was tested on all development and release builds against Python 3.13 and Home Assistant 2026.2.3 (the last to support v3.13 only)
+- This was dropped when Home Assistant 2026.10 was released on 7-Oct-2026, so Python 3.13 and the older versions of Home Assistant no longer have support assured by running the 2000+ tests of the test suite.
 
 ## Rhizomatics Open Source for Home Assistant
 
@@ -133,7 +134,7 @@ An alternative `supernotify.notify` action is now available that is much easier 
 ### Python / Docker
 
 - [Anpr2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - Integrate with ANPR/ALPR licence plate cameras via file system (NAS/FTP) to MQTT with optional image analysis and UK DVLA integration.
-- [Dev Shell](https://devshell.rhizomatics.org.uk) - Python REPL for Home Assistant development and data exploration.
+- [Homeassistant REPL](https://homeassistant-repl.rhizomatics.org.uk) - Python REPL for Home Assistant development and data exploration.
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Automatically notify via MQTT on Docker image updates, with advanced handling to extract versions and release notes from images, and option to remotely pull and restart containers from Home Assistant. Also available on [PyPI](https://pypi.org/project/updates2mqtt/)
 
 # Quick Start
@@ -190,7 +191,9 @@ Everything on this page is done from the Home Assistant UI, straight after [inst
 
 ## 1. Notify Everyone
 
-Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action, type a message, and press **Perform action**.
+Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action
+
+Type a message, and press **Perform action**.
 
 Message to Everyone
 
@@ -284,7 +287,7 @@ Each person Supernotify knows about has a Home Assistant `switch` entity, and so
 
 ## Notify Just Some Devices
 
-Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md) for common questions.
+Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md) for common questions.
 
 ## Tune the Settings
 
@@ -307,7 +310,7 @@ More is possible with some YAML configuration, and all of it is optional:
 
 ## Get Help
 
-Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md).
+Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md).
 
 # Basic Concepts
 
@@ -458,40 +461,6 @@ From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
 1. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. Templates may be left behind, by default in a `supernotify/templates` directory under your Home Assistant config directory unless configured otherwise. Remove this directory if needed.
-
-# Frequently Asked Questions
-
-Source: https://supernotify.rhizomatics.org.uk/latest/faqs/
-
-## Target Selection
-
-**Q**: If I define a `label_id` and an `area_id`, and in that area I have 3 devices, is the `label_id` treated as an `AND`? (so it will send to just devices in `label_id` that have `label_id`), or an `OR`, (so it sends to all devices that are in `area_id`, as well as all devices in the system that have `label_id`?)
-
-**A**: It works as an OR selector - give me all everything that is in area X OR has label Y, so all the `area_id`,`floor_id` and `label` targets all add up to one big list. This is part of the standard Home Assistant [target selectors](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) which happens outside of Supernotify, and works the same for all integrations.
-
-**Q**: How do I send a notification to only 3 of my Alexa speakers and not the rest.
-
-**A**: There are a few ways of doing this
-
-Option 1 - Use the Home Assistant [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) on the `supernotify.notify` action to pick the speakers by their **Area**, **Floor** or **Label**.
-
-Option 2 - Create a separate *Delivery* (YAML only at present) for these speakers, and list them as targets. Then when setting up notifications, pick this delivery from the list.
-
-```yaml
-alexa_inform:
-    alias: Ask all the Alexas apart from bedrooms to speak the notification
-    transport: alexa_devices
-    target:
-    - notify.kitchen_alexa_speak
-    - notify.living_room_flex_speak
-    - notify.studio_speak
-```
-
-**Q**: My question isn't here, and I can't get find answer in the docs.
-
-**A**: Try using an AI agent if you have one, like Claude or ChatGPT, or the Home Assistant chat bot - the Supernotify site has agent-accessible help, and can give good suggestions and even write or rewrite your YAML for you.
-
-Otherwise, ask a human at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page for general help, or the [Issues](https://github.com/rhizomatics/supernotify/issues) if you've found a bug.
 # Using Supernotify
 
 # Usage
@@ -565,6 +534,19 @@ days:
 count: 3100
 ```
 
+### Lighter lists from the archive
+
+`priority` keeps only notifications with one of the given priorities, across the whole range - the filter applies before `limit`. With `verbosity: summary`, each notification carries `missed`, the number of deliveries that were asked for but could not go out (why a notification with no failure is a `partial_delivery`). A summary leaves out `delivery_provenance`, why each delivery was enabled or disabled, which would be about half of it: list many notifications as summaries, then read one with `id` at `standard` or `full` to see it.
+
+```yaml
+action: supernotify.enquire_archive
+data:
+  priority: [critical, high]
+  period: last_month
+  limit: 500
+  verbosity: summary
+```
+
 # Assist and AI Agents
 
 Source: https://supernotify.rhizomatics.org.uk/latest/usage/assist/
@@ -631,7 +613,7 @@ Some fields of `supernotify.notify` are not offered, so an agent can only reach 
 
 ### Snoozing
 
-The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority, camera or [tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag).
+The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority, camera or [tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag). Unless asked to snooze everything, the agent leaves `critical` notifications coming through, and turning notifications back on undoes either kind.
 
 If the agent doesn't name who the snooze is for, it applies to the person asking, if Supernotify can match their Home Assistant user to a recipient. Otherwise it applies to everyone. See [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md) for how snoozes work.
 
@@ -641,7 +623,7 @@ If the agent doesn't name who the snooze is for, it applies to the person asking
 
 Turn on the file [archive](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md) to get a history. Without it, only the most recent notification since Home Assistant started is known.
 
-### Dry Run
+### Simulation (Dry Run)
 
 `supernotify__dry_run` works out which deliveries a notification would use right now, and who it would reach, without sending anything. It goes through exactly the same checks as a real notification - snoozes, priorities, conditions, who is home, and the duplicate check - so running it twice with the same message reports a duplicate on the second, just as sending it twice would.
 
@@ -661,16 +643,18 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias                                                                                        |
 | "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would                                                                                     |
-| "Snooze my notifications for *30* minutes"          | Snoozes everything                                                                                                            |
-| "Mute all notifications for an hour"                | Snoozes everything for an hour                                                                                                |
-| "Snooze notifications until *15:30*"                | Snoozes everything until then, today or tomorrow                                                                              |
+| "Snooze my notifications for *30* minutes"          | Snoozes all but critical                                                                                                      |
+| "Mute all notifications for an hour"                | Snoozes all but critical for an hour                                                                                          |
+| "Snooze notifications until *15:30*"                | Snoozes all but critical until then, today or tomorrow                                                                        |
 | "Snooze notifications for *driveway* until *6am*"   | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *driveway* |
-| "Silence notifications"                             | Silences everything until turned back on                                                                                      |
+| "Silence notifications"                             | Silences all but critical until turned back on                                                                                |
+| "Silence notifications even critical ones"          | Silences everything, critical included, until turned back on                                                                  |
 | "Turn my notifications back on"                     | Undoes the snooze or silence                                                                                                  |
 | "Resume notifications for *driveway*"               | Undoes the snooze or silence for *driveway*                                                                                   |
-| "What was the last notification"                    | Says what it was, and what sent it                                                                                            |
+| "What was the last notification"                    | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "How do I get help on Supernotify"                  | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
-"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone. They hold back everything but `critical` notifications, so saying "silence notifications" at bedtime never silences a smoke alarm. When an alert that's meant to be critical keeps going off, say "silence notifications even critical ones" (or "including critical", "and critical ones too") to hold back critical ones as well; from an automation or button, use the `supernotify.silence` action with `scope: everything`. Turning notifications back on undoes both.
 
 "For *driveway*" works with any of the snooze sentences, for minutes, an hour, until a time, or until I say. The reply lists the scenarios and entities *driveway* matches now. If it matches nothing, the agent says so and nothing is snoozed. See [Snoozing by Tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) for what it matches.
 
@@ -698,14 +682,16 @@ The same commands can be given in Italian, whatever the language of the assistan
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | "Avvisa *Alice* che *la cena è pronta*"               | Notifies a recipient, by name or alias                                                                                        |
 | "Manda un messaggio a *tutti* che dice *esco adesso*" | Notifies everyone, as an automation would                                                                                     |
-| "Posticipa le mie notifiche per *30* minuti"          | Snoozes everything                                                                                                            |
-| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes everything for an hour                                                                                                |
-| "Posticipa le notifiche fino alle *15:30*"            | Snoozes everything until then, today or tomorrow                                                                              |
+| "Posticipa le mie notifiche per *30* minuti"          | Snoozes all but critical                                                                                                      |
+| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes all but critical for an hour                                                                                          |
+| "Posticipa le notifiche fino alle *15:30*"            | Snoozes all but critical until then, today or tomorrow                                                                        |
 | "Posticipa le notifiche del *vialetto* fino alle *6*" | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *vialetto* |
-| "Silenzia le notifiche"                               | Silences everything until turned back on                                                                                      |
+| "Silenzia le notifiche"                               | Silences all but critical until turned back on                                                                                |
+| "Silenzia le notifiche anche quelle critiche"         | Silences everything, critical included, until turned back on                                                                  |
 | "Riattiva le mie notifiche"                           | Undoes the snooze or silence                                                                                                  |
 | "Riattiva le notifiche del *vialetto*"                | Undoes the snooze or silence for *vialetto*                                                                                   |
-| "Qual è stata l'ultima notifica"                      | Says what it was, and what sent it                                                                                            |
+| "Qual è stata l'ultima notifica"                      | Says what it was, and what it was sent via, or why it wasn't sent                                                             |
+| "Come trovo aiuto per Supernotify"                    | Gives a link to the [help page](https://supernotify.rhizomatics.org.uk/latest/help/index.md)                                  |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for snoozing.
 
@@ -1072,7 +1058,7 @@ In this example, when an Actionable Notification is sent with action `Red Alert`
   actions:
   - action: supernotify.notify
     data:
-      apply_scenario: red_alert
+      apply_scenarios: red_alert
 ```
 
 In this example, a mobile notification goes out to notify of the dishwasher finishing, and email is switched off.
@@ -1188,7 +1174,7 @@ supernotify:
         chime_tune: christmas_05
 ```
 
-## Compatibility with Notify Platform Actions
+## Notify Entities and Legacy Notify Platform Compatibility
 
 For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
 
@@ -1205,6 +1191,8 @@ Legacy notify.supernotify
             priority: high
             delivery: mobile_push
 ```
+
+A notify entity can also be made for any scenario or delivery, which is a way to get more of Supernotify from something that only takes a notify entity. Each of these, and each recipient's `notify.recipient_<name>` entity, also has a legacy action of the same name, taking the same as `notify.supernotify`, for anything that only takes the name of a `notify` action, like the Alert integration. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) and [Delivery Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#notify-entity).
 
 ## References
 
@@ -1247,6 +1235,7 @@ A `TAG` snooze covers every notification that a word or name like *driveway* app
 - the name of one of the notification's scenarios, whether applied by the automation or selected by its conditions
 - the `entity_id`, object_id, friendly name or an alias of the entity in the notification's `entity_id` data, as the Frigate blueprint sends, or of its `media` camera
 - the object_id then the domain, so *driveway camera* matches `camera.driveway`
+- the `entity_id`, object_id, friendly name or an alias of the automation or script that sent it, so *garage closed* covers every notification from `automation.garage_closed` - nothing needs adding to the notify call. The sender is the automation or script whose current run carries the notification's context (a script started by an automation counts both)
 
 Case, underscores and extra spaces are ignored, so *unknown vehicle* matches the `unknown_vehicle` scenario. The tag is matched as each notification is sent, so if a scenario and a camera are both called *driveway*, both are covered.
 
@@ -1460,6 +1449,45 @@ scenarios:
         camera_entity_id: camera.porch
 ```
 
+## Targets in Delivery Configuration
+
+A delivery can also have its own `target` in its configuration, or inherit one from the `delivery_defaults` of its transport. This is separate from the targets on the notification, and the delivery's `target_usage` option decides what happens when there are both.
+
+| `target_usage`   | When the delivery's own targets are used                                     | Targets on the notification |
+| ---------------- | ---------------------------------------------------------------------------- | --------------------------- |
+| `no_action`      | Only when the action call has no `target` at all. This is the default        | Used                        |
+| `no_delivery`    | Only when none of the notification's targets are usable by this delivery     | Used                        |
+| `merge_delivery` | Added, but only when the notification already has a target for this delivery | Used                        |
+| `merge_always`   | Always added                                                                 | Used                        |
+| `fixed`          | Always, and nothing else                                                     | Ignored                     |
+
+"Targets on the notification" covers everything that isn't the delivery's own: the `target` on the action call, the people it names, and the default recipients used when there's no `target`.
+
+The difference between `no_action` and `no_delivery` shows up when the notification has targets, but none this delivery can use. Here the action call has only an email address, so with the default `no_action` the siren delivery gets no target, and `no_delivery` lets it fall back to its own:
+
+configuration
+
+```yaml
+delivery:
+  hall_siren:
+    transport: chime
+    target: siren.hall
+    target_usage: no_delivery
+```
+
+action call
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target: jjh@34acacia.avenue.com
+```
+
+Similarly, `merge_delivery` only adds to a delivery that was already going to send, which suits a copy address on an email, while `merge_always` will make the delivery send even if it had nothing else to send to. Use `fixed` when the delivery should reach the same targets whatever is on the notification, including when a person is targeted.
+
+See [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) for the related `target_required` option, and the [Fixed Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md) and [Email CC](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) recipes for worked examples.
+
 ## Debugging
 
 In the archived JSON, each delivery has an `envelope` with the targets assigned to it. There's also a field `uncategorized_targets` that lists ones that couldn't be understood and were ignored, and a field `unassigned_targets` for those that could be categorized but didn't get selected by a delivery.
@@ -1553,13 +1581,13 @@ or use the generic delivery overrides
 There are also options to combine the title into the message, or drop it out altogether that may work better for you
 
 ```yaml
-  - action: supernotify.notify
-    data:
-        title: Home Security
-        message: Somebody has triggered the motion detector at the front porch
-        # any transport, like a voice assistant, that only looks at `message` will prefix
-        # the message with the title. Alternatively, `use_title` uses only the title
-        message_usage: combine_title
+delivery:
+  alexa_announce:
+    transport: alexa_devices
+    options:
+      # any transport, like a voice assistant, that only looks at `message` will prefix
+      # the message with the title. Alternatively, `use_title` uses only the title
+      message_usage: combine_title
 ```
 
 ### Noises
@@ -2298,9 +2326,40 @@ Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNot
 
 Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
 
+A delivery switch also shows what the delivery last did, from live notifications only (a dry run leaves them alone):
+
+| Attribute          | Example                        | Set when                                          |
+| ------------------ | ------------------------------ | ------------------------------------------------- |
+| `last_sent_at`     | `2026-10-04T16:42:10+00:00`    | the delivery sent something                       |
+| `last_outcome`     | `success`, `error`, `skipped`  | every live notification the delivery took part in |
+| `last_skip_reason` | `SNOOZED`, `OCCUPANCY`, `DUPE` | only with `last_outcome: skipped`                 |
+
+So a delivery that has quietly stopped going out shows up without opening the archive, for example in a template:
+
+```jinja
+{{ now() - as_datetime(state_attr('switch.supernotify_delivery_mobile_push', 'last_sent_at') or 0) > timedelta(days=3) }}
+```
+
+An `error` is only seen when the call to the action waits for its result, as with `debug: true` or a delivery with a `fallback`, the same as for the archive. These attributes start empty after a restart, and aren't kept in history.
+
 Deprecated
 
 The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
+
+### Notify Entity
+
+A delivery can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+Delivery with its own notify entity
+
+```yaml
+delivery:
+  family_chat:
+    transport: telegram
+    notify_entity: family_chat
+```
+
+Sending a message to `notify.family_chat` is like a `supernotify.notify` with only a message and title, and `delivery` set to this delivery. There is a `notify.family_chat` action too, which also takes `target` and `data`. If `notify.family_chat` already exists, the entity isn't created and a repair is raised. Scenarios can have one too, see [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) for more, and for how to use one from the Alert integration.
 
 ### Overrides
 
@@ -2653,6 +2712,8 @@ Disabling One of the Automatic Discoveries
 
 By default, all the mobile devices registered in Home Assistant are discovered and associated with the recipient.
 
+A mobile app with no `notify` action is skipped, since it can't be notified. An Apple Watch is the usual case, it registers with Home Assistant as its own mobile app, but takes its notifications by way of the paired iPhone.
+
 This can be switched off by default for everyone from the UI config:
 
 or using, the advanced YAML config, per recipient:
@@ -2690,6 +2751,12 @@ recipients:
 ```
 
 If for some odd reason auto-discover doesn't find a device, you can enable it by listing it under `mobile_devices` in a similar way (`enabled` defaults to `True`).
+
+### Missing Mobile Apps
+
+At start up, each enabled mobile device of a recipient is checked for a matching `notify.mobile_app_XXXX` action. If there isn't one, for example because the phone was replaced or the Home Assistant app removed from it, a repair is raised in Home Assistant. Remove the device from Home Assistant, or disable it as above, to clear the repair, or ignore the repair in Home Assistant if the device is only away for a while.
+
+A notification that includes a device with no action still goes to all the other targets. The device is snoozed for a day, and the failed call is listed in the [archived notification](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md).
 
 ## Sending Notifications
 
@@ -2748,6 +2815,8 @@ Example Automation Action
 ```
 
 This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` or `supernotify.notify` does, just scoped to that one recipient instead of the whole People Registry.
+
+There is also a `notify.recipient_XXXXX` action of the same name, for anything that only takes the name of a `notify` action, like the `notifiers` of the [Alert](https://www.home-assistant.io/integrations/alert/) integration.
 
 Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
 
@@ -2953,17 +3022,17 @@ This scenario could be used to select more obtrusive notifications, like email o
 
 ```yaml
 more_attention:
-        alias: time to make more of a fuss
-        conditions:
-          condition: and
-          conditions:
-            - not:
-                - condition: state
-                  entity_id: alarm_control_panel.home_alarm_control
-                  state: disarmed
-            - condition: time
-              after: "21:30:00"
-              before: "06:30:00"
+  alias: time to make more of a fuss
+  conditions:
+    condition: and
+    conditions:
+      - not:
+          - condition: state
+            entity_id: alarm_control_panel.home_alarm_control
+            state: disarmed
+      - condition: time
+        after: "21:30:00"
+        before: "06:30:00"
 ```
 
 In this example, selecting the scenario by name in a notification call switches on a set of delivery transports, which saves repetitive declaration in many notification calls. Delivery Selection is made `implicit` so not switching off any other deliveries that would have applied.
@@ -2984,6 +3053,64 @@ scenarios:
 Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification. This lasts across restarts and reloads, until the scenario's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
+
+### Notify Entity
+
+A scenario can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`
+
+Sending a message to it is like a `supernotify.notify` with only a message and title, and `apply_scenarios` set to this scenario, so it goes to the default recipients and the scenario's overrides are applied. Other scenarios still select themselves by their conditions.
+
+In this example, anything sent to `notify.its_raining_again` becomes a low priority mobile push with a rain icon. The `.*` switches off every other delivery, which would otherwise be sent as well, since a scenario adds to the deliveries a notification would have had - see the [Rain Alert Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/#why-the-is-needed).
+
+Scenario with its own notify entity
+
+```yaml
+scenarios:
+  rain:
+    alias: Its raining again
+    notify_entity: its_raining_again
+    delivery:
+      mobile_push:
+        data:
+          priority: low
+          notification_icon: mdi:weather-pouring
+      .*:
+        enabled: false
+```
+
+Using it in an automation
+
+```yaml
+  - action: notify.send_message
+    target:
+      entity_id: notify.its_raining_again
+    data:
+      message: Bring the washing in
+```
+
+The entity can also be one of the targets of a `supernotify.notify`, where it isn't notified itself, but has its scenario applied to that notification - or for a delivery, has its delivery added to those selected.
+
+The entity is named by the scenario's `alias`, or its name if there's none. If `notify.its_raining_again` already exists, as an entity or a `notify` action, from another integration or another `notify_entity`, the entity isn't created and a repair is raised - choose another value, or rename the other entity. Changing `notify_entity` renames the entity, and taking it away removes it.
+
+There is also a `notify.its_raining_again` action of the same name, for anything that asks for the name of a `notify` action and not a notify entity. Unlike the entity, it takes `target` and `data`, as [notify.supernotify](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#notify-entities-and-legacy-notify-platform-compatibility) does.
+
+#### With the Alert Integration
+
+Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration repeats a notification while a problem lasts. Give it the scenario's `notify_entity` as a notifier, and every alert is sent as the scenario says.
+
+configuration.yaml
+
+```yaml
+alert:
+  rain:
+    name: Its raining again
+    entity_id: binary_sensor.rain
+    repeat: 60
+    notifiers:
+      - its_raining_again
+```
+
+See the [Rain Alert Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) for the two together.
 
 ## Overriding Delivery Selection and Configuration
 
@@ -3007,6 +3134,14 @@ scenarios:
     alias: Switch on email
     delivery:
       email:
+  style_1b:
+    alias: Configure email if already enabled, but don't switch it on
+    delivery:
+      email:
+        enabled:
+        data:
+          priority: high
+
   style_2:
     alias: Switch on email
     delivery:
@@ -3052,14 +3187,14 @@ Individual deliveries can be overridden, including the content of the messages u
 
 ## Using Scenarios to Suppress Notifications
 
-Using `required_scenarios`, a notification can be generated that will only be delivered if one of the listed scenarios has an active condition.
+Using `require_scenarios`, a notification can be generated that will only be delivered if one of the listed scenarios has an active condition.
 
 ```yaml
   - action: supernotify.notify
     data:
         title: Hallway PIR
         message: Somebody in the hall
-        required_scenarios:
+        require_scenarios:
           - nobody_home
 ```
 
@@ -4579,6 +4714,10 @@ Use this transport to call *any* action, including 'legacy' Notification actions
 
 To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list.
 
+Info
+
+This transport has also been used to add some minor support for an integration that doesn't yet warrant a full scale transport. For example, this was the case for [ntfy.sh](https://ntfy.sh) before the [ntfy transport](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md) was contributed, and remains the case for the [notify.events](https://notify.events) vendor service.
+
 ### Notify Actions
 
 If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be passed in the Action (Service) Data.
@@ -4659,22 +4798,24 @@ Example Action Call
 
 Generic isn't completely a blank slate - it knows about the most common integration domains and will build a compatible Action call for them. These have a lot of variation because Home Assistant actions have a lot of variation! Generic Transports handling of these means you can create multi-channel notifications without worrying too much about the variety of `data` mappings etc.
 
-| Domain                                 | Action Data                                                                                                                                                                                                         | Target Data                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| notify ( `send_message` only)          | `message` and `title` only                                                                                                                                                                                          | `entity_id` map             |
-| notify ( other actions )               | `message` and `title` plus all `data` elements                                                                                                                                                                      | big list of all targets     |
-| input_text                             | `value` with message                                                                                                                                                                                                | `entity_id` map             |
-| switch                                 | Empty                                                                                                                                                                                                               | `entity_id` map             |
-| mqtt                                   | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined                                                         | Empty                       |
-| siren                                  | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                                                                              | `entity_id` map             |
-| light                                  | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                                                                              | `entity_id` map             |
-| rest_command                           | All of \`data                                                                                                                                                                                                       | Empty                       |
-| notify_events                          | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements                                                                                               | Empty                       |
-| ntfy (`ntfy.publish`)                  | All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
-| script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right                                                                            | `entity_id` map             |
-| script (script name as action)         | `message` and `title` plus all `data` elements                                                                                                                                                                      | `entity_id` map             |
-| tts                                    | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements                                                                                                                                      | `entity_id` map             |
-| *default*                              | `message` and `title` plus all `data` elements                                                                                                                                                                      | big list of all targets     |
+Several of these now have their own transports, and are effectively deprecated in Generic although remain working - `ntfy`,`mqtt`,`siren` (`chime` transport),`tts` and `notify` (`notify_entity` transport).
+
+| Domain                                 | Action Data                                                                                                                                                                                                                                                                                                                                                            | Target Data                 |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| notify ( `send_message` only)          | `message` and `title` only                                                                                                                                                                                                                                                                                                                                             | `entity_id` map             |
+| notify ( other actions )               | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | big list of all targets     |
+| input_text                             | `value` with message                                                                                                                                                                                                                                                                                                                                                   | `entity_id` map             |
+| switch                                 | Empty                                                                                                                                                                                                                                                                                                                                                                  | `entity_id` map             |
+| mqtt                                   | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined                                                                                                                                                                                                            | Empty                       |
+| siren                                  | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                                                                                                                                                                                                                                 | `entity_id` map             |
+| light                                  | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                                                                                                                                                                                                                                 | `entity_id` map             |
+| rest_command                           | All of \`data                                                                                                                                                                                                                                                                                                                                                          | Empty                       |
+| notify_events                          | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements                                                                                                                                                                                                                                                  | Empty                       |
+| ntfy (`ntfy.publish`)                  | **Deprecated**, use the [ntfy transport](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md), a warning is logged at start up. All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
+| script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right                                                                                                                                                                                                                               | `entity_id` map             |
+| script (script name as action)         | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | `entity_id` map             |
+| tts                                    | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements                                                                                                                                                                                                                                                                                         | `entity_id` map             |
+| *default*                              | `message` and `title` plus all `data` elements                                                                                                                                                                                                                                                                                                                         | big list of all targets     |
 
 Notify Events
 
@@ -5336,6 +5477,45 @@ Although Supernotify will automatically set most useful mobile push options, its
 Info
 
 This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
+
+## Critical on Android
+
+A `critical` notification goes to Android phones the way the [companion app documents critical notifications](https://companion.home-assistant.io/docs/notifications/critical-notifications): `ttl: 0` and `priority: high`, so a phone saving battery gets it straight away, and the `alarm_stream` channel, so it sounds even with Do Not Disturb on or the phone on silent - the Android counterpart of iOS's `interruption-level: critical`.
+
+The companion app's own `channel` and `ttl`, when set in the data, are kept as they are, so a critical notification can still use a channel of its own (`mobile_push_critical_priority: normal` changes the `high` priority):
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Smoke in the kitchen
+      priority: critical
+      delivery:
+        mobile_push:
+          data:
+            channel: smoke_alarm
+```
+
+Tip
+
+Some phones (Samsung One UI for one) also need the Home Assistant app allowed as an exception to Do Not Disturb, in the phone's own settings.
+
+## Android Commands and Spoken Text
+
+The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands) and TTS as the `message` of a call of their own, so Supernotify sends them that way, to Android phones only: `mobile_push_command_dnd` (`alarms_only`, `priority_only`, `total_silence`, `off`), `mobile_push_command_ringer_mode` (`normal`, `silent`, `vibrate`) and `mobile_push_command_screen_on` each go just before the notification, and `mobile_push_tts_text` 5 seconds after it, so the notification's own sound isn't cut off (`mobile_push_tts_delay` changes that, `0` for straight away) - for a `critical` notification on the alarm stream at full volume (`alarm_stream_max`, the app puts the volume back afterwards), since a watch's alarm volume can be too low to hear:
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Water leak under the sink
+      priority: critical
+      extra_data:
+        mobile_push_command_screen_on: true
+        mobile_push_tts_text: Water leak under the sink
+```
+
+Note
+
+`command_dnd` needs a permission the companion app asks for the first time it's used.
 
 ## Notification Grouping
 
@@ -6151,6 +6331,7 @@ Ideas for Home Assistant notifications using Supernotify, with example configura
 
 Select a tag to see only the recipes with that tag, and select it again to see them all.
 
+- [Alert Quietly When it Rains](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md) alertscenarionotify_entitymobile_pushwildcardsweather
 - [Alexa Whispering Low Priority Announcements](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) alexascenarioconditiontts
 - [All Sirens Go!](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md) alexacriticalemergencyrest_apichimemqttsiren
 - [Apply a Scenario Exception](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md) scenariotemplatecondition
@@ -6160,7 +6341,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) frigateptz
 - [CC All Emails](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) emailhtml_email
 - [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md)
-- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancycondition
+- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancywildcardscondition
 - [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushandroid
 - [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
 - [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushapplemacos
@@ -6173,12 +6354,13 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
+- [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md) pyscriptcamera
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushandroidapplezero_yaml_config
 - [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) doorbellalexavoice_assistantcameramobile_pushchimeoccupancyzero_yaml_config
 - [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md) mqttsiren
 - [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) androidlivemobile_push
-- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattscameraaccessibilitytemplatecondition
+- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattswildcardscameraaccessibilitytemplatecondition
 
 # Recipe - Alexa Alternative Integration
 
@@ -7148,7 +7330,13 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashb
 
 ## Implementation
 
-See the example YAML and instructions at [Dashboard Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
+### Pre-built Dashboard
+
+If you have Supernotify Cards already installed, go to **Settings | Dashboards** in Home Assistant, and click on **Add Dashboard**. The pre-built one will appear under *Community Dashboards*
+
+### Custom YAML
+
+Example YAML and instructions to create and tune your own dashboard are at [Dashboard Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
 
 # Recipe - OTEL Event Generation
 
@@ -7263,6 +7451,153 @@ This doesn't scale the way the `occupancy`-only version does - a new recipient n
 `inclusion: fallback` would do nothing here - don't add it
 
 It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual gating here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
+
+# Recipe - Pyscript
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/
+
+## Purpose
+
+Call Supernotify from [Pyscript](https://hacs-pyscript.readthedocs.io/) python code, check what was delivered, react to notification and mobile action events, and get autocompletion for the `supernotify` actions in an IDE.
+
+## Implementation
+
+Pyscript exposes every Home Assistant action as a python function, so `supernotify.notify` is called directly with the same fields as the [notify action](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md). All the fields are plain keyword arguments, however they are grouped in the *Developer Tools* form.
+
+## Example Code
+
+### Send a notification
+
+```python
+@state_trigger("binary_sensor.driveway_detector == 'on'")
+def driveway_alert():
+    supernotify.notify(
+        title="Driveway",
+        message="Vehicle detected on the driveway",
+        priority="high",
+        apply_scenarios=["cctv", "driveway"],
+        camera_entity_id="camera.driveway",
+        media={"camera_ptz_preset": "driveway_entrance"},
+        actions=[{"action_url_title": "Go to Camera", "action_url": "http://10.4.6.43/cameras/driveway/view"}],
+    )
+```
+
+### Check the outcome
+
+Add `return_response=True` to get the notification back as a dictionary, including which deliveries were made. With `dry_run="simulate"` nothing is sent, so a script can be tried out safely.
+
+```python
+@service
+def test_driveway_alert():
+    result = supernotify.notify(
+        message="Vehicle detected on the driveway",
+        delivery=["mobile_push", "alexa_announce"],
+        dry_run="simulate",
+        return_response=True,
+    )
+    log.info(f"Supernotify outcome: {result['outcome']}")
+```
+
+The `enquire_*` actions, such as `supernotify.enquire_last_notification` or `supernotify.enquire_active_scenarios`, only work with `return_response=True`.
+
+### React to notifications
+
+A `supernotify_notification` event is fired for each notification sent, with `notification_id`, `summary`, `outcome` and `deliveries`.
+
+```python
+@event_trigger("supernotify_notification", "outcome != 'SUCCESS'")
+def notification_problem(notification_id=None, summary=None, outcome=None, **kwargs):
+    log.warning(f"Notification {notification_id} ({summary}) ended as {outcome}")
+```
+
+### Handle mobile actions
+
+[Mobile actions](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md) arrive as the usual Home Assistant `mobile_app_notification_action` event.
+
+```python
+@event_trigger("mobile_app_notification_action", "action == 'OPEN_GATE'")
+def open_gate(**kwargs):
+    cover.open_cover(entity_id="cover.driveway_gate")
+```
+
+## IDE Autocompletion
+
+Pyscript can generate [IDE helper stubs](https://hacs-pyscript.readthedocs.io/en/stable/reference.html#ide-helpers) for all the actions in an installation, including Supernotify's. Run the `pyscript.generate_stubs` action, point the IDE at `<config>/pyscript/modules`, and import the stub at the top of a script:
+
+```python
+from stubs.pyscript_generated import supernotify
+```
+
+Pyscript ignores this import at runtime. The names of the deliveries configured are included in the stub, so run `pyscript.generate_stubs` again after changing them.
+
+Note
+
+Pyscript 2.1.0 only recognises its own two section names, so the Supernotify fields grouped under *Multimedia*, *Scenarios* and *Advanced* are missing from the stub and the IDE will report them as unknown arguments, and fields taking a list are shown as taking a single value. They all work when the script runs. A fix for this has been [proposed to Pyscript](https://github.com/custom-components/pyscript/pull/878).
+
+### Typed helpers
+
+The stub can only describe `media`, `delivery_control`, `actions`, `data` and the responses as `Any`, since Home Assistant actions don't publish the shape of object fields. A typed python helper module for Pyscript, with definitions for these, could be provided if there is interest - ask for it with a feature request on [GitHub Discussions](https://github.com/rhizomatics/supernotify/discussions).
+
+# Recipe - Rain Alert
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/
+
+## Purpose
+
+Get a quiet reminder on the phone while it's raining, repeated every hour until it stops, using Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration.
+
+## Implementation
+
+An alert only gives a notifier a message and a title, so what kind of notification it becomes is set in a scenario. The scenario has a `notify_entity`, which gives it a `notify.its_raining_again` entity, and an action of the same name for the alert to list in its `notifiers`. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity).
+
+Everything the alert sends has the scenario applied, which makes the mobile push low priority and gives it a rain icon. Low priority is passed on to an iPhone as a `passive` notification, which doesn't light up the screen or make a sound.
+
+## Example Configuration
+
+supernotify.yaml
+
+```yaml
+scenarios:
+  rain:
+    alias: Its raining again
+    notify_entity: its_raining_again
+    delivery:
+      mobile_push:
+        data:
+          priority: low
+          notification_icon: mdi:weather-pouring
+      .*:
+        enabled: false
+```
+
+configuration.yaml
+
+```yaml
+alert:
+  rain:
+    name: Its raining again
+    entity_id: binary_sensor.rain
+    repeat: 60
+    notifiers:
+      - its_raining_again
+```
+
+`mobile_push` is the standard delivery Supernotify makes when there are phones with the Home Assistant app, so there's nothing more to configure for it.
+
+### Why the `.*` is needed
+
+A scenario doesn't replace the usual choice of deliveries, it adds to it and adjusts it. The alert names no deliveries, so without the last two lines the notification goes to every delivery that is included by default - email, chimes, Alexa or whatever else is set up - and the scenario only changes how the `mobile_push` one looks.
+
+- `.*` is a pattern that matches the name of every delivery, and `enabled: false` switches off each one it matches, for this notification only.
+- `mobile_push` is still sent, because a delivery listed by its own name always wins over a pattern that also matches it.
+
+So the two together say "only mobile push". Other notifications are not affected, since the scenario is only applied to what is sent to `notify.its_raining_again`. See [Wildcard Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#wildcard-deliveries) for more on patterns.
+
+## Variations
+
+- Add `done_message` to the alert to be told when the rain has stopped, which goes through the same scenario.
+- Add more deliveries to the scenario by name, such as a chime, and they are sent too.
+- The same notify entity works anywhere else that takes one, like an automation's `notify.send_message`.
 
 # Recipe - Home Assistant Restart
 

@@ -15,7 +15,6 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Basic Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md): Basic concepts - targets, recipients, deliveries and priority
 - [Advanced Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md): Advanced concepts - transports, deliveries, scenarios, recipients and targets
 - [Removal](https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/index.md): Remove Supernotify and clean up what it leaves behind
-- [Frequently Asked Questions](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md): Frequently asked questions, with short answers
 
 ## Using Supernotify
 
@@ -97,6 +96,8 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md)
+- [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md)
+- [Alert Quietly When it Rains](https://supernotify.rhizomatics.org.uk/latest/recipes/rain_alert/index.md)
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md)
