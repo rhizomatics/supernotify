@@ -66,10 +66,19 @@ The classes are described in [Classes](reference/classes/index.md), and how they
 
 ## Using It
 
+### Installation
+
+```bash
+uv tool install homeassistant-repl
+```
+!!! tip
+    Installation isn't essential - if you don't want to that then use
+    ```uvx --from homeassistant-repl ha-repl``` instead every time you want to run it.
+
 ### Interactive
 
 ```bash
-uv run ha-repl live
+ha-repl live
 ```
 
 ```python
@@ -87,7 +96,7 @@ uv run ha-repl live
 `exec` runs a snippet and exits, which suits scripts, and is what an AI coding agent uses:
 
 ```bash
-uv run ha-repl --json exec -t 30 - <<'PY'
+ha-repl --json exec -t 30 - <<'PY'
 {name: (d.last_outcome, d.last_skip_reason) for name, d in deliveries.items()}
 PY
 ```
