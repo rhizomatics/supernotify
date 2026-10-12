@@ -21,11 +21,12 @@ document.addEventListener("click", event => {
 })
 
 // A link ending #tag=name, as the sidebar has for each tag, opens the index narrowed to that tag
-function filterByHash() {
+function filterByHash(hash = location.hash) {
   const list = document.querySelector(".md-content .index-tag")?.closest("ul")
-  const tag = new URLSearchParams(location.hash.slice(1)).get("tag")
-  if (list && tag) filterByTag(list, tag)
+  if (list) filterByTag(list, new URLSearchParams(hash.slice(1)).get("tag"))
 }
 
-window.addEventListener("hashchange", filterByHash)
-document$.subscribe(filterByHash)
+window.addEventListener("hashchange", () => filterByHash())
+document$.subscribe(() => filterByHash())
+// instant navigation moves within a page by history.pushState, which fires neither of the above
+location$.subscribe(url => filterByHash(url.hash))
