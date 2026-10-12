@@ -4,6 +4,7 @@
 
 # Appendix - Anticipated Changes
 
+
 Changes anticipated in Supernotify before any production [Auto Notifier](./0003-auto_notifier.md) is released, collected from the proposed packages:
 [Frigate](./0006-frigate_auto_notifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
@@ -109,6 +110,9 @@ package happens to call its events.
 
 ### 3. Notification lifecycle and tag
 
+!!! warning
+    This section has been superseded by [RFC0005](./0005-supernotify-tracked-notifications.md)
+
 Promote `mobile_push_notification_tag` to a transport-neutral `tag`, and add a `lifecycle` of `new` (default), `update` or `end`:
 
 - **update** - replaces the earlier notification with the same tag without alerting again. Mobile push replaces
@@ -164,6 +168,9 @@ Done: `mobile_push_live_view_entity`, with tests in `test_transport_mobile_push.
 
 ### 10. Live Activity fields
 
+!!! warning
+    This section has been superseded by [RFC0005](./0005-supernotify-tracked-notifications.md)
+
 First-class fields for [Live Activities](https://companion.home-assistant.io/docs/notifications/live-activities):
 `live_update`, `progress`, `progress_max`, `chronometer`, `when` and the notification icon, mapped for iOS and Android,
 and left out entirely when the source value is `unavailable`. Combined with lifecycle `update` and `end`, an appliance
@@ -172,6 +179,11 @@ package only needs to send the current state.
 ## Package Framework
 
 ### 11. Package modules and subentries
+
+!!! warning
+    This section has been rejected. Auto Notify
+    packages will be separate
+    HACS plugins
 
 - A `packages` sub-package with a base class per package: `detect(hass)`, a subentry flow, default notification,
   and runtime start and stop hooks for listeners
@@ -182,6 +194,10 @@ package only needs to send the current state.
 - Packages run inside Supernotify, so they're loaded, reloaded and unloaded with the config entry
 
 ### 12. Stored notification action
+
+!!! warning
+    This section may have been superseded
+    by the separate package decision
 
 Each subentry keeps its notification as an action sequence, edited with the `ActionSelector`, pre-filled with a
 `supernotify.notify` call, and run with `helpers.script.Script` with the package's variables. The core Template helper
@@ -194,6 +210,10 @@ already uses `ActionSelector` in its config flow. Also needs:
 
 ### 13. Richer `services.yaml`
 
+!!! warning
+    This section may have been superseded
+    by the separate package decision
+
 The action editor becomes the whole customization UI for packages, so `supernotify.notify` field descriptions, examples
 and selectors matter far more, and translations for all of it.
 
@@ -202,6 +222,10 @@ with live `select` dropdowns for the delivery and scenario fields, via `async_se
 config entry setup/reload. Packages will need the same treatment for whatever fields they add.
 
 ### 14. Optional integration dependencies
+
+!!! warning
+    This section may have been superseded
+    by the separate package decision
 
 Packages bundled in Supernotify can't add `mqtt` or `frigate` to `dependencies`, since that would force them on every
 user. Add them to `after_dependencies` instead, check at runtime, and only offer a package when its integrations are

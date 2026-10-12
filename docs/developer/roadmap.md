@@ -45,6 +45,11 @@ Switch from `voluptuous` to `probatio`
 Minimize need of scenarios and conditional logic.
 [RFC0007](rfcs/0007-quick_selectors.md)
 
+### Live Notifications
+
+Supernotify owns the start, update, end and close of a Live Activity, Live Update or persistent notification, from one `live:` mapping on the notify action and a `mobile_live` transport.
+[RFC0005](rfcs/0005-supernotify-tracked-notifications.md)
+
 
 ### Rate Limiting
 

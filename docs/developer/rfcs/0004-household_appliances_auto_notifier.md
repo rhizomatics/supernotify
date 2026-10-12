@@ -6,6 +6,8 @@
 
 An implementation of [Auto Notifier](./0003-auto_notifier.md) to use *Live Activities* for common household appliances, such as dishwashers, robot vacuums, ovens and washing machines.
 
+What it needs from Supernotify to do that simply is in [RFC 0005](./0005-supernotify-tracked-notifications.md).
+
 Although this component aims to make full use of Supernotifier available to a wider group of people with minimal effort, the primary aim is to make household appliances integrate smoothly into everyday handheld and voice devices.
 
 This will include 'smart' appliances with their own network connections, and simpler appliances that have smart plugs to monitor them. The latter may in time be made further smarter by using previous behaviour to predict run times.
