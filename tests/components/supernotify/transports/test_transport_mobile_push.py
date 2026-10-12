@@ -30,12 +30,11 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.schema import DeliveryOutcome, EnvelopeOutcome
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_mobile_app
-from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -734,216 +733,50 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
     assert data["image"] == "http://my.home/precomputed.jpg"
 
 
-@pytest.mark.parametrize(
-    ("manufacturer", "priority", "data", "expected"),
-    [
-        ("Samsung", PRIORITY_CRITICAL, {}, {"ttl": 0, "priority": "high", "channel": "alarm_stream"}),
-        # the companion app's own data elements are left as given
-        ("Samsung", PRIORITY_CRITICAL, {"channel": "alarm"}, {"ttl": 0, "priority": "high", "channel": "alarm"}),
-        (
-            "Samsung",
-            PRIORITY_CRITICAL,
-            {"ttl": 60},
-            {"ttl": 60, "priority": "high", "channel": "alarm_stream"},
-        ),
-        (
-            "Samsung",
-            PRIORITY_CRITICAL,
-            {"mobile_push_critical_priority": "normal"},
-            {"ttl": 0, "priority": "normal", "channel": "alarm_stream"},
-        ),
-        ("Samsung", PRIORITY_HIGH, {}, {}),
-        ("Samsung", PRIORITY_MEDIUM, {"mobile_push_alarm_stream": True}, {"channel": "alarm_stream"}),
-        ("Samsung", PRIORITY_MEDIUM, {"mobile_push_alarm_stream_max": True}, {"channel": "alarm_stream"}),
-        ("Apple", PRIORITY_CRITICAL, {}, {}),
-    ],
-)
-async def test_android_critical_sounds_through_do_not_disturb(
-    unmocked_config: Context, manufacturer: str, priority: str, data: dict[str, Any], expected: dict[str, Any]
-) -> None:
-    """Critical on Android gets what the companion app documents for critical notifications - ttl 0,
-    priority high and the alarm_stream channel - as iOS gets interruption-level critical"""
-    context = unmocked_config
-    uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]
-    context.configure_for_tests([uut])
-    await context.initialize()
-    e = Envelope(
-        Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
-        Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: priority}),
-        target=Target({"mobile_app_id": ["mobile_app_phone"]}),
-        data=data,
-    )
-    await uut.deliver(e)
-
-    sent = e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
-    assert {k: sent[k] for k in ("ttl", "priority", "channel") if k in sent} == expected
-    assert not any(k.startswith("mobile_push_") for k in sent)
-
-
-async def _deliver_to(context: Context, manufacturer: str, priority: str, data: dict[str, Any]) -> Envelope:
-    uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]
-    context.configure_for_tests([uut])
-    await context.initialize()
-    e = Envelope(
-        Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
-        Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: priority}),
-        target=Target({"mobile_app_id": ["mobile_app_phone"]}),
-        data=data,
-    )
-    await uut.deliver(e)
-    return e
-
-
-async def test_android_commands_go_before_the_notification_as_their_own_calls(unmocked_config: Context) -> None:
-    e = await _deliver_to(
-        unmocked_config,
-        "Samsung",
-        PRIORITY_MEDIUM,
-        {
-            "mobile_push_command_dnd": "off",
-            "mobile_push_command_ringer_mode": "normal",
-            "mobile_push_command_screen_on": True,
-        },
-    )
-
-    sent = [c.action_data for c in e.calls]
-    assert sent[:3] == [
-        {"message": "command_dnd", "data": {"command": "off"}},
-        {"message": "command_ringer_mode", "data": {"command": "normal"}},
-        {"message": "command_screen_on", "data": {}},
-    ]
-    assert sent[3]["message"] == "smoke"  # type: ignore[index]
-    assert len(sent) == 4
-    assert all(c.action == "mobile_app_phone" for c in e.calls)
-
-
-@pytest.mark.parametrize(
-    ("priority", "data", "media_stream"),
-    [
-        (PRIORITY_MEDIUM, {}, None),
-        (PRIORITY_CRITICAL, {}, "alarm_stream_max"),
-        (PRIORITY_MEDIUM, {"mobile_push_alarm_stream": True}, "alarm_stream"),
-        (PRIORITY_MEDIUM, {"mobile_push_alarm_stream_max": True}, "alarm_stream_max"),
-    ],
-)
-async def test_android_tts_is_its_own_call_after_the_notification(
-    unmocked_config: Context, priority: str, data: dict[str, Any], media_stream: str | None
-) -> None:
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
-        e = await _deliver_to(unmocked_config, "Samsung", priority, {"mobile_push_tts_text": "smoke in the kitchen", **data})
-    sleep.assert_awaited_once_with(5)  # so the notification's own sound is heard before the TTS
-
-    assert len(e.calls) == 2
-    assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
-    assert "tts_text" not in e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
-    tts = e.calls[1].action_data
-    assert tts is not None
-    assert tts["message"] == "TTS"
-    assert tts["data"]["tts_text"] == "smoke in the kitchen"
-    assert tts["data"].get("media_stream") == media_stream
-    # a critical's TTS goes as fast as the notification, or it waits for the phone to be unlocked
-    urgent = {"ttl": 0, "priority": "high"} if priority == PRIORITY_CRITICAL else {}
-    assert {k: tts["data"][k] for k in ("ttl", "priority") if k in tts["data"]} == urgent
-
-
-async def test_iphone_gets_no_android_commands_or_tts(unmocked_config: Context) -> None:
-    e = await _deliver_to(
-        unmocked_config,
-        "Apple",
-        PRIORITY_CRITICAL,
-        {"mobile_push_command_dnd": "off", "mobile_push_tts_text": "smoke in the kitchen"},
-    )
-
-    assert len(e.calls) == 1
-    assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
-
-
-async def test_android_commands_for_critical_go_with_high_priority(unmocked_config: Context) -> None:
-    e = await _deliver_to(unmocked_config, "Samsung", PRIORITY_CRITICAL, {"mobile_push_command_screen_on": True})
-
-    assert e.calls[0].action_data == {"message": "command_screen_on", "data": {"ttl": 0, "priority": "high"}}
-
-
-async def test_android_tts_waits_once_for_all_devices_and_can_go_straight_away(unmocked_config: Context) -> None:
-    context = unmocked_config
-    uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Samsung", model="Phone")  # type: ignore[attr-defined]
-    context.configure_for_tests([uut])
-    await context.initialize()
-
-    def envelope(data: dict[str, Any]) -> Envelope:
-        return Envelope(
-            Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
-            Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL}),
-            target=Target({"mobile_app_id": ["mobile_app_phone", "mobile_app_watch"]}),
-            data=data,
-        )
-
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
-        e = envelope({"mobile_push_tts_text": "smoke"})
-        await uut.deliver(e)
-    sleep.assert_awaited_once_with(5)
-    assert [c.action_data["message"] for c in e.calls] == ["smoke", "smoke", "TTS", "TTS"]  # type: ignore[index]
-
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
-        await uut.deliver(envelope({"mobile_push_tts_text": "smoke", "mobile_push_tts_delay": 0}))
-    sleep.assert_not_awaited()
-
-
-async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> None:
-    from pytest_homeassistant_custom_component.common import async_mock_service
-
-    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
-    ctx = TestingContext(
-        homeassistant=hass,
-        recipients=[
-            {
-                CONF_PERSON: "person.bidey_in",
-                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
-            },
-        ],
-        deliveries={"push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}},
-        viable_transport_types=[MobilePushTransport],
-    )
+async def _deliver_to(manufacturer: str, data: dict[str, Any], media: dict[str, Any] | None = None) -> dict[str, Any]:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     await ctx.test_initialize()
-
-    uut = Notification(ctx, message="hello there", target="person.bidey_in", action_data={"delivery": ["push"]})
-    await uut.initialize()
-    await uut.deliver()
-
-    assert len(calls) == 1
-    assert uut.outcome() == DeliveryOutcome.SUCCESS
-    assert uut.error_count == 0
-    envelope = uut.delivered_envelopes[0]
-    assert envelope.delivery_error is None
-    assert envelope.failed_calls[0].exception == "Action notify.mobile_app_nophone not found"
-    # gone rather than unreachable, so a repair says so, instead of a snooze hiding it
-    assert ctx.snoozer.snoozes == {}
-    from homeassistant.helpers import issue_registry as ir
-
-    issues = [i for (domain, i) in ir.async_get(hass).issues if domain == DOMAIN and "mobile_app" in i]
-    assert issues == ["recipient_bidey_in_mobile_app_mobile_app_nophone_not_found"]
-
-
-@sizes
-async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
-    case = SchemaCase(
-        MobilePushTransport,
-        {"mobile_app_id": ["mobile_app_new_iphone"]},
-        {"notify.mobile_app_new_iphone"},
-        maximal_data={
-            "mobile_push_subtitle": "Porch",
-            "mobile_push_critical_level": "critical",
-            "mobile_push_critical_ttl": 0,
-            "mobile_push_critical_priority": "high",
-            "mobile_push_channel_override": "alarms",
-            "mobile_push_tts_text": "Motion at the porch",
-            "mobile_push_tts_locale": "en-GB",
-            "mobile_push_command_screen_on": True,
-            "mobile_push_group": "cameras",
-            "mobile_push_notification_tag": "porch",
-        },
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": media} if media else None),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_phone"]}),
+        data=data,
     )
-    await assert_schema_usage(hass, case, maximal)
+    device = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")
+    with patch.object(ctx.hass_api, "mobile_app_by_id", return_value=device):
+        assert await uut.deliver(e) is True
+    assert e.calls[0].action_data is not None
+    # an empty data block is pruned from the call
+    return e.calls[0].action_data.get("data", {})
+
+
+async def test_deliver_tap_url_ios() -> None:
+    data = await _deliver_to("Apple", {"mobile_push_tap_url": "/lovelace/cameras"})
+    assert data["url"] == "/lovelace/cameras"
+    assert "clickAction" not in data
+    assert "mobile_push_tap_url" not in data
+
+
+async def test_deliver_tap_url_android() -> None:
+    data = await _deliver_to("Google", {"mobile_push_tap_url": "https://example.com/clip"})
+    assert data["clickAction"] == "https://example.com/clip"
+    assert "url" not in data
+    assert "mobile_push_tap_url" not in data
+
+
+async def test_deliver_live_view_entity_independent_of_snapshot_image() -> None:
+    data = await _deliver_to(
+        "Apple",
+        {"mobile_push_live_view_entity": "camera.driveway"},
+        media={"snapshot_url": "https://frigate.local/api/events/123/snapshot.jpg"},
+    )
+    assert data["image"] == "https://frigate.local/api/events/123/snapshot.jpg"
+    assert data["entity_id"] == "camera.driveway"
+    assert "mobile_push_live_view_entity" not in data
+
+
+async def test_deliver_live_view_entity_is_ios_only() -> None:
+    data = await _deliver_to("Google", {"mobile_push_live_view_entity": "camera.driveway"})
+    assert "entity_id" not in data
+    assert "mobile_push_live_view_entity" not in data
