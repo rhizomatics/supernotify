@@ -1,0 +1,63 @@
+name: Prune Docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    concurrency:
+      # shared with the deploy build, which also commits to gh-pages
+      group: gh-pages-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - name: Install uv
+      uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+    - name: Prune superseded docs versions
+      run: |
+        uv sync --group docs
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git fetch --depth=1 origin gh-pages
+        uv run mike list --json > "$RUNNER_TEMP/versions.json"
+        PRUNE=$(uv run python - "$RUNNER_TEMP/versions.json" <<'EOF'
+        import json
+        import sys
+
+        from packaging.version import InvalidVersion, Version
+
+        versions = {}
+        with open(sys.argv[1]) as f:
+            for name in (v["version"] for v in json.load(f)):
+                try:
+                    versions[name] = Version(name)
+                except InvalidVersion:
+                    pass  # dev
+        stable = [v for v in versions.values() if not v.is_prerelease]
+        # latest point release of each minor version
+        keep = {max(v for v in stable if v.release[:2] == minor) for minor in {v.release[:2] for v in stable}}
+        # and the newest beta, unless it has since been released
+        betas = [v for v in versions.values() if v.is_prerelease]
+        if betas and max(betas) > max(stable):
+            keep.add(max(betas))
+        print(" ".join(name for name, v in versions.items() if v not in keep))
+        EOF
+        )
+        if [ -z "$PRUNE" ]; then
+          echo "Nothing to prune"
+          exit 0
+        fi
+        echo "Pruning: $PRUNE"
+        uv run mike delete $PRUNE
+        git push origin gh-pages
+
+  publish:
+    needs: prune
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/publish-pages.yml

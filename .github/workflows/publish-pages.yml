@@ -1,0 +1,58 @@
+name: Publish Pages
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages-publish
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: https://supernotify.rhizomatics.org.uk/
+    steps:
+    - uses: actions/checkout@v7.0.1
+      with:
+        ref: gh-pages
+    - name: Get gh-pages commit
+      id: site
+      run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+    - name: Upload Pages artifact
+      id: artifact
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: .
+    - name: Deploy to GitHub Pages
+      # not actions/deploy-pages, which versions the deployment by the workflow commit, and Pages silently
+      # skips a version it has already deployed - so a release tagged on a commit main had already published,
+      # or a prune run from an unchanged main, would never go live
+      uses: actions/github-script@v8
+      env:
+        ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
+        BUILD_VERSION: ${{ steps.site.outputs.sha }}
+      with:
+        script: |
+          const { data: deployment } = await github.request('POST /repos/{owner}/{repo}/pages/deployments', {
+            ...context.repo,
+            artifact_id: Number(process.env.ARTIFACT_ID),
+            pages_build_version: process.env.BUILD_VERSION,
+            oidc_token: await core.getIDToken(),
+          })
+          let status
+          for (let i = 0; i < 120; i++) {
+            await new Promise(resolve => setTimeout(resolve, 5000))
+            status = (await github.request('GET /repos/{owner}/{repo}/pages/deployments/{id}', {
+              ...context.repo,
+              id: deployment.id,
+            })).data.status
+            core.info(`Pages deployment ${deployment.id}: ${status}`)
+            if (status === 'succeed') return
+            if (/cancel|fail|error|lost/.test(status)) break
+          }
+          core.setFailed(`Pages deployment ${deployment.id} did not complete: ${status}`)
