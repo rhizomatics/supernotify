@@ -1698,7 +1698,7 @@ wheels = [
 
 [[package]]
 name = "homeassistant-repl"
-version = "0.12.0"
+version = "0.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "homeassistant-api" },
@@ -1709,9 +1709,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/c2/abde52eebc0625ac3bb6437e5e817144f5b8806c8237679fd9d0d32d897b/homeassistant_repl-0.12.0.tar.gz", hash = "sha256:24e4a4e4e25b87f5c9ab089fe0af77cf2be4e2c7dc22b15a0dcd356acb414194", size = 50891, upload-time = "2026-10-09T20:07:30.098Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/5e/97a89831e1b879aff9eee6b0d9bc285bc1163107f906c6bb42f16a69b70d/homeassistant_repl-0.13.0.tar.gz", hash = "sha256:a43d1a3c8c4109081520a25a46b84bbe60ab0edad7a68f3580b89cb376a023a3", size = 54821, upload-time = "2026-10-11T21:47:42.454Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/48/30c1e7f835d0fccb0eb42e5e3dcccf9908e4f38965df32bec4723776082b/homeassistant_repl-0.12.0-py3-none-any.whl", hash = "sha256:f26d1529efe21ee9a5bbd006db944874419bd069d2031c804e689d09d18742a5", size = 57337, upload-time = "2026-10-09T20:07:28.677Z" },
+    { url = "https://files.pythonhosted.org/packages/34/29/8d75b199b84e0ec2cdc0d0642db9b427d67f0afe98c33cdc7f47b1190d59/homeassistant_repl-0.13.0-py3-none-any.whl", hash = "sha256:e5ef6696c5b71247f90ba93a0b9395ffa9926fc77288fc215d18086baaa33423", size = 61166, upload-time = "2026-10-11T21:47:41.174Z" },
 ]
 
 [[package]]

@@ -8,6 +8,9 @@ if TYPE_CHECKING:
     from homeassistant_repl.plugin import MODE, sql  # noqa: TC004
     from homeassistant_repl.sql import SqlResult
 
+# use the `sn_events.query` and similar for other queries will show the sql
+# also allows you to do `sql(sn_events.query,raw=True).show()` to get a raw version, or change `max_rows`,`legacy` etc
+
 if MODE != "api":
     # Retrieve most recently fired `supernotification` events with their payload
 
