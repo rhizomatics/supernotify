@@ -44,8 +44,10 @@ New data keys (all optional):
                                       The command_* keys are each sent as their own `message: command_...`
                                       call before the notification, as the companion app takes them.
     mobile_push_channel_override    str   Android notification channel override (e.g. "alarm","general")
-    mobile_push_alarm_stream        bool  Android: route audio through alarm stream (interrupts DND/silent)
-    mobile_push_alarm_stream_max    bool  Android: alarm stream at maximum device volume
+    mobile_push_alarm_stream        bool  Android: use the alarm_stream channel, which sounds through
+                                      Do Not Disturb and silent mode
+    mobile_push_alarm_stream_max    bool  Android: kept for compatibility, same as mobile_push_alarm_stream -
+                                      the companion app only supports alarm_stream_max for TTS
     mobile_push_tap_url             str   URL or app path (e.g. "/lovelace/cameras") opened when the
                                       notification is tapped - iOS `url`, Android `clickAction`.
     mobile_push_live_view_entity    str   iOS: camera entity streamed live when the notification is
@@ -259,22 +261,6 @@ class MobilePushTransport(Transport):
             android_data["priority"] = push_data["critical_android_priority"]
         elif critical:
             android_data["priority"] = ANDROID_CRITICAL_PRIORITY
-
-        # Android TTS: read message aloud on device (Android 8+)
-        if push_data["tts_text"]:
-            android_data["tts_text"] = push_data["tts_text"]
-            if push_data["tts_locale"]:
-                android_data["tts_text_language"] = push_data["tts_locale"]
-            if push_data["tts_engine"]:
-                android_data["tts_engine"] = push_data["tts_engine"]
-
-        # Notification Commands (Android 8+)
-        if push_data["command_screen_on"]:
-            android_data["command_screen_on"] = True
-        if push_data["command_dnd"]:
-            android_data["command_dnd"] = push_data["command_dnd"]
-        if push_data["command_ringer_mode"]:
-            android_data["command_ringer_mode"] = push_data["command_ringer_mode"]
 
         # Tap URL: Android's name for the iOS `url`
         if push_data["tap_url"]:
