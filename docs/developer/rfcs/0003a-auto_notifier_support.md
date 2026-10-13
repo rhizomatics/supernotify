@@ -76,6 +76,13 @@ How the source is set:
 - **An explicit `source`** on `supernotify.notify` overrides any part, for example to group several automations under
   one name
 
+**Review, 2026-10-13**: the parts need renaming to match Home Assistant before any of this is built. `origin` is
+really the `platform`, and should be the actual Home Assistant one, such as `autoarm`, `automation` or `frigate`;
+`subject` and `instance` are both an `entity_id`; and `flow` is a new word that sits too close to config flow. Finding
+the automation or script from the context of its state is also doubtful, being slow and fragile, and Home Assistant
+has no native way to get the original cause of a context. A component that passes its own context on the call, as
+AutoArm does, may make much of an explicit source redundant.
+
 As purpose-specific Home Assistant triggers reach more device types, such as appliances finishing, they fill in `flow`
 and `subject` for automation-derived sources more usefully, and let appliance packages use them instead of watching
 integration-specific states. They say *when* something happened; the lifecycle below still says how a notification

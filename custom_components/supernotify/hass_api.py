@@ -326,7 +326,13 @@ class HomeAssistantAPI:
 
         An automation or script writes its state with the context of the run it starts, and the actions
         of that run carry the same context (a script started by an automation gets it as parent), so
-        the sender is the automation or script whose state has the context's id or its parent's"""
+        the sender is the automation or script whose state has the context's id or its parent's
+
+        WARNING: best effort only, and not to be built on further. Home Assistant has no native way
+        to get the original cause of a context, so this relies on the state still carrying the
+        context of that run - a later or parallel run replaces it, and a sender further up the
+        chain than the parent isn't found. It also scans every automation and script state on each
+        call, so callers should only use it when the answer could matter."""
         if ha_context is None:
             return []
         ids: set[str] = {i for i in (ha_context.id, ha_context.parent_id) if i}

@@ -207,6 +207,8 @@ include = ["custom_components/supernotify","tests"]
 
 [tool.ty.rules]
 unused-type-ignore-comment="ignore"
+# Home Assistant entities override is_on, extra_state_attributes etc. with a plain property
+invalid-property-type-override="ignore"
 
 [[tool.ty.overrides]]
 include = ["tests/**"]

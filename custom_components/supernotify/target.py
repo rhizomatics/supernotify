@@ -68,6 +68,10 @@ class TargetEntityCategory:
         return True
 
 
+def _blank(target: object) -> bool:
+    return isinstance(target, str) and not target.strip()
+
+
 class Target:
     # actual targets, that can positively identified with a validator
     DIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_EMAIL, ATTR_PHONE, ATTR_MOBILE_APP_ID]
@@ -107,7 +111,9 @@ class Target:
             pass  # empty constructor is valid case for target building
         elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
-            targets = list(target)
+            # a blank entry, as the UI or a template can leave behind, isn't a target, and would
+            # otherwise count as an explicit one and stop the default recipients being used
+            targets = [t for t in target if not _blank(t)]
             # "<category>:<value>" entries scope a custom target without needing the full
             # mapping form - only recognised here, in the flat list/scalar form, so the mapping
             # form (`target: {category: value}`) stays available verbatim for any value that
@@ -137,7 +143,7 @@ class Target:
 
         elif isinstance(target, dict):
             for category in target:
-                targets = ensure_list(target[category])
+                targets = [t for t in ensure_list(target[category]) if not _blank(t)]
                 if not targets:
                     continue
                 if category in self.AUTO_CATEGORIES:

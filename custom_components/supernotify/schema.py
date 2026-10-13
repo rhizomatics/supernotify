@@ -255,7 +255,7 @@ TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into firs
         vol.Optional(cv.string): vol.All(cv.ensure_list, [str]),
     },
     str,
-    list[str],
+    [str],  # not list[str], which voluptuous calls, turning a mapping that failed above into a list of its keys
 )
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(None, str, int, bool, float, dict, list)})

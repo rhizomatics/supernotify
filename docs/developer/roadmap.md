@@ -204,7 +204,7 @@ v2.10.0 shipped a first beta, see [Assist and AI Agents](../usage/assist.md). It
   snoozes, and look up the documentation site (`llms-full.txt`, fetched at most daily).
 - **Built-in agent sentences** (`sentences.py`) for the agent without AI, registered as conversation triggers: notify someone or everyone, snooze, silence, resume, and ask for the last notification.
 - **Notify action descriptions**: examples on the fields, the scenario fields as dropdowns of the configured scenarios, and the configured deliveries as the delivery field's example.
-- **Errors**: unknown delivery and scenario names in a call are logged with the configured names and kept as `unknown_names` in the archive. Repair issues list what's configured and include condition errors, and diagnostics include open issues.
+- **Errors**: unknown delivery and scenario names in a call are logged with the configured names and kept as `unknown_names` in the archive. An unknown `apply_scenarios` or `constrain_scenarios` name is logged only at debug, so a component such as AutoArm can name a scenario on every call for users to configure or not. A strict mode, to choose between silent, warn and fail, may follow. Repair issues list what's configured and include condition errors, and diagnostics include open issues.
 
 Still to do:
 

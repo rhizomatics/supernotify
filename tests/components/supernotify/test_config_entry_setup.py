@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -459,6 +459,29 @@ async def test_notify_action_custom_target_alone_populates_target(hass: HomeAssi
     target = entry.runtime_data.last_notification._target
     assert target is not None
     assert target.email == ["joe@example.com"]
+
+
+@pytest.mark.parametrize(
+    "targets",
+    [
+        {"custom_target": ["", " "]},
+        {"target": [""]},
+        {"target": ""},
+        {"target": {"label_id": [""]}, "custom_target": [""]},
+    ],
+)
+async def test_notify_action_blank_target_is_not_a_target(hass: HomeAssistant, targets: dict[str, Any]) -> None:
+    """A blank target or custom_target, as left by an emptied UI field, must not count as an
+    explicit target, or the default recipients are never used and nothing is delivered"""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "notify", {"message": "hello there", **targets}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert not entry.runtime_data.last_notification._target
 
 
 async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:

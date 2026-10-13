@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -1202,13 +1203,34 @@ async def test_unknown_delivery_and_scenario_names_warned_not_fatal(
     await hass.async_block_till_done()
     engine = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
 
+    caplog.set_level(logging.DEBUG)
     notification = await engine.async_send_message(
-        "hello", data={"delivery": ["chat", "fax"], "apply_scenarios": ["nite"], "require_scenarios": ["night"]}
+        "hello",
+        data={
+            "delivery": ["chat", "fax"],
+            "apply_scenarios": ["nite", "night"],
+            "constrain_scenarios": ["nite"],
+            "require_scenarios": ["night", "nite"],
+        },
     )
 
     assert notification is not None
-    assert notification.unknown_names == {"delivery": ["fax"], "apply_scenarios": ["nite"]}
-    assert notification.contents()["unknown_names"] == {"delivery": ["fax"], "apply_scenarios": ["nite"]}
+    unknown = {
+        "delivery": ["fax"],
+        "require_scenarios": ["nite"],
+        "apply_scenarios": ["nite"],
+        "constrain_scenarios": ["nite"],
+    }
+    assert notification.unknown_names == unknown
+    assert notification.contents()["unknown_names"] == unknown
+    # a caller may name scenarios the user hasn't configured, so only a required one is worth a warning
+    levels = {r.args[0]: r.levelno for r in caplog.records if "Ignoring unknown" in r.getMessage()}  # type: ignore[index]
+    assert levels == {
+        "delivery": logging.WARNING,
+        "require_scenarios": logging.WARNING,
+        "apply_scenarios": logging.DEBUG,
+        "constrain_scenarios": logging.DEBUG,
+    }
     assert "Ignoring unknown delivery fax, configured names are:" in caplog.text
     assert "Ignoring unknown apply_scenarios nite, configured names are: night" in caplog.text
     assert "unknown_names" not in (await engine.async_send_message("again", data={"delivery": ["chat"]})).contents()

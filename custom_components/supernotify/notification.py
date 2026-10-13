@@ -230,7 +230,10 @@ class Notification(ArchivableObject):
         self.unknown_names: dict[str, list[str]] = self._unknown_names()
 
     def _unknown_names(self) -> dict[str, list[str]]:
-        """Delivery and scenario names in the call that aren't configured, which are otherwise ignored"""
+        """Delivery and scenario names in the call that aren't configured, which are otherwise ignored.
+
+        An unknown applied or constraining scenario is only logged at debug, so a caller can name
+        scenarios that the user may or may not have chosen to configure"""
         if not (
             self.delivery_overrides
             or self.required_scenario_names
@@ -253,7 +256,8 @@ class Notification(ArchivableObject):
         unknown: dict[str, list[str]] = {}
         for field, (names, valid) in requested.items():
             if names:
-                _LOGGER.warning(
+                _LOGGER.log(
+                    logging.WARNING if field in (ATTR_DELIVERY, ATTR_SCENARIOS_REQUIRE) else logging.DEBUG,
                     "SUPERNOTIFY Ignoring unknown %s %s, configured names are: %s",
                     field,
                     ", ".join(names),
