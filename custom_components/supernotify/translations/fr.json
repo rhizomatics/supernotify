@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Livraison",
-                    "description": "Utiliser uniquement ces livraisons, ainsi que celles activées par un scénario. Commence avec les livraisons utilisées par défaut, à compléter ou réduire. Omettre pour un choix automatique."
+                    "description": "Utiliser uniquement ces livraisons, ainsi que celles activées par un scénario. Commence avec les livraisons utilisées par défaut, à compléter ou réduire. Si le champ est vide, seules les livraisons activées par un scénario sont utilisées, et c'est aussi ainsi qu'il commence quand aucune livraison n'est utilisée par défaut. Omettre pour un choix automatique."
                 },
                 "require_scenarios": {
                     "name": "Scénarios requis",

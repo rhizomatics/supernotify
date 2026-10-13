@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Dostarczenie",
-                    "description": "Używaj tylko tych dostarczeń oraz tych, które włączy scenariusz. Zaczyna od dostarczeń używanych domyślnie, do których można dodawać lub je usuwać. Pomiń, aby wybrać automatycznie."
+                    "description": "Używaj tylko tych dostarczeń oraz tych, które włączy scenariusz. Zaczyna od dostarczeń używanych domyślnie, do których można dodawać lub je usuwać. Gdy pole jest puste, używane są tylko dostarczenia włączone przez scenariusz, i tak też zaczyna, gdy żadne dostarczenie nie jest używane domyślnie. Pomiń, aby wybrać automatycznie."
                 },
                 "require_scenarios": {
                     "name": "Wymagane scenariusze",

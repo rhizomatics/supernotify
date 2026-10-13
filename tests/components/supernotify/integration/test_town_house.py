@@ -18,6 +18,44 @@ async def test_notify_no_targets(hass: HomeAssistant, town_house: House) -> None
     )
 
 
+async def test_notify_empty_target_list_reaches_no_one(hass: HomeAssistant, town_house: House) -> None:
+    """An explicitly empty list is a choice of no targets, so the recipients aren't used by default"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target: []
+    """,
+        expected_calls=None,
+        expected_entities=None,
+    )
+
+
+async def test_notify_blank_target_still_reaches_default_recipients(hass: HomeAssistant, town_house: House) -> None:
+    """A blank entry isn't a choice of no targets, unlike an empty list"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+          - ""
+    """,
+        expected_calls={"notify": ["mobile_app_alice_phone", "mobile_app_bob_phone"]},
+        expected_entities={},
+    )
+
+
+async def test_notify_empty_delivery_list_uses_no_default_deliveries(hass: HomeAssistant, town_house: House) -> None:
+    """An explicitly empty list is a choice of no deliveries, as an empty target list is of no
+    targets, so the default deliveries aren't used, leaving only those a scenario turns on"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        delivery: []
+    """,
+        expected_calls=None,
+        expected_entities=None,
+    )
+
+
 async def test_notify_with_camera(hass: HomeAssistant, town_house: House) -> None:
     await town_house.assert_e2e(
         """

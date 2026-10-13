@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Entrega",
-                    "description": "Usar solo estas entregas, además de las que active un escenario. Empieza con las entregas usadas por defecto, para añadir o quitar. Omitir para elegir automáticamente."
+                    "description": "Usar solo estas entregas, además de las que active un escenario. Empieza con las entregas usadas por defecto, para añadir o quitar. Si está vacío, solo se usan las entregas que active un escenario, y así empieza también cuando ninguna entrega se usa por defecto. Omitir para elegir automáticamente."
                 },
                 "require_scenarios": {
                     "name": "Escenarios requeridos",

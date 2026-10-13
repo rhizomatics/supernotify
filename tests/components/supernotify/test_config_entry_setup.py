@@ -484,6 +484,21 @@ async def test_notify_action_blank_target_is_not_a_target(hass: HomeAssistant, t
     assert not entry.runtime_data.last_notification._target
 
 
+async def test_notify_action_rejects_mapping_target_with_invalid_value(hass: HomeAssistant) -> None:
+    """A mapping target that fails validation must be refused, not turned into a list of its
+    keys, which sent the notification to a target literally called `entity_id`"""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid, match="not a valid entity ID"):
+        await hass.services.async_call(
+            DOMAIN, "notify", {"message": "hello there", "target": {"entity_id": ["not an entity"]}}, blocking=True
+        )
+    assert entry.runtime_data.last_notification is None
+
+
 async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)

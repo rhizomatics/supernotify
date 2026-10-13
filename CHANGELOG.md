@@ -3,6 +3,8 @@
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
 - Unrecognized scenarios now only logged as warnings if they are `require_scenarios`, otherwise logged at debug level. This makes it easier to auto generate scenarios from other components or automations and not have lots of log noise
 - A blank `target` or `custom_target`, as an emptied field in the action's UI editor leaves behind, is now ignored. It was taken as an explicit target, so the default recipients were not used and nothing was delivered
+- A `target` mapping with an invalid value, such as a mistyped `entity_id`, is now refused with the validation error. It was silently turned into a list of its keys, so the notification went to a target called `entity_id`
+- An empty list in YAML for targets is now explicitly handled, and treated as selecting no targets, and no default recipient targets. The notification will only be handled by deliveries that don't require targets, or where delivery or scenario configurations inject their own targets.
 
 # v2.14.0
 ## 🚨 Breaking changes

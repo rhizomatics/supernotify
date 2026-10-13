@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Entrega",
-                    "description": "Usar apenas estas entregas, além das que um cenário ativar. Começa com as entregas usadas por predefinição, para acrescentar ou retirar. Omita para escolher automaticamente."
+                    "description": "Usar apenas estas entregas, além das que um cenário ativar. Começa com as entregas usadas por predefinição, para acrescentar ou retirar. Se estiver vazio, só são usadas as entregas que um cenário ativar, e é também assim que começa quando nenhuma entrega é usada por predefinição. Omita para escolher automaticamente."
                 },
                 "require_scenarios": {
                     "name": "Cenários exigidos",

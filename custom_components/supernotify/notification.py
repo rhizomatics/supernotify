@@ -140,6 +140,10 @@ class Notification(ArchivableObject):
             _LOGGER.warning("SUPERNOTIFY recipients key in notify action data deprecated, list recipients in target instead")
             target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
 
+        # an explicitly empty list of targets is a choice to have none, so the recipients aren't
+        # used by default, leaving only targets from deliveries and scenarios. A missing or blank
+        # target is not that choice.
+        self._no_default_recipients: bool = isinstance(target, list) and not target
         target, action_data = self.convert_exposed_notify_entities(target, action_data)
         self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
         # targeting this integration's own device is never a real target - treat it as a request to
@@ -190,6 +194,8 @@ class Notification(ArchivableObject):
 
         delivery_data: Any | None = action_data.get(ATTR_DELIVERY)
         if self.delivery_selection is None:
+            # an empty list is a choice of no deliveries of its own, leaving only those a scenario
+            # turns on, just as an empty list of targets leaves only those from deliveries and scenarios
             if isinstance(delivery_data, list) or (isinstance(delivery_data, str) and delivery_data):
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             else:
@@ -1383,13 +1389,15 @@ class Notification(ArchivableObject):
                 for pers_ent_id in self._target.person_ids
                 if pers_ent_id in self.people_registry.people and self.people_registry.people[pers_ent_id].enabled
             )
-        else:
+        elif not self._no_default_recipients:
             # default to all known recipients
             recipients = self.people_registry.enabled_recipients()
         return recipients
 
     def default_person_ids(self, delivery: Delivery) -> Target:
         # If target not specified on service call or delivery, then default to std list of recipients
+        if self._no_default_recipients:
+            return Target()
         people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
         return Target({
             ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id and delivery.name not in p.disabling_delivery_names()]

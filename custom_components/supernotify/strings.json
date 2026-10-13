@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Delivery",
-                    "description": "Use only these deliveries, as well as any a scenario turns on. Starts with the deliveries used by default, to add to or take away from. Leave out to choose automatically."
+                    "description": "Use only these deliveries, as well as any a scenario turns on. Starts with the deliveries used by default, to add to or take away from. If empty, only the deliveries a scenario turns on are used, which is also how it starts when no delivery is used by default. Leave out to choose automatically."
                 },
                 "require_scenarios": {
                     "name": "Required Scenarios",

@@ -596,6 +596,33 @@ async def test_generate_targets_from_recipients() -> None:
     assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar", "@fee", "@fum"]
 
 
+async def test_empty_target_list_leaves_only_the_delivery_target() -> None:
+    """An explicitly empty target list switches off the default recipients, not the delivery's own target"""
+    ctx = TestingContext(
+        recipients=[{CONF_PERSON: "person.new_home_owner", CONF_TARGET: ["@foo", "@bar"]}],
+        deliveries={
+            "chatty": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: {"entity_id": ["custom.light_1"]},
+                CONF_TRANSPORT: "generic",
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "_UNKNOWN_"]},
+            }
+        },
+    )
+    await ctx.test_initialize()
+    delivery = ctx.delivery("chatty")
+
+    by_default: list[Target] = Notification(ctx, "testing 123").generate_targets(delivery)
+    assert by_default[0].entity_ids == ["custom.light_1"]
+    assert by_default[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar"]
+
+    uut = Notification(ctx, "testing 123", target=[])
+    assert uut.all_recipients() == []
+    with_none: list[Target] = uut.generate_targets(delivery)
+    assert with_none[0].entity_ids == ["custom.light_1"]
+    assert with_none[0].custom_ids("_UNKNOWN_") == []
+
+
 async def test_select_recipient_deliveries() -> None:
     ctx = TestingContext(
         recipients=[

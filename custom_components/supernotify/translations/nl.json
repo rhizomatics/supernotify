@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Bezorging",
-                    "description": "Alleen deze bezorgingen gebruiken, plus die een scenario inschakelt. Begint met de standaard gebruikte bezorgingen, om aan toe te voegen of uit te halen. Weglaten om automatisch te kiezen."
+                    "description": "Alleen deze bezorgingen gebruiken, plus die een scenario inschakelt. Begint met de standaard gebruikte bezorgingen, om aan toe te voegen of uit te halen. Indien leeg worden alleen de bezorgingen gebruikt die een scenario inschakelt, en zo begint het ook wanneer geen enkele bezorging standaard wordt gebruikt. Weglaten om automatisch te kiezen."
                 },
                 "require_scenarios": {
                     "name": "Vereiste scenario's",

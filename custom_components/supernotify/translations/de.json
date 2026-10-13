@@ -86,7 +86,7 @@
                 },
                 "delivery": {
                     "name": "Zustellung",
-                    "description": "Nur diese Zustellungen verwenden, sowie alle, die ein Szenario aktiviert. Beginnt mit den standardmäßig verwendeten Zustellungen, die ergänzt oder entfernt werden können. Weglassen für automatische Auswahl."
+                    "description": "Nur diese Zustellungen verwenden, sowie alle, die ein Szenario aktiviert. Beginnt mit den standardmäßig verwendeten Zustellungen, die ergänzt oder entfernt werden können. Ist das Feld leer, werden nur die Zustellungen verwendet, die ein Szenario aktiviert; so beginnt es auch, wenn keine Zustellung standardmäßig verwendet wird. Weglassen für automatische Auswahl."
                 },
                 "require_scenarios": {
                     "name": "Erforderliche Szenarien",
