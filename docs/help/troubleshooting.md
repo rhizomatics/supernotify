@@ -1,7 +1,10 @@
 ---
 title: Troubleshooting
 tags:
--
+- troubleshooting
+- debug
+- support
+- problems
 description: Tips, tricks and tools for debugging issues
 ---
 # Troubleshooting
