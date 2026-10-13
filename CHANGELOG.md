@@ -6,6 +6,13 @@
 - A `target` mapping with an invalid value, such as a mistyped `entity_id`, is now refused with the validation error. It was silently turned into a list of its keys, so the notification went to a target called `entity_id`
 - An empty list in YAML for targets is now explicitly handled, and treated as selecting no targets, and no default recipient targets. The notification will only be handled by deliveries that don't require targets, or where delivery or scenario configurations inject their own targets.
 
+## ✨ Enhancements
+### Mobile Push
+2 new platform neutral that will translate into the Android and/or Apple device keys where available:
+
+- `mobile_push_tap_url` - what opens when the notification is tapped, for both platforms: iOS `url`, Android `clickAction`. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
+- `mobile_push_live_view_entity` - the camera iOS streams live when the notification is expanded (entity_id), independently of where the image comes from, e.g. a Frigate snapshot_url as the image and camera.driveway as the live view. It wins over the camera the transport would otherwise hand the device as an image fallback. Android has no live view, so it's left out there, so nothing happens, but also nothing breaks.
+
 # v2.14.0
 ## 🚨 Breaking changes
 
