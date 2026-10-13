@@ -1,4 +1,4 @@
-# Recipe - Debug an Integration
+# Recipe - Debug a Transport Integration
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/
 

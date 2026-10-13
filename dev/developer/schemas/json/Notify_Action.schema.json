@@ -81,9 +81,7 @@
                   },
                   {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 ]
               },
@@ -376,9 +374,7 @@
         },
         {
           "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "items": {}
         }
       ]
     },
@@ -501,9 +497,7 @@
                   },
                   {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 ]
               },

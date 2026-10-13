@@ -10,6 +10,8 @@ Supernotify has the ability to take a big, mixed bag of targets and send off the
 
 If no `target` is specified on the action call, a default list will be used based on all the recipients configured or auto-discovered. This usually means everyone with a Home Assistant app on their phone or other device gets a mobile push notification.
 
+To switch the default list off for one notification, give an empty list, `target: []`. The notification then has no targets of its own and no default recipients, and goes only to deliveries that need no target, or get one from their own configuration or a scenario. A blank target, such as an emptied field in the action's editor, doesn't do this, and is ignored.
+
 Choosing any explicit targets switches this defaulting off. Targets can be re-added manually where needed, and there's a shortcut in the Home Assistant target UI where you choose the Supernotify **Device** and this will be read as switching back on those "out of the box" targets.
 
 ## Target Categories

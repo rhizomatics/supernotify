@@ -81,9 +81,7 @@
                   },
                   {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {}
                   }
                 ]
               },
