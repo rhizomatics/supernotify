@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 NOTIFY_SERVICE_NAME = "supernotify"
 
 # Key under hass.data[DOMAIN] holding the validated top-level `supernotify:` YAML section
-# (delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze - the 8 keys not
+# (delivery/transports/scenarios/recipients/cameras/action_groups/snooze - the 8 keys not
 # yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.
 KEY_YAML_CONFIG = "yaml_config"
 
@@ -104,7 +104,7 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
     entry.data holds the flat "user" step fields; entry.options holds the nested
     archive/dupe_check/housekeeping sections from the options flow - both validated here via
     CONFIG_ENTRY_SCHEMA. hass.data[DOMAIN] holds the delivery/transports/scenarios/recipients/
-    cameras/action_groups/links/snooze YAML section (see async_setup) - already validated once
+    cameras/action_groups/snooze YAML section (see async_setup) - already validated once
     by CONFIG_SCHEMA when that YAML was first loaded, so it's merged in as-is rather than
     re-validated (a second pass would reject values schema validation already coerced, e.g.
     cv.template's Template objects - see CONFIG_ENTRY_SCHEMA's docstring in schema.py).

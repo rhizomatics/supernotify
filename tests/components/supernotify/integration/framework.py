@@ -122,7 +122,9 @@ class House:
             for device_name, owner in self.apple_apps.items():
                 person_slug = self.users[owner]
                 person_id = f"person.{person_slug}" if person_slug is not None else None
-                register_mobile_app(hass_api, person=person_id, device_name=device_name, user_id=self.user_ids[owner])
+                register_mobile_app(
+                    hass_api, person=person_id, manufacturer="Apple", device_name=device_name, user_id=self.user_ids[owner]
+                )
 
         for account_name, person_slug in self.users.items():
             # registering a mobile app above may have overwritten this person's attributes

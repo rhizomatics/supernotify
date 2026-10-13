@@ -7,11 +7,19 @@
 - An empty list in YAML for targets is now explicitly handled, and treated as selecting no targets, and no default recipient targets. The notification will only be handled by deliveries that don't require targets, or where delivery or scenario configurations inject their own targets.
 
 ## ✨ Enhancements
-### Mobile Push
-2 new platform neutral that will translate into the Android and/or Apple device keys where available:
+### Mobile Actions
+- An action with `level: notification` is what opens when the notification itself is tapped or clicked. It needs a `uri` or `uri_template`, and can be in the `actions` of a notification or in an action group
+    - Mobile Push sends it as `url` for iOS and `clickAction` for Android, and ntfy, Gotify and HTML5 as their click url
+    - An explicit `url`, `clickAction`, `ntfy_click`, `gotify_click` or `html5_url` wins over it
+    - Where there's more than one, the action on the notification wins, then its action groups, then the first scenario
+- `uri_template` can be used for an action in an action group, as `action_template` and `title_template` can
+- `camera` is a new variable for conditions and templates, with the `entity_id` of the notification's camera and anything configured for it under `cameras:`, such as `camera.alias`
+- `action_template`, `title_template` and `uri_template` are now rendered, with the same variables as scenario conditions. They were accepted but previously sent as they were as raw templates.
 
-- `mobile_push_tap_url` - what opens when the notification is tapped, for both platforms: iOS `url`, Android `clickAction`. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
-- `mobile_push_live_view_entity` - the camera iOS streams live when the notification is expanded (entity_id), independently of where the image comes from, e.g. a Frigate snapshot_url as the image and camera.driveway as the live view. It wins over the camera the transport would otherwise hand the device as an image fallback. Android has no live view, so it's left out there, so nothing happens, but also nothing breaks.
+## 📝 Other changes
+- `links:` section of YAML that was never implemented now completely ignored.
+  - The intended function of links has been subsumed some time ago into the *mobile actions*, which are now available for any transport. Mobile actions can be defined with only a URI.
+
 
 # v2.14.0
 ## 🚨 Breaking changes

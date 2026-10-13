@@ -291,6 +291,8 @@ class HTML5Transport(Transport):
             _LOGGER.warning("SUPERNOTIFY html5: html5_data must be a dict, dropping %r", custom_data)
         if click_url:
             data_field["url"] = str(click_url)
+        elif "url" not in data_field and (notification_uri := envelope.notification_uri(absolute=True)):
+            data_field["url"] = notification_uri
         if data_field:
             action_data[ATTR_DATA] = data_field
 

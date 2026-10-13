@@ -965,34 +965,3 @@ async def _delivered_data(manufacturer: str, data: dict[str, Any], media: dict[s
     assert e.calls[0].action_data is not None
     # an empty data block is pruned from the call
     return e.calls[0].action_data.get("data", {})
-
-
-async def test_deliver_tap_url_ios() -> None:
-    data = await _delivered_data("Apple", {"mobile_push_tap_url": "/lovelace/cameras"})
-    assert data["url"] == "/lovelace/cameras"
-    assert "clickAction" not in data
-    assert "mobile_push_tap_url" not in data
-
-
-async def test_deliver_tap_url_android() -> None:
-    data = await _delivered_data("Google", {"mobile_push_tap_url": "https://example.com/clip"})
-    assert data["clickAction"] == "https://example.com/clip"
-    assert "url" not in data
-    assert "mobile_push_tap_url" not in data
-
-
-async def test_deliver_live_view_entity_independent_of_snapshot_image() -> None:
-    data = await _delivered_data(
-        "Apple",
-        {"mobile_push_live_view_entity": "camera.driveway"},
-        media={"snapshot_url": "https://frigate.local/api/events/123/snapshot.jpg"},
-    )
-    assert data["image"] == "https://frigate.local/api/events/123/snapshot.jpg"
-    assert data["entity_id"] == "camera.driveway"
-    assert "mobile_push_live_view_entity" not in data
-
-
-async def test_deliver_live_view_entity_is_ios_only() -> None:
-    data = await _delivered_data("Google", {"mobile_push_live_view_entity": "camera.driveway"})
-    assert "entity_id" not in data
-    assert "mobile_push_live_view_entity" not in data

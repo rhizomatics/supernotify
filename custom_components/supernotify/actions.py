@@ -50,7 +50,6 @@ from .const import (
     CONF_DELIVERY,
     CONF_DUPE_CHECK,
     CONF_HOUSEKEEPING,
-    CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MESSAGE,
     CONF_MOBILE_DISCOVERY,
@@ -298,7 +297,6 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return _json_safe({
             CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
-            CONF_LINKS: config.get(CONF_LINKS, ()),
             CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
             CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
             CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),

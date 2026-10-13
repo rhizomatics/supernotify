@@ -3,6 +3,7 @@
 import re
 from collections.abc import Callable
 from enum import IntFlag, StrEnum, auto
+from typing import Any
 
 from homeassistant.const import (
     CONF_ACTION,
@@ -32,6 +33,8 @@ from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
 
 from .compat import vol
 from .const import (
+    ACTION_LEVEL_ACTION,
+    ACTION_LEVEL_NOTIFICATION,
     ATTR_ACTION,
     ATTR_ACTION_GROUPS,
     ATTR_ACTION_URL,
@@ -107,7 +110,7 @@ from .const import (
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
     CONF_INCLUSION,
-    CONF_LINKS,
+    CONF_LEVEL,
     CONF_LOAD,
     CONF_MANUFACTURER,
     CONF_MEDIA,
@@ -151,6 +154,7 @@ from .const import (
     CONF_TRANSPORTS,
     CONF_TTL,
     CONF_URI,
+    CONF_URI_TEMPLATE,
     CONF_USER_ID,
     CONF_VOICE_OCCUPANCY,
     DEFAULT_INCLUSION_VALUES,
@@ -475,6 +479,28 @@ def _mobile_action_uri(value: str) -> str:
     return value
 
 
+def _mobile_action_level(action: dict[str, Any]) -> dict[str, Any]:
+    """A notification level action is the URI opened by tapping the notification, not a button"""
+    if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
+        if not (action.get(CONF_URI) or action.get(CONF_URI_TEMPLATE)):
+            raise vol.Invalid(
+                f"A {CONF_LEVEL}: {ACTION_LEVEL_NOTIFICATION} action must have a {CONF_URI} or {CONF_URI_TEMPLATE}"
+            )
+        if CONF_ACTION in action or CONF_ACTION_TEMPLATE in action:
+            raise vol.Invalid(
+                f"A {CONF_LEVEL}: {ACTION_LEVEL_NOTIFICATION} action cannot have an {CONF_ACTION} or {CONF_ACTION_TEMPLATE}"
+            )
+    return action
+
+
+def _single_notification_level(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if sum(1 for action in actions if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION) > 1:
+        raise vol.Invalid(f"Only one action can be {CONF_LEVEL}: {ACTION_LEVEL_NOTIFICATION}")
+    return actions
+
+
+_MOBILE_ACTION_LEVELS = vol.In([ACTION_LEVEL_ACTION, ACTION_LEVEL_NOTIFICATION])
+
 MOBILE_ACTION_CALL_SCHEMA = vol.All(
     cv.deprecated(key="action_category"),  # deprecated v2.5.0
     vol.Schema(
@@ -484,19 +510,26 @@ MOBILE_ACTION_CALL_SCHEMA = vol.All(
             vol.Optional("action_category"): cv.string,
             vol.Optional(ATTR_ACTION_URL): cv.url,
             vol.Optional(ATTR_ACTION_URL_TITLE): cv.string,
+            vol.Optional(CONF_LEVEL): _MOBILE_ACTION_LEVELS,
         },
         extra=vol.ALLOW_EXTRA,
     ),
+    _mobile_action_level,
 )
 
-MOBILE_ACTION_SCHEMA = vol.Schema(
-    {
-        vol.Exclusive(CONF_ACTION, CONF_ACTION_TEMPLATE): cv.string,
-        vol.Exclusive(CONF_TITLE, CONF_TITLE_TEMPLATE): cv.string,
-        vol.Optional(CONF_URI): _mobile_action_uri,
-        vol.Optional(CONF_ICON): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
+MOBILE_ACTION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(CONF_ACTION, CONF_ACTION_TEMPLATE): cv.string,
+            vol.Exclusive(CONF_TITLE, CONF_TITLE_TEMPLATE): cv.string,
+            vol.Exclusive(CONF_URI, CONF_URI_TEMPLATE): _mobile_action_uri,
+            vol.Exclusive(CONF_URI_TEMPLATE, CONF_URI_TEMPLATE): cv.string,
+            vol.Optional(CONF_ICON): cv.string,
+            vol.Optional(CONF_LEVEL): _MOBILE_ACTION_LEVELS,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
+    _mobile_action_level,
 )
 
 
@@ -530,9 +563,10 @@ HOUSEKEEPING_SCHEMA = vol.Schema({
 SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
-        vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
+        vol.Optional(CONF_ACTION_GROUPS, default=dict): {
+            cv.string: vol.All([MOBILE_ACTION_SCHEMA], _single_notification_level)
+        },
         vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
-        vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
         vol.Optional(CONF_SCENARIOS, default=dict): vol.All(
             {cv.string: SCENARIO_SCHEMA},
             validate_scenario_names,
@@ -610,7 +644,9 @@ _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MESSAGE_HTML): cv.string,
         vol.Optional(ATTR_SPOKEN_MESSAGE): cv.string,
         vol.Optional(ATTR_ACTION_GROUPS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ACTIONS, default=[]): vol.All(cv.ensure_list, [MOBILE_ACTION_CALL_SCHEMA]),
+        vol.Optional(ATTR_ACTIONS, default=[]): vol.All(
+            cv.ensure_list, [MOBILE_ACTION_CALL_SCHEMA], _single_notification_level
+        ),
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_FORCE_RESEND, default=False): cv.boolean,
         vol.Optional(ATTR_DRY_RUN, default=DRY_RUN_LIVE): vol.In(DRY_RUN_VALUES),

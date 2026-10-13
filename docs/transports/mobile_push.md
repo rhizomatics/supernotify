@@ -118,7 +118,7 @@ iOS doesn't support it for them.
 
 ## Tap URL and Live View
 
-`mobile_push_tap_url` sets what opens when the notification is tapped, for both platforms - it becomes
+A [notification level action](../usage/mobile_actions.md#notification-level-actions) sets what opens when the notification is tapped, for both platforms - it becomes
 `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion
 App, a full URL in the browser.
 
@@ -132,9 +132,11 @@ camera itself as the live view. Android has no live view, so it's left out there
       message: Car on the driveway
       media:
         snapshot_url: https://frigate.local/api/events/1696512345.123-abc/snapshot.jpg
-      extra_data:
-        mobile_push_tap_url: /lovelace/cameras
-        mobile_push_live_view_entity: camera.driveway
+        camera_entity_id: camera.driveway
+      actions:
+        - level: notification
+          uri: /lovelace/cameras
+
 ```
 
 ## Default Delivery

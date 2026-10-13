@@ -2,7 +2,7 @@
 
 The config entry is the sole, unconditional owner of registering notify.supernotify (see
 async_setup_entry in __init__.py) - delivery/transports/scenarios/recipients/cameras/
-action_groups/links/snooze now live under a top-level `supernotify:` YAML key instead (see
+action_groups/snooze now live under a top-level `supernotify:` YAML key instead (see
 CONFIG_SCHEMA/async_setup in __init__.py). A leftover legacy block is inert (notify.py's
 async_get_service shim registers nothing from it) but still raises this fixable repair, which
 automates moving that config into `supernotify.yaml` plus a `supernotify: !include
@@ -36,7 +36,6 @@ from .const import (
     CONF_ACTION_GROUPS,
     CONF_CAMERAS,
     CONF_DELIVERY,
-    CONF_LINKS,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
     CONF_SNOOZE,
@@ -83,7 +82,6 @@ _YAML_ONLY_KEYS = (
     CONF_RECIPIENTS,
     CONF_CAMERAS,
     CONF_ACTION_GROUPS,
-    CONF_LINKS,
     CONF_SNOOZE,
 )
 
@@ -250,7 +248,7 @@ def _is_already_migrated(hass: HomeAssistant) -> bool:
 
 
 class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
-    """Migrate delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze out
+    """Migrate delivery/transports/scenarios/recipients/cameras/action_groups/snooze out
     of the legacy `notify: - platform: supernotify` YAML block into a new top-level
     `supernotify:` key (typically `supernotify: !include supernotify.yaml`).
     """

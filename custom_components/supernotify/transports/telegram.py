@@ -34,7 +34,7 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_TELEGRAM_CHAT_ID, TRANSPORT_TELEGRAM
+from custom_components.supernotify.const import ACTION_LEVEL_NOTIFICATION, ATTR_TELEGRAM_CHAT_ID, CONF_LEVEL, TRANSPORT_TELEGRAM
 from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.target import TargetEntityCategory
@@ -123,6 +123,10 @@ def _build_inline_keyboard(actions: list) -> list:
 
         if not isinstance(action, dict):
             _LOGGER.warning("SUPERNOTIFY telegram: action not a dict, skipped")
+            continue
+
+        if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
+            # opens on tapping the notification, which Telegram has no way to do, and not a button
             continue
 
         # SuperNotify action keys: "title" for label, "action" for callback id.

@@ -77,6 +77,7 @@ def _make_envelope(
     media: dict[str, Any] | None = None,
     grab_image_value: Path | None = None,
     grab_image_raises: bool = False,
+    notification_uri: str | None = None,
 ) -> MagicMock:
     """Build a mock Envelope exposing the attributes deliver() consumes."""
     envelope = MagicMock()
@@ -87,6 +88,7 @@ def _make_envelope(
     envelope.media = media
     envelope.target = MagicMock()
     envelope.target.resolved_targets = MagicMock(return_value=[BROWSER_1] if targets is None else targets)
+    envelope.notification_uri = MagicMock(return_value=notification_uri)
     if grab_image_raises:
         envelope.grab_image = AsyncMock(side_effect=OSError("camera offline"))
     else:
@@ -842,3 +844,23 @@ async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
         },
     )
     await assert_schema_usage(hass, case, maximal)
+
+
+@pytest.mark.asyncio
+async def test_deliver_notification_level_action_sets_url() -> None:
+    uut = _make_transport()
+    envelope = _make_envelope(notification_uri="https://my.home/cameras")
+
+    await uut.deliver(envelope)
+
+    assert _action_data(uut)["data"] == {"url": "https://my.home/cameras"}
+
+
+@pytest.mark.asyncio
+async def test_deliver_html5_url_wins_over_notification_level_action() -> None:
+    uut = _make_transport()
+    envelope = _make_envelope(data={"html5_url": "/lovelace/own"}, notification_uri="https://my.home/cameras")
+
+    await uut.deliver(envelope)
+
+    assert _action_data(uut)["data"] == {"url": "/lovelace/own"}

@@ -34,7 +34,7 @@ by the transport and never forwarded to `ntfy.publish`.
 | `ntfy_device_id` | `str` | — | **Required.** `device_id` of the ntfy topic configured in HA |
 | `ntfy_priority` | `int` 1–5 | from SN mapping | Override priority (5=urgent, 1=min) |
 | `ntfy_tags` | `list[str]` | `[]` | ntfy emoji shortcodes e.g. `["warning", "house"]` |
-| `ntfy_click` | `str` (URL) | — | URL opened when notification is tapped |
+| `ntfy_click` | `str` (URL) | — | URL opened when notification is tapped, defaults to the `uri` of a [notification level action](../usage/mobile_actions.md#notification-level-actions) |
 | `ntfy_attach_image` | `bool` | `false` | Attach camera snapshot (requires `media.camera_entity_id`) |
 | `ntfy_filename` | `str` | `snapshot.jpg` | Filename for the attachment |
 | `ntfy_icon` | `str` (URL) | — | JPEG/PNG icon URL |

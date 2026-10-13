@@ -144,7 +144,7 @@ class GotifyTransport(Transport):
 
         # --- Extract gotify_* keys (must not reach the notify service) ---
         priority_ovr_raw = raw_data.pop("gotify_priority", None)
-        click_url = raw_data.pop("gotify_click", None)
+        click_url = raw_data.pop("gotify_click", None) or envelope.notification_uri(absolute=True)
         image_url: str | None = raw_data.pop("gotify_image_url", None)
         attach_image = boolify(raw_data.pop("gotify_attach_image", False), default=False)
         markdown = boolify(raw_data.pop("gotify_markdown", False), default=False)

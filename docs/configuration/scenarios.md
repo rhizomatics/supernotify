@@ -221,8 +221,7 @@ The templates are regular HomeAssistant `jinja2`, and have the same context vari
 
 ## Using Scenarios to Suppress Notifications
 
-Using `require_scenarios`, a notification can be generated that will only be delivered if one of the
-listed scenarios has an active condition.
+Using `require_scenarios`, a notification can be generated that will only be delivered if one of the listed scenarios has an active condition.
 
 ```yaml
   - action: supernotify.notify

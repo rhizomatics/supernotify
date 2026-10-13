@@ -141,7 +141,7 @@ class NtfyTransport(Transport):
         device_id = raw_data.pop("ntfy_device_id", None)
         priority_ovr = raw_data.pop("ntfy_priority", None)
         tags = raw_data.pop("ntfy_tags", [])
-        click_url = raw_data.pop("ntfy_click", None)
+        click_url = raw_data.pop("ntfy_click", None) or envelope.notification_uri(absolute=True)
         attach_image = boolify(raw_data.pop("ntfy_attach_image", False), default=False)
         filename = raw_data.pop("ntfy_filename", "snapshot.jpg")
         icon = raw_data.pop("ntfy_icon", None)

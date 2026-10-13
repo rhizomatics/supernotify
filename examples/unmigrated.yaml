@@ -315,10 +315,3 @@ notify:
         - action: "ALARM_PANEL_AWAY"
           title: "Arm Alarm Panel for Going Away"
           icon: "sfsymbols:airplane"
-    # Links not implemented yet
-    links:
-      - id: frigate_home
-        url: http://frigate
-        icon: "mdi:camera"
-        name: Frigate
-        description: Frigate CCTV

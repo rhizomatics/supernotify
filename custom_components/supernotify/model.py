@@ -373,6 +373,7 @@ class ConditionVariables:
         notification_title (str): Title of the notification
         occupancy (list[str]): List of occupancy scenarios
         notification_data (dict[str,Any]): Additional data passed on notify action call
+        camera (dict[str,Any]): Camera of the notification, its `entity_id` and anything configured for it in `cameras`
 
     """
 
@@ -394,6 +395,7 @@ class ConditionVariables:
         message: str | None = None,
         title: str | None = None,
         notification_data: dict[str, Any] | None = None,
+        camera: dict[str, Any] | None = None,
     ) -> None:
         occupiers = occupiers or {}
         self.occupancy = []
@@ -414,6 +416,7 @@ class ConditionVariables:
         self.notification_message = message
         self.notification_title = title
         self.notification_data: dict[str, Any] = notification_data or {}
+        self.camera: dict[str, Any] = camera or {}
 
     def as_dict(self, **_kwargs: Any) -> TemplateVarsType:
         return {
@@ -425,6 +428,7 @@ class ConditionVariables:
             "notification_priority": self.notification_priority,
             "occupancy": self.occupancy,
             "notification_data": self.notification_data,
+            "camera": self.camera,
         }
 
 

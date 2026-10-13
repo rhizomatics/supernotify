@@ -48,11 +48,6 @@ New data keys (all optional):
                                       Do Not Disturb and silent mode
     mobile_push_alarm_stream_max    bool  Android: kept for compatibility, same as mobile_push_alarm_stream -
                                       the companion app only supports alarm_stream_max for TTS
-    mobile_push_tap_url             str   URL or app path (e.g. "/lovelace/cameras") opened when the
-                                      notification is tapped - iOS `url`, Android `clickAction`.
-    mobile_push_live_view_entity    str   iOS: camera entity streamed live when the notification is
-                                      expanded, independently of where the image comes from.
-
 """
 
 from __future__ import annotations
@@ -71,6 +66,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify import const
 from custom_components.supernotify.const import (
+    ACTION_LEVEL_NOTIFICATION,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_DEFAULT,
@@ -80,6 +76,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
     ATTR_VIDEO,
+    CONF_LEVEL,
     MANUFACTURER_APPLE,
     TRANSPORT_MOBILE_PUSH,
 )
@@ -221,9 +218,6 @@ class MobilePushTransport(Transport):
             "group": raw_data.pop("mobile_push_group", None),
             "notification_tag": raw_data.pop("mobile_push_notification_tag", None),
             "clear_notification": raw_data.pop("mobile_push_clear_notification", False),
-            "tap_url": raw_data.pop("mobile_push_tap_url", None),
-            # iOS live camera view
-            "live_view_entity": raw_data.pop("mobile_push_live_view_entity", None),
         }
 
     def _android_payload(
@@ -262,9 +256,6 @@ class MobilePushTransport(Transport):
         elif critical:
             android_data["priority"] = ANDROID_CRITICAL_PRIORITY
 
-        # Tap URL: Android's name for the iOS `url`
-        if push_data["tap_url"]:
-            android_data["clickAction"] = push_data["tap_url"]
         return android_data
 
     def _android_extra_calls(
@@ -364,12 +355,6 @@ class MobilePushTransport(Transport):
 
         if push_data["subtitle"]:
             ios_data["subtitle"] = push_data["subtitle"]
-        if push_data["tap_url"]:
-            ios_data["url"] = push_data["tap_url"]
-        if push_data["live_view_entity"]:
-            # wins over the camera the device would otherwise fetch the image from, since the
-            # image can come from a snapshot url while the live view is of the camera itself
-            ios_data["entity_id"] = push_data["live_view_entity"]
 
         # 5. Android-specific fields
         android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority, given=raw_data.keys())
@@ -426,11 +411,14 @@ class MobilePushTransport(Transport):
         else:
             data.setdefault("actions", [])
         for action in envelope.actions:
-            app_url: str | None = self.hass_api.abs_url(action.get(ATTR_ACTION_URL))
+            if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
+                continue
+            button = envelope.render_action(action)
+            app_url: str | None = self.hass_api.abs_url(button.get(ATTR_ACTION_URL))
             if app_url:
-                app_url_title = action.get(ATTR_ACTION_URL_TITLE) or await self.action_title(app_url) or "Click for Action"
-                action[ATTR_ACTION_URL_TITLE] = app_url_title
-            data["actions"].append(action)
+                app_url_title = button.get(ATTR_ACTION_URL_TITLE) or await self.action_title(app_url) or "Click for Action"
+                button[ATTR_ACTION_URL_TITLE] = app_url_title
+            data["actions"].append(button)
         if camera_entity_id:
             data["actions"].append({
                 "action": f"SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_{camera_entity_id}",
@@ -441,9 +429,18 @@ class MobilePushTransport(Transport):
             })
         for group, actions in self.context.mobile_actions.items():
             if action_groups is None or group in action_groups:
-                data["actions"].extend(actions)
+                data["actions"].extend(
+                    envelope.render_action(action) for action in actions if action.get(CONF_LEVEL) != ACTION_LEVEL_NOTIFICATION
+                )
         if not data["actions"]:
             del data["actions"]
+        # tapping the notification itself opens the uri of a notification level action
+        notification_uri: str | None = envelope.notification_uri()
+        if notification_uri:
+            if "url" not in data:
+                ios_data["url"] = notification_uri
+            if "clickAction" not in data:
+                android_data["clickAction"] = notification_uri
 
         # 9. Dispatch to each mobile target
         clear_notification = bool(push_data["clear_notification"] and notification_tag)

@@ -166,3 +166,27 @@ async def test_notify_targets_floor_and_area_with_default_deliveries_via_own_dev
             ]
         },
     )
+
+
+async def test_notify_with_ad_hoc_notification_level_action(hass: HomeAssistant, town_house: House) -> None:
+    """Tapping the notification opens the uri, as `url` for iOS and `clickAction` for Android"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        data:
+          actions:
+            - action: POUR
+              title: Pour it
+            - level: notification
+              uri: /lovelace/kitchen
+    """,
+        expected_calls={"notify": ["mobile_app_alice_phone", "mobile_app_bob_phone"]},
+        expected_entities={},
+    )
+    sent = {call.service: call.data["data"] for call in town_house.service_calls["notify"]}
+    assert sent["mobile_app_alice_phone"]["url"] == "/lovelace/kitchen"
+    assert "clickAction" not in sent["mobile_app_alice_phone"]
+    assert sent["mobile_app_bob_phone"]["clickAction"] == "/lovelace/kitchen"
+    assert "url" not in sent["mobile_app_bob_phone"]
+    for data in sent.values():
+        assert data["actions"] == [{"action": "POUR", "title": "Pour it"}]

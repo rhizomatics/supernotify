@@ -39,7 +39,6 @@ class Context:
         archive: NotificationArchive,
         media_storage: MediaStorage,
         snoozer: Snoozer,
-        links: list[str] | None = None,
         recipients: list[dict[str, Any]] | None = None,
         mobile_actions: ConfigType | None = None,
         template_path: str | None = None,
@@ -54,7 +53,6 @@ class Context:
         self.archive: NotificationArchive = archive
         self.hass_api: HomeAssistantAPI = hass_api
         self.media_storage: MediaStorage = media_storage
-        self.links: list[dict[str, Any]] = ensure_list(links)
 
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.mobile_actions: ConfigType = mobile_actions or {}

@@ -284,6 +284,7 @@ class Notification(ArchivableObject):
             self.message,
             self._title,
             self.extra_data,
+            self.camera_variables(),
         )  # requires occupancy first
 
         enabled_scenario_names: list[str] = list(self.applied_scenario_names) or []
@@ -310,6 +311,15 @@ class Notification(ArchivableObject):
 
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
+        # a scenario may have chosen the camera, too late for conditions but in time for templates
+        self.condition_variables.camera = self.camera_variables()
+
+    def camera_variables(self) -> dict[str, Any]:
+        """Camera of the notification for conditions and templates, with its `cameras` config if there is any"""
+        entity_id: str | None = (self.media or {}).get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+        if not entity_id:
+            return {}
+        return {**self.context.cameras.get(entity_id, {}), "entity_id": entity_id}
 
     def convert_exposed_notify_entities(
         self, target: list[str] | str | dict[str, Any] | None, action_data: dict[str, Any]

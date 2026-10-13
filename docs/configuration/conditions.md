@@ -23,6 +23,7 @@ automatically available:
 | constrain_scenarios   | Restricted list of scenarios                                       | `[]`     |
 | occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME             | `{}`     |
 | notification_data     | Additional `data` passed on notification action call               | `{}`     |
+| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 

@@ -19,6 +19,8 @@ from custom_components.supernotify.target import Target
 
 from .common import DupeCheckable
 from .const import (
+    ACTION_LEVEL_NOTIFICATION,
+    ATTR_ACTION,
     ATTR_FORCE_RESEND,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
@@ -27,6 +29,9 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_SPOKEN_MESSAGE,
     ATTR_TIMESTAMP,
+    CONF_LEVEL,
+    CONF_TITLE,
+    CONF_URI,
     PRIORITY_MEDIUM,
 )
 from .media_grab import grab_image
@@ -169,6 +174,39 @@ class Envelope(DupeCheckable):
                 self._notification, self.delivery, self._notification.context, ha_context=self.ha_context
             )
         return image_path
+
+    def render_action(self, action: dict[str, Any]) -> dict[str, Any]:
+        """Mobile action with its `action_template`, `title_template` and `uri_template` rendered, and `level` dropped"""
+        rendered: dict[str, Any] = {k: v for k, v in action.items() if k != CONF_LEVEL}
+        for field in (ATTR_ACTION, CONF_TITLE, CONF_URI):
+            template_format = rendered.pop(f"{field}_template", None)
+            if template_format is None or self.context is None:
+                continue
+            try:
+                context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+                rendered[field] = self.context.hass_api.template(template_format).async_render(variables=context_vars)
+            except TemplateError as e:
+                self.error_count += 1
+                _LOGGER.warning("SUPERNOTIFY Rendering %s_template for %s failed: %s", field, self.delivery_name, e)
+        return rendered
+
+    def notification_uri(self, absolute: bool = False) -> str | None:
+        """URI to open when the notification itself is tapped, from a `level: notification` mobile action
+
+        Where there's more than one, an action on the notification wins, then the action groups
+        in the order chosen, which is those on the notification followed by each scenario in turn.
+        `absolute` is for where a path relative to Home Assistant, like `/lovelace/cameras`, won't do.
+        """
+        groups: dict[str, list[dict[str, Any]]] = self.context.mobile_actions if self.context else {}
+        group_names: list[str] = list(groups) if self.action_groups is None else self.action_groups
+        for action in [*self.actions, *(action for name in group_names for action in groups.get(name, []))]:
+            if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
+                uri: str | None = self.render_action(action).get(CONF_URI)
+                if uri and absolute and self.context and str(uri).startswith("/"):
+                    return self.context.hass_api.abs_url(str(uri))
+                if uri:
+                    return str(uri)
+        return None
 
     def core_action_data(self, force_message: bool = True) -> dict[str, Any]:
         """Build the core set of `service_data` dict to pass to underlying notify service"""
