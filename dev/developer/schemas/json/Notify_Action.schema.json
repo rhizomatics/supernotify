@@ -228,28 +228,46 @@
       "default": []
     },
     "actions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "action_category": {
-            "type": "string"
-          },
-          "action_url": {
-            "type": "string"
-          },
-          "action_url_title": {
-            "type": "string"
+      "allOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "action_category": {
+                "type": "string"
+              },
+              "action_url": {
+                "type": "string"
+              },
+              "action_url_title": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "action",
+                  "notification"
+                ]
+              }
+            },
+            "additionalProperties": true
           }
         },
-        "additionalProperties": true
-      },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      ],
       "default": []
     },
     "debug": {

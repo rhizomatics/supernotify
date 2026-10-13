@@ -263,25 +263,60 @@
     "action_groups": {
       "type": "object",
       "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "action": {
-              "type": "string"
-            },
-            "title": {
-              "type": "string"
-            },
-            "uri": {
-              "type": "string"
-            },
-            "icon": {
-              "type": "string"
+        "allOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "uri": {
+                  "type": "string"
+                },
+                "uri_template": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "action",
+                    "notification"
+                  ]
+                }
+              },
+              "additionalProperties": true,
+              "allOf": [
+                {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "uri",
+                          "uri_template"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           },
-          "additionalProperties": true
-        }
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
       },
       "default": {}
     },
@@ -521,33 +556,6 @@
             "default": {}
           }
         },
-        "additionalProperties": false
-      },
-      "default": []
-    },
-    "links": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "icon": {},
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "url",
-          "description"
-        ],
         "additionalProperties": false
       },
       "default": []

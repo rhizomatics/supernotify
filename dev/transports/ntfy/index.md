@@ -21,20 +21,20 @@ The existing `generic` transport can call `ntfy.publish`, but it cannot:
 
 All keys are optional unless noted. Keys with prefix `ntfy_` are extracted by the transport and never forwarded to `ntfy.publish`.
 
-| Key                 | Type         | Default         | Description                                                  |
-| ------------------- | ------------ | --------------- | ------------------------------------------------------------ |
-| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA |
-| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                          |
-| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`            |
-| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped                       |
-| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)   |
-| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                  |
-| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                            |
-| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                    |
-| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`            |
-| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                |
-| `ntfy_email`        | `str`        | —               | Email forwarding address                                     |
-| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)      |
+| Key                 | Type         | Default         | Description                                                                                                                                                                                    |
+| ------------------- | ------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA                                                                                                                                   |
+| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                                                                                                                                                            |
+| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`                                                                                                                                              |
+| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped, defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) |
+| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)                                                                                                                                     |
+| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                                                                                                                                                    |
+| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                                                                                                                                                              |
+| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                                                                                                                                                      |
+| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`                                                                                                                                              |
+| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                                                                                                                                                  |
+| `ntfy_email`        | `str`        | —               | Email forwarding address                                                                                                                                                                       |
+| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)                                                                                                                                        |
 
 ______________________________________________________________________
 

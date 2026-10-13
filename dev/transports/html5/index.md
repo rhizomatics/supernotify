@@ -42,7 +42,7 @@ delivery:
 - `html5_actions` — list of `{action, title, icon}` buttons
 - `html5_attach_image` — camera snapshot as `image` URL (default `false`)
 - `html5_icon`, `html5_badge` — icon / badge URLs
-- `html5_url` — URL opened on click (sent as `data.url`)
+- `html5_url` — URL opened on click (sent as `data.url`), defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
 - `html5_require_interaction` — keep on screen until the user interacts
 - `html5_renotify` — alert again when a new notification replaces an existing tag
 - `html5_silent` — suppress sound/vibration (exclusive with `html5_vibrate`)

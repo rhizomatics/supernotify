@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_actions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-13 17:14 +0000
+            created at 2026-10-13 21:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -120,7 +120,7 @@
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="nam">NOTIFY_SERVICE_NAME</span> <span class="op">=</span> <span class="str">&quot;supernotify&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="com"># Key under hass.data[DOMAIN] holding the validated top-level `supernotify:` YAML section</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="com"># (delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze - the 8 keys not</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="com"># (delivery/transports/scenarios/recipients/cameras/action_groups/snooze - the 8 keys not</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="com"># yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="nam">KEY_YAML_CONFIG</span> <span class="op">=</span> <span class="str">&quot;yaml_config&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -186,7 +186,7 @@
     <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t"><span class="str">    entry.data holds the flat &quot;user&quot; step fields; entry.options holds the nested</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t"><span class="str">    archive/dupe_check/housekeeping sections from the options flow - both validated here via</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t"><span class="str">    CONFIG_ENTRY_SCHEMA. hass.data[DOMAIN] holds the delivery/transports/scenarios/recipients/</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t"><span class="str">    cameras/action_groups/links/snooze YAML section (see async_setup) - already validated once</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t"><span class="str">    cameras/action_groups/snooze YAML section (see async_setup) - already validated once</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t"><span class="str">    by CONFIG_SCHEMA when that YAML was first loaded, so it&#x27;s merged in as-is rather than</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="str">    re-validated (a second pass would reject values schema validation already coerced, e.g.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t"><span class="str">    cv.template&#x27;s Template objects - see CONFIG_ENTRY_SCHEMA&#x27;s docstring in schema.py).</span>&nbsp;</span><span class="r"></span></p>
@@ -310,7 +310,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_actions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-13 17:14 +0000
+            created at 2026-10-13 21:38 +0000
         </p>
     </div>
 </footer>

@@ -734,7 +734,7 @@ Note
 
 This page is about the buttons on an [Actionable Notification](https://companion.home-assistant.io/docs/notifications/actionable-notifications/) (referred to throughout as **Mobile Actions**), not Home Assistant *Actions* (previously known as 'services') such as `supernotify.notify` - those are documented at [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md).
 
-Mobile Actions currently only affect the [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) transport - other transports either ignore `actions`/`action_groups` entirely, or only pick up the single `action_url` link described below.
+Mobile Actions as buttons currently only affect the [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) transport - other transports either ignore `actions`/`action_groups` entirely, or only pick up the single `action_url` link described below. A [notification level action](#notification-level-actions), which is what tapping the notification itself opens, also works for ntfy, Gotify and HTML5.
 
 Note
 
@@ -764,6 +764,7 @@ Recognized fields per action:
 | `title`                                                                                                                                                   | Button label                                                                                                                                                                                           |
 | `action_url`                                                                                                                                              | A URL (relative URLs are resolved against your HA external/internal URL)                                                                                                                               |
 | `action_url_title`                                                                                                                                        | Optional explicit title for `action_url` - see [Auto-fetched link titles](#auto-fetched-link-titles) below                                                                                             |
+| `level`                                                                                                                                                   | `action` for a button, which is the default, or `notification` for a [notification level action](#notification-level-actions)                                                                          |
 | anything else (`icon`, `uri`, `destructive`, `behavior`, `textInputButtonTitle`, `textInputPlaceholder`, `activationMode`, `authenticationRequired`, ...) | Passed straight through to the Companion App - see its [action fields reference](https://companion.home-assistant.io/docs/notifications/actionable-notifications/#building-notifications-with-actions) |
 
 ## Action Groups
@@ -784,7 +785,17 @@ action_groups:
       icon: "sfsymbols:bell"
 ```
 
-Each group is a list of the same action objects described above (`action`/`title` plus any extra Companion App fields). There's also an `action_template`/`title_template` pair in the schema for a templated `action`/`title` - **these are currently accepted but never rendered**, so the literal `{{ ... }}` template text would be sent to the app. Stick to plain `action`/`title` for now.
+Each group is a list of the same action objects described above (`action`/`title` plus any extra Companion App fields). `action_template`, `title_template` and `uri_template` can be used in place of `action`, `title` and `uri`, and are rendered for each notification, with the same variables as [scenario conditions](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md), such as `notification_priority`, `notification_message` and `camera`.
+
+Config: templated action
+
+```yaml
+action_groups:
+  priority_actions:
+    - action_template: "SILENCE_{{ notification_priority | upper }}"
+      title_template: "Silence {{ notification_priority }} priority notifications"
+      uri_template: "https://my.home/alerts/{{ notification_priority }}"
+```
 
 ### Attaching groups to a notification
 
@@ -825,6 +836,47 @@ There's no implicit "all groups" default
 It might look, from the transport code, like omitting `action_groups` entirely means "use every configured group" - but in practice a plain notification (no matching scenario, no explicit `action_groups:` in the call) ends up with **no** group actions attached at all. An empty `action_groups: []` on the call behaves the same as omitting it: scenarios can still add groups on top. To guarantee no group actions ever appear on a given notification, don't enable a scenario that adds them.
 
 A scenario referencing a group name that isn't defined under the top-level `action_groups:` is dropped at startup with a logged error and a repair issue, rather than failing to load.
+
+## Notification level actions
+
+An action with `level: notification` isn't a button, it's what opens when the notification itself is tapped. It must have a `uri` or `uri_template`, can't have an `action`, and there can only be one in an action group, or in the `actions` of a notification.
+
+Config: open the cameras dashboard when the notification is tapped
+
+```yaml
+action_groups:
+  camera_actions:
+    - action: CAMERA_SILENCE
+      title: Silence
+    - level: notification
+      uri: homeassistant://navigate/lovelace/cameras
+```
+
+Ad-hoc notification level action
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: Garage door has been open for 10 minutes
+    actions:
+      - level: notification
+        uri: /lovelace/garage
+```
+
+| Transport                                                                                    | Sent as                                                                          |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) | `url` for iOS and `clickAction` for Android, unless one is already in the `data` |
+| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)               | `click`, unless there's an `ntfy_click`                                          |
+| [Gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)           | The click url, unless there's a `gotify_click`                                   |
+| [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)             | `url`, unless there's an `html5_url` or a `url` in `html5_data`                  |
+
+A path such as `/lovelace/garage` opens in the Companion App for Mobile Push, and is made into a full Home Assistant URL for the other transports.
+
+Where a notification ends up with more than one, only one is used, in this order:
+
+1. One in the `actions` of the notification
+1. One in the `action_groups` of the notification, in the order listed
+1. One in the action groups of a scenario, the first scenario winning
 
 ## Snoozing from a Mobile Action
 
@@ -1940,16 +1992,17 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/inde
 
 `Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can access, such as entities, templating etc. In addition, Supernotify makes additional variables automatically available:
 
-| Template Variable     | Description                                                        | Default  |
-| --------------------- | ------------------------------------------------------------------ | -------- |
-| notification_priority | Priority of current notification, explicitly selected or default   | `medium` |
-| notification_message  | Message of current notification                                    | *None*   |
-| notification_title    | Title of current notification                                      | *None*   |
-| applied_scenarios     | Scenarios explicitly selected in current notification call         | `[]`     |
-| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed | `[]`     |
-| constrain_scenarios   | Restricted list of scenarios                                       | `[]`     |
-| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME             | `{}`     |
-| notification_data     | Additional `data` passed on notification action call               | `{}`     |
+| Template Variable     | Description                                                                                                                                                                                                  | Default  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| notification_priority | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
+| notification_message  | Message of current notification                                                                                                                                                                              | *None*   |
+| notification_title    | Title of current notification                                                                                                                                                                                | *None*   |
+| applied_scenarios     | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
+| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
+| constrain_scenarios   | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
+| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
+| notification_data     | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
+| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
@@ -3896,6 +3949,12 @@ supernotify:
       - action_template: silence-{{camera.entity_id}}
         title_template: Silence Notifications for {{camera.entity_id}}
         icon: "sfsymbols:bell.slash"
+      - uri: http://frigate.local
+        icon: "mdi:camera"
+        description: Frigate CCTV
+      - uri_template: http://frigate.local/{{camera.alias}}
+        icon: "mdi:camera"
+        description: Frigate CCTV
     alarm_panel:
       - action: "ALARM_PANEL_DISARM"
         title: "Disarm Alarm Panel"
@@ -3912,7 +3971,7 @@ supernotify:
       url: http://frigate
       icon: "mdi:camera"
       name: Frigate
-      description: Frigate CCTV
+      description: Deprecated link
 
   snooze:
     snooze_time: 3600
@@ -5109,7 +5168,7 @@ delivery:
 - `html5_actions` — list of `{action, title, icon}` buttons
 - `html5_attach_image` — camera snapshot as `image` URL (default `false`)
 - `html5_icon`, `html5_badge` — icon / badge URLs
-- `html5_url` — URL opened on click (sent as `data.url`)
+- `html5_url` — URL opened on click (sent as `data.url`), defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
 - `html5_require_interaction` — keep on screen until the user interacts
 - `html5_renotify` — alert again when a new notification replaces an existing tag
 - `html5_silent` — suppress sound/vibration (exclusive with `html5_vibrate`)
@@ -5539,7 +5598,7 @@ Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/l
 
 ## Tap URL and Live View
 
-`mobile_push_tap_url` sets what opens when the notification is tapped, for both platforms - it becomes `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
+A [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) sets what opens when the notification is tapped, for both platforms - it becomes `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
 
 `mobile_push_live_view_entity` sets the camera iOS streams live when the notification is expanded, independently of where the image comes from - for example a Frigate snapshot as the image and the camera itself as the live view. Android has no live view, so it's left out there.
 
@@ -5549,9 +5608,10 @@ Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/l
       message: Car on the driveway
       media:
         snapshot_url: https://frigate.local/api/events/1696512345.123-abc/snapshot.jpg
-      extra_data:
-        mobile_push_tap_url: /lovelace/cameras
-        mobile_push_live_view_entity: camera.driveway
+        camera_entity_id: camera.driveway
+      actions:
+        - level: notification
+          uri: /lovelace/cameras
 ```
 
 ## Default Delivery
@@ -5773,20 +5833,20 @@ The existing `generic` transport can call `ntfy.publish`, but it cannot:
 
 All keys are optional unless noted. Keys with prefix `ntfy_` are extracted by the transport and never forwarded to `ntfy.publish`.
 
-| Key                 | Type         | Default         | Description                                                  |
-| ------------------- | ------------ | --------------- | ------------------------------------------------------------ |
-| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA |
-| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                          |
-| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`            |
-| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped                       |
-| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)   |
-| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                  |
-| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                            |
-| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                    |
-| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`            |
-| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                |
-| `ntfy_email`        | `str`        | —               | Email forwarding address                                     |
-| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)      |
+| Key                 | Type         | Default         | Description                                                                                                                                                                                    |
+| ------------------- | ------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA                                                                                                                                   |
+| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                                                                                                                                                            |
+| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`                                                                                                                                              |
+| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped, defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) |
+| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)                                                                                                                                     |
+| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                                                                                                                                                    |
+| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                                                                                                                                                              |
+| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                                                                                                                                                      |
+| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`                                                                                                                                              |
+| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                                                                                                                                                  |
+| `ntfy_email`        | `str`        | —               | Email forwarding address                                                                                                                                                                       |
+| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)                                                                                                                                        |
 
 ______________________________________________________________________
 

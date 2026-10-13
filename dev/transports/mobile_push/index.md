@@ -102,7 +102,7 @@ Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/l
 
 ## Tap URL and Live View
 
-`mobile_push_tap_url` sets what opens when the notification is tapped, for both platforms - it becomes `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
+A [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) sets what opens when the notification is tapped, for both platforms - it becomes `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion App, a full URL in the browser.
 
 `mobile_push_live_view_entity` sets the camera iOS streams live when the notification is expanded, independently of where the image comes from - for example a Frigate snapshot as the image and the camera itself as the live view. Android has no live view, so it's left out there.
 
@@ -112,9 +112,10 @@ Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/l
       message: Car on the driveway
       media:
         snapshot_url: https://frigate.local/api/events/1696512345.123-abc/snapshot.jpg
-      extra_data:
-        mobile_push_tap_url: /lovelace/cameras
-        mobile_push_live_view_entity: camera.driveway
+        camera_entity_id: camera.driveway
+      actions:
+        - level: notification
+          uri: /lovelace/cameras
 ```
 
 ## Default Delivery

@@ -387,6 +387,12 @@ supernotify:
       - action_template: silence-{{camera.entity_id}}
         title_template: Silence Notifications for {{camera.entity_id}}
         icon: "sfsymbols:bell.slash"
+      - uri: http://frigate.local
+        icon: "mdi:camera"
+        description: Frigate CCTV
+      - uri_template: http://frigate.local/{{camera.alias}}
+        icon: "mdi:camera"
+        description: Frigate CCTV
     alarm_panel:
       - action: "ALARM_PANEL_DISARM"
         title: "Disarm Alarm Panel"
@@ -403,7 +409,7 @@ supernotify:
       url: http://frigate
       icon: "mdi:camera"
       name: Frigate
-      description: Frigate CCTV
+      description: Deprecated link
 
   snooze:
     snooze_time: 3600

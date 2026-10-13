@@ -8,16 +8,17 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/inde
 
 `Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can access, such as entities, templating etc. In addition, Supernotify makes additional variables automatically available:
 
-| Template Variable     | Description                                                        | Default  |
-| --------------------- | ------------------------------------------------------------------ | -------- |
-| notification_priority | Priority of current notification, explicitly selected or default   | `medium` |
-| notification_message  | Message of current notification                                    | *None*   |
-| notification_title    | Title of current notification                                      | *None*   |
-| applied_scenarios     | Scenarios explicitly selected in current notification call         | `[]`     |
-| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed | `[]`     |
-| constrain_scenarios   | Restricted list of scenarios                                       | `[]`     |
-| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME             | `{}`     |
-| notification_data     | Additional `data` passed on notification action call               | `{}`     |
+| Template Variable     | Description                                                                                                                                                                                                  | Default  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| notification_priority | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
+| notification_message  | Message of current notification                                                                                                                                                                              | *None*   |
+| notification_title    | Title of current notification                                                                                                                                                                                | *None*   |
+| applied_scenarios     | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
+| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
+| constrain_scenarios   | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
+| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
+| notification_data     | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
+| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
