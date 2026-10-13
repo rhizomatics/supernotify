@@ -1,4 +1,4 @@
-# v2.14.1
+# v2.15.0
 ## 🐛 Bug fixes
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
 - Unrecognized scenarios now only logged as warnings if they are `require_scenarios`, otherwise logged at debug level. This makes it easier to auto generate scenarios from other components or automations and not have lots of log noise
