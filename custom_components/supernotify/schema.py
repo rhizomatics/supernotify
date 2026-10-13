@@ -513,7 +513,7 @@ ARCHIVE_SCHEMA = vol.All(
         vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
         vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=OutcomeSelection.NONE): parse_event_policy,
         vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=OutcomeSelection.ERROR): parse_event_policy,
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,  # deprecated
     }),
 )
 

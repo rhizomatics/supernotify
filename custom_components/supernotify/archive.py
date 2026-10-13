@@ -13,7 +13,6 @@ import anyio
 import homeassistant.util.dt as dt_util
 from anyio import Path
 from homeassistant.const import (
-    CONF_DEBUG,
     CONF_ENABLED,
 )
 
@@ -409,7 +408,6 @@ class NotificationArchive:
         self.mqtt_topic: str | None = config.get(CONF_ARCHIVE_MQTT_TOPIC)
         self.mqtt_qos: int = int(config.get(CONF_ARCHIVE_MQTT_QOS, 0))
         self.mqtt_retain: bool = bool(config.get(CONF_ARCHIVE_MQTT_RETAIN, True))
-        self.debug: bool = bool(config.get(CONF_DEBUG, False))
 
         self.purge_minute_interval = int(config.get(CONF_ARCHIVE_PURGE_INTERVAL, ARCHIVE_PURGE_MIN_INTERVAL))
 
