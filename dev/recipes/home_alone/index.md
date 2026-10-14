@@ -8,7 +8,7 @@ Vary how and which notifications are made if someone is home on their own.
 
 ## Implementation
 
-Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when `recipients` are defined in the config. [AutoArm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
+Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when `recipients` are defined in the config. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
 
 ## Example Configuration
 

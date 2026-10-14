@@ -14,7 +14,7 @@ Uses a **Scenario**, with conditions to select the alarm control panel states, a
 
 This scenario contributes only mobile actions, and other scenarios ( or delivery defaults ) could combine to contribute other things like sirens, camera snapshots, push noises etc.
 
-The mobile action itself will be handled by the [AutoArm](https://autoarm.rhizomatics.org.uk) custom integration, which responds to the `ALARM_PANEL_DISARM`, `ALARM_PANEL_RESET` etc action keys.
+The mobile action itself will be handled by the [Auto Arm](https://autoarm.rhizomatics.org.uk) custom integration, which responds to the `ALARM_PANEL_DISARM`, `ALARM_PANEL_RESET` etc action keys.
 
 ## Example Configuration
 
