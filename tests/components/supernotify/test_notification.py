@@ -1120,6 +1120,19 @@ async def test_contents_places_populated_exposed_fields_by_preferred_order() -> 
     assert keys.index("extra_data") > keys.index("priority")
 
 
+async def test_contents_includes_title_before_message() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", title="Test Title")
+    await uut.initialize()
+
+    contents = uut.contents()
+
+    assert contents["title"] == "Test Title"
+    keys = list(contents)
+    assert keys.index("title") == keys.index("message") - 1
+
+
 async def test_delivery_provenance_records_each_source() -> None:
     """The trace says which scenario, recipient, default inclusion or the call itself switched each
     delivery on or off - the per-stage delivery_selection lists only have the combined result"""

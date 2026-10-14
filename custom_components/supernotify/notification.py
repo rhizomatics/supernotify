@@ -1056,6 +1056,7 @@ class Notification(ArchivableObject):
             "id",
             "outcome",
             "created",
+            "title",
             "message",
             "spoken_message",
             "message_html",
@@ -1096,6 +1097,7 @@ class Notification(ArchivableObject):
         raw["unassigned_targets"] = self._unassigned_targets()
         raw["stats"] = self._delivery_stats()
         raw["version"] = _VERSION
+        raw["title"] = self._title
         raw["outcome"] = self.outcome()
         raw["delivery_provenance"] = self.debug_trace.delivery_provenance
 

@@ -1,6 +1,11 @@
-# v2.15.0
+# v2.15.1
 ## 🐛 Bug fixes
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
+- Integrations now log only at DEBUG level if they are not going to be setup if the underlying integration isn't even installed (removes a good chunk of startup log noise)
+
+# v2.15.0
+## 🐛 Bug fixes
+
 - Unrecognized scenarios now only logged as warnings if they are `require_scenarios`, otherwise logged at debug level. This makes it easier to auto generate scenarios from other components or automations and not have lots of log noise
 - A blank `target` or `custom_target`, as an emptied field in the action's UI editor leaves behind, is now ignored. It was taken as an explicit target, so the default recipients were not used and nothing was delivered
 - A `target` mapping with an invalid value, such as a mistyped `entity_id`, is now refused with the validation error. It was silently turned into a list of its keys, so the notification went to a target called `entity_id`
