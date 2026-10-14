@@ -1,3 +1,7 @@
+## 🔥 Early Access
+
+[Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
+
 # v2.15.1
 ## 🐛 Bug fixes
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
