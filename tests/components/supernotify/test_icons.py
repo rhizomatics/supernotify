@@ -4,7 +4,7 @@ from pathlib import Path
 
 COMPONENT_DIR = Path(__file__).parents[3] / "custom_components" / "supernotify"
 ICONS = json.loads((COMPONENT_DIR / "icons.json").read_text())
-STRINGS = json.loads((COMPONENT_DIR / "strings.json").read_text())
+STRINGS = json.loads((COMPONENT_DIR / "translations" / "en.json").read_text())
 
 MDI_ICON = re.compile(r"^mdi:[a-z0-9]+(-[a-z0-9]+)*$")
 # platforms whose entities are only ever on or off
@@ -12,7 +12,7 @@ ON_OFF_PLATFORMS = {"switch", "binary_sensor"}
 
 
 def test_entity_icons_match_translated_entities():
-    """Every entity icon is keyed by a translation_key that strings.json knows, and the reverse"""
+    """Every entity icon is keyed by a translation_key that en.json knows, and the reverse"""
     assert set(ICONS["entity"]) == set(STRINGS["entity"])
     for platform, entities in ICONS["entity"].items():
         assert set(entities) == set(STRINGS["entity"][platform]), platform

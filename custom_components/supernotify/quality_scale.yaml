@@ -324,7 +324,7 @@ rules:
   entity-translations:
     status: done
     comment: |
-      Every entity has a translated name via strings.json's "entity" section and
+      Every entity has a translated name via translations/en.json's "entity" section and
       _attr_translation_key - the counter sensors, the reset_overrides button, the
       recipient notify entities, and the scenario, recipient, delivery and transport
       binary_sensors and switches (the scenario/recipient/delivery/transport name being a

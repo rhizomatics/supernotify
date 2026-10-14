@@ -3,7 +3,7 @@ from pathlib import Path
 
 COMPONENT_DIR = Path(__file__).parents[3] / "custom_components" / "supernotify"
 TRANSLATIONS_DIR = COMPONENT_DIR / "translations"
-STRINGS_FILE = COMPONENT_DIR / "strings.json"
+ENGLISH_FILE = TRANSLATIONS_DIR / "en.json"
 
 
 def _leaf_keys(obj: dict, prefix: str = "") -> set[str]:
@@ -75,7 +75,7 @@ def test_non_english_translations_differ_from_english():
     English source is almost always a forgotten or copy-pasted string, not a real
     translation (see the legacy_yaml_config repair strings, which stayed in English in
     every language until this was caught)."""
-    english = _leaf_values(json.loads((TRANSLATIONS_DIR / "en.json").read_text()))
+    english = _leaf_values(json.loads(ENGLISH_FILE.read_text()))
 
     for path in TRANSLATIONS_DIR.glob("*.json"):
         if path.stem == "en":
@@ -93,9 +93,8 @@ def test_non_english_translations_differ_from_english():
         assert not untranslated, f"{path.name} has untranslated (English) values for: {sorted(untranslated)}"
 
 
-def test_all_translations_match_strings():
-    strings = json.loads(STRINGS_FILE.read_text())
-    expected_keys = _leaf_keys(strings)
+def test_all_translations_match_english():
+    expected_keys = _leaf_keys(json.loads(ENGLISH_FILE.read_text()))
 
     translation_files = list(TRANSLATIONS_DIR.glob("*.json"))
     assert translation_files, "No translation files found"
@@ -112,6 +111,6 @@ def test_all_translations_match_strings():
 def test_no_angle_brackets_in_translations():
     """Home Assistant's frontend parses translation strings as ICU messages, where `<name>` is
     an HTML-style tag, so a bare `<name>` placeholder in text shows as an UNCLOSED_TAG error"""
-    for path in [STRINGS_FILE, *TRANSLATIONS_DIR.glob("*.json")]:
+    for path in TRANSLATIONS_DIR.glob("*.json"):
         offending = [key for key, value in _leaf_values(json.loads(path.read_text())).items() if "<" in value]
         assert not offending, f"{path.name} has angle brackets in: {sorted(offending)}"
