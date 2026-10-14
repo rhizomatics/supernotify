@@ -118,7 +118,7 @@ Wiele można osiągnąć dzięki prostej konfiguracji bez YAML, w tym automatyza
 ##  Rhizomatics Open Source dla Home Assistant
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - Automatyczne uzbrajanie i rozbrajanie paneli alarmowych Home Assistant za pomocą fizycznych przycisków, obecności, kalendarzy i innych
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatyczne uzbrajanie i rozbrajanie paneli alarmowych Home Assistant za pomocą fizycznych przycisków, obecności, kalendarzy i innych
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Przechwytywanie zdarzeń OpenTelemetry (OTLP) i Syslog dla Home Assistant
 
 

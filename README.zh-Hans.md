@@ -118,7 +118,7 @@ Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置�
 ##  面向 Home Assistant 的 Rhizomatics 开源项目
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - 使用物理按钮、在家状态、日历等自动布防/撤防 Home Assistant 警报控制面板
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - 使用物理按钮、在家状态、日历等自动布防/撤防 Home Assistant 警报控制面板
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - 适用于 Home Assistant 的 OpenTelemetry（OTLP）和 Syslog 事件采集
 
 

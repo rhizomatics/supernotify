@@ -118,7 +118,7 @@ Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief a
 ##  Rhizomatics Open Source voor Home Assistant
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - Automatisch Home Assistant alarmcontrolepanelen in- en uitschakelen met fysieke knoppen, aanwezigheid, agenda's en meer
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatisch Home Assistant alarmcontrolepanelen in- en uitschakelen met fysieke knoppen, aanwezigheid, agenda's en meer
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - OpenTelemetry (OTLP) en Syslog-gebeurtenisregistratie voor Home Assistant
 
 

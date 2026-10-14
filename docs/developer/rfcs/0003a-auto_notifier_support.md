@@ -81,7 +81,7 @@ really the `platform`, and should be the actual Home Assistant one, such as `aut
 `subject` and `instance` are both an `entity_id`; and `flow` is a new word that sits too close to config flow. Finding
 the automation or script from the context of its state is also doubtful, being slow and fragile, and Home Assistant
 has no native way to get the original cause of a context. A component that passes its own context on the call, as
-AutoArm does, may make much of an explicit source redundant.
+Auto Arm does, may make much of an explicit source redundant.
 
 As purpose-specific Home Assistant triggers reach more device types, such as appliances finishing, they fill in `flow`
 and `subject` for automation-derived sources more usefully, and let appliance packages use them instead of watching

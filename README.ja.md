@@ -118,7 +118,7 @@ Supernotifyは現在、基本設定には標準のHome Assistant UI設定、高�
 ##  Home Assistant向けRhizomatics Open Source
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - 物理ボタン、在室状況、カレンダー等を使ってHome Assistantの警報コントロールパネルを自動的に設定/解除
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - 物理ボタン、在室状況、カレンダー等を使ってHome Assistantの警報コントロールパネルを自動的に設定/解除
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Home Assistant用OpenTelemetry（OTLP）およびSyslogイベントキャプチャ
 
 

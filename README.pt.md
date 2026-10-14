@@ -118,7 +118,7 @@ Muito pode ser feito com a simples configuração sem YAML, incluindo a automaç
 ##  Rhizomatics Open Source para Home Assistant
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - Armar e desarmar automaticamente painéis de controle de alarme do Home Assistant usando botões físicos, presença, calendários e mais
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Armar e desarmar automaticamente painéis de controle de alarme do Home Assistant usando botões físicos, presença, calendários e mais
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Captura de eventos OpenTelemetry (OTLP) e Syslog para Home Assistant
 
 

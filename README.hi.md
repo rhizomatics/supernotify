@@ -118,7 +118,7 @@ Supernotify अब बुनियादी सेटअप के लिए म
 ##  Home Assistant के लिए Rhizomatics Open Source
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - भौतिक बटन, उपस्थिति, कैलेंडर और अधिक का उपयोग करके Home Assistant अलार्म नियंत्रण पैनलों को स्वचालित रूप से सक्रिय/निष्क्रिय करें
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - भौतिक बटन, उपस्थिति, कैलेंडर और अधिक का उपयोग करके Home Assistant अलार्म नियंत्रण पैनलों को स्वचालित रूप से सक्रिय/निष्क्रिय करें
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Home Assistant के लिए OpenTelemetry (OTLP) और Syslog ईवेंट कैप्चर
 
 
