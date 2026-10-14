@@ -133,6 +133,7 @@ ANDROID_TTS_DELAY = 5
 
 class MobilePushTransport(Transport):
     name = TRANSPORT_MOBILE_PUSH
+    integration_domain = "mobile_app"
     declared_options: ClassVar[list[DeliveryOption]] = [
         *MEDIA_OPTIONS,
         DeliveryOption(

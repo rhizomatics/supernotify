@@ -156,6 +156,7 @@ class TelegramTransport(Transport):
     """Notify via Telegram using Home Assistant telegram_bot integration."""
 
     name = TRANSPORT_TELEGRAM
+    integration_domain = HA_TELEGRAM_BOT_DOMAIN
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -134,6 +134,7 @@ class LaMetricTransport(Transport):
     """
 
     name = TRANSPORT_LAMETRIC
+    integration_domain = HA_LAMETRIC_DOMAIN
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

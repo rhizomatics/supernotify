@@ -59,6 +59,7 @@ class AlexaDevicesTransport(Transport):
     """
 
     name = TRANSPORT_ALEXA
+    integration_domain = HA_ALEXA_DEVICES_DOMAIN
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

@@ -106,6 +106,7 @@ class NtfyTransport(Transport):
     """Notify via ntfy push notification service."""
 
     name = TRANSPORT_NTFY
+    integration_domain = HA_NTFY_DOMAIN
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

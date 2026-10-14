@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class MediaPlayerTransport(Transport):
     name = TRANSPORT_MEDIA
+    integration_domain = "media_player"
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -124,6 +124,7 @@ class HTML5Transport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_HTML5
+    integration_domain = HA_HTML5_DOMAIN
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property

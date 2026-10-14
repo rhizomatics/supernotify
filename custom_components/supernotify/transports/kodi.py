@@ -117,6 +117,7 @@ class KodiTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_KODI
+    integration_domain = HA_KODI_DOMAIN
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property

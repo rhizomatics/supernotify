@@ -86,6 +86,7 @@ class MatrixTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_MATRIX
+    integration_domain = "matrix"
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property

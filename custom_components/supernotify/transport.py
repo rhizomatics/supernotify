@@ -115,6 +115,9 @@ class Transport:
     """
 
     name: str
+    # the Home Assistant integration this transport depends on, if any - only used to judge
+    # how loudly to log when the transport isn't viable
+    integration_domain: ClassVar[str | None] = None
     declared_options: ClassVar[list[DeliveryOption]] = []
 
     @abstractmethod

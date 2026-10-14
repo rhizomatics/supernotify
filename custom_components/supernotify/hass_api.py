@@ -273,6 +273,11 @@ class HomeAssistantAPI:
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)
 
+    def integration_loaded(self, domain: str) -> bool:
+        # guarded like hass_avail(), as tests and docgen may run with a mock hass
+        components = getattr(self._hass.config, "components", None) if self.hass_avail("config") else None
+        return isinstance(components, set) and domain in components
+
     def mobile_app_action_exists(self, mobile_app_id: str) -> bool:
         """Whether a mobile app can be notified, by its notify action or its notify entity"""
         action: str = mobile_app_id.removeprefix("notify.")

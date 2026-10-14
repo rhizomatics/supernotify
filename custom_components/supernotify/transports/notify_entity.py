@@ -41,6 +41,7 @@ class NotifyEntityTransport(Transport):
     """Call any notify entity"""
 
     name = TRANSPORT_NOTIFY_ENTITY
+    integration_domain = "notify"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

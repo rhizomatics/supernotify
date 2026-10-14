@@ -54,6 +54,7 @@ class TTSTransport(Transport):
     """
 
     name = TRANSPORT_TTS
+    integration_domain = "tts"
     declared_options: ClassVar[list[DeliveryOption]] = [
         DeliveryOption(OPTION_TTS_ENTITY_ID, "The tts entity used to generate speech"),
     ]

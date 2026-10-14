@@ -37,6 +37,7 @@ Path in upstream repo:
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import pytest
@@ -74,6 +75,7 @@ from custom_components.supernotify.transports.alexa_devices import (
     STANDARD_DELIVERY_SPEAK_ALL,
 )
 from custom_components.supernotify.transports.chime import OPTION_CHIME_ALIASES, STANDARD_DELIVERY_SIREN_ALL
+from custom_components.supernotify.transports.kodi import KodiTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -101,6 +103,20 @@ async def test_auto_configure_no_config_entry(hass: HomeAssistant, transport_nam
     await ctx.test_initialize()
     uut = ctx.transport(transport_name, force=True)
     assert not uut.is_viable(ctx.hass_api)
+
+
+@pytest.mark.parametrize(("integration_loaded", "level"), [(False, logging.DEBUG), (True, logging.INFO)])
+async def test_not_viable_log_level_depends_on_integration_presence(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, integration_loaded: bool, level: int
+) -> None:
+    """Missing integration is routine, so only debug; present but unusable is worth an info"""
+    if integration_loaded:
+        hass.config.components.add("kodi")
+    ctx = TestingContext(homeassistant=hass, transport_types=[KodiTransport])
+    with caplog.at_level(logging.DEBUG, logger="custom_components.supernotify"):
+        await ctx.test_initialize()
+    records = [r for r in caplog.records if "kodi transport has no viable configuration" in r.getMessage()]
+    assert [r.levelno for r in records] == [level]
 
 
 @pytest.mark.parametrize(

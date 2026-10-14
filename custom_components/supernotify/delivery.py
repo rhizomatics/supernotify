@@ -610,7 +610,14 @@ class DeliveryRegistry:
                 transport = transport_class(context, transport_config, **kwargs)
                 self.apply_delivery_control(transport, transport_config)
                 if not transport.is_viable(context.hass_api):
-                    _LOGGER.info("SUPERNOTIFY %s transport has no viable configuration, not loaded", transport_class.name)
+                    # quietly skip transports for integrations that aren't installed at all
+                    level = (
+                        logging.DEBUG
+                        if transport.integration_domain
+                        and not context.hass_api.integration_loaded(transport.integration_domain)
+                        else logging.INFO
+                    )
+                    _LOGGER.log(level, "SUPERNOTIFY %s transport has no viable configuration, not loaded", transport_class.name)
                     continue
                 self.transports[transport_class.name] = transport
                 await transport.initialize()

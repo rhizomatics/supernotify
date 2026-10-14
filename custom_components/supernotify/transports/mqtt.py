@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class MQTTTransport(Transport):
     name = TRANSPORT_MQTT
+    integration_domain = HA_MQTT_DOMAIN
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
