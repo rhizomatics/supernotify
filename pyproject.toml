@@ -49,7 +49,7 @@ dev=[
     "types-cachetools",
     "pre-commit",
     "pytest-httpserver",
-    "ruff>=0.16.0",
+    "ruff>=0.16.10",
     "codespell",
     "mypy",
     "genbadge[all]",
