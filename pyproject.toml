@@ -5,7 +5,7 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant>=2026.10.0",
+    "homeassistant>=2026.4.0",
     "cachetools",
     "bs4",
     "aiofiles",
@@ -109,16 +109,7 @@ prerelease = "if-necessary"
 environments = [
     "python_full_version >= '3.14.2'",
 ]
-override-dependencies = [
-    #"voluptuous-openapi==0.2.0"
-    # homeassistant==2026.2.3 hard-pins zeroconf==0.148.0 (exact, no range) - that version
-    # carries a known CVE, so force the patched 0.149.16 instead for py3.13 (2026.9.2, used
-    # for py3.14+, already requires a newer zeroconf range that isn't affected)
-    "zeroconf>=0.150.1",
-    "homeassistant==2026.10.0",
-    "homeassistant-stubs==2026.10.0",
 
-]
 exclude-newer = "5 days"
 exclude-newer-package = { homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
 add-bounds = "major"

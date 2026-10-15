@@ -22,13 +22,6 @@ signalk-cli = false
 updates2mqtt = false
 uv = false
 
-[manifest]
-overrides = [
-    { name = "homeassistant", specifier = "==2026.10.0" },
-    { name = "homeassistant-stubs", specifier = "==2026.10.0" },
-    { name = "zeroconf", specifier = ">=0.150.1" },
-]
-
 [[package]]
 name = "acme"
 version = "5.7.0"
@@ -712,30 +705,30 @@ wheels = [
 
 [[package]]
 name = "boto3"
-version = "1.43.110"
+version = "1.43.111"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
     { name = "jmespath" },
     { name = "s3transfer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/6e/fe973c8ce8fe4f59d6df6128600b9cc7c4ed75788bed5f5f615f88379529/boto3-1.43.110.tar.gz", hash = "sha256:0251b67d99cc0e7b958db48e7dd149094d453377fcd03299fde7329f975db2e6", size = 112658, upload-time = "2026-10-08T19:30:47.85Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/d3/fa092ae1c109100d0c5c14c69a316cd6d53c05fb57183fa77b1fcdef86ce/boto3-1.43.111.tar.gz", hash = "sha256:5ae342a16c848909cd42d4be404f69d9082e5705460198d4d3327eca5f6cddcb", size = 112656, upload-time = "2026-10-09T19:27:48.995Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/97/3295f3f87138c3647be183e08b4f585ae26e794e7ae9f3c44c24880483bd/boto3-1.43.110-py3-none-any.whl", hash = "sha256:74b811e6def4b30d685d4539a9ead3796f0e03a2112f00134e0f5e583ad8b098", size = 140042, upload-time = "2026-10-08T19:30:46.512Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/3b/bca42f8f7b76e567c66cc39bacc6bf31b353c9edfbb0fb1f5c534fc65369/boto3-1.43.111-py3-none-any.whl", hash = "sha256:c79994619c8d89e45f6fd0edc5c5b5a70c9358f00423f4c99cb64931f89ecf37", size = 140042, upload-time = "2026-10-09T19:27:47.599Z" },
 ]
 
 [[package]]
 name = "botocore"
-version = "1.43.110"
+version = "1.43.111"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/d8/7a2320aabf1b1e62580e990f8a52760e396f4ec56e3ebcbce07d23acc031/botocore-1.43.110.tar.gz", hash = "sha256:888cd54d59502e2195dac30805e5c08dd1be5416932a3793373e81b8f463e006", size = 16317803, upload-time = "2026-10-08T19:30:43.376Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/43/257e97270ddd6833fd54b11e544a09b441b02f8c731bdeb29b90479be565/botocore-1.43.111.tar.gz", hash = "sha256:44d5e80962ac6cb9e85af72667b77c9586451e3328ab0ce33195380767e213d8", size = 16321685, upload-time = "2026-10-09T19:27:44.19Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/6c/bea5940931819d2f8e4a467af8b40302846183bf1e280e31c5a4727c8476/botocore-1.43.110-py3-none-any.whl", hash = "sha256:9f5ae5685b4d7129e32f6084ae8683d5857a1d60d77528b8da77bb53b9dff48f", size = 16015248, upload-time = "2026-10-08T19:30:38.172Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/5b/c3ce1b227954eb0313e76e6e7c0b5b24d4c553f0e8a03e5828ff5a5918dc/botocore-1.43.111-py3-none-any.whl", hash = "sha256:f1f4c28cb2a096bf246d0bb24cbb1a01c5cb696ef499fa71b155adda7b94c90b", size = 16018923, upload-time = "2026-10-09T19:27:40.066Z" },
 ]
 
 [[package]]
@@ -1253,11 +1246,11 @@ wheels = [
 
 [[package]]
 name = "filelock"
-version = "4.0.12"
+version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/53/e4/34efcb869715cf299e47d1ac7b2624d2bcb6f2d3dffc2f0abe8417f65ab2/filelock-4.0.12.tar.gz", hash = "sha256:cf42711a7ac791818b299fab0332a088c65aeeefa36290de98db92c434303b0c", size = 253880, upload-time = "2026-10-05T13:17:43.677Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/58/6fd434bec86eff7c38a3168454cb132b762b2bea9b3ac094101a2f7bc32a/filelock-4.1.0.tar.gz", hash = "sha256:ad7f724afef953e731b1cc39bcd3a09166d72ed7fcdf29e6e88b1c3235c6715d", size = 561277, upload-time = "2026-10-09T19:57:20.34Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/a1/b047e1c486a2c66283633b7dbb73872ca16ca1ce6a426f70d4d037fc8e1c/filelock-4.0.12-py3-none-any.whl", hash = "sha256:5f17ee83ecee8a6f3e389c75822fb70a1c2f0506b99438a6dffa1d56793588c8", size = 111732, upload-time = "2026-10-05T13:17:42.361Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/86/032133892a5de43b5a98200b01aadcad68cc255e274a762f08b8a76d2912/filelock-4.1.0-py3-none-any.whl", hash = "sha256:2ce9818e3e2d8f284c1a964414447ef148d42a5fd5e2a477a7118e574b293ec1", size = 133003, upload-time = "2026-10-09T19:57:18.716Z" },
 ]
 
 [[package]]
@@ -2803,7 +2796,7 @@ wheels = [
 
 [[package]]
 name = "nab"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nab-index" },
@@ -2814,14 +2807,14 @@ dependencies = [
     { name = "tomli" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/21/e7199e089d7bfeabfd1cc5de49d99c8be930acea2eb98a5bac9df78b4320/nab-0.0.18.tar.gz", hash = "sha256:f34b19146b2b1ac1d34108ff69525758202ad20f39a8ceb9a3649013c083e97c", size = 268784, upload-time = "2026-09-20T01:25:14.785Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/17/de0ca73740d27f415480576269402288cb991b86c2a45ea5deadfb82c834/nab-0.0.19.tar.gz", hash = "sha256:d6ab94d37d1a2f8438a775eee3d9e21ed4b0f27b39d0eab7eafe5d3cc6ceaf0f", size = 278193, upload-time = "2026-10-10T03:09:04.259Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/c9/8c72e658824919c10a8c7e4ed84be9ca6f84d8a69e853b989515aa27ca63/nab-0.0.18-py3-none-any.whl", hash = "sha256:e7dff82c3b2ec1affa3fd2b48fd7c8099ac6a5a1bab3ca34147e9b548f02cff5", size = 133296, upload-time = "2026-09-20T01:25:13.021Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/44/d096dc7be532d742240a133adc99d13d49e6c154bc6ee48747a2c96353f3/nab-0.0.19-py3-none-any.whl", hash = "sha256:5cc8d6bd919a26766bae22440f6219478a30c1a88a66c37081c86233eddb263c", size = 136900, upload-time = "2026-10-10T03:09:02.857Z" },
 ]
 
 [[package]]
 name = "nab-index"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nab-provider" },
@@ -2830,23 +2823,23 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/50/b4b7f99a5b001f47af263701990621358731dde8798cc3e60cbe49ef109b/nab_index-0.0.18.tar.gz", hash = "sha256:e53803a771edd086859ac4be35f68204868b067e2d74061375d24e31036c27b3", size = 104464, upload-time = "2026-09-20T01:25:00.421Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/61/d7319fc9634fde5fbd6f7b5d247c94fda65dad8e8c8d38ac1407b0b4b034/nab_index-0.0.19.tar.gz", hash = "sha256:c53b929812cde53fbff85dc499bad8fce6568db585b50ece4aac5047b8292236", size = 108227, upload-time = "2026-10-10T03:08:41.578Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/04/9e569daaeeda021db70f1e7fa76b00bfeb3970ae552231d7ed7bd99c33eb/nab_index-0.0.18-py3-none-any.whl", hash = "sha256:8f0a2d37654ed0bd8a613867ad837dd2019b3966d09fa523b0d56e8fb36aa378", size = 86567, upload-time = "2026-09-20T01:24:59.052Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/b1/8a8f74aab27c4e2c693b22c836aae849f28b6cb2b24aa279b193c69ca508/nab_index-0.0.19-py3-none-any.whl", hash = "sha256:4495d7c93bb11949c9969c2265323682f6783c5bc5894cb6d41a235933624f7d", size = 88062, upload-time = "2026-10-10T03:08:39.996Z" },
 ]
 
 [[package]]
 name = "nab-markersets"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/06/6d/ba6a28e8eb04c2f7a548abfb5db2debf965ca4a5a94596531ce1e0060b3b/nab_markersets-0.0.18.tar.gz", hash = "sha256:a8353c7a435d4b232eb0718a009309fe56b30af252d376a77b273f639fda2aa7", size = 60390, upload-time = "2026-09-20T01:24:45.563Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/de/03b35011370e2c27d9ee32142fcb55c793636ab4bb29a35c9e7f2ff52c34/nab_markersets-0.0.19.tar.gz", hash = "sha256:7e7314ac8cbdfb0d025a0a5ca53eaac7a6b66059c033386832ff8d1bd0f1ba2f", size = 60551, upload-time = "2026-10-10T03:08:18.555Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/d3/70dabc9fcde20c5f8ad6f7adfd0bc09d70b15f8dd252d184ed8f935c4f92/nab_markersets-0.0.18-py3-none-any.whl", hash = "sha256:3a0b1d05468a477566cc2285a7d1b57046122b9c25fd7d179762113318f2101f", size = 31127, upload-time = "2026-09-20T01:24:44.387Z" },
+    { url = "https://files.pythonhosted.org/packages/24/df/d4e499e1e0796dd7dbe78700743e0847753ba42c583cb5a489673385d085/nab_markersets-0.0.19-py3-none-any.whl", hash = "sha256:253c54ed3e5e59bfa3cf69eac95ab08ecb333c3239b2476ef770034b194e7437", size = 31268, upload-time = "2026-10-10T03:08:17.157Z" },
 ]
 
 [[package]]
 name = "nab-project"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "build" },
@@ -2861,32 +2854,32 @@ dependencies = [
     { name = "tomli-w" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/dc/7ebc631b9ad6a9cad5bbe08b68c4366e2874744853d0ee9529ae51854d1f/nab_project-0.0.18.tar.gz", hash = "sha256:e60bc27d893c3012b138f1f40a803cf45a9b7c24ebf88d52fcfe8b17c986a708", size = 716010, upload-time = "2026-09-20T01:25:07.079Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/c4/df2fa66071ed7a92088f389bbcbbeef7fe2e473c936a15233fb979ac1312/nab_project-0.0.19.tar.gz", hash = "sha256:a9788f5e3e75a30881208de28d0fd88577dcaae61bc889158faad958241d5d00", size = 752443, upload-time = "2026-10-10T03:08:54.467Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/b1/4c8750abfd54da65e98bcab5039483175d3b8b8e06595a075c55903a1079/nab_project-0.0.18-py3-none-any.whl", hash = "sha256:8c52eec5a030133ebbf8f72d6f22c2ff7993fb9e0acae56b6ef9b47515cbfbc3", size = 141356, upload-time = "2026-09-20T01:25:05.794Z" },
+    { url = "https://files.pythonhosted.org/packages/68/5b/4484233d18bd495704d7d25d5edb787b803ae039badb4a43bdc838b60827/nab_project-0.0.19-py3-none-any.whl", hash = "sha256:64edf95bf9c19defbd2612bc1e66279b502e8d65050aba6f2a38710fac5c29c4", size = 145996, upload-time = "2026-10-10T03:08:53.117Z" },
 ]
 
 [[package]]
 name = "nab-provider"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nab-markersets" },
     { name = "nab-resolver" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/a5/8a36478f76942d3abb6deff396d2b8c50838bca52674f4a361ebf0550bfd/nab_provider-0.0.18.tar.gz", hash = "sha256:9c6838f5f2be2c328c4b0af7cee38846d66e3a430505c4945e7ae7d3ff6fb810", size = 394265, upload-time = "2026-09-20T01:24:53.296Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/69/6ca9f24f44d8762875afab92c73088472f5ca433707f6eee11e9a224e65a/nab_provider-0.0.19.tar.gz", hash = "sha256:2962dcf9711dd2d24e865c66e6eab283667561645ebb8e911e6f8c02f260629a", size = 403080, upload-time = "2026-10-10T03:08:28.492Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/de/83fef6f3daafeb283ccc5e86e9030635c94a7df4eeeb60fcdc1ab63e3f0a/nab_provider-0.0.18-py3-none-any.whl", hash = "sha256:a832f107fd399fd1a48b8c4a7561af39d1f4c868726056874f820bbd44f60047", size = 323123, upload-time = "2026-09-20T01:24:51.514Z" },
+    { url = "https://files.pythonhosted.org/packages/87/20/871dcaf7e7f6700e9fcedf8ca327dea0cb84a0e29c51e25fec1fd5824a23/nab_provider-0.0.19-py3-none-any.whl", hash = "sha256:8eb710dc5ff44c921f5deb57266ba2b81361bd07768fe8f11bdeadea559369ef", size = 337616, upload-time = "2026-10-10T03:08:26.933Z" },
 ]
 
 [[package]]
 name = "nab-resolver"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6c/03/5ecf2c2bf0e93e44a2e4f0a396d79cd9b6e98d790ecf5c9d9c3bb34e5a79/nab_resolver-0.0.18.tar.gz", hash = "sha256:161f4613aa5394827f939fee369d881340455811ff5fa105c4688b978955c3b4", size = 165379, upload-time = "2026-09-20T01:24:38.748Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/a1/b5b5c11a5729184b332360d37fcf68ede46f087aa56ea959b2417321cc65/nab_resolver-0.0.19.tar.gz", hash = "sha256:1d3e00fe8a6d920721318b68bd0fa6fc06a89cffd3020f1465d5cf726fe1f49c", size = 167475, upload-time = "2026-10-10T03:08:05.06Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/d3/973dcb98cd52c2ab20387c63c7831c66095875845b41bc92cc0eef9e6521/nab_resolver-0.0.18-py3-none-any.whl", hash = "sha256:28a15be8b9d906e34c925be76ba138d5a84aea05d9dbaf6b77a9bd8a22c90c9b", size = 57501, upload-time = "2026-09-20T01:24:37.341Z" },
+    { url = "https://files.pythonhosted.org/packages/84/36/95429a1277be70bc9496a3c770650e4f6c2ff35eec6cfac3ce88570fd9f4/nab_resolver-0.0.19-py3-none-any.whl", hash = "sha256:f33cd21986508e3b7278e5c2f4dead78dbe7c005706f923383b6e4129ed04329", size = 58527, upload-time = "2026-10-10T03:08:03.828Z" },
 ]
 
 [[package]]
@@ -3948,14 +3941,14 @@ wheels = [
 
 [[package]]
 name = "python-discovery"
-version = "1.6.1"
+version = "1.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/57/250bd238b966cece44328235eb85290045d059265fdaf7527a3a958123db/python_discovery-1.6.1.tar.gz", hash = "sha256:cf87d3627dfb4412437fdd5b13eae402607722998d21567993aedbc59b23c15e", size = 84338, upload-time = "2026-09-18T01:31:53.971Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/73/54993df8fc57e906dc9b7e01d1d9b0b2d3eb0ce3190639e33dccb12853f7/python_discovery-1.6.2.tar.gz", hash = "sha256:cd1738ca1d37c86ef9d0b654dd46fcee1e41c97c6add12575e8501ced39afdb4", size = 86921, upload-time = "2026-10-10T01:24:27.912Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/7d/e9ffbadfbf89c93848412d04594135c4ae8c1d37d9e053b9c3ed718fabc4/python_discovery-1.6.1-py3-none-any.whl", hash = "sha256:d43fcdef879fe795352bd13ccf8d185ba5a9f86f36cfcd00529f596e737442b3", size = 38664, upload-time = "2026-09-18T01:31:52.448Z" },
+    { url = "https://files.pythonhosted.org/packages/61/3b/50ed32583bfffa737df67d33b9c15d7b25df232c55ab606d059f610ef6ca/python_discovery-1.6.2-py3-none-any.whl", hash = "sha256:f0c697f95a3aaec4174a6e5e58f5885e25768684bafc76f1afde384709ebdcf2", size = 38912, upload-time = "2026-10-10T01:24:26.721Z" },
 ]
 
 [[package]]
@@ -4445,7 +4438,7 @@ requires-dist = [
     { name = "aiofiles" },
     { name = "bs4" },
     { name = "cachetools" },
-    { name = "homeassistant", specifier = ">=2026.10.0" },
+    { name = "homeassistant", specifier = ">=2026.4.0" },
 ]
 
 [package.metadata.requires-dev]
