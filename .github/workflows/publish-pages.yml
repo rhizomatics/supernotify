@@ -32,7 +32,7 @@ jobs:
       # not actions/deploy-pages, which versions the deployment by the workflow commit, and Pages silently
       # skips a version it has already deployed - so a release tagged on a commit main had already published,
       # or a prune run from an unchanged main, would never go live
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       env:
         ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
         BUILD_VERSION: ${{ steps.site.outputs.sha }}
