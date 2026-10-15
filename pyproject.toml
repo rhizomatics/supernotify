@@ -49,7 +49,7 @@ dev=[
     "types-cachetools",
     "pre-commit",
     "pytest-httpserver",
-    "ruff>=0.16.0",
+    "ruff>=0.16.10",
     "codespell",
     "mypy",
     "genbadge[all]",
@@ -72,7 +72,7 @@ dev=[
     # type checking
     "types-python-slugify>=8.0.2.20240310",
     "voluptuous-stubs>=0.1.1",
-    "types-requests>=2.33.0.20260906,<3.0.0.0",
+    "types-requests>=2.33.0.20261006,<3.0.0.0",
     "types-pillow",
     "types-pyyaml>=6.0.12.20260906,<7.0.0.0",
     "types-beautifulsoup4",

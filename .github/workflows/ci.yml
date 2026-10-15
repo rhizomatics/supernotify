@@ -108,3 +108,17 @@ jobs:
         with:
           name: pytest-results-${{ matrix.python-version }}-ha${{ matrix.ha-version }}
           path: junit/test-results-${{ matrix.python-version }}-ha${{ matrix.ha-version }}.xml
+
+  # The one check branch protection requires, so the lint/test matrix can change without
+  # editing the required status checks.
+  ci-ok:
+    if: always()
+    needs: [lint, typecheck, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All CI jobs passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for r in $RESULTS; do [[ $r == success ]] || exit 1; done
