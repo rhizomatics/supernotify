@@ -31,6 +31,12 @@ updates:
     # differ per Python fork in uv.lock; Dependabot can't bump them per fork.
     allow:
       - dependency-type: direct
+        # Inherited from Home Assistant / its test harness: follow the platform, don't bump.
+    ignore:
+      - dependency-name: homeassistant
+      - dependency-name: pytest-homeassistant-custom-component
+      - dependency-name: pytest
+      - dependency-name: zeroconf
     groups:
       # Trusted: auto-merged by admin-dependabot-automerge.yml once checks pass.
       astral:
