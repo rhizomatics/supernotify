@@ -37,7 +37,7 @@ dev=[
     "pytest==9.0.3",
     "pytest-cov",
     "pytest-socket",
-    "pytest-homeassistant-custom-component>=0.13.356",
+    "pytest-homeassistant-custom-component>=0.13.370",
     "pytest-asyncio",
     "pytest-aiohttp==1.1.1",
     "pytest-unordered",
