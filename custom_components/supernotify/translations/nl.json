@@ -610,7 +610,7 @@
             },
             "llm_tools": {
                 "title": "Assist en AI-agenten (bèta)",
-                "description": "Bèta: laat Assist Supernotify gebruiken. De hulpmiddelen zijn voor gespreksagenten die een AI-model gebruiken en voor AI-agenten die via de MCP-server van Home Assistant verbonden zijn, en bereiken alleen de al geconfigureerde ontvangers, bezorgingen en scenario's. De ingebouwde agent, die geen AI gebruikt, kan ze niet gebruiken, maar begrijpt in plaats daarvan enkele Engelse zinnen.",
+                "description": "Laat Assist Supernotify gebruiken. De hulpmiddelen zijn voor gespreksagenten die een AI-model gebruiken en voor AI-agenten die via de MCP-server van Home Assistant verbonden zijn, en bereiken alleen de al geconfigureerde ontvangers, bezorgingen en scenario's. De ingebouwde agent, die geen AI gebruikt, kan ze niet gebruiken, maar begrijpt in plaats daarvan enkele Engelse zinnen.",
                 "data": {
                     "action_tools": "Actiehulpmiddelen",
                     "diagnostic_tools": "Diagnosehulpmiddelen",

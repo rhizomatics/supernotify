@@ -610,7 +610,7 @@
             },
             "llm_tools": {
                 "title": "Assist 与 AI 代理（测试版）",
-                "description": "测试版：允许 Assist 使用 Supernotify。这些工具供使用 AI 模型的对话代理以及通过 Home Assistant 的 MCP 服务器连接的 AI 代理使用，只能触达已配置的接收人、投递方式和场景。不使用 AI 的内置代理无法使用这些工具，但可以理解一些英文语句。",
+                "description": "允许 Assist 使用 Supernotify。这些工具供使用 AI 模型的对话代理以及通过 Home Assistant 的 MCP 服务器连接的 AI 代理使用，只能触达已配置的接收人、投递方式和场景。不使用 AI 的内置代理无法使用这些工具，但可以理解一些英文语句。",
                 "data": {
                     "action_tools": "操作工具",
                     "diagnostic_tools": "诊断工具",

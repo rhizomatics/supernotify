@@ -610,7 +610,7 @@
             },
             "llm_tools": {
                 "title": "Assist e agentes de IA",
-                "description": "Beta: permite que o Assist use o Supernotify. As ferramentas são para agentes de conversa que usam um modelo de IA e para agentes de IA ligados pelo servidor MCP do Home Assistant, e só chegam aos destinatários, entregas e cenários já configurados. O agente integrado, que não usa IA, não as pode usar, mas entende em vez disso algumas frases em inglês.",
+                "description": "Permite que o Assist use o Supernotify. As ferramentas são para agentes de conversa que usam um modelo de IA e para agentes de IA ligados pelo servidor MCP do Home Assistant, e só chegam aos destinatários, entregas e cenários já configurados. O agente integrado, que não usa IA, não as pode usar, mas entende em vez disso algumas frases em inglês.",
                 "data": {
                     "action_tools": "Ferramentas de ação",
                     "diagnostic_tools": "Ferramentas de diagnóstico",

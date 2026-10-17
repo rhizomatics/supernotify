@@ -161,6 +161,24 @@ Listen out for changes to users, persons, integrations and change integrations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement. `delivery_provenance` (v2.8.0) now records which source enabled or disabled each delivery; suppression reasons and multiple selectors are still to do.
 
+### Archive Viewer and Logbook Linkage
+
+The logbook shows a short `supernotify_notification` event per notification, with the full JSON kept out of the HA database in the file archive. There's no way to get from one to the other.
+
+**Logbook to archive.** Logbook entries have no URL field and render the message as plain text, so a direct link from the Activity view isn't possible. Instead:
+
+- Bundle a sidebar panel (`panel_custom`, JS served via `async_register_static_paths`) that lists recent archived notifications and opens one at `/supernotify?id=<notification_id>`, fetched by a websocket command limited to admins, since entries can hold diagnostics
+- Put a short notification id in the logbook message, so it can be found in the panel
+- Optionally let a mobile push carry `url: /supernotify?id=...`, so tapping the notification opens its own archive entry
+
+**Archive to logbook and traces.** The archive's `original_context` holds only the raw context ids. Make it readable and linkable:
+
+- Record the sending automation or script and its run from `homeassistant.helpers.trace.trace_id_get()`, which the trace sets as a context var for the run and which reaches the notify action. This gives the exact sender and a link to `/config/automation/trace/<id>?run_id=<run_id>`, and could replace the best-effort state scan in `HomeAssistantAPI.sender_entity_ids()`. Traces are only kept for the last 5 runs by default, so the link goes stale, but the sender name stays
+  - Always set for automations and scripts on a standard install, since both depend on `trace`, but the run is only stored, and so linkable, for automations with an `id` (YAML ones without one get the trace id `("automation.None", run_id)`, but no stored trace, so it should be dropped). The key holds the automation's config `id`, which the trace URL needs, not its entity id. Not set for calls from the developer tools, REST API, Assist or another integration's own code, so it is optional and the context ids stay as the fallback
+  - Context vars are copied into tasks and event listeners, so an integration reacting to an event an automation fired could inherit that automation's trace id. HA also never resets it when a run ends, so later code in the same task sees a stale one. Record it as the run in progress, not as proof it sent the notification
+  - A stored trace's context id matches the call's context when the automation really made the call, and differs for a stale or inherited trace id, so the two can be checked against each other. Do that check in the archive viewer with the `trace/get` websocket command rather than in Python: `hass.data[DATA_TRACE]` is internal, and its layout changed between 2026.10.1 and 2026.10.2
+- Add a logbook link for the time of the notification, `/logbook?start_date=...&end_date=...`, narrowed to the sender entity when there is one. The logbook UI can't filter by context id, though the `logbook/get_events` websocket command can, so the panel above could show the related logbook entries itself, as the trace view does
+
 ### Error Handling
 
 Dead letter queue for failed deliveries, so admin can get by email if preferred, with options to throttle / group / summarize

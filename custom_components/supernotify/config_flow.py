@@ -438,7 +438,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
         return self.async_show_form(step_id="delivery_control", data_schema=schema)
 
     async def async_step_llm_tools(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Beta: which tools llm.py offers to AI conversation agents and the MCP server, and whether
+        """Which tools llm.py offers to AI conversation agents and the MCP server, and whether
         sentences.py registers commands with the built-in agent"""
         current: dict[str, Any] = self.config_entry.options.get(CONF_LLM_TOOLS, {})
         if user_input is not None:

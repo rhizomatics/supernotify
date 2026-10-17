@@ -507,7 +507,7 @@
             },
             "llm_tools": {
                 "title": "Assist and AI agents",
-                "description": "Beta: let Assist use Supernotify. The tools are for conversation agents that use an AI model, and AI agents connected through Home Assistant's MCP server, and only reach the recipients, deliveries and scenarios already configured. The built-in agent, which doesn't use AI, can't use them, but can understand a few English and Italian sentences instead.",
+                "description": "Access notifications using voice or chat. Action Tools and Diagnostic Tools work only with AI based chat agents or MCP, and only reach the recipients, deliveries and scenarios already configured. The built-in agent, which doesn't use AI, can understand a few English and Italian sentences instead.",
                 "data": {
                     "action_tools": "Action tools",
                     "diagnostic_tools": "Diagnostic tools",

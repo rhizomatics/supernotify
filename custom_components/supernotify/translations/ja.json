@@ -610,7 +610,7 @@
             },
             "llm_tools": {
                 "title": "Assist と AI エージェント（ベータ）",
-                "description": "ベータ: Assist が Supernotify を使えるようにします。ツールは AI モデルを使う会話エージェントと、Home Assistant の MCP サーバー経由で接続された AI エージェント向けで、設定済みの受信者、配信、シナリオだけに届きます。AI を使わない内蔵エージェントはツールを使えませんが、代わりにいくつかの英語の文を理解します。",
+                "description": "Assist が Supernotify を使えるようにします。ツールは AI モデルを使う会話エージェントと、Home Assistant の MCP サーバー経由で接続された AI エージェント向けで、設定済みの受信者、配信、シナリオだけに届きます。AI を使わない内蔵エージェントはツールを使えませんが、代わりにいくつかの英語の文を理解します。",
                 "data": {
                     "action_tools": "アクションツール",
                     "diagnostic_tools": "診断ツール",
