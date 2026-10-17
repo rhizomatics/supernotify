@@ -11,53 +11,53 @@ One of the first [Auto Notifiers](./0003-auto_notifier.md): a new module (with o
 ## Goals
 
 - 100% ConfigFlow, no YAML needed to set up or use
-- Sensible defaults, so a user only picks cameras and gets working mobile, email and voice notifications
+- Sensible defaults, autoselects cameras
+  - Users delete cameras they don't want rather than add ones they do
+  - If supernotify setup gets working mobile, email and voice notifications
+  - Same fallback as `appliance_autonotify` without supernotify, call all mobiles
 - Every part of the `supernotify.notify` call can still be tuned, using the same UI as an automation action
 - Supernotify's own YAML still applies, so users can add scenarios or deliveries that react to Frigate notifications
 - The [Apple push fix](../../recipes/fix_frigate_apple_push.md) is built in, with an option to turn it off
+- Use the new notification level click thru for a destination URL
+- All AutoNotify components should look and behave similarly
+- Garner feedback on changes for Supernotify
+  - See [Principle 11](../principles.md) on building out mobile support
+  - Primary goal is to enhance Supernotify such that automations and blueprints *like* the Frigate one don't require 100s of lines of YAML to handle different phone models, notification options
+- Design for HomeAssistant and Frigate rather than blindly following the Frigate blueprint
+  - https://docs.frigate.video/integrations/home-assistant/ is canonical
+  - https://docs.frigate.video/configuration/notifications may offer suggestions of what's needed to handle
+- Works with standalone Frigate or running as a HA app
 
-Out of scope for the first release: GenAI review summaries (`frigate/tracked_object_update` and the `genai` review type),
-ANPR, Telegram inline keyboards and Android TV overlays. Telegram and TV remain possible as ordinary Supernotify deliveries.
+Out of scope for the first release:
+ - GenAI review summaries (`frigate/tracked_object_update` and the `genai` review type),
+ - ANPR
+ - Telegram inline keyboards
+ - Android TV overlays.
+ - Telegram and TV remain possible as ordinary Supernotify deliveries.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    F["Frigate<br/>MQTT frigate/reviews"] --> C["Frigate SuperNotifier<br/>filters + review tracker"]
-    C -->|"supernotify.notify<br/>(stored action, with variables)"| S["Supernotify"]
-    S --> D["Deliveries<br/>mobile push, email, TTS..."]
-    D -->|"mobile_app_notification_action"| C
-```
+New HACS component, **Frigate AutoNotify**
 
-- **Package module inside Supernotify**, with `mqtt` and `frigate` as `after_dependencies`, only offered when both are
-  loaded. A thin *Frigate SuperNotifier* HACS repository can follow later for visibility
-- **Config subentry per notification profile** of the Supernotify entry - a Frigate instance and a set of cameras with
-  their own filters and notification. Most users have one; someone wanting the driveway treated differently from the
-  garden adds a second
+Has dependencies on the Frigate and MQTT integrations. Supernotify is an 'after' dependency, so not required for startup. Possibly Frigate Proxy can be optional too.
+
+- **Config subentry per camera**
+- **Config subentry for all cameras** - Set auto-discovery, like Appliance AutoNotify. Use for any global defaults
 - **Frigate settings discovered** from the existing `frigate` config entry. The MQTT topic prefix, proxy client ID and
   base URL are read from the Frigate entry and Home Assistant's external URL, replacing the blueprint's `base_url`,
-  `client_id` and `mqtt_topic` inputs
+  `client_id` and `mqtt_topic` inputs.
+  If no Frigate proxy, use default mqtt topic
 - **Runtime**: one MQTT subscription per entry; a review tracker keeps per-review state (severity, objects,
   sub-labels, zones, last sent) in memory, replacing the blueprint's `wait_for_trigger` loop. Everything is in code,
   so improvements reach existing users on upgrade
 
 ## Customization UI
 
-HA integration config flows can't show an automation editor in general, but they can show the **action selector**.
-Core already does this, for example the Template helper's alarm panel uses `ActionSelector` for its arm and disarm
-actions (`homeassistant/components/template/config_flow.py`).
+Offer same notification options and integration as Appliance AutoNotify.
 
-So each profile stores its notification as an action:
+## Reference
 
-- The **Notification** step of the subentry flow shows an `ActionSelector`, pre-filled with a
-  `supernotify.notify` call using the default title, message, media, priority and actions
-- The user sees exactly the `supernotify.notify` UI they'd get in an automation, and can change any field, add
-  `delivery` overrides, `apply_scenarios`, or even add further actions before or after
-- The component runs the stored actions with `homeassistant.helpers.script.Script`, passing the review as variables,
-  so templates like `{{ label }}` work as they do in the blueprint
-- A **Reset to default** option replaces the stored action with the current default, for when the default improves
-
-Variables passed to the action:
+Frigate blueprint variables.
 
 | Variable                                       | Meaning                                                                     |
 | ---------------------------------------------- | --------------------------------------------------------------------------- |
@@ -103,16 +103,14 @@ Remaining profile settings, with the fix recipe:
 
 ## Changes needed in Supernotify
 
-See [Auto Notifier Support](./0003a-auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are
-snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and
-live view changes.
+See [Auto Notifier Support](./0003a-auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and live view changes.
 
 ## Open Questions
 
-- Spike: confirm `ActionSelector` defaults render pre-filled in a subentry flow, and that templates in `data` survive
-  storage and run through `Script` with the review variables
 - Spike: confirm `ConditionSelector` renders in config flows, since no core integration uses it there yet
 - How does the component know Frigate's camera list, zones and labels during the flow - from the Frigate integration's
   coordinator data, or the Frigate API?
-- Should a default profile be created automatically when a Frigate entry is found, or only offered?
-- Naming - see [Auto Notifier](./0003-auto_notifier.md#questions)
+- Some type of 'entity context' needed here rather than context as calling automation/trigger
+  - Appliance AutoNotify would have that too, i.e. the washing machine, or by proxy the power monitor for it
+- Is there too much variation for a simple `apply-scenarios` approach? does this need to supply new variables to drive downstream conditions?
+- Live activities for view, or click thru?

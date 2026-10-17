@@ -85,7 +85,45 @@ Two more failures were found by reading the code, not seen live. Both are still 
 - **Reopened activity.** A progress update sent after the clear is treated by Home Assistant as a new start, because the token for that tag has gone.
 - **Start and end reach different devices.** The start is selected by scenario and occupancy at that moment. The clear goes to every mobile push delivery later, under whatever applies then. A phone that got the start can miss the clear, and a phone that never got the start is sent one.
 
+## Enriched Source
+
+Several limitations with current Home Assistant
+
+- The calling object - typically an automation or script - *is* available, but it is unwieldy to find, requiring either a scan of all states, or direct SQL queries
+  - The calling object itself may have metadata - categories, labels - that are of value in conditions, or tracking
+- For notification use cases, often the real context is the entity, device etc that led to the automation
+  - Examples
+    - A camera entity ID, or a Frigate event ID
+    - A HomeConnect-enabled dishwasher, or a power monitor connected to a washing machine
+  - The static metadata for this object may be needed, along with state, state attributes, state transition, event, and the new HA triggers
+- Supernotify needs a clean way of discovering or accepting this info from AutoNotify components, or any other upstream that chooses to use them
+- Some of this may eventually be part of HA, so doing it once within the code useful, to minimize migration path within code and for automations
+- Condition code may need some shortcuts, like 'furthest back known context' that picks either parent or current context depending on availability
+- May be multiple objects for same thing, e.g. onvif camera plus hikvision camera plus mpeg camera plus frigate camera plus SN camera config object
+- AutoArm currently does this by passing an `apply_scenarios` however this is very limited for cases where multiple vars involved
+  - Subject -> verb -> Object -> Medium -- sunrise disarmed alarm panel state reported by autoarm
+
+Step back to *why* this is needed, or if it is really needed at all:
+
+- Condition variables for scenarios, or conditional deliveries
+- Debugging, live or reading an archive notification to see why something happened
+  - Archive notification is a more relaxed environment to do slow calls to pull in context
+  - A method that turns existing HA context into useful user and automation refs is obvious
+
+
+### Implementation Guidelines
+
+- Method already available, with caveats, in `hass_api` to retrieve the upstream automation from context
+  - This shouldn't run on every notification, should be on demand
+  - Also on demand, pull in parent version of it
+  - Object ref available as well as entity_id string, so all attributes can be accessed without duplicating within SN
+-
+
+
+
 ## Proposal: the `live:` mapping
+
+**Under Review - incorporating new work on source and other refinements**
 
 A live notification is reported over several `notify` calls that share an id. Each call can carry two parts:
 
@@ -185,7 +223,6 @@ The caller is not expected to choose an id that is unique across Home Assistant.
 - A live call with no source, given or found, is refused with an error that says so.
 - An ordinary notification with no source, given or found, is sent as now.
 
-This is the first use of a notification source in Supernotify. A single string is enough here. The fuller source parts proposed in [Auto Notify Support](./0003a-auto_notifier_support.md#2-notification-source) can build on it later.
 
 ### What Supernotify takes on
 
@@ -351,7 +388,7 @@ Answered by the Appliance Auto Notify work up to v0.7.0 and its platform notes, 
 - [x] **Callers without Supernotify.** Appliance Auto Notify falls back to `notify.send_message` for start and end only. That stays the caller's concern.
 - [x] **Source.** A top level field for any notification, required for live ones, taken from the call context for automations and scripts, and given explicitly by components.
 - [x] **End and close.** An end sends final content to the same live item, which is closed later under a close rule.
-- [x] **Earlier design.** Sections 3 and 10 of [Auto Notify Support](./0003a-auto_notifier_support.md), with `tag` and `lifecycle`, are superseded by this RFC.
+
 
 ## Open questions
 
@@ -430,7 +467,7 @@ Persistent notifications:
 ## References
 
 - [Auto Notify](./0003-auto_notifier.md) - The Auto Notify design doc
-- [Auto Notify Support](./0003a-auto_notifier_support.md) - Appendix of changes anticipated before first real use. Its sections 3 and 10 are superseded by this RFC
+- [Auto Notify Support](./0003a-auto_notifier_support.md) - Appendix of changes anticipated before first real use, largely superseded.
 - [Household Appliances Auto Notifier](./0004-household_appliances_auto_notifier.md) - The first caller
 - [Mobile platforms](https://github.com/rhizomatics/appliances_autonotify/blob/main/docs/mobile_platforms.md) - Android and iOS behaviour, field by field, from Appliance Auto Notify
 - [Supernotify #254](https://github.com/rhizomatics/supernotify/issues/254) - Ending a notification everywhere it was shown
