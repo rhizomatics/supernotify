@@ -81,6 +81,7 @@ Breakdown:
   - Delivery only needs its own ConfigFlow entry for the advanced case of more than one preset per Transport (e.g. a low-priority and high-priority chime) - Principle #3, Design Decision 2.
   - Prerequisite engine change, ahead of or alongside the UI work rather than part of it: merge the `DELIVERY_SCHEMA` extensions back into `DELIVERY_CONFIG_SCHEMA` (Design Decision 1), so there's a single config shape to expose instead of two.
   - This may mean that the UI supports only a simplified version of these, if for example Condition editing is not viable, and the YAML remains. Preferably every one of these can be edited in either the UI or YAML, and round-tripped between them.
+  - YAML stays the primary store, with UI edits round-tripped to the file as automations do. Config subentries were prototyped and rejected as the store ([#166](https://github.com/rhizomatics/supernotify/issues/166)).
 * Extend auto discovery to other viable transports
   - ntfy, gotify, telegram, pushover, lametric, alexa devices, SMS (if mikrotik_sms, twilio, clicksend etc installed)
 

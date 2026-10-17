@@ -147,6 +147,19 @@ Might be scope for having 'real time' deliveries sequenced ahead of async ones, 
 
 Second and further phases identified at [ConfigFlow](./rfcs/0001-configflow_approach.md)
 
+Storage model for deliveries, scenarios and transports, settled in [#166](https://github.com/rhizomatics/supernotify/issues/166):
+
+- YAML stays the primary storage, with UI edits round-tripped to the file as automations do. Once there are many deliveries or scenarios, one file is far easier to manage and compare than hundreds of clicks. Config entries for these would at most be ephemeral, not the store
+- Config subentries were prototyped and rejected as the store. The field typing from that prototype carries over to the form layer of the round-trip editor: a `SelectSelector` for transport, typed `enabled`/`priority`/`occupancy`/`selection`, and an `ObjectSelector` for transport-specific `data`/`options`/`conditions`, validated against `DELIVERY_SCHEMA` before writing back. @lollox80 has offered to build this against the file-writing mechanism once there is a branch or doc for it
+- The UI covers the simpler cases, with guard rails and guidance, while the full YAML stays available for advanced use
+- Anything stored in a config entry must be raw strings re-validated at load time, since validated config holds `Template` objects that are not JSON-serializable. Handled for now by the `CONFIG_ENTRY_SCHEMA` / `FULL_CONFIG_SCHEMA` split
+- Update listeners from `entry.add_update_listener()` must be coroutine functions; a sync `@callback` fails at the first options save
+
+Also raised there and still open, and more pressing once deliveries are edited in a form:
+
+- `delivery:` as a map defaults to implicit selection, as a list to explicit, so the same key behaves differently by YAML shape. Expose the selection mode explicitly in the delivery form and decouple the default from the shape
+- When two active scenarios disagree on a delivery's `enabled`, `false` wins silently. Document the rule, or let a scenario say it should win
+
 ### Respond to Dynamic Home Assistant Changes
 
 Listen out for changes to users, persons, integrations and change integrations
@@ -160,6 +173,8 @@ Listen out for changes to users, persons, integrations and change integrations
 ### Delivery Explanations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement. `delivery_provenance` (v2.8.0) now records which source enabled or disabled each delivery; suppression reasons and multiple selectors are still to do.
+
+Something like automation traces would suit delivery selection best, since the rules get complicated fast and whatever they are will surprise someone, such as `fixed` being disabled by `enabled` but not by `priority` ([#166](https://github.com/rhizomatics/supernotify/issues/166)).
 
 ### Archive Viewer and Logbook Linkage
 
@@ -312,6 +327,8 @@ Scenarios can mess with targets but its complicated in config and in code, and n
    - v2.9.0
    - [https://github.com/rhizomatics/supernotify/pull/188]
 - MQTT Publish action
+- Scenario binary sensors show evaluated scenario state, refreshed on condition entity changes
+   - [https://github.com/rhizomatics/supernotify/pull/171], from [#166](https://github.com/rhizomatics/supernotify/issues/166)
 
 ## Rejected Roadmap
 
