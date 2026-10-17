@@ -111,7 +111,7 @@ async def test_scenario_binary_sensor_is_published_unless_opted_out(hass: HomeAs
     manual = hass.states.get("binary_sensor.supernotify_scenario_manual")
     assert manual is not None
     assert manual.state == STATE_OFF
-    assert manual.name == "SuperNotify Scenario Manual manual"
+    assert manual.name == "Supernotify Scenario Manual manual"
     assert hass.states.get("binary_sensor.supernotify_scenario_sera").state in (STATE_ON, STATE_OFF)  # type: ignore[union-attr]
     # while every scenario keeps its switch
     for name in ("manual", "quiet", "sera"):
@@ -267,8 +267,8 @@ async def test_scenario_entities_have_config_entry_device_and_names(hass: HomeAs
 
     binary = hass.states.get("binary_sensor.supernotify_scenario_sera")
     assert binary is not None
-    assert binary.name == "SuperNotify Scenario Condition Evening mode"
-    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Scenario Evening mode"  # type: ignore[union-attr]
+    assert binary.name == "Supernotify Scenario Condition Evening mode"
+    assert hass.states.get("switch.supernotify_scenario_sera").name == "Supernotify Scenario Evening mode"  # type: ignore[union-attr]
 
 
 async def test_scenario_binary_sensor_is_published_on_a_new_install(hass: HomeAssistant) -> None:
@@ -360,8 +360,8 @@ async def test_recipient_entities_have_config_entry_device_and_names(hass: HomeA
         assert reg_entry.device_id is not None
         assert reg_entry.unique_id == "recipient_joe"
 
-    assert hass.states.get("switch.supernotify_recipient_joe").name == "SuperNotify Recipient Joe Bloggs Enabled"  # type: ignore[union-attr]
-    assert hass.states.get("binary_sensor.supernotify_recipient_joe").name == "SuperNotify Recipient Joe Bloggs"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_recipient_joe").name == "Supernotify Recipient Joe Bloggs Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("binary_sensor.supernotify_recipient_joe").name == "Supernotify Recipient Joe Bloggs"  # type: ignore[union-attr]
 
 
 async def test_recipient_binary_sensor_is_not_published_on_a_new_install(hass: HomeAssistant) -> None:

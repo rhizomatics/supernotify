@@ -5,6 +5,8 @@
 # v2.15.1
 ## 🐛 Bug fixes
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
+- The name is now spelt `Supernotify` throughout, as in the integration list, rather than sometimes `SuperNotify`. This changes the device name, and so the friendly names of its entities, e.g. `Supernotify Reset overrides`, unless the device has been renamed. Entity ids are unchanged
+- Supernotify's entries in the Activity view now have their own icon
 - Integrations now log only at DEBUG level if they are not going to be setup if the underlying integration isn't even installed (removes a good chunk of startup log noise)
 
 ## ✨ Enhancements

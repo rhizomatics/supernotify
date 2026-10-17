@@ -236,7 +236,7 @@ async def test_button_is_on_the_supernotify_device(hass: HomeAssistant) -> None:
     assert reg_entry.device_id is not None
     state = hass.states.get("button.supernotify_reset_overrides")
     assert state is not None
-    assert state.name == "SuperNotify Reset overrides"
+    assert state.name == "Supernotify Reset overrides"
 
 
 async def test_reset_leaves_manual_scenario_state_alone(hass: HomeAssistant) -> None:

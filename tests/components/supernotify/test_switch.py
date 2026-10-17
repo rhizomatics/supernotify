@@ -280,11 +280,11 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
 
     state = hass.states.get("switch.supernotify_delivery_chat_room")
     assert state is not None
-    assert state.name == "SuperNotify Delivery Chat Room Enabled"
+    assert state.name == "Supernotify Delivery Chat Room Enabled"
     assert state.attributes["transport"] == "generic"
     state = hass.states.get("switch.supernotify_transport_generic")
     assert state is not None
-    assert state.name == "SuperNotify Transport generic Enabled"
+    assert state.name == "Supernotify Transport generic Enabled"
 
 
 async def test_delivery_names_slugified_alike_get_distinct_switches(hass: HomeAssistant) -> None:
