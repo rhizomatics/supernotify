@@ -103,7 +103,8 @@ Option A, keeping uuid1, is also acceptable. Once the human reference is separat
 Option D's daily counter, used only as the reference: `ref: 7`, shown with the date as "17 Oct #7".
 
 - Kept in a `Store` file, e.g. `.storage/supernotify.sequence` holding `{"date": "2026-10-17", "count": 7}`. The first notification after local midnight starts again at 1
-- Taken when the notification is created, for every notification, whether delivered, suppressed, failed or a duplicate, so every archived notification has one. Dry runs don't take one, since they aren't archived
+- Taken when the notification is created, for every notification, whether delivered, suppressed, failed or a duplicate, so every archived notification has one
+- A dry run (`dry_run: simulate`) takes a number from its own daily count instead, with a marker that can't be mistaken for a real one, e.g. `#D3`. The real numbering has no gaps, and a dry run's reference in its response, the logs or an AI agent's reply is plainly not a notification that was sent. Dry runs aren't archived or logged in the Activity view, so this count doesn't need to survive a restart
 - Saved with `async_delay_save()` on a short delay. `Store` already does a final write when HA stops, so only a hard crash within the delay can reuse a number. Restoring a backup can too. Neither breaks anything, because the technical id stays unique
 - The store file is removed when the config entry is removed (`async_remove_entry`)
 - The existing notifications sensor isn't used. It only counts delivered notifications, and as an entity it can be disabled or deleted
@@ -147,13 +148,15 @@ The archive viewer itself, a bundled panel, is on the [roadmap](../roadmap.md#ar
 - [ ] **Change the technical id at all?** With a separate reference, uuid1 still works. Sorting by time is the main gain
 - [ ] **Reference in the filename?** `2026-10-17T13-07_7_<id>.json` would let a lookup by reference skip opening files, at the cost of a longer name
 - [ ] **Reference format.** `#7` alone, or with a date prefix where there's no date beside it, e.g. `1017-7`?
-- [ ] **Count dry runs?** They aren't archived, so they'd leave gaps in the numbering, but a `ref` in the dry run response could still help
+- [x] **Count dry runs?** Yes, from their own count with a marker, e.g. `#D3`, so the real numbering has no gaps
+- [ ] **Dry run marker.** A `D` prefix, or a suffix such as `#3-dry`? It has to read clearly in the dry run response and in an AI agent's reply
 - [ ] **Look up by context id.** A context id can match several notifications, so the lookup returns a list. Is that worth adding to the archive enquiry action before the viewer exists?
 
 ## Testing
 
 - The reference survives a restart on the same day, and starts at 1 on the next local day
 - Every archived notification has a `ref`, whatever its outcome
+- A dry run gets a marked reference from its own count, and doesn't move the real count on
 - Lookup by full id, by date and reference, and by an old uuid1 id. A partial number doesn't match a longer one
 - The logbook message and event data include the reference
 - Two notifications from one automation run get different ids and references, and the same `original_trace` and `original_context`
