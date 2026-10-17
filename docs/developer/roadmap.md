@@ -163,6 +163,8 @@ Better explain in the archived message, the basis on which any single delivery w
 
 ### Archive Viewer and Logbook Linkage
 
+See also [RFC0009](rfcs/0009-notification_ids.md) for notification ids and a human-friendly reference.
+
 The logbook shows a short `supernotify_notification` event per notification, with the full JSON kept out of the HA database in the file archive. There's no way to get from one to the other.
 
 **Logbook to archive.** Logbook entries have no URL field and render the message as plain text, so a direct link from the Activity view isn't possible. Instead:
