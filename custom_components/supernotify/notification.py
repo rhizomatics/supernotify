@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.helpers.trace import trace_id_get
 
 from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
@@ -110,6 +111,20 @@ class DeliveryTargetOverride:
         return {"fixed": self.fixed, "include": self.include, "exclude": self.exclude}
 
 
+def _original_trace() -> dict[str, str] | None:
+    """The automation or script run in progress when the notification was made, for a link to its trace.
+
+    Home Assistant sets this for the task an automation or script runs in, and the tasks and event
+    listeners it starts, and never clears it, so it is the run in progress rather than proof of the
+    sender - compare its trace's context with `original_context` to be sure. There's none for a call
+    from the developer tools, the API or another integration's own task, and an automation without an
+    `id` gets one keyed `automation.None` but no stored trace to link to"""
+    trace_id: tuple[str, str] | None = trace_id_get()
+    if trace_id is None or trace_id[0].endswith(".None"):
+        return None
+    return {"key": trace_id[0], "run_id": trace_id[1]}
+
+
 class Notification(ArchivableObject):
     def __init__(
         self,
@@ -131,6 +146,7 @@ class Notification(ArchivableObject):
         self.message: str | None = message
         self.context: Context = context
         self.ha_context: HAContext | None = ha_context
+        self.original_trace: dict[str, str] | None = _original_trace()
         self._senders: list[str] | None = None
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
@@ -1050,6 +1066,7 @@ class Notification(ArchivableObject):
             "_suppression_reason",
             "delivery_provenance",
             "unknown_names",
+            "original_trace",
         ]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
@@ -1090,6 +1107,7 @@ class Notification(ArchivableObject):
             "actions",
             "delivery_exceptions",
             "original_context",
+            "original_trace",
             "version",
         ]
         # preferred fields

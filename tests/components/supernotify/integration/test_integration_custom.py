@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     import pathlib
 
     from homeassistant.core import HomeAssistant, ServiceCall
+    from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
     from conftest import TestImage
 
@@ -56,6 +57,70 @@ async def test_notification_fires_from_event_triggered_automation(
     assert len(dummy_notify.calls) == 1
     message, _title, _target, _kwargs = dummy_notify.calls[0]
     assert message == "Someone is at the door"
+
+
+async def test_archive_records_automation_trace(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, dummy_notify: DummyNotificationService
+) -> None:
+    """The automation run that made the notification is kept in the archive, so its trace can be linked to,
+    except for an automation without an id, which has no stored trace, and a call from outside one"""
+    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy", "inclusion": ["default"]}}}
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "id": "doorbell_notify",
+                    "alias": "notify on doorbell",
+                    "trigger": [{"platform": "event", "event_type": "doorbell_pressed"}],
+                    "action": [{"action": "supernotify.notify", "data": {"message": "Someone is at the door"}}],
+                },
+                {
+                    "alias": "notify on gate, no id",
+                    "trigger": [{"platform": "event", "event_type": "gate_opened"}],
+                    "action": [{"action": "supernotify.notify", "data": {"message": "Gate open"}}],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    async def last_notification() -> dict:
+        return await hass.services.async_call(  # type: ignore[return-value] # ty: ignore
+            DOMAIN, "enquire_last_notification", None, blocking=True, return_response=True
+        )
+
+    hass.bus.async_fire("doorbell_pressed")
+    await hass.async_block_till_done()
+    archived = await last_notification()
+    assert archived["message"] == "Someone is at the door"
+    assert archived["original_trace"]["key"] == "automation.doorbell_notify"
+    # the trace Home Assistant stored for that run, found as the frontend would, has the same context
+    client = await hass_ws_client(hass)
+    domain, item_id = archived["original_trace"]["key"].split(".", 1)
+    await client.send_json({
+        "id": 1,
+        "type": "trace/get",
+        "domain": domain,
+        "item_id": item_id,
+        "run_id": archived["original_trace"]["run_id"],
+    })
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["context"]["id"] == archived["original_context"]["id"]
+
+    hass.bus.async_fire("gate_opened")
+    await hass.async_block_till_done()
+    archived = await last_notification()
+    assert archived["message"] == "Gate open"
+    assert "original_trace" not in archived
+
+    await hass.services.async_call(DOMAIN, "notify", {"message": "From outside"}, blocking=True)
+    archived = await last_notification()
+    assert archived["message"] == "From outside"
+    assert "original_trace" not in archived
 
 
 async def test_context_propagates_to_camera_ptz_and_mobile_push(

@@ -7,6 +7,10 @@
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
 - Integrations now log only at DEBUG level if they are not going to be setup if the underlying integration isn't even installed (removes a good chunk of startup log noise)
 
+## ✨ Enhancements
+- `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
+  - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
+
 # v2.15.0
 ## 🐛 Bug fixes
 
