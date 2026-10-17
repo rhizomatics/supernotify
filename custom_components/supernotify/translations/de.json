@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Benachrichtigen",
-            "description": "Sendet über SuperNotify eine Benachrichtigung an eine oder mehrere Benachrichtigungsplattformen über eine einzige, einheitliche Schnittstelle.",
+            "description": "Sendet über Supernotify eine Benachrichtigung an eine oder mehrere Benachrichtigungsplattformen über eine einzige, einheitliche Schnittstelle.",
             "fields": {
                 "message": {
                     "name": "Nachricht",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Konfiguration abfragen",
-            "description": "Debug-Assistent zur Anzeige der aktuell geladenen SuperNotify-Konfiguration"
+            "description": "Debug-Assistent zur Anzeige der aktuell geladenen Supernotify-Konfiguration"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Lieferungen nach Szenario abfragen",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Entitäten aktualisieren",
-            "description": "Aktualisiert alle von SuperNotify bereitgestellten Entitäten zur Überprüfung und Steuerung"
+            "description": "Aktualisiert alle von Supernotify bereitgestellten Entitäten zur Überprüfung und Steuerung"
         },
         "reset_overrides": {
             "name": "Überschreibungen zurücksetzen",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Unbekannter Transport für Lieferung",
-            "description": "Die Lieferungskonfiguration {delivery} verweist auf einen Transport {transport}, der nicht von SuperNotify bereitgestellt wird. Verfügbare Transporte: {transports}"
+            "description": "Die Lieferungskonfiguration {delivery} verweist auf einen Transport {transport}, der nicht von Supernotify bereitgestellt wird. Verfügbare Transporte: {transports}"
         },
         "media_path": {
             "title": "Medienpfad kann nicht verwendet werden",

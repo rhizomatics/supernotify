@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "通知",
-            "description": "通过 SuperNotify，使用单一、统一的接口向一个或多个通知平台发送通知。",
+            "description": "通过 Supernotify，使用单一、统一的接口向一个或多个通知平台发送通知。",
             "fields": {
                 "message": {
                     "name": "消息",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "查询配置",
-            "description": "调试助手，用于显示当前加载的 SuperNotify 配置"
+            "description": "调试助手，用于显示当前加载的 Supernotify 配置"
         },
         "enquire_deliveries_by_scenario": {
             "name": "按场景查询推送",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "刷新实体",
-            "description": "刷新 SuperNotify 公开的所有实体，以便查看和控制"
+            "description": "刷新 Supernotify 公开的所有实体，以便查看和控制"
         },
         "reset_overrides": {
             "name": "重置覆盖",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "推送的传输方式未知",
-            "description": "推送配置 {delivery} 引用了 SuperNotify 不提供的传输方式 {transport}。可用的传输方式：{transports}"
+            "description": "推送配置 {delivery} 引用了 Supernotify 不提供的传输方式 {transport}。可用的传输方式：{transports}"
         },
         "media_path": {
             "title": "无法使用媒体路径",

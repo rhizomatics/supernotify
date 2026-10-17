@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "通知",
-            "description": "SuperNotify を介して、単一の統一されたインターフェースで1つ以上の通知プラットフォームに通知を送信します。",
+            "description": "Supernotify を介して、単一の統一されたインターフェースで1つ以上の通知プラットフォームに通知を送信します。",
             "fields": {
                 "message": {
                     "name": "メッセージ",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "設定の照会",
-            "description": "現在読み込まれているSuperNotifyの設定を表示するデバッグアシスタント"
+            "description": "現在読み込まれているSupernotifyの設定を表示するデバッグアシスタント"
         },
         "enquire_deliveries_by_scenario": {
             "name": "シナリオ別配信の照会",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "エンティティの更新",
-            "description": "SuperNotifyが公開するすべてのエンティティを、確認と制御のために更新します"
+            "description": "Supernotifyが公開するすべてのエンティティを、確認と制御のために更新します"
         },
         "reset_overrides": {
             "name": "オーバーライドのリセット",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "配信のトランスポートが不明です",
-            "description": "配信設定 {delivery} は、SuperNotifyが提供していないトランスポート {transport} を参照しています。利用可能なトランスポート: {transports}"
+            "description": "配信設定 {delivery} は、Supernotifyが提供していないトランスポート {transport} を参照しています。利用可能なトランスポート: {transports}"
         },
         "media_path": {
             "title": "メディアパスを使用できません",

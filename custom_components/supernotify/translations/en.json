@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Notify",
-            "description": "Send a notification via SuperNotify to one or more notification platforms via a single, unified interface.",
+            "description": "Send a notification via Supernotify to one or more notification platforms via a single, unified interface.",
             "fields": {
                 "message": {
                     "name": "Message",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Enquire Configuration",
-            "description": "Debugging assistant to show the currently loaded SuperNotify configuration"
+            "description": "Debugging assistant to show the currently loaded Supernotify configuration"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Enquire Deliveries By Scenario",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Refresh Entities",
-            "description": "Refresh every entity SuperNotify exposes for introspection and control"
+            "description": "Refresh every entity Supernotify exposes for introspection and control"
         },
         "reset_overrides": {
             "name": "Reset Overrides",
@@ -579,7 +579,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Unknown Transport for Delivery",
-            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify. Available transports: {transports}"
+            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by Supernotify. Available transports: {transports}"
         },
         "media_path": {
             "title": "Media Path Cannot be Used",

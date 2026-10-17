@@ -28,7 +28,11 @@ async def test_describes_sent_notification(hass: HomeAssistant) -> None:
         Mock(data={"summary": "Door open", "outcome": "success", "deliveries": ["email", "mobile_push"]})
     )
 
-    assert described == {"name": "SuperNotify", "message": "sent 'Door open' via email, mobile_push"}
+    assert described == {
+        "name": "Supernotify",
+        "message": "sent 'Door open' via email, mobile_push",
+        "icon": "mdi:bell-ring-outline",
+    }
 
 
 async def test_describes_undelivered_notification(hass: HomeAssistant) -> None:

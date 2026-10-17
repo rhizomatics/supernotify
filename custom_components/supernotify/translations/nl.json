@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Melden",
-            "description": "Verstuurt via SuperNotify een melding naar een of meer meldingsplatforms via één uniforme interface.",
+            "description": "Verstuurt via Supernotify een melding naar een of meer meldingsplatforms via één uniforme interface.",
             "fields": {
                 "message": {
                     "name": "Bericht",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Configuratie opvragen",
-            "description": "Foutopsporingsassistent om de momenteel geladen SuperNotify-configuratie te tonen"
+            "description": "Foutopsporingsassistent om de momenteel geladen Supernotify-configuratie te tonen"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Bezorgingen per scenario opvragen",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Entiteiten vernieuwen",
-            "description": "Vernieuwt elke entiteit die SuperNotify blootstelt voor inspectie en controle"
+            "description": "Vernieuwt elke entiteit die Supernotify blootstelt voor inspectie en controle"
         },
         "reset_overrides": {
             "name": "Overschrijvingen herstellen",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Onbekend transport voor bezorging",
-            "description": "Bezorgingsconfiguratie {delivery} verwijst naar een transport {transport} dat niet door SuperNotify wordt geleverd. Beschikbare transporten: {transports}"
+            "description": "Bezorgingsconfiguratie {delivery} verwijst naar een transport {transport} dat niet door Supernotify wordt geleverd. Beschikbare transporten: {transports}"
         },
         "media_path": {
             "title": "Mediapad kan niet worden gebruikt",

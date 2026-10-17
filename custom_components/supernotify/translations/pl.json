@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Powiadom",
-            "description": "Wysyła powiadomienie za pośrednictwem SuperNotify do jednej lub kilku platform powiadomień poprzez pojedynczy, ujednolicony interfejs.",
+            "description": "Wysyła powiadomienie za pośrednictwem Supernotify do jednej lub kilku platform powiadomień poprzez pojedynczy, ujednolicony interfejs.",
             "fields": {
                 "message": {
                     "name": "Wiadomość",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Zapytaj o konfigurację",
-            "description": "Asystent debugowania do wyświetlania aktualnie wczytanej konfiguracji SuperNotify"
+            "description": "Asystent debugowania do wyświetlania aktualnie wczytanej konfiguracji Supernotify"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Zapytaj o dostarczenia według scenariusza",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Odśwież encje",
-            "description": "Odświeża każdą encję udostępnianą przez SuperNotify do wglądu i sterowania"
+            "description": "Odświeża każdą encję udostępnianą przez Supernotify do wglądu i sterowania"
         },
         "reset_overrides": {
             "name": "Zresetuj nadpisania",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Nieznany transport dla dostarczenia",
-            "description": "Konfiguracja dostarczenia {delivery} odwołuje się do transportu {transport}, który nie jest dostarczany przez SuperNotify. Dostępne transporty: {transports}"
+            "description": "Konfiguracja dostarczenia {delivery} odwołuje się do transportu {transport}, który nie jest dostarczany przez Supernotify. Dostępne transporty: {transports}"
         },
         "media_path": {
             "title": "Ścieżka mediów nie może być użyta",

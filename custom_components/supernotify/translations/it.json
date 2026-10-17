@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Notifica",
-            "description": "Invia una notifica tramite SuperNotify a una o più piattaforme di notifica attraverso un'unica interfaccia unificata.",
+            "description": "Invia una notifica tramite Supernotify a una o più piattaforme di notifica attraverso un'unica interfaccia unificata.",
             "fields": {
                 "message": {
                     "name": "Messaggio",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Interroga configurazione",
-            "description": "Strumento di debug per visualizzare la configurazione di SuperNotify attualmente caricata"
+            "description": "Strumento di debug per visualizzare la configurazione di Supernotify attualmente caricata"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Interroga consegne per scenario",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Aggiorna entità",
-            "description": "Aggiorna tutte le entità esposte da SuperNotify per l'introspezione e il controllo"
+            "description": "Aggiorna tutte le entità esposte da Supernotify per l'introspezione e il controllo"
         },
         "reset_overrides": {
             "name": "Ripristina override",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Transport sconosciuto per delivery",
-            "description": "La configurazione della consegna {delivery} fa riferimento a un transport {transport} non fornito da SuperNotify. Transport disponibili: {transports}"
+            "description": "La configurazione della consegna {delivery} fa riferimento a un transport {transport} non fornito da Supernotify. Transport disponibili: {transports}"
         },
         "media_path": {
             "title": "Percorso media non utilizzabile",

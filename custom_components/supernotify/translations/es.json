@@ -58,7 +58,7 @@
         },
         "notify": {
             "name": "Notificar",
-            "description": "Envía una notificación a través de SuperNotify a una o más plataformas de notificación mediante una única interfaz unificada.",
+            "description": "Envía una notificación a través de Supernotify a una o más plataformas de notificación mediante una única interfaz unificada.",
             "fields": {
                 "message": {
                     "name": "Mensaje",
@@ -178,7 +178,7 @@
         },
         "enquire_configuration": {
             "name": "Consultar configuración",
-            "description": "Asistente de depuración para mostrar la configuración de SuperNotify actualmente cargada"
+            "description": "Asistente de depuración para mostrar la configuración de Supernotify actualmente cargada"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Consultar entregas por escenario",
@@ -226,7 +226,7 @@
         },
         "refresh_entities": {
             "name": "Actualizar entidades",
-            "description": "Actualiza todas las entidades que expone SuperNotify para inspección y control"
+            "description": "Actualiza todas las entidades que expone Supernotify para inspección y control"
         },
         "reset_overrides": {
             "name": "Restablecer anulaciones",
@@ -432,7 +432,7 @@
         },
         "delivery_unknown_transport": {
             "title": "Transporte desconocido para la entrega",
-            "description": "La configuración de entrega {delivery} hace referencia a un transporte {transport} que no es proporcionado por SuperNotify. Transportes disponibles: {transports}"
+            "description": "La configuración de entrega {delivery} hace referencia a un transporte {transport} que no es proporcionado por Supernotify. Transportes disponibles: {transports}"
         },
         "media_path": {
             "title": "La ruta de medios no puede ser utilizada",

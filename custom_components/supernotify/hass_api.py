@@ -150,7 +150,7 @@ def ha_device_info(entry_id: str) -> dr.DeviceInfo:
     registry. Unrelated to `TrackedDeviceDetails` above, which describes a discovered mobile_app
     device for targeting.
     """
-    return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="SuperNotify", manufacturer="SuperNotify")
+    return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="Supernotify", manufacturer="Supernotify")
 
 
 def _describe_unsubscribe(unsub: Callable[[], Any]) -> str:

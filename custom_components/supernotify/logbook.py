@@ -3,7 +3,12 @@
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME, LazyEventPartialState
+from homeassistant.components.logbook import (
+    LOGBOOK_ENTRY_ICON,
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+    LazyEventPartialState,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from . import DOMAIN
@@ -33,6 +38,6 @@ def async_describe_events(
         message: str = f"{OUTCOME_VERBS.get(data.get('outcome', ''), 'notified')} '{data.get('summary', '')}'"
         if data.get("deliveries"):
             message += f" via {', '.join(data['deliveries'])}"
-        return {LOGBOOK_ENTRY_NAME: "SuperNotify", LOGBOOK_ENTRY_MESSAGE: message}
+        return {LOGBOOK_ENTRY_NAME: "Supernotify", LOGBOOK_ENTRY_MESSAGE: message, LOGBOOK_ENTRY_ICON: "mdi:bell-ring-outline"}
 
     async_describe_event(DOMAIN, EVENT_NOTIFICATION, async_describe_notification)
