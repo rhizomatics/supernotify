@@ -351,6 +351,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0009-notification_ids/</loc>
+        <lastmod>2026-10-17</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/es/</loc>
         <lastmod>2026-10-17</lastmod>
         <changefreq>daily</changefreq>
