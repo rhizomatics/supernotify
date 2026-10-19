@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -63,6 +64,47 @@ async def town_house(hass: HomeAssistant) -> AsyncGenerator[House]:
         apple_apps={"alice_phone": "alice"},
         cameras={"front_door": "garage", "back_garden": None},
         pirs={"hall_pir": "lounge", "garden_pir": None},
+    )
+    await house.setup(hass)
+    try:
+        yield house
+    finally:
+        house.cleanup()
+
+
+@pytest.fixture
+async def smart_villa(hass: HomeAssistant) -> AsyncGenerator[House]:
+    """This house has a richer Home Assistant setup, and Supernotify configured with YAML, from
+    smart_villa.yaml alongside this file, which is where its scenarios will go too.
+
+        - 3 floors, with 7 rooms defined
+        - 3 Mobile apps
+        - No Person entries, only User accounts
+        - 2 cameras
+        - 2 PIRs
+        - A doorbell chime delivery, ringing a hall chime switch and the gate siren
+
+    """
+
+    areas: dict[str, str | None] = {
+        "hall": "ground",
+        "kitchen": "ground",
+        "lounge": "ground",
+        "master_bedroom": "first",
+        "guest_suite": "first",
+        "cinema": "basement",
+        "pool_house": None,
+    }
+    house = House(
+        floors=["basement", "ground", "first"],
+        areas=areas,
+        users={"carla": "carla", "dev": "dev", "nonna": "nonna"},
+        android_apps={"dev_phone": "dev"},
+        apple_apps={"carla_phone": "carla", "nonna_tablet": "nonna"},
+        cameras={"gate": None, "pool": "pool_house"},
+        pirs={"hall_pir": "hall", "pool_pir": "pool_house"},
+        config=(Path(__file__).parent / "smart_villa.yaml").read_text(),
+        stub_actions=["switch.turn_on", "siren.turn_on"],
     )
     await house.setup(hass)
     try:

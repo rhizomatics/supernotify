@@ -8,6 +8,12 @@
 - The name is now spelt `Supernotify` throughout, as in the integration list, rather than sometimes `SuperNotify`. This changes the device name, and so the friendly names of its entities, e.g. `Supernotify Reset overrides`, unless the device has been renamed. Entity ids are unchanged
 - Supernotify's entries in the Activity view now have their own icon
 - Integrations now log only at DEBUG level if they are not going to be setup if the underlying integration isn't even installed (removes a good chunk of startup log noise)
+- *Chime*
+  - Script chimes on a delivery with `debug` set were refused by Home Assistant, from an extra `wait` field
+  - A media player or script chime alias with `data` no longer has the data of each notification it is used for added to its own, which could carry `announce` and the like over to later notifications
+  - An alias entry with an empty `target`, or a label with neither `domain` nor `target`, no longer stops the whole chime delivery. The label entry is now ignored with a warning at startup
+  - A `group` in an alias entry's `target` is now expanded to its members, as it already was in a notification's target, rather than being skipped
+  - An alias entry's `domain` must now be one the chime transport supports, and is refused at startup if not
 
 ## ✨ Enhancements
 - `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.

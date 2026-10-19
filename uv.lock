@@ -1604,6 +1604,19 @@ wheels = [
 ]
 
 [[package]]
+name = "hassil"
+version = "3.12.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "unicode-rbnf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c8/9f/5908d3ec6b811f63f444d27d54b7dca58e95c8443af8814ddc4fc015b9e8/hassil-3.12.1.tar.gz", hash = "sha256:dad08f2525ad0246cfd6cc072e2c3015f1b15f918ac49a7b8e9dd07bd6ef8f5a", size = 71564, upload-time = "2026-09-14T16:00:09.703Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/37/395bad9bfeed5d9a78e6769941d09eb073fab6c76f65e6257fb0388b9751/hassil-3.12.1-py3-none-any.whl", hash = "sha256:d12553cccf2548a86cfedd28c8f3171690f5e8c064470c2b66170cc5848ecdef", size = 58054, upload-time = "2026-09-14T16:00:08.252Z" },
+]
+
+[[package]]
 name = "home-assistant-bluetooth"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4416,6 +4429,7 @@ dev = [
     { name = "codespell" },
     { name = "genbadge", extra = ["all"] },
     { name = "ha-ffmpeg" },
+    { name = "hassil" },
     { name = "homeassistant-repl" },
     { name = "homeassistant-stubs" },
     { name = "icdiff" },
@@ -4484,6 +4498,7 @@ dev = [
     { name = "codespell" },
     { name = "genbadge", extras = ["all"] },
     { name = "ha-ffmpeg" },
+    { name = "hassil" },
     { name = "homeassistant-repl" },
     { name = "homeassistant-stubs" },
     { name = "icdiff" },
@@ -4812,6 +4827,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/7e/4beaa80ac820b3243e376f79fde4a8bca2b477d8b6529ff5afcfd83f5f74/ulid_transform-2.2.9-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:35084b9ade29b462472485966789e5edc66dcbc376ffaf89759e7ada0c7d1f6c", size = 1058912, upload-time = "2026-05-25T05:46:10.736Z" },
     { url = "https://files.pythonhosted.org/packages/39/f8/ab3af64aa6ced7c65b09aa4b1c33d2cd4bf48646c9957a17659cea69e1c5/ulid_transform-2.2.9-cp314-cp314t-win32.whl", hash = "sha256:ccf6b173ae1e90a589935fd99176dc9d71d461c9f413b1a754d542ba2d399860", size = 25725, upload-time = "2026-05-25T05:46:12.117Z" },
     { url = "https://files.pythonhosted.org/packages/0b/c8/cbb9374e8a0e26d18e94ffb3e1f861beab5312b3e0be4fbad1bf60cdb47c/ulid_transform-2.2.9-cp314-cp314t-win_amd64.whl", hash = "sha256:fed352965a8682a156000d29e0efff8b85e7c2b8cb74f2e953a1e6d0157648b9", size = 25827, upload-time = "2026-05-25T05:46:13.164Z" },
+]
+
+[[package]]
+name = "unicode-rbnf"
+version = "2.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/97/ee2a969ddfd3988a11b5e026060dffb60f59e99c9906cff0ffe3384b9345/unicode_rbnf-2.4.1.tar.gz", hash = "sha256:17621d76cb9dd22eac493f667317b8563820b3d674374af130017ab281ca8648", size = 98405, upload-time = "2026-10-06T21:02:08.138Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/f7/a19bcc91afc3155023c906c85321e456f67936feab151ef808cc5b8ebfe2/unicode_rbnf-2.4.1-py3-none-any.whl", hash = "sha256:545a10c40316b49a6f14a1470e51a217c75438569c352abdbc5da11fef273498", size = 150370, upload-time = "2026-10-06T21:02:06.807Z" },
 ]
 
 [[package]]

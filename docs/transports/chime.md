@@ -25,6 +25,10 @@ integration to discover, so it stays unconfigured until a transport-level `chime
 option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own
 to use it directly.
 
+The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is
+created that targets all of them. It is explicit-only, so it is used only when named in an action
+call or scenario, and needs no aliases since a siren can be turned on without a tune.
+
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
 This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
 
@@ -80,6 +84,17 @@ In this example, a 433Mhz doorbell will go 'ding dong' and Alexa will play a doo
           alarm_id: 12
 ```
 
+Each entry under an alias is keyed by either a domain (`alexa_devices`, `media_player`,
+`rest_command`, `script`, `siren` or `switch`), or a label of your choosing. A label entry must
+have a `domain` or a `target`, otherwise it is ignored with a warning. An entry with a `target`
+chimes just those entities - any `group` among them is expanded to its members - while one without
+applies to every target of that domain in the notification.
+
+Targets in the notification that no alias entry covers are still chimed, using the alias name
+itself as the tune - for example `chime_tune: doorbell` plays `doorbell` on a media player that
+isn't in the alias. Switches ignore the tune, but other devices may not recognize it, so give each
+kind of device you target an entry in the alias.
+
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
 The formal schema is published as [Chime Aliases Definition](../developer/reference/schemas/Chime_Aliases_Definition.md).
@@ -98,11 +113,11 @@ level and durations. The following generic chime tunings are passed to the siren
 | Chime Option   | Siren Data Field |
 |----------------|------------------|
 | chime_tune     | tone             |
-| chime_volume   | volume           |
+| chime_volume   | volume_level     |
 | chime_duration | duration         |
 
-
-Supernotify passes on the `data` structure exactly as it is on the regular Home Assistant actions, see the documentation for those integrations below:
+Only these fields are sent - switches get no data at all, and any `data` on a switch or siren
+alias entry is not used. See the documentation for those integrations below:
 
 - [Siren](https://www.home-assistant.io/integrations/siren/)
 - [Switch](https://www.home-assistant.io/integrations/switch/)
@@ -130,23 +145,43 @@ Each script will be called with:
 
 - `message` - from the notification
 - `title`   - optional on the notification
+- `priority` - priority of the notification
 - `chime_tune` - name of the chime if supplied
 - `chime_duration` - where passed in action data or defined in chime alias
 - `chime_volume` - where passed in action data or defined in chime alias
 
-Additional variables can be configured when defining an alias using the `variables` attribute in `data`.
+Additional variables can be configured when defining an alias, by adding them to its `data`,
+for example `data: {visitor_name: Guest}` makes `visitor_name` available to the script.
 
 See also [Script](https://www.home-assistant.io/integrations/script/) in HomeAssistant documentation.
 
-### Alexa Media Player
-
-NOTE: Requires the [`Alexa Media Player`](https://github.com/alandtse/alexa_media_player) integration
-to be installed on Home Assistant.
+### Media Players and Alexa Media Player
 
 Supply `media_player` entities as targets and this transport will make appropriate `media_player.play_media`
-action calls to them, passing the sound name provided in `tune` field.
+action calls to them, passing the sound name provided in `tune` field as the media content ID,
+with a media content type of `sound`.
 
-See https://github.com/alandtse/alexa_media_player/wiki#known-available-sounds for
+These can be adjusted in the alias entry's `data`, or the delivery's `data`:
+
+| Data Field                    | Use                                                  |
+|-------------------------------|------------------------------------------------------|
+| `media`: `media_content_type` | Content type in place of `sound`, e.g. `music`       |
+| `announce`                    | Passed to `play_media`, to play over current media   |
+| `enqueue`                     | Passed to `play_media`, e.g. `add` or `replace`      |
+
+```yaml
+chime_aliases:
+  doorbell:
+    media_player:
+      tune: https://my.home/sounds/doorbell.mp3
+      data:
+        media:
+          media_content_type: music
+        announce: true
+```
+
+For Amazon Echo devices this needs the [`Alexa Media Player`](https://github.com/alandtse/alexa_media_player)
+integration installed on Home Assistant. See https://github.com/alandtse/alexa_media_player/wiki#known-available-sounds for
 a list of known tunes that work with Alexa devices.
 
 ### Alexa Devices
@@ -219,6 +254,8 @@ transports:
                   # non-dict defaults to a dict with a single key `tune`
                   alexa_devices: scifi/amzn_sfx_scifi_alarm_04
                   siren: emergency
+                  media_player:
+                  # tune defaults to alias ('red_alert')
 ```
 
 ## Rest Commands
@@ -226,9 +263,9 @@ transports:
 Assuming this command is set up in the Home Assistant configuration:
 
 ```yaml title="CCTV Camera Siren"
-rest_commands:
+rest_command:
   camera_siren:
-      url: "http://10.111.10.202/ISAPI/Event/triggers/notifications/AudioAlarm/{{hik_alarm_code|default('11')}}/test?format=json"
+      url: "http://10.111.10.202/ISAPI/Event/triggers/notifications/AudioAlarm/{{alarm_code|default('11')}}/test?format=json"
       method: put
       username: !secret hik_user
       password: !secret hik_password
@@ -238,7 +275,6 @@ rest_commands:
 This chime alias in the transport definition will make it available as `chime_tune: siren` in notifications.
 
 ```yaml title="Supernotify Config Snippet"
-```yaml
 transports:
   chime:
     delivery_defaults:

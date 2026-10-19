@@ -243,7 +243,6 @@ async def test_script_debug() -> None:
                         "chime_volume": None,
                         "chime_duration": None,
                     },
-                    "wait": True,
                 },
                 blocking=True,
                 context=None,
@@ -257,11 +256,13 @@ async def test_script_debug() -> None:
 
 async def test_default_discovery_inheritance():
     ctx = TestingContext(
-        transports={TRANSPORT_CHIME: {"delivery_defaults": {CONF_OPTIONS: {"chime_aliases": {"alexa_devices": "bell01"}}}}},
+        transports={
+            TRANSPORT_CHIME: {"delivery_defaults": {CONF_OPTIONS: {"chime_aliases": {"doorbell": {"alexa_devices": "bell01"}}}}}
+        },
         deliveries={
             "chime_1": {
                 CONF_TRANSPORT: TRANSPORT_CHIME,
-                CONF_OPTIONS: {"chime_aliases": {"media_player": "amzn_sfx_doorbell"}},
+                CONF_OPTIONS: {"chime_aliases": {"doorbell": {"media_player": "amzn_sfx_doorbell"}}},
             },
             "chime_2": {CONF_TRANSPORT: TRANSPORT_CHIME},
             "chime_3": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_duration": 10}},
@@ -274,6 +275,8 @@ async def test_default_discovery_inheritance():
     assert len(ctx.delivery_registry.deliveries) == 4
     for delivery in ctx.delivery_registry.deliveries.values():
         assert delivery.option_bool(OPTION_DEVICE_DISCOVERY)
+    assert ctx.delivery("chime_1").transport_data["chime_aliases"]["doorbell"]["media_player"]["tune"] == "amzn_sfx_doorbell"
+    assert ctx.delivery("chime_2").transport_data["chime_aliases"]["doorbell"]["alexa_devices"]["tune"] == "bell01"
 
 
 class MockSiren:
@@ -307,6 +310,7 @@ async def test_deliver_to_group() -> None:
             target=Target(["group.alexa", "group.chime", "script.siren_2"]),
         )
     )
+    assert context.hass.services.async_call.call_count == 4  # type: ignore
     context.hass.services.async_call.assert_has_calls(  # type: ignore
         [
             service_call(
@@ -329,6 +333,17 @@ async def test_deliver_to_group() -> None:
                 "media_player",
                 "play_media",
                 target={"entity_id": "media_player.alexa_1"},
+                service_data={
+                    "media": {
+                        "media_content_type": "sound",
+                        "media_content_id": "dive_dive_dive",
+                    }
+                },
+            ),
+            service_call(
+                "media_player",
+                "play_media",
+                target={"entity_id": "media_player.alexa_2"},
                 service_data={
                     "media": {
                         "media_content_type": "sound",
@@ -420,23 +435,33 @@ async def test_deliver_sound_sirens() -> None:
         Envelope(
             context.delivery("siren"),
             Notification(context),
+            target=Target(["siren.upstairs", "siren.porch"]),
         )
     )
-    assert uut is not None
+    assert context.hass.services.async_call.call_count == 2  # type: ignore
+    context.hass.services.async_call.assert_has_calls(  # type: ignore
+        [
+            service_call("siren", "turn_on", target={"entity_id": "siren.upstairs"}, service_data={"tone": "emergency"}),
+            service_call("siren", "turn_on", target={"entity_id": "siren.porch"}, service_data={"tone": "emergency"}),
+        ],
+        any_order=True,
+    )
 
 
 async def test_documentation_example() -> None:
+    """Kept in step with the Example section of docs/transports/chime.md"""
     ctx = TestingContext(
         transports="""
   chime:
-    device_discovery: True
-    device_model_include: Speaker Group
     delivery_defaults:
         target:
         - media_player.kitchen_echo
         - media_player.bedroom
         - ffff0000eeee1111dddd2222cccc3333 # Alexa Devices device_id
         options:
+            device_discovery: True
+            device_model_select:
+                exclude: Speaker Group
             chime_aliases:
                 doorbell: #alias
                     alexa_devices: # integration domain or label ( if label then domain must be a key in the config )
@@ -482,7 +507,9 @@ async def test_documentation_example() -> None:
                     siren: emergency
                     media_player:
                     # tune defaults to alias ('red_alert')
-"""
+""",
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
+        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     uut: Delivery = Delivery("chimey", {}, transport=ctx.transport("chime"))
@@ -517,6 +544,64 @@ async def test_documentation_example() -> None:
     assert red_alert["media_player"] == {"tune": "red_alert", "domain": "media_player"}
     assert red_alert["siren"] == {"tune": "emergency", "domain": "siren"}
     assert red_alert["alexa_devices"] == {"tune": "scifi/amzn_sfx_scifi_alarm_04", "domain": "alexa_devices"}
+
+    n = Notification(ctx, message="ding dong", action_data={"delivery": {"chimes": {"data": {"chime_tune": "doorbell"}}}})
+    await n.initialize()
+    await n.deliver()
+    calls = ctx.hass.services.async_call
+    assert calls.call_count == 8  # type: ignore[attr-defined]
+    calls.assert_has_calls(  # type: ignore[attr-defined]
+        [
+            service_call(
+                "alexa_devices",
+                "send_sound",
+                service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "amzn_sfx_cat_meow_1x_01"},
+            ),
+            service_call(
+                "media_player",
+                "play_media",
+                target={"entity_id": "media_player.kitchen_echo"},
+                service_data={"media": {"media_content_type": "sound", "media_content_id": "home/amzn_sfx_doorbell_chime_02"}},
+            ),
+            service_call(
+                "media_player",
+                "play_media",
+                target={"entity_id": "media_player.bedroom"},
+                service_data={"media": {"media_content_type": "sound", "media_content_id": "home/amzn_sfx_doorbell_chime_02"}},
+            ),
+            service_call(
+                "media_player",
+                "play_media",
+                target={"entity_id": "media_player.hall_custom"},
+                service_data={"media": {"media_content_type": "sound", "media_content_id": "raindrops_and_roses.mp4"}},
+            ),
+            service_call("switch", "turn_on", target={"entity_id": "switch.chime_ding_dong"}),
+            service_call(
+                "siren",
+                "turn_on",
+                target={"entity_id": "siren.bedroom"},
+                service_data={"tone": "bleep", "volume_level": pytest.approx(0.1), "duration": 5},
+            ),
+            service_call(
+                "script",
+                "turn_on",
+                target={"entity_id": "script.pull_bell_cord"},
+                service_data={
+                    "variables": {
+                        "duration": 25,
+                        "message": "ding dong",
+                        "title": None,
+                        "priority": "medium",
+                        "chime_tune": "doorbell",
+                        "chime_volume": None,
+                        "chime_duration": None,
+                    }
+                },
+            ),
+            service_call("rest_command", "api_call_to_camera_alarm", service_data={"alarm_tone": 14}),
+        ],
+        any_order=True,
+    )
 
 
 def test_chime_target_config_no_entity_or_device() -> None:
@@ -653,7 +738,8 @@ def test_build_aliases_with_empty_target() -> None:
     from custom_components.supernotify.transports.chime import build_aliases
 
     result = build_aliases({"doorbell": {"switch": {"target": []}}})
-    assert isinstance(result, dict)
+    assert isinstance(result["doorbell"]["switch"]["target"], Target)
+    assert not result["doorbell"]["switch"]["target"].has_targets()
 
 
 def test_build_aliases_with_exception_in_target() -> None:
@@ -663,14 +749,134 @@ def test_build_aliases_with_exception_in_target() -> None:
 
     with patch("custom_components.supernotify.transports.chime.Target", side_effect=Exception("bad target")):
         result = build_aliases({"doorbell": {"switch": {"target": "switch.foo"}}})
-    assert isinstance(result, dict)
+    assert result == {}
 
 
 def test_build_aliases_invalid_schema() -> None:
     from custom_components.supernotify.transports.chime import build_aliases
 
-    result = build_aliases({"invalid_alias": {"media_player": {"target": "not_a_valid_target_at_all"}}})
-    assert isinstance(result, dict)
+    result = build_aliases({"invalid_alias": {"media_player": {"volume": "loud"}}})
+    assert result == {}
+
+
+def test_build_aliases_unknown_domain_rejected() -> None:
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    assert build_aliases({"doorbell": {"lights": {"domain": "light", "target": "light.hall"}}}) == {}
+
+
+def test_build_aliases_label_without_domain_or_target_dropped() -> None:
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    result = build_aliases({"doorbell": {"chimey": {"tune": "bong"}, "switch": {"target": "switch.bell"}}})
+    assert list(result["doorbell"]) == ["switch"]
+
+
+async def test_deliver_alias_with_empty_target_still_chimes_others() -> None:
+    ctx = TestingContext(
+        deliveries={
+            "chimes": {
+                CONF_TRANSPORT: TRANSPORT_CHIME,
+                CONF_DATA: {"chime_tune": "doorbell"},
+                CONF_OPTIONS: {"chime_aliases": {"doorbell": {"switch": {"target": []}, "script": {"target": "script.bell"}}}},
+            }
+        },
+        viable_transport_types=[ChimeTransport],
+    )
+    await ctx.test_initialize()
+    assert await ctx.transport(TRANSPORT_CHIME).deliver(Envelope(ctx.delivery("chimes"), Notification(ctx, message="hi")))
+    assert ctx.hass.services.async_call.call_count == 1  # type: ignore
+    assert ctx.hass.services.async_call.call_args.args[:2] == ("script", "turn_on")  # type: ignore
+
+
+async def test_deliver_alias_target_group_expanded() -> None:
+    ctx = TestingContext(
+        deliveries={
+            "chimes": {
+                CONF_TRANSPORT: TRANSPORT_CHIME,
+                CONF_DATA: {"chime_tune": "doorbell"},
+                CONF_OPTIONS: {"chime_aliases": {"doorbell": {"switch": {"target": "group.chimes"}}}},
+            }
+        },
+        entities={"group.chimes": MockGroup(["switch.bell_1", "switch.bell_2"])},
+        viable_transport_types=[ChimeTransport],
+    )
+    await ctx.test_initialize()
+    await ctx.transport(TRANSPORT_CHIME).deliver(Envelope(ctx.delivery("chimes"), Notification(ctx)))
+    assert ctx.hass.services.async_call.call_count == 2  # type: ignore
+    ctx.hass.services.async_call.assert_has_calls(  # type: ignore
+        [
+            service_call("switch", "turn_on", target={"entity_id": "switch.bell_1"}),
+            service_call("switch", "turn_on", target={"entity_id": "switch.bell_2"}),
+        ],
+        any_order=True,
+    )
+
+
+async def test_repeat_deliveries_leave_alias_data_unchanged() -> None:
+    aliases = {
+        "doorbell": {
+            "media_player": {"target": "media_player.hall", "data": {"media": {"media_content_type": "music"}}},
+            "script": {"target": "script.bell", "data": {"visitor_name": "Guest"}},
+        }
+    }
+    ctx = TestingContext(
+        deliveries={
+            "chimes": {
+                CONF_TRANSPORT: TRANSPORT_CHIME,
+                CONF_DATA: {"chime_tune": "doorbell"},
+                CONF_OPTIONS: {"chime_aliases": aliases},
+            }
+        },
+        viable_transport_types=[ChimeTransport],
+    )
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME)
+    delivery = ctx.delivery("chimes")
+
+    await uut.deliver(Envelope(delivery, Notification(ctx, message="first"), data={"announce": True}))
+    ctx.hass.services.async_call.reset_mock()  # type: ignore
+    await uut.deliver(Envelope(delivery, Notification(ctx, message="second")))
+
+    resolved = delivery.transport_data["chime_aliases"]["doorbell"]
+    assert resolved["media_player"]["data"] == {"media": {"media_content_type": "music"}}
+    assert resolved["script"]["data"] == {"visitor_name": "Guest"}
+    ctx.hass.services.async_call.assert_has_calls(  # type: ignore
+        [
+            service_call(
+                "media_player",
+                "play_media",
+                target={"entity_id": "media_player.hall"},
+                service_data={"media": {"media_content_type": "music", "media_content_id": "doorbell"}},
+            ),
+        ],
+        any_order=True,
+    )
+
+
+async def test_deliver_excludes_speaker_group_devices() -> None:
+    ctx = TestingContext(
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}},
+        devices=[
+            ("alexa_devices", "ffff0000eeee1111dddd2222cccc3333", False),
+            ("alexa_devices", "aaaa0000bbbb1111cccc2222dddd3333", False),
+        ],
+        viable_transport_types=[ChimeTransport],
+    )
+    ctx.devices["ffff0000eeee1111dddd2222cccc3333"].model = "Speaker Group"
+    ctx.devices["aaaa0000bbbb1111cccc2222dddd3333"].model = "Echo Dot"
+    await ctx.test_initialize()
+
+    await ctx.transport(TRANSPORT_CHIME).deliver(
+        Envelope(
+            ctx.delivery("chimes"),
+            Notification(ctx),
+            target=Target(["ffff0000eeee1111dddd2222cccc3333", "aaaa0000bbbb1111cccc2222dddd3333"]),
+            data={"chime_tune": "bell_02"},
+        )
+    )
+    ctx.hass.services.async_call.assert_called_once()  # type: ignore
+    assert ctx.hass.services.async_call.call_args.kwargs["service_data"]["device_id"] == "aaaa0000bbbb1111cccc2222dddd3333"  # type: ignore
 
 
 def test_build_aliases_generic_exception() -> None:
@@ -695,6 +901,13 @@ SCHEMA_CASES: dict[str, SchemaCase] = {
         ChimeTransport,
         ["script.doorbell"],
         {"script.turn_on"},
+        maximal_data={"chime_tune": "ding", "chime_duration": 10, "chime_volume": 0.8},
+    ),
+    "script_debug": SchemaCase(
+        ChimeTransport,
+        ["script.doorbell"],
+        {"script.turn_on"},
+        delivery={CONF_DEBUG: True},
         maximal_data={"chime_tune": "ding", "chime_duration": 10, "chime_volume": 0.8},
     ),
     "media_player": SchemaCase(

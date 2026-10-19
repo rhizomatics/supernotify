@@ -75,10 +75,10 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
     vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
         cv.string: vol.Schema({
             cv.string: vol.Any(
-                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
+                vol.Any(None, cv.string),
                 vol.Schema({
                     vol.Optional(CONF_ALIAS): cv.string,
-                    vol.Optional(CONF_DOMAIN): cv.string,
+                    vol.Optional(CONF_DOMAIN): vol.In(OPTIONS_CHIME_DOMAINS),
                     vol.Optional(CONF_TUNE): cv.string,
                     vol.Optional(CONF_DATA): DATA_SCHEMA,
                     vol.Optional(CONF_VOLUME): float,
@@ -236,7 +236,7 @@ class ScriptChimeTransport(MiniChimeTransport):
         if envelope is None:
             _LOGGER.warning("SUPERNOTIFY Script chime target requires envelope")
             return None
-        variables: dict[str, Any] = target_config.data or {}
+        variables: dict[str, Any] = dict(target_config.data or {})
         variables[ATTR_MESSAGE] = envelope.message
         variables[ATTR_TITLE] = envelope.title
         variables[ATTR_PRIORITY] = envelope.priority
@@ -244,8 +244,6 @@ class ScriptChimeTransport(MiniChimeTransport):
         variables["chime_volume"] = target_config.volume
         variables["chime_duration"] = target_config.duration
         output_data: dict[str, Any] = {"variables": variables}
-        if envelope.delivery.debug:
-            output_data["wait"] = envelope.delivery.debug
         # use `turn_on` rather than direct call to run script in background
         return ActionCall(
             self.domain, "turn_on", action_data=output_data, target_data={ATTR_ENTITY_ID: target_config.entity_id}
@@ -281,7 +279,7 @@ class MediaPlayerChimeTransport(MiniChimeTransport):
         envelope: Envelope | None = None,
         **_kwargs: Any,
     ) -> ActionCall | None:
-        input_data = target_config.data or {}
+        input_data = dict(target_config.data or {})
         if action_data:
             input_data.update(action_data)
         output_data: dict[str, Any] = {
@@ -471,7 +469,7 @@ class ChimeTransport(Transport):
         # TODO: use method or delivery config vs fixed local constant for domains
         if target_config.device_id is not None and DEVICE_DOMAINS:
             if target_config.domain is not None and target_config.domain in DEVICE_DOMAINS:
-                _LOGGER.debug(f"SUPERNOTIFY Chime selected target {domain} for {target_config.domain}")
+                _LOGGER.debug(f"SUPERNOTIFY Chime selected target {target_config.domain} for {target_config.device_id}")
                 domain = target_config.domain
             else:
                 domain = self.hass_api.domain_for_device(target_config.device_id, DEVICE_DOMAINS)
@@ -509,7 +507,10 @@ class ChimeTransport(Transport):
                 alias_kwargs: dict[str, Any] = {k: v for k, v in alias_config.items() if k != CONF_TARGET}
                 # pass through variables or data if present
                 if alias_target is not None:
-                    target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_kwargs) for t in alias_target.entity_ids})
+                    target_configs.update({
+                        t: ChimeTargetConfig(entity_id=t, **alias_kwargs)
+                        for t in self.hass_api.expand_group(alias_target.entity_ids)
+                    })
                     target_configs.update({t: ChimeTargetConfig(device_id=t, **alias_kwargs) for t in alias_target.device_ids})
                 elif alias_config[CONF_DOMAIN] in DEVICE_DOMAINS and target is not None:
                     # bulk apply to all known target devices of this domain
@@ -517,7 +518,6 @@ class ChimeTransport(Transport):
                         dev: ChimeTargetConfig(device_id=dev, **alias_kwargs)
                         for dev in target.device_ids
                         if dev not in target_configs  # don't overwrite existing specific targets
-                        and ATTR_DEVICE_ID not in alias_config
                     }
                     # TODO: Constrain to device domain
                     target_configs.update(bulk_apply)
@@ -528,7 +528,6 @@ class ChimeTransport(Transport):
                         for ent in target.entity_ids
                         if ent.startswith(f"{alias_config[CONF_DOMAIN]}.")
                         and ent not in target_configs  # don't overwrite existing specific targets
-                        and ATTR_ENTITY_ID not in alias_config
                     }
                     target_configs.update(bulk_apply)
         _LOGGER.debug("SUPERNOTIFY transport_chime: Resolved tune %s to %s", tune_or_alias, target_configs)
@@ -549,9 +548,12 @@ def build_aliases(src_config: ConfigType) -> ConfigType:
                 domain_config.setdefault(CONF_TUNE, alias)
                 if domain_or_label in OPTIONS_CHIME_DOMAINS:
                     domain_config.setdefault(CONF_DOMAIN, domain_or_label)
+                if CONF_DOMAIN not in domain_config and CONF_TARGET not in domain_config:
+                    _LOGGER.warning("SUPERNOTIFY Chime alias %s ignoring %s, needs a domain or target", alias, domain_or_label)
+                    continue
 
                 try:
-                    if domain_config.get(CONF_TARGET):
+                    if CONF_TARGET in domain_config:
                         domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
                         if not domain_config[CONF_TARGET].has_targets():
                             _LOGGER.warning("SUPERNOTIFY Chime alias %s has empty target", alias)

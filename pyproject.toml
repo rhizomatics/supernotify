@@ -65,7 +65,7 @@ dev=[
     # home assistant mobile push testing, and ntfy, old ver for HA compat
     "PyTurboJPEG==1.8.3",
     # integration testing
-    #"hassil",
+    "hassil",
     #"gazetteer_matcher",
     #"pymicro_vad",
     #"pyspeex_noise",

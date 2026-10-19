@@ -41,7 +41,13 @@ class House:
         apple_apps: dict[str, str] | None = None,
         cameras: dict[str, str | None] | None = None,
         pirs: dict[str, str | None] | None = None,
+        config: str | None = None,
+        stub_actions: list[str] | None = None,
     ) -> None:
+        # Supernotify YAML config, or None for a zero-YAML install
+        self.config: str | None = config
+        # actions the config calls beyond notify, e.g. `switch.turn_on`, recorded rather than run
+        self.stub_actions: list[str] = stub_actions or []
         self._floors: list[str] = floors or []
         self._areas: dict[str, str | None] = areas or {}
 
@@ -156,15 +162,16 @@ class House:
             self.service_calls.setdefault(call.domain, [])
             self.service_calls[call.domain].append(call)
 
-        # this is a zero-YAML setup - CONF_MEDIA_PATH etc default to relative paths, which
+        # unless the config sets them, CONF_MEDIA_PATH etc default to relative paths, which
         # resolve against the process cwd. Without this, that's the repo root, and every test
         # run leaves real files behind under <repo>/supernotify/. chdir into a throwaway temp
         # dir just for this call, since MediaStorage.initialize() resolves the relative path to
         # an absolute one immediately and keeps that absolute path for the rest of this House's
         # lifetime - the cwd doesn't need to stay changed afterwards.
+        supernotify_config = parse_yaml(self.config) if self.config else {}
         self._media_root = tempfile.TemporaryDirectory(prefix="supernotify_test_")
         with chdir(self._media_root.name):
-            assert await async_setup_component(hass, SUPERNOTIFY_DOMAIN, {SUPERNOTIFY_DOMAIN: {}})
+            assert await async_setup_component(hass, SUPERNOTIFY_DOMAIN, {SUPERNOTIFY_DOMAIN: supernotify_config})
             await hass.async_block_till_done()
 
         # setting up the notify platform registers the real, entity-backed notify.send_message -
@@ -180,6 +187,11 @@ class House:
             service_name = slugify(f"mobile_app_{device_name}")
             hass.services.async_remove("notify", service_name)
             hass.services.async_register("notify", service_name, fake_call_service)
+        # after setup, since Supernotify's own entities register the real `switch.turn_on` etc
+        for action in self.stub_actions:
+            domain, service = action.split(".", 1)
+            hass.services.async_remove(domain, service)
+            hass.services.async_register(domain, service, fake_call_service)
 
     def cleanup(self) -> None:
         """Remove the temp dir created in setup() for the zero-YAML media/archive/template
@@ -250,8 +262,9 @@ class House:
                     actual_calls.setdefault(service_domain, [])
                     actual_calls[service_domain].append(call.service)
                 if "entity_id" in call.data:
+                    entity_ids = call.data["entity_id"]
                     actual_entities.setdefault(service_domain, [])
-                    actual_entities[service_domain].extend(call.data.get("entity_id", []))
+                    actual_entities[service_domain].extend([entity_ids] if isinstance(entity_ids, str) else entity_ids)
                 image_path = call.data.get("data", {}).get("image")
                 if image_path:
                     actual_image_paths.setdefault(service_domain, [])

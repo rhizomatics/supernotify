@@ -1,0 +1,15 @@
+# Supernotify YAML config for the smart_villa integration test house, see conftest.py
+delivery:
+  doorbell_chime:
+    transport: chime
+    data:
+      chime_tune: doorbell
+    options:
+      chime_aliases:
+        doorbell:
+          switch:
+            target: switch.hall_chime
+          siren:
+            target: siren.gate
+            tune: ding_dong
+            duration: 5

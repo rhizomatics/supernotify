@@ -280,3 +280,54 @@ async def test_notify_action_group_fans_out_to_members(hass: HomeAssistant) -> N
         assert len(service.calls) == 1
         message, _title, _target, _kwargs = service.calls[0]
         assert message == "dinner is ready"
+
+
+async def test_chime_alias_runs_real_script(hass: HomeAssistant) -> None:
+    """A chime alias rings a real Home Assistant script, including with debug on, and stays the same
+    from one notification to the next"""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "doorbell": {
+                    "sequence": [
+                        {
+                            "event": "chime_rung",
+                            "event_data": {
+                                "message": "{{ message }}",
+                                "visitor": "{{ visitor_name }}",
+                                "tune": "{{ chime_tune }}",
+                            },
+                        }
+                    ]
+                }
+            }
+        },
+    )
+    config = {
+        "delivery": {
+            "chimes": {
+                "transport": "chime",
+                "debug": True,
+                "inclusion": ["default"],
+                "data": {"chime_tune": "doorbell"},
+                "options": {
+                    "chime_aliases": {"doorbell": {"script": {"target": "script.doorbell", "data": {"visitor_name": "Guest"}}}}
+                },
+            }
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    await hass.async_block_till_done()
+    rung: list[dict] = []
+    hass.bus.async_listen("chime_rung", lambda event: rung.append(dict(event.data)))
+
+    for message in ("first ring", "second ring"):
+        await hass.services.async_call(DOMAIN, "notify", {"message": message}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert rung == [
+        {"message": "first ring", "visitor": "Guest", "tune": "doorbell"},
+        {"message": "second ring", "visitor": "Guest", "tune": "doorbell"},
+    ]
