@@ -156,6 +156,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rolling_review/</loc>
+        <lastmod>2026-10-19</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/</loc>
         <lastmod>2026-10-19</lastmod>
         <changefreq>daily</changefreq>

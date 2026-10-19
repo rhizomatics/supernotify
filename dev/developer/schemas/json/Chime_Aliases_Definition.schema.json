@@ -8,18 +8,8 @@
         "additionalProperties": {
           "anyOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "string",
-              "enum": [
-                "media_player",
-                "switch",
-                "script",
-                "rest_command",
-                "siren",
-                "alexa_devices"
-              ]
+              "nullable": true
             },
             {
               "type": "object",
@@ -28,7 +18,15 @@
                   "type": "string"
                 },
                 "domain": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "media_player",
+                    "switch",
+                    "script",
+                    "rest_command",
+                    "siren",
+                    "alexa_devices"
+                  ]
                 },
                 "tune": {
                   "type": "string"
@@ -142,11 +140,6 @@
                 }
               },
               "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "nullable": true,
-              "description": "Must be null"
             }
           ]
         }
