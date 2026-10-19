@@ -26,9 +26,10 @@ Supernotify's own notify entities - for a recipient, or for a scenario or delive
 `notify_entity` - are not called when given as a target in a notification action. The recipient is
 targeted, or the scenario applied or delivery selected, directly instead.
 
-!!! warning
-    Don't put Supernotify's own notify entities in the `target` of a delivery, scenario or recipient.
-    Each call to one of them starts a new notification, which can then call it again.
+This transport never sends to Supernotify's own notify entities. In the `target` of a delivery,
+scenario or recipient, a recipient's entity is replaced by the recipient, and a scenario's or
+delivery's is dropped with a warning. See [Scenario Notify Entity](../configuration/scenarios.md#notify-entity)
+for the current limitations.
 
 ## Discovery
 

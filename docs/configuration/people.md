@@ -159,6 +159,12 @@ Because it's an ordinary Home Assistant Notify Entity, it can be added as a memb
 !!! note
     Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
 
+!!! warning "Current limitations"
+    In the `target` of a delivery, scenario or another recipient, a recipient's notify entity is
+    replaced by the recipient. Calling it, or a Notify Group containing it, while Supernotify is
+    delivering a notification, such as from a script that a delivery runs, is ignored with a warning,
+    so it can't make a loop. See [Scenario Notify Entity](scenarios.md#notify-entity) for the details.
+
 Notify Entities get updated on every notification by Supernotify for that person, regardless of whether the Notify Entity itself was used for it. This also adds context of the original automation, so you can track what happened for a person.
 
 ![Notify Entity Notification History](../assets/images/notify_entity_context.png)

@@ -241,6 +241,11 @@ delivery:
 
 Sending a message to `notify.family_chat` is like a `supernotify.notify` with only a message and title, and `delivery` set to this delivery. There is a `notify.family_chat` action too, which also takes `target` and `data`. If `notify.family_chat` already exists, the entity isn't created and a repair is raised. Scenarios can have one too, see [Scenario Notify Entity](scenarios.md#notify-entity) for more, and for how to use one from the Alert integration.
 
+!!! warning "Current limitations"
+    A delivery's notify entity is dropped, with a warning, if it's in the `target` of a delivery,
+    scenario or recipient, and ignored if it's called while Supernotify is delivering a notification,
+    so it can't make a loop. See [Scenario Notify Entity](scenarios.md#notify-entity) for the details.
+
 ### Overrides
 
 Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.

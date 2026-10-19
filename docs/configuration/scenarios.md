@@ -130,6 +130,21 @@ The entity is named by the scenario's `alias`, or its name if there's none. If `
 
 There is also a `notify.its_raining_again` action of the same name, for anything that asks for the name of a `notify` action and not a notify entity. Unlike the entity, it takes `target` and `data`, as [notify.supernotify](../usage/notifying.md#notify-entities-and-legacy-notify-platform-compatibility) does.
 
+!!! warning "Current limitations"
+    Supernotify's own notify entities and actions - for a scenario, a delivery or a recipient - are
+    always handled inside Supernotify, and never sent to through `notify.send_message`, since each
+    call would start a new notification, which could call it again in a loop. For now, this limits
+    how they can be used:
+
+    - In the `target` of a delivery, scenario or recipient, a recipient's notify entity is replaced by
+      that recipient, but a scenario's or delivery's is dropped with a warning in the log. By the time
+      those targets are worked out, it's too late in the notification to apply a scenario or select a
+      delivery. Use the scenario's or delivery's own name in `apply_scenarios` or `delivery` instead.
+    - Any of them called while Supernotify is delivering a notification is ignored with a warning,
+      for example from a script run by a [chime](../transports/chime.md), a `generic` delivery's
+      action, or a Notify Group that contains one of them. This may also catch an automation triggered
+      by something a delivery did, if it calls one of them straight away.
+
 #### With the Alert Integration
 
 Home Assistant's [Alert](https://www.home-assistant.io/integrations/alert/) integration repeats a notification while a problem lasts. Give it the scenario's `notify_entity` as a notifier, and every alert is sent as the scenario says.

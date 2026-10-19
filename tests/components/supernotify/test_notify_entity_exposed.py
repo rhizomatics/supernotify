@@ -345,3 +345,69 @@ async def test_unexposed_notify_entity_as_target_is_left_alone(hass: HomeAssista
     assert notification.applied_scenario_names == []
     assert notification._target is not None
     assert notification._target.entity_ids == ["notify.its_raining_again"]
+
+
+async def _relay_setup(hass: HomeAssistant, relay: dict[str, Any]) -> list[dict[str, Any]]:
+    """A delivery exposed as notify.relay, with dupe checking off, so nothing else stops a loop,
+    returning the action calls made"""
+    calls: list[dict[str, Any]] = []
+    hass.bus.async_listen("call_service", lambda event: calls.append(dict(event.data)))
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "dupe_check": {"dupe_policy": "dupe_policy_none"},
+                "delivery": {"relay": {"transport": "generic", "notify_entity": "relay", "inclusion": ["explicit"], **relay}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return calls
+
+
+async def _send_and_settle(hass: HomeAssistant, entity_id: str) -> None:
+    await hass.services.async_call("notify", "send_message", {"entity_id": entity_id, "message": "hi"}, blocking=True)
+    for _ in range(5):
+        await hass.async_block_till_done()
+
+
+async def test_own_notify_entity_in_delivery_target_is_dropped(hass: HomeAssistant) -> None:
+    calls = await _relay_setup(hass, {"action": "notify.send_message", "target": ["notify.relay"]})
+
+    await _send_and_settle(hass, "notify.relay")
+
+    # only the call made here, rather than the delivery calling notify.relay back, over and over
+    relayed = [c for c in calls if c["service"] == "send_message" and "notify.relay" in str(c["service_data"].get("entity_id"))]
+    assert len(relayed) == 1
+
+
+async def test_own_notify_action_called_while_delivering_is_refused(hass: HomeAssistant) -> None:
+    """A delivery calling Supernotify's own notify action, a route with no target to short circuit"""
+    calls = await _relay_setup(hass, {"action": "notify.relay", "target_required": "never"})
+
+    await _send_and_settle(hass, "notify.relay")
+
+    assert [c["service"] for c in calls if c["domain"] == "notify"] == ["send_message", "relay"]
+
+
+async def test_recipient_notify_entity_in_delivery_target_becomes_recipient(hass: HomeAssistant) -> None:
+    hass.states.async_set("person.bob", "home", {"friendly_name": "Bob"})
+    engine, _calls = await _setup(
+        hass,
+        chat={
+            "inclusion": ["default"],
+            "target": ["notify.recipient_bob"],
+            "target_usage": "fixed",
+            "target_required": "always",
+            "options": {"target_categories": ["entity_id"]},
+        },
+        recipients=[{"person": "person.bob", "target": ["light.bob_lamp"]}],
+    )
+
+    notification = await engine.async_send_message("Lamp on")
+
+    assert notification is not None
+    envelope = notification.delivered_envelopes[0]
+    assert envelope.target.entity_ids == ["light.bob_lamp"]
+    assert envelope.target.person_ids == ["person.bob"]
