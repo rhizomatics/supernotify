@@ -4684,7 +4684,7 @@ A default Delivery called `email` will be automatically generated for Email tran
 ```yaml
 transports:
   email:
-    disabled: false
+    enabled: false
 ```
 
 ## Direct Connection
@@ -4701,6 +4701,7 @@ By default, the `OPTION_MODE` option is set to `direct`, so deliveries go throug
 
 ```yaml
 transports:
+  email:
     delivery_defaults:
       options:
         mode: direct
@@ -5646,7 +5647,7 @@ A default Delivery called `mobile_push` will be automatically generated for Mobi
 ```yaml
 transports:
   mobile_push:
-    disabled: false
+    enabled: false
 ```
 
 ### Auto generating targets
@@ -5805,13 +5806,23 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------- |
 | `notify_entity` | [`notify_entity.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/notify_entity.py) | [Notify Entity Integration](https://www.home-assistant.io/integrations/notify/) | -        |
 
-This transport uses the new style Home Assistant notify entities, so accepts only a `message`, `title` and `target`, plus an optional `data` specific to some entity types.
+This transport uses the new style Home Assistant notify entities, through the `notify.send_message` action, which accepts only a `message` and `title`. Whether the title is shown is up to each entity.
 
-Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple notify entities at once.
+## Targets
+
+Any `notify.*` entity can be a target. An `area_id`, `floor_id` or `label_id` can also be used, and is turned into the notify entities in it before delivery, as is a `group` into its members. This is an easy way of calling several notify entities at once. Devices can't be used as targets for this transport.
+
+This is the catch-all for notify entities. Ones that belong to an integration with its own transport, such as [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md) or [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md), are left to that transport.
+
+Supernotify's own notify entities - for a recipient, or for a scenario or delivery with a `notify_entity` - are not called when given as a target in a notification action. The recipient is targeted, or the scenario applied or delivery selected, directly instead.
+
+Warning
+
+Don't put Supernotify's own notify entities in the `target` of a delivery, scenario or recipient. Each call to one of them starts a new notification, which can then call it again.
 
 ## Discovery
 
-**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically and fires on every notification, since this is the standard Home Assistant notification provider.
+**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically. It is used whenever a notification targets a notify entity that no more specific transport has taken.
 
 ## Default Delivery
 
@@ -5820,7 +5831,7 @@ If you don't want to use the automatically generated default delivery, then use 
 ```yaml
 transports:
   notify_entity:
-    disabled: false
+    enabled: false
 ```
 
 ## Example
@@ -5833,6 +5844,17 @@ Example Notification
     message: "Motion detected at the front door"
     target:
         - notify.mobile_app_pixel
+```
+
+Example Notification to every notify entity in the kitchen, and those labelled display
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Dinner is ready"
+    target:
+        area_id: kitchen
+        label_id: display
 ```
 
 # ntfy Transport Adaptor

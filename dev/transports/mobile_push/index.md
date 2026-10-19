@@ -125,7 +125,7 @@ A default Delivery called `mobile_push` will be automatically generated for Mobi
 ```yaml
 transports:
   mobile_push:
-    disabled: false
+    enabled: false
 ```
 
 ### Auto generating targets
