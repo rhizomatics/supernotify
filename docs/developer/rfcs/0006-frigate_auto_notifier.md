@@ -21,7 +21,7 @@ One of the first [Auto Notifiers](./0003-auto_notifier.md): a new module (with o
 - Use the new notification level click thru for a destination URL
 - All AutoNotify components should look and behave similarly
 - Garner feedback on changes for Supernotify
-  - See [Principle 11](../principles.md) on building out mobile support
+  - See [Principle 12](../principles.md) on building out mobile support
   - Primary goal is to enhance Supernotify such that automations and blueprints *like* the Frigate one don't require 100s of lines of YAML to handle different phone models, notification options
 - Design for HomeAssistant and Frigate rather than blindly following the Frigate blueprint
   - https://docs.frigate.video/integrations/home-assistant/ is canonical

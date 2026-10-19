@@ -70,7 +70,18 @@
 
     Minimize unnecessary concepts in config, and Home Assistant entities/devices/helpers.
 
-11. High Level Common Language Only
+11. Supernotify's own notify entities are handled inside Supernotify
+
+    A notify entity or `notify` action that Supernotify exposes, for a recipient, scenario or delivery, is always short circuited to the
+    recipient, scenario or delivery it stands for, wherever it turns up, and is never called through `notify.send_message` or the
+    `notify_entity` transport. Each call to one of them starts a new notification, so going out through Home Assistant and back again
+    loses the intent of the original notification at best, and loops forever at worst.
+
+    Where one can't be short circuited, for example a scenario's notify entity in a delivery's target, too late in the notification
+    for the scenario to be applied, it is dropped with a warning. As a backstop, any of them called while a notification is being
+    delivered is ignored.
+
+12. High Level Common Language Only
 
 ![Competing Standards](https://imgs.xkcd.com/comics/standards.png)
 
