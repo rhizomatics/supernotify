@@ -337,6 +337,65 @@ class Notification(ArchivableObject):
             return {}
         return {**self.context.cameras.get(entity_id, {}), "entity_id": entity_id}
 
+    def _exposed_notify_entities(self) -> dict[str, tuple[str, str]]:
+        """The notify entity of each scenario or delivery that has one, to its action data key and name"""
+        return {
+            exposable.notify_entity_id: (data_key, name)
+            for data_key, configured in (
+                (ATTR_SCENARIOS_APPLY, self.context.scenario_registry.scenarios),
+                (ATTR_DELIVERY, self.delivery_registry.deliveries),
+            )
+            for name, exposable in configured.items()
+            if exposable.notify_entity_id
+        }
+
+    def _short_circuit_own_entities(self, target: Target, delivery: Delivery) -> Target:
+        """Short circuit this integration's own notify entities in a target that came from configuration,
+        such as a delivery, scenario or recipient target, as convert_notify_entities() and
+        convert_exposed_notify_entities() do for the action's own target, so they never go out through
+        notify.send_message and come back as a new notification, possibly in a loop.
+
+        A recipient's notify entity is replaced by the recipient, and their own targets for this
+        delivery. A scenario or delivery's notify entity is dropped, since by now it's too late to
+        apply the scenario or select the delivery.
+        """
+        exposed: dict[str, tuple[str, str]] = self._exposed_notify_entities()
+        recipients: dict[str, Recipient] = self.people_registry.notify_entities()
+        own: list[str] = [e for e in target.entity_ids if e in exposed or e in recipients]
+        if not own:
+            return target
+        target = target.safe_copy()
+        target.remove(ATTR_ENTITY_ID, own)
+        for entity_id in own:
+            if entity_id in exposed:
+                _LOGGER.warning(
+                    "SUPERNOTIFY Dropping %s from %s targets, Supernotify's own notify entity for %s %s",
+                    entity_id,
+                    delivery.name,
+                    *exposed[entity_id],
+                )
+        person_ids: list[str] = [
+            p
+            for p in dict.fromkeys(recipients[e].entity_id for e in own if e in recipients)
+            if p and p not in target.person_ids
+        ]
+        if person_ids:
+            people: Target = self.context.snoozer.filter_recipients(
+                Target({ATTR_PERSON_ID: person_ids}),
+                self.priority,
+                delivery,
+                self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID),
+                tags=self.snooze_tags(),
+            )
+            target += people
+            for indirect_target in self.resolve_indirect_targets(people, delivery):
+                target += indirect_target
+            # only one level, so a recipient whose own targets name one of these can't recurse
+            again: list[str] = [e for e in target.entity_ids if e in exposed or e in recipients]
+            if again:
+                target.remove(ATTR_ENTITY_ID, again)
+        return target
+
     def convert_exposed_notify_entities(
         self, target: list[str] | str | dict[str, Any] | None, action_data: dict[str, Any]
     ) -> tuple[list[str] | str | dict[str, Any] | None, dict[str, Any]]:
@@ -347,15 +406,7 @@ class Notification(ArchivableObject):
         """
         if not target:
             return target, action_data
-        exposed: dict[str, tuple[str, str]] = {
-            exposable.notify_entity_id: (data_key, name)
-            for data_key, configured in (
-                (ATTR_SCENARIOS_APPLY, self.context.scenario_registry.scenarios),
-                (ATTR_DELIVERY, self.delivery_registry.deliveries),
-            )
-            for name, exposable in configured.items()
-            if exposable.notify_entity_id
-        }
+        exposed: dict[str, tuple[str, str]] = self._exposed_notify_entities()
         entity_ids: list[str] = ensure_list(target.get(ATTR_ENTITY_ID) if isinstance(target, dict) else target)
         found: list[str] = [e for e in entity_ids if e in exposed]
         if not found:
@@ -1231,6 +1282,7 @@ class Notification(ArchivableObject):
             computed_target += indirect_target
         self.debug_trace.record_target(delivery.name, stages[1], computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
+        computed_target = self._short_circuit_own_entities(computed_target, delivery)
         self.debug_trace.record_target(delivery.name, stages[2], computed_target)
         computed_target = delivery.select_targets(computed_target)
         self.debug_trace.record_target(delivery.name, stages[3], computed_target)
@@ -1331,7 +1383,7 @@ class Notification(ArchivableObject):
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
-            computed_target = delivery.select_targets(override_target)
+            computed_target = delivery.select_targets(self._short_circuit_own_entities(override_target, delivery))
             self.debug_trace.record_target(delivery.name, "600_delivery_override_target", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()

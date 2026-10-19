@@ -17,7 +17,7 @@
 - Supernotify's own notify entities, for a scenario, delivery or recipient, could make a notification loop forever, held back only by dupe checking, when one was in the `target` of a delivery, scenario or recipient, or called by something a delivery ran
   - In those targets, a recipient's notify entity is now replaced by the recipient, as it already was in the target of an action call, and a scenario's or delivery's is dropped with a warning
   - Any of them, or their `notify` actions, called while a notification is being delivered is ignored with a warning
-- Notify Entity
+- *Notify Entity*
   - The docs example for switching off the default delivery used `disabled: false`, which isn't a valid option and stopped the configuration loading. It is now `enabled: false`, as it is for the same examples for Email and Mobile Push, and every transport example in the docs is now checked against the schema
   - Docs corrected: device targets aren't supported, there's no `data`, and the default delivery is only used for notify entities no other transport takes
 

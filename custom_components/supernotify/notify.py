@@ -83,7 +83,7 @@ class SuperNotificationService(BaseNotificationService):
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
         kwargs["context"] = service.context
 
-        await self.engine.async_send_message(**kwargs)
+        await self.engine.async_send_message(**kwargs, via_notify=f"{NOTIFY_DOMAIN}.{service.service}")
 
 
 class ExposedNotifyEntity(NotifyEntity):
@@ -104,7 +104,9 @@ class ExposedNotifyEntity(NotifyEntity):
         self._data = data
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        await self._engine.async_send_message(message, title=title, context=self._context, data=dict(self._data))
+        await self._engine.async_send_message(
+            message, title=title, context=self._context, data=dict(self._data), via_notify=self.entity_id
+        )
 
 
 def exposed_notify_entities(
@@ -183,13 +185,14 @@ def async_register_entity_actions(
             _LOGGER.warning("SUPERNOTIFY notify.%s is already registered - not registering it again", name)
             continue
 
-        async def notify(call: ServiceCall, target: str = target) -> None:
+        async def notify(call: ServiceCall, target: str = target, name: str = name) -> None:
             await engine.async_send_message(
                 call.data[CONF_MESSAGE],
                 title=call.data.get(CONF_TITLE),
                 target=[target, *ensure_list(call.data.get(CONF_TARGET))],
                 context=call.context,
                 data=call.data.get(ATTR_DATA),
+                via_notify=f"{NOTIFY_DOMAIN}.{name}",
             )
 
         hass.services.async_register(NOTIFY_DOMAIN, name, notify, schema=NOTIFY_SERVICE_SCHEMA)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from contextvars import ContextVar
 from dataclasses import asdict
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any
@@ -77,6 +78,10 @@ if TYPE_CHECKING:
     from .switch import Overridable, SupernotifyOverridableSwitch
 
 _LOGGER = logging.getLogger(__name__)
+
+# set while a notification is being delivered, and inherited by any task started from it, such
+# as a non-blocking action call - see async_send_message()
+_DELIVERING: ContextVar[bool] = ContextVar("supernotify_delivering", default=False)
 
 
 class SupernotifyEngine:
@@ -203,9 +208,18 @@ class SupernotifyEngine:
         title: str | None = None,
         target: list[str] | str | dict[str, Any] | None = None,
         context: HAContext | None = None,
+        via_notify: str | None = None,
         **kwargs: Any,
     ) -> Notification | None:
-        """Send a message via chosen transport, returning the notification, if one could be made"""
+        """Send a message via chosen transport, returning the notification, if one could be made
+
+        `via_notify` is the `notify.*` entity or action of this integration's own that the message
+        came in through. It's refused while a notification is being delivered, since that can only
+        be a delivery calling back into Supernotify, which could otherwise go round in a loop.
+        """
+        if via_notify and _DELIVERING.get():
+            _LOGGER.warning("SUPERNOTIFY Ignoring %s, called while delivering a notification, to avoid a loop", via_notify)
+            return None
         data = kwargs.get(ATTR_DATA, {})
         notification = None
         _LOGGER.debug("SUPERNOTIFY Message: %s, target: %s, data: %s", message, target, data)
@@ -222,7 +236,11 @@ class SupernotifyEngine:
         try:
             notification = Notification(self.context, message, title, target, action_data=data, ha_context=context)
             await notification.initialize()
-            delivered = await notification.deliver()
+            delivering = _DELIVERING.set(True)
+            try:
+                delivered = await notification.deliver()
+            finally:
+                _DELIVERING.reset(delivering)
             if delivered:
                 if notification.dry_run == DRY_RUN_LIVE:
                     self.notifications_sensor.increment()

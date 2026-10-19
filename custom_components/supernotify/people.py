@@ -156,7 +156,9 @@ class RecipientNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to this recipient."""
-        await self._engine.async_send_message(message, title=title, target=self.entity_id, context=self._context)
+        await self._engine.async_send_message(
+            message, title=title, target=self.entity_id, context=self._context, via_notify=self.entity_id
+        )
 
 
 class Recipient:

@@ -616,6 +616,11 @@ class NotifyEntityPlatform:
 
     @abc.abstractmethod
     async def async_send_message(
-        self, message: str, title: str | None = None, target: str | None = None, context: HAContext | None = None
+        self,
+        message: str,
+        title: str | None = None,
+        target: str | None = None,
+        context: HAContext | None = None,
+        via_notify: str | None = None,
     ) -> None:
         """implement message"""
