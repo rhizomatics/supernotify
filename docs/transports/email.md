@@ -104,7 +104,7 @@ A default Delivery called `email` will be automatically generated for Email tran
 ```yaml
 transports:
   email:
-    disabled: false
+    enabled: false
 ```
 
 ## Direct Connection
@@ -121,6 +121,7 @@ By default, the `OPTION_MODE` option is set to `direct`, so deliveries go throug
 
 ```yaml
 transports:
+  email:
     delivery_defaults:
       options:
         mode: direct

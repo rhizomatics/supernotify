@@ -10,9 +10,10 @@ from typing import Any, cast
 import pytest
 import voluptuous as vol
 import yaml
+from _pytest.mark.structures import ParameterSet
 
 from custom_components.supernotify.actions import lift_legacy_nested_data
-from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
+from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA, TRANSPORT_SCHEMA
 
 ROOT = Path(__file__).parents[3]
 ACTION = "supernotify.notify"
@@ -64,13 +65,39 @@ def _yaml_blocks(path: Path) -> Iterator[tuple[int, str]]:
         yield text[: match.start(1)].count("\n") + 1, match.group(1)
 
 
+def _doc_paths() -> list[Path]:
+    return [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md")), *sorted((ROOT / "examples").rglob("*.yaml"))]
+
+
 def _blocks() -> list[Any]:
     """Every YAML block that mentions the action, whether or not it turns out to parse"""
     found = []
-    for path in [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md")), *sorted((ROOT / "examples").rglob("*.yaml"))]:
+    for path in _doc_paths():
         for line, block in _yaml_blocks(path):
             if ACTION in block:
                 found.append(pytest.param(block, id=f"{path.relative_to(ROOT)}:{line}"))
+    return found
+
+
+def _transport_examples() -> list[Any]:
+    """Every transport configured under a `transports:` key in a YAML block"""
+    found: list[ParameterSet | Any] = []
+    for path in _doc_paths():
+        for line, block in _yaml_blocks(path):
+            if "transports:" not in block:
+                continue
+            try:
+                doc = yaml.load(block, _DocLoader)
+            except yaml.YAMLError:
+                continue
+            for mapping in _dicts(doc):
+                transports = mapping.get("transports")
+                if isinstance(transports, dict):
+                    found.extend(
+                        pytest.param(config, id=f"{path.relative_to(ROOT)}:{line}#{name}")
+                        for name, config in transports.items()
+                        if isinstance(config, dict)
+                    )
     return found
 
 
@@ -92,6 +119,7 @@ def _examples() -> list[Any]:
 
 BLOCKS = _blocks()
 EXAMPLES = _examples()
+TRANSPORT_EXAMPLES = _transport_examples()
 
 
 @pytest.mark.parametrize("block", BLOCKS)
@@ -146,3 +174,16 @@ def test_docs_example_has_no_unknown_keys(payload: dict[str, Any], allowed: set[
         pytest.fail(
             f"docs example has keys supernotify.notify doesn't know: {unknown}. Fix, or allow with docs-check: allow-keys"
         )
+
+
+def test_docs_transport_examples_were_found() -> None:
+    assert len(TRANSPORT_EXAMPLES) >= MIN_EXAMPLES
+
+
+@pytest.mark.parametrize("config", TRANSPORT_EXAMPLES)
+def test_docs_transport_example_is_valid(config: dict[str, Any]) -> None:
+    """A transport config copied from the docs that the schema refuses stops the whole integration loading"""
+    try:
+        TRANSPORT_SCHEMA(_checkable(config))
+    except vol.Invalid as e:
+        pytest.fail(f"docs example rejected by transport schema: {e}")

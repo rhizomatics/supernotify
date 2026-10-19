@@ -331,3 +331,32 @@ async def test_chime_alias_runs_real_script(hass: HomeAssistant) -> None:
         {"message": "first ring", "visitor": "Guest", "tune": "doorbell"},
         {"message": "second ring", "visitor": "Guest", "tune": "doorbell"},
     ]
+
+
+async def test_notify_entity_transport_sends_to_real_notify_entity(hass: HomeAssistant) -> None:
+    """A notify.* target goes through notify.send_message to a real notify entity"""
+    from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+
+    class RecordingNotifyEntity(NotifyEntity):
+        _attr_name = "Hall Display"
+        _attr_unique_id = "hall_display"
+        _attr_supported_features = NotifyEntityFeature.TITLE
+
+        def __init__(self) -> None:
+            self.sent: list[tuple[str, str | None]] = []
+
+        async def async_send_message(self, message: str, title: str | None = None) -> None:
+            self.sent.append((message, title))
+
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {})
+    hall = RecordingNotifyEntity()
+    await hass.data[NOTIFY_DOMAIN].async_add_entities([hall])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN, "notify", {"message": "Washing done", "title": "Utility", "target": "notify.hall_display"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert hall.sent == [("Washing done", "Utility")]
