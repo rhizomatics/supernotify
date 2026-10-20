@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">37 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">36<span class="text"> run</span></button>
+            <span class="text">38 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">37<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">1<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_people_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-20 11:30 +0000
+            created at 2026-10-20 12:45 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -202,10 +202,17 @@
     <p class="run run2"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t"><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="key">def</span> <span class="nam">all_options_for</span><span class="op">(</span><span class="nam">transport_options</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">DeliveryOption</span><span class="op">]</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">list</span><span class="op">[</span><span class="nam">DeliveryOption</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Common options plus a transport&#x27;s own &#8212; the full applicable set for one transport.&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span><span class="op">*</span><span class="nam">COMMON_OPTIONS</span><span class="op">,</span> <span class="op">*</span><span class="nam">transport_options</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t"><span class="com"># for a transport passing on what&#x27;s left of the notification&#x27;s `data` to the integration</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="nam">DATA_KEYS_SELECT_OPTION</span> <span class="op">=</span> <span class="nam">DeliveryOption</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">OPTION_DATA_KEYS_SELECT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="str">&quot;Prune the data block by including/excluding values or by regex pattern&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="nam">value_type</span><span class="op">=</span><span class="nam">SelectionRule</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t"><span class="key">def</span> <span class="nam">all_options_for</span><span class="op">(</span><span class="nam">transport_options</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">DeliveryOption</span><span class="op">]</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">list</span><span class="op">[</span><span class="nam">DeliveryOption</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Common options plus a transport&#x27;s own &#8212; the full applicable set for one transport.&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span><span class="op">*</span><span class="nam">COMMON_OPTIONS</span><span class="op">,</span> <span class="op">*</span><span class="nam">transport_options</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -215,7 +222,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_people_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-20 11:30 +0000
+            created at 2026-10-20 12:45 +0000
         </p>
     </div>
 </footer>
