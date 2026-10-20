@@ -148,7 +148,7 @@ Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "
 
 ### Other Languages
 
-The sentences are in English and Italian for now - if you'd like them in your language, please suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues). They live in `SENTENCES` and `RESPONSES` in `sentences.py`, one entry per language.
+The sentences are in English and Italian for now - if you'd like them in your language, please suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues). The sentences live in `SENTENCES` in `sentences.py`, one entry per language, and what's said back in the translations, as `common.voice_*` in `translations/<language>.json`.
 
 This functionality is also available to scripts and automations from the `conversation.process` action.
 
