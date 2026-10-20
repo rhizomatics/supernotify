@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from custom_components.supernotify.sentences import SENTENCES
@@ -7,7 +8,7 @@ COMPONENT_DIR = Path(__file__).parents[3] / "custom_components" / "supernotify"
 TRANSLATIONS_DIR = COMPONENT_DIR / "translations"
 ENGLISH_FILE = TRANSLATIONS_DIR / "en.json"
 # What the built-in agent says back - only for the languages it has sentences in
-VOICE_PREFIX = "common.voice."
+VOICE_PREFIX = "common.voice_"
 
 
 def _leaf_keys(obj: dict, prefix: str = "") -> set[str]:
@@ -121,6 +122,19 @@ def test_all_translations_match_english():
 def test_every_sentence_language_has_a_translation_file():
     for language in SENTENCES:
         assert (TRANSLATIONS_DIR / f"{language}.json").exists(), language
+
+
+def test_translations_pass_hassfest_value_rules():
+    """The checks hassfest makes of every value that the tests here can make without it"""
+    for path in TRANSLATIONS_DIR.glob("*.json"):
+        translation = json.loads(path.read_text())
+        nested = [key for key, value in translation["common"].items() if not isinstance(value, str)]
+        assert not nested, f"{path.name} has common values that aren't strings: {nested}"
+        values = _leaf_values(translation)
+        spaced = [key for key, value in values.items() if value != value.strip()]
+        assert not spaced, f"{path.name} has leading or trailing spaces in: {sorted(spaced)}"
+        quoted = [key for key, value in values.items() if re.search(r"'{\w+}'", value)]
+        assert not quoted, f"{path.name} has placeholders in single quotes in: {sorted(quoted)}"
 
 
 def test_no_angle_brackets_in_translations():

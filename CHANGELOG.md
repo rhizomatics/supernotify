@@ -19,7 +19,7 @@
   - *Kodi* and *HTML5*: the title given to a notification without one, now "Notification" in the Home Assistant language. For HTML5 this was previously "Home Assistant"
   - The message shown on the integrations page when Supernotify fails to start and will retry
   - The repair issue for a scenario condition that can't be checked no longer starts with "Schema error" or "Unknown error" in English
-  - What the built-in agent says back is now in the translations, under `common.voice`, so a language can be added there alongside its sentences. English and Italian for now
+  - What the built-in agent says back is now in the translations, as `common.voice_*`, so a language can be added there alongside its sentences. English and Italian for now
 - `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
   - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
 

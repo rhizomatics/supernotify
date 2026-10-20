@@ -154,18 +154,22 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
 class Voice(NamedTuple):
     """What to say back, in the language of the sentence that matched
 
-    The responses are in the translations, under `common.voice`. A language with sentences needs its
-    responses there too, while English fills in for any language without them.
+    The responses are in the translations, as `common.voice_*`. A language with sentences needs its
+    responses there too, while English fills in for any language without them. Translations can't
+    start or end with a space, so the space before a part joined into a response is added here.
     """
 
     language: str
     responses: dict[str, str]
 
     def say(self, key: str, **values: Any) -> str:
-        return self.responses[f"component.{DOMAIN}.common.voice.{key}"].format(**values)
+        return self.responses[f"component.{DOMAIN}.common.voice_{key}"].format(**values)
+
+    def joined(self, choices: list[str]) -> str:
+        return f" {self.say('or')} ".join(choices)
 
     def can_say(self, key: str) -> bool:
-        return f"component.{DOMAIN}.common.voice.{key}" in self.responses
+        return f"component.{DOMAIN}.common.voice_{key}" in self.responses
 
 
 async def async_register_sentences(hass: HomeAssistant, engine: SupernotifyEngine) -> CALLBACK_TYPE | None:
@@ -258,7 +262,7 @@ def _subject(engine: SupernotifyEngine, tag: str, command: str, voice: Voice) ->
             e for e in hass_api.entity_ids_named(name) + hass_api.entity_ids_named(tag) if e.startswith("camera.")
         })
         if len(cameras) > 1:
-            return voice.say("which_camera", tag=tag, cameras=voice.say("or").join(cameras))
+            return voice.say("which_camera", tag=tag, cameras=voice.joined(cameras))
         if cameras:
             return Subject(QualifiedTargetType.CAMERA, cameras[0], tag)
     if command != "resume" and not engine.tag_matches(tag):
@@ -288,7 +292,7 @@ async def _notify(engine: SupernotifyEngine, name: str, message: str, context: H
     if name.strip().casefold() not in EVERYONE:
         named = people.people_named(name)
         if len(named) > 1:
-            choices = voice.say("or").join(sorted(r.alias or r.name for r in named))
+            choices = voice.joined(sorted(r.alias or r.name for r in named))
             return voice.say("which", name=name, choices=choices)
         if not named:
             known = ", ".join(sorted(r.alias or r.name for r in people.enabled_recipients())) or voice.say("nobody_yet")
@@ -368,7 +372,7 @@ def _snooze(
         matches: list[str] = (
             [subject.target] if subject.target_type == QualifiedTargetType.CAMERA else engine.tag_matches(subject.target)
         )
-        about = voice.say("about", tag=subject.spoken) + (f" ({', '.join(matches)})" if matches else "")
+        about = " " + voice.say("about", tag=subject.spoken) + (f" ({', '.join(matches)})" if matches else "")
     if cmd == CommandType.NORMAL:
         return voice.say(f"resumed_{whose}", about=about)
     if cmd == CommandType.SILENCE:
@@ -392,7 +396,8 @@ def _last(engine: SupernotifyEngine, voice: Voice) -> str:
     sent = [name for name, outcomes in notification.deliveries.items() if outcomes.get(EnvelopeOutcome.SUCCESS)]
     if sent:
         return voice.say("last_sent", when=when, message=notification.message, sent=", ".join(sent))
-    return voice.say("last_not_sent", when=when, message=notification.message, why=_why_not_sent(notification, voice))
+    why: str = _why_not_sent(notification, voice)
+    return voice.say("last_not_sent", when=when, message=notification.message, why=f" {why}" if why else "")
 
 
 def _why_not_sent(notification: Notification, voice: Voice) -> str:

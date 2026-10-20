@@ -33,7 +33,8 @@ TRANSLATIONS_DIR = Path(__file__).parents[3] / "custom_components" / "supernotif
 
 
 def _responses(language: str) -> dict[str, str]:
-    return json.loads((TRANSLATIONS_DIR / f"{language}.json").read_text())["common"]["voice"]
+    common: dict[str, str] = json.loads((TRANSLATIONS_DIR / f"{language}.json").read_text())["common"]
+    return {key.removeprefix("voice_"): value for key, value in common.items() if key.startswith("voice_")}
 
 
 async def _setup(
