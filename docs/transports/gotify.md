@@ -5,14 +5,6 @@ tags:
 ---
 # Gotify Transport Adaptor
 
-## Discovery
-
-**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the
-`custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is
-defined, a `gotify` delivery is generated automatically using that service and fires on
-every notification. Manually configuring your own `gotify` delivery with an explicit `action:`
-(see [Notes](#notes) below) still works and takes precedence.
-
 ## Motivation
 
 Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires
@@ -153,6 +145,14 @@ decision is documented with an inline comment in `deliver()`.
 service name is user-controlled. `auto_configure()` fills it in dynamically once discovered
 (see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a
 manually configured delivery omits `action:`.
+
+## Discovery
+
+**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the
+`custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is
+defined, a `gotify` delivery is generated automatically using that service and fires on
+every notification. Manually configuring your own `gotify` delivery with an explicit `action:`
+(see [Notes](#notes) below) still works and takes precedence.
 
 ---
 
