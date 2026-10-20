@@ -16,8 +16,19 @@ Can be used for plain or HTML template emails, and handle images as attachments 
 
 ## Discovery
 
-**Default delivery.** If an HA `smtp` (or compatible notify-platform) integration is already
-configured and no `email` delivery is defined, a `email` delivery is generated automatically and fires on every notification.
+**Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically
+and fires on every notification, when either:
+
+- a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
+- the Home Assistant SMTP integration's notify action is available
+
+To stop it being generated, switch the transport off:
+
+```yaml
+transports:
+  email:
+    enabled: false
+```
 
 ## Example
 
@@ -30,6 +41,38 @@ configured and no `email` delivery is defined, a `email` delivery is generated a
         - homeowner@example.com
 ```
 
+## Data
+
+Supernotify's own `message_html` becomes the `html` of the email. Anything else in `data`, or in
+`extra_data` on `supernotify.notify`, is passed on to the integration as it is, such as the
+SMTP integration's own `html` and `images`, or Google Mail's `cc`, `bcc` and `from` for a delivery
+with `action: notify.google_mail`. An `html` given that way wins over `message_html`, and any
+snapped image is added to the `images` given.
+
+```yaml title="Example Notification with Pass-through Data"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    target:
+        - homeowner@example.com
+    extra_data:
+      images:
+        - /config/www/floorplan.png
+```
+
+These keys in `data` are Supernotify's own, and not passed on:
+
+| Key                | Usage                                                                                                  |
+|--------------------|--------------------------------------------------------------------------------------------------------|
+| `template`         | Template to use instead of the delivery's `template`                                                   |
+| `footer`           | Text added at the end of a plain email, with `{e}` for the delivery envelope, for example `{e.delivery_name}`. Not used with a template |
+| `action_url`       | `action_url` for the template                                                                          |
+| `action_url_title` | `action_url_title` for the template                                                                    |
+
+!!! note
+    The legacy `notify.supernotify` action needed a `data` inside `data` for what went to the integration.
+    That still works, with a warning in the log, but the keys belong directly in `data` or `extra_data`.
+
 ## Pre-generated HTML
 
 The notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. It can be set in fixed configuration, in the `data` of a delivery or scenario, or as `message_html` in the action call.
@@ -37,6 +80,8 @@ The notification can have a `message_html` supplied for html that will be used i
 ## HTML Templates
 
 HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+
+Templates are read once and kept, so restart Home Assistant after changing one.
 
 Padding to nudge e-mail clients from reading too deeply into the e-mail for in-box summaries can be tuned with `preheader_blank` and `preheader_length` configuration in the transport `options`. The other useful option is `strict_template` to switch on or off the stricter
 Jinja2 template validation.
@@ -94,22 +139,9 @@ not to dig into the message contents when showing a preview in the in-box.
 Where the image is snapped rather than being only a URL, it will be included as an attachment and
 an `cid:XXXX` URL generated to point to the attachment name.
 
-!!! info
-    The additional `data` options for Google Mail (`cc`,`bcc`,`from`) are not yet supported.
-
-## Default Delivery
-
-A default Delivery called `email` will be automatically generated for Email transport if no explicit ones created, using the first available SMTP integration if one is present. If you don't want to use it, then use configuration as below, or configure your own delivery for the transport.
-
-```yaml
-transports:
-  email:
-    enabled: false
-```
-
 ## Direct Connection
 
-By default, Supernotify now uses its own SMTP connection rather than the Home Assistant one, since the standard is planning to lose ability to handle e-mail addresses dynamically (all e-mails must be pre-wrapped as Notify Entities) and its missing features like access to e-mail priority.
+By default, Supernotify uses its own SMTP connection rather than the Home Assistant one. The Home Assistant SMTP integration is moving to recipients set up one by one as notify entities, rather than any address given at the time, and its notify action has no e-mail priority.
 
 If you already have the SMTP integration installed, Supernotify can reuse the connection details automatically if it was set up from the UI (but not if its defined in YAML). Or you can skip that altogether and use the `connection` section of the Supernotify transport to define it directly.
 
@@ -117,7 +149,7 @@ If you really want to use only the native Home Assistant integration, then overr
 
 ### Configuring
 
-By default, the `OPTION_MODE` option is set to `direct`, so deliveries go through Supernotify's own SMTP capability rather than the Home Assistant notify integration. This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
+By default, the `mode` option is set to `direct`, so deliveries go through Supernotify's own SMTP capability rather than the Home Assistant notify integration. This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
 
 ```yaml
 transports:
@@ -125,11 +157,16 @@ transports:
     delivery_defaults:
       options:
         mode: direct
-        sender: hass@mail.barrsofcloak.org
+        sender: hass@example.com
         sender_name: Home Assistant
 ```
 
-This avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
+As for the Home Assistant SMTP integration, a `sender` is needed: without one, direct emails aren't sent,
+no default delivery is generated, and a warning is logged at startup. The email is from the `sender` alone
+unless a `sender_name` is given. `sender`, `sender_name` and `default_title` can also be set in the
+`options` of a single delivery, to send that delivery's emails from a different address.
+
+This avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality but without setting up each email address in Home Assistant first.
 
 In addition to reverting to the previous simpler Home Assistant usage, it also offers:
 

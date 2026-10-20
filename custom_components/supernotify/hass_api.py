@@ -586,6 +586,29 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to find service for %s, module %s : %s", domain, module, e)
         return None
 
+    def smtp_recipients(self) -> dict[str, str]:
+        """E-mail address of each recipient set up in Home Assistant's SMTP integration, to its notify entity"""
+        recipients: dict[str, str] = {}
+        registry: er.EntityRegistry | None = self._entity_registry()
+        if registry is None or not self.hass_avail("config_entries"):
+            return recipients
+        try:
+            for entry in self._hass.config_entries.async_entries("smtp", include_ignore=False, include_disabled=False):
+                for subentry in entry.subentries.values():
+                    # the smtp integration gives each recipient's notify entity the unique id `<entry id>_<address>`
+                    if subentry.unique_id and (
+                        entity_id := registry.async_get_entity_id("notify", "smtp", f"{entry.entry_id}_{subentry.unique_id}")
+                    ):
+                        recipients[subentry.unique_id] = entity_id
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to find SMTP recipients: %s", e)
+        return recipients
+
+    @property
+    def media_dirs(self) -> dict[str, str]:
+        """Folders Home Assistant's media source serves, by their name in `media-source://media_source/<name>/`"""
+        return dict(self._hass.config.media_dirs)
+
     def find_config_entry_data(self, domain: str) -> Mapping[str, Any] | None:
         """Return the data of the first enabled, non-ignored config entry for domain, if any."""
         if not self.hass_avail("config_entries"):

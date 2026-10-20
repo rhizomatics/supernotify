@@ -992,3 +992,29 @@ async def test_translations_in_configured_language(hass: HomeAssistant) -> None:
     strings = await HomeAssistantAPI(hass).translations("common")
 
     assert strings["component.supernotify.common.snooze_camera_title"] == "Posticipa le notifiche da {camera}"
+
+
+def test_smtp_recipients_maps_addresses_to_notify_entities(hass: HomeAssistant) -> None:
+    from homeassistant.config_entries import ConfigSubentryData
+    from homeassistant.helpers import entity_registry as er
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(
+        domain="smtp",
+        subentries_data=[
+            ConfigSubentryData(data={}, subentry_type="recipient", title="Alice", unique_id="alice@example.com"),
+            ConfigSubentryData(data={}, subentry_type="recipient", title="Bob", unique_id="bob@example.com"),
+        ],
+    )
+    entry.add_to_hass(hass)
+    er.async_get(hass).async_get_or_create(
+        "notify", "smtp", f"{entry.entry_id}_alice@example.com", config_entry=entry, suggested_object_id="alice"
+    )
+
+    # Bob has no notify entity yet, so can't be sent to
+    assert HomeAssistantAPI(hass).smtp_recipients() == {"alice@example.com": "notify.alice"}
+
+
+def test_media_dirs(hass: HomeAssistant) -> None:
+    hass.config.media_dirs = {"local": "/media"}
+    assert HomeAssistantAPI(hass).media_dirs == {"local": "/media"}

@@ -34,12 +34,12 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 [dependency-groups]
 dev=[
     "homeassistant-stubs",
-    "pytest==9.0.3",
+    "pytest",
     "pytest-cov",
     "pytest-socket",
     "pytest-homeassistant-custom-component>=0.13.356",
     "pytest-asyncio",
-    "pytest-aiohttp==1.1.1",
+    "pytest-aiohttp",
     "pytest-unordered",
     "pytest-mock",
     "pytest-xdist",
@@ -98,20 +98,21 @@ docs=[
     "mike",
     "mkdocs-htmlproofer-plugin",
     "mkdocs-llmstxt",
-    "mkdocs-redirects>=1.2.3,<2.0.0",
+    "mkdocs-redirects",
 ]
 
 [project.optional-dependencies]
 
 
 [tool.uv]
+package=false
 prerelease = "if-necessary"
 environments = [
     "python_full_version >= '3.14.2'",
 ]
 
 exclude-newer = "5 days"
-exclude-newer-package = { homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,aiohttp=false,uv=false }
+exclude-newer-package = { homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant-custom-component=false,aiohttp=false,uv=false }
 add-bounds = "major"
 
 [tool.ruff]

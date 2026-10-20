@@ -4,7 +4,8 @@
         "snooze_camera_title": "暂停来自 {camera} 的通知",
         "snooze_camera_button": "暂停分钟数",
         "action_url_title": "点击执行操作",
-        "email_heading": "Home Assistant 通知"
+        "email_heading": "Home Assistant 通知",
+        "email_snapshot_desc": "快照图像"
     },
     "entity": {
         "binary_sensor": {

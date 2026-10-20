@@ -340,12 +340,8 @@ class TelegramTransport(Transport):
         # Determine if we have an image to attach
         image_path = None
         if attach_image:
-            try:
-                image_path = await envelope.grab_image()
-                _LOGGER.debug("SUPERNOTIFY telegram: image grabbed at %s", image_path)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY telegram: failed to grab image: %s", e)
-                image_path = None
+            image_path = await self.safe_grab_image(envelope)
+            _LOGGER.debug("SUPERNOTIFY telegram: image grabbed at %s", image_path)
 
         # Select service and build service-specific payload
         service_action = "telegram_bot.send_message"

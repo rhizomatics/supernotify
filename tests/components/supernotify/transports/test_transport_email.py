@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock, patch
 
+import pytest
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
@@ -43,6 +45,7 @@ from custom_components.supernotify.schema import TRANSPORT_SCHEMA
 from custom_components.supernotify.transports.email import (
     EMAIL_OPTION_MODE_DIRECT,
     EMAIL_OPTION_MODE_HA_SMTP,
+    OPTION_DEFAULT_TITLE,
     OPTION_MODE,
     OPTION_PREHEADER_BLANK,
     OPTION_PREHEADER_LENGTH,
@@ -73,6 +76,8 @@ SMTP_TRANSPORT_CONFIG = {
 def _direct_smtp_uut(transport_config: dict | None = None) -> EmailTransport:
     context = Mock(custom_template_path=None)
     context.hass_api.translations = english_translations
+    context.hass_api.hass_name = "Our Home"
+    context.hass_api.has_service.return_value = False
     return EmailTransport(context, transport_config if transport_config is not None else SMTP_TRANSPORT_CONFIG)
 
 
@@ -136,7 +141,7 @@ async def test_deliver_with_template(hass: HomeAssistant) -> None:
         "target": ["tester9@assert.com"],
         "title": "testing",
         "message": "hello there",
-        "data": {"html": "<H1>testing</H1>\n\n<H2>Joey is home</H2>"},
+        "data": {"html": "<H1>testing</H1>\n<H2>Joey is home</H2>"},
     }
 
 
@@ -212,7 +217,11 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
             "target": ["tester9@assert.com"],
             "title": "testing",
             "message": "hello there",
-            "data": {"images": ["/local/picture.jpg"], "html": '<H3>testing</H3><div><p><img src="cid:picture.jpg"></p></div>'},
+            # the notification's snapshot_url, so the image links to it
+            "data": {
+                "images": ["/local/picture.jpg"],
+                "html": '<H3>testing</H3><div><p><a href="http://mycamera.thing"><img src="cid:picture.jpg"/></a></p></div>',
+            },
         },
         blocking=False,
         context=None,
@@ -606,8 +615,18 @@ def test_direct_smtp_validate_action_without_connection() -> None:
     context = Mock(custom_template_path=None)
     context.hass_api.find_config_entry_data.return_value = None
     context.hass_api.find_service.return_value = None
+    context.hass_api.has_service.return_value = False
     uut = EmailTransport(context, {})
     assert uut.validate_action(None) is False
+
+
+def test_validate_action_with_smtp_send_message() -> None:
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.return_value = None
+    context.hass_api.find_service.return_value = None
+    context.hass_api.has_service.side_effect = lambda domain, service: (domain, service) == ("smtp", "send_message")
+    uut = EmailTransport(context, {})
+    assert uut.validate_action(None) is True
 
 
 def test_direct_smtp_validate_action_with_connection() -> None:
@@ -689,7 +708,8 @@ async def test_build_message_html() -> None:
         "002",
     )
     assert isinstance(msg, MIMEMultipart)
-    assert msg["From"] == "Home Assistant <hass@example.com>"
+    # the home's name when there's no sender_name
+    assert msg["From"] == "Our Home <hass@example.com>"
 
 
 async def test_build_message_with_image_attachment(tmp_path: object) -> None:
@@ -967,3 +987,278 @@ async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
         maximal_data={"footer": "Sent by {e.delivery_name}", "data": {"sender_name": "Home"}},
     )
     await assert_schema_usage(hass, case, maximal)
+
+
+async def _sent_by_notify_smtp(delivery: dict, action_data: dict | None = None, **kwargs: object) -> dict:
+    context = TestingContext(
+        deliveries={"mail": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", **delivery}}, **kwargs
+    )
+    await context.test_initialize()
+    notification = Notification(
+        context, message="hello there", target=["a@b.com"], action_data={"delivery": ["mail"], **(action_data or {})}
+    )
+    await notification.initialize()
+    await notification.deliver()
+    return context.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
+
+
+async def test_smtp_keys_in_data_are_passed_on() -> None:
+    """Regression: smtp's own `html` and `images` were only passed on from a nested `data`"""
+    sent = await _sent_by_notify_smtp({"data": {"html": "<b>hi</b>", "images": ["/tmp/a.jpg"]}}, {"data": {"cc": "c@d.com"}})
+
+    assert sent["data"] == {"html": "<b>hi</b>", "images": ["/tmp/a.jpg"], "cc": "c@d.com"}
+
+
+async def test_nested_data_is_moved_up(caplog: pytest.LogCaptureFixture) -> None:
+    sent = await _sent_by_notify_smtp({"data": {"data": {"html": "<b>old</b>", "cc": "old@d.com"}, "cc": "new@d.com"}})
+
+    assert sent["data"] == {"html": "<b>old</b>", "cc": "new@d.com"}
+    assert "rather than in a nested `data`" in caplog.text
+
+
+async def test_html_given_wins_over_message_html() -> None:
+    sent = await _sent_by_notify_smtp({"data": {"html": "<b>own</b>"}}, {"message_html": "<i>supernotify</i>"})
+
+    assert sent["data"] == {"html": "<b>own</b>"}
+
+
+async def test_supernotify_keys_are_not_passed_on() -> None:
+    sent = await _sent_by_notify_smtp({"data": {"footer": "-- sent by {e.delivery_name}", "action_url": "http://x"}})
+
+    assert sent["message"] == "hello there\n\n-- sent by mail"
+    assert "data" not in sent
+
+
+async def test_grabbed_image_is_added_to_given_images() -> None:
+    context = TestingContext(deliveries={"mail": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}})
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+    notification = Notification(context, message="hello there")
+    await notification.initialize()
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path("/local/picture.jpg")
+    await uut.deliver(
+        Envelope(
+            Delivery("mail", context.delivery_config("mail"), uut),
+            notification,
+            target=Target(["a@b.com"]),
+            data={"images": ["/tmp/a.jpg"]},
+        )
+    )
+
+    sent = context.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
+    assert sent["data"]["images"] == ["/tmp/a.jpg", "/local/picture.jpg"]
+
+
+async def test_template_gets_notification_snapshot_url(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """Regression: the notification's own media.snapshot_url was only looked for in `data`"""
+    template_dir: Path = tmp_aiopath / "email"
+    await template_dir.mkdir(parents=True)
+    await (template_dir / "img.html.j2").write_text("{{ alert.img.url }}|{{ alert.img.desc }}")
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"mail": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_TEMPLATE: "img.html.j2"}},
+        template_path=tmp_aiopath,
+        services={"notify": ["smtp"]},
+    )
+    await ctx.test_initialize()
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    notification = Notification(ctx, message="hello there", action_data={"media": {"snapshot_url": "http://mycamera.thing"}})
+    await notification.initialize()
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path("/local/picture.jpg")
+    await uut.deliver(Envelope(Delivery("mail", ctx.delivery_config("mail"), uut), notification, target=Target(["a@b.com"])))
+    await ctx.hass.async_block_till_done()
+
+    assert ctx.services["notify"]["smtp"].calls[0].data["data"]["html"] == "http://mycamera.thing|Snapshot Image"
+
+
+async def test_template_lines_are_kept_as_written(tmp_aiopath: Path) -> None:
+    await (tmp_aiopath / "lines.html.j2").write_text("<pre>\none\ntwo\n</pre>\n")
+    uut = EmailTransport(Mock(custom_template_path=tmp_aiopath), {})
+    await uut.initialize()
+
+    assert await uut.load_template("lines.html.j2") == "<pre>\none\ntwo\n</pre>\n"
+
+
+async def test_build_message_uses_delivery_sender_options() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_MESSAGE: "hello there"},
+        ["tester1@assert.com"],
+        None,
+        "005",
+        {OPTION_SENDER: "alarm@example.com", OPTION_SENDER_NAME: "Alarm", OPTION_DEFAULT_TITLE: "Alarm!"},
+    )
+
+    assert msg["From"] == "Alarm <alarm@example.com>"
+    assert msg["Subject"] == "Alarm!"
+
+
+async def test_deliver_direct_smtp_uses_delivery_sender(hass: HomeAssistant) -> None:
+    context = TestingContext(
+        homeassistant=hass,
+        deliveries={
+            "direct_smtp": {
+                CONF_TRANSPORT: TRANSPORT_EMAIL,
+                CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT, OPTION_SENDER: "alarm@example.com"},
+            }
+        },
+        transports={TRANSPORT_EMAIL: {CONF_CONNECTION: SMTP_CONNECTION}},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+    envelope = Envelope(
+        Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),
+        Notification(context, message="hello there"),
+        target=Target(["tester1@assert.com"]),
+    )
+    with patch.object(EmailTransport, "_send_smtp") as mock_send:
+        assert await uut.deliver(envelope) is True
+
+    assert mock_send.call_args.args[2] == "alarm@example.com"
+    assert mock_send.call_args.args[0]["From"] == f"{hass.config.location_name} <alarm@example.com>"
+
+
+async def test_no_default_delivery_without_sender(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """As for Home Assistant's own SMTP, a connection without a sender doesn't send"""
+    ctx = TestingContext(homeassistant=hass, transports={TRANSPORT_EMAIL: {CONF_CONNECTION: SMTP_CONNECTION}})
+    await ctx.test_initialize()
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL, force=True))
+    await uut.initialize()
+
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
+    assert "has no sender" in caplog.text
+
+
+async def test_deliver_direct_smtp_failure_is_recorded(hass: HomeAssistant) -> None:
+    context = TestingContext(
+        homeassistant=hass,
+        deliveries={"direct_smtp": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}},
+        transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+    envelope = Envelope(
+        Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),
+        Notification(context, message="hello there"),
+        target=Target(["tester1@assert.com"]),
+    )
+    with patch.object(EmailTransport, "_send_smtp", side_effect=smtplib.SMTPAuthenticationError(535, b"bad password")):
+        assert await uut.deliver(envelope) is False
+
+    assert envelope.delivered == 0
+    assert envelope.error_count == 1
+    assert envelope.failed_calls[0].target_data == {ATTR_TARGET: ["tester1@assert.com"]}
+    assert "bad password" in (envelope.failed_calls[0].exception or "")
+
+
+async def test_missing_attachment_is_left_out(tmp_path: object) -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(tmp_path / "gone.jpg")]}},  # type: ignore[operator]  # ty: ignore[unsupported-operator]
+        ["tester1@assert.com"],
+        None,
+        "006",
+    )
+
+    assert isinstance(msg, MIMEMultipart)
+    assert len(msg.get_payload()) == 1  # type: ignore[arg-type]  # only the text, no attachment
+
+
+async def _sent_by_smtp_send_message(
+    hass: HomeAssistant, targets: list[str], action_data: dict | None = None, legacy_action: bool = False
+) -> tuple[list[ServiceCall], Envelope]:
+    from homeassistant.components.smtp.services import SERVICE_SEND_MESSAGE_SCHEMA
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    calls: list[ServiceCall] = async_mock_service(hass, "smtp", "send_message", schema=SERVICE_SEND_MESSAGE_SCHEMA)
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"mail": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP}}},
+        services={"notify": ["smtp"]} if legacy_action else None,
+    )
+    await ctx.test_initialize()
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    if legacy_action:
+        uut.ha_action = "notify.smtp"
+    notification = Notification(ctx, message="hello there", title="testing", action_data=action_data)
+    await notification.initialize()
+    envelope = Envelope(Delivery("mail", ctx.delivery_config("mail"), uut), notification, target=Target(targets))
+    with patch.object(ctx.hass_api, "smtp_recipients", return_value={"alice@example.com": "notify.alice"}):
+        await uut.deliver(envelope)
+    await hass.async_block_till_done()
+    return calls, envelope
+
+
+async def test_ha_smtp_mode_uses_smtp_send_message(hass: HomeAssistant) -> None:
+    calls, envelope = await _sent_by_smtp_send_message(
+        hass,
+        ["alice@example.com"],
+        {"priority": "critical", "message_html": "<b>hello</b>", "data": {"cc": "not@for.smtp"}},
+    )
+
+    assert envelope.delivered == 1
+    assert len(calls) == 1
+    assert dict(calls[0].data) == {
+        "entity_id": ["notify.alice"],
+        "message": "hello there",
+        "title": "testing",
+        "html": "<b>hello</b>",
+        "priority": "highest",  # cc isn't a field of smtp.send_message, so left out
+    }
+
+
+async def test_smtp_send_message_attaches_camera_when_snapshot_not_in_media_dirs(hass: HomeAssistant) -> None:
+    with patch(
+        "custom_components.supernotify.envelope.Envelope.grab_image",
+        return_value=Path("/config/supernotify/media/image/snap.jpg"),
+    ):
+        calls, _ = await _sent_by_smtp_send_message(
+            hass, ["alice@example.com"], {"media": {"camera_entity_id": "camera.porch"}}
+        )
+
+    assert calls[0].data["attachments"] == [
+        {
+            "media_source": {"media_content_id": "media-source://camera/camera.porch", "media_content_type": "image/jpeg"},
+            "filename": "snap.jpg",
+            "content_id": "snap.jpg",
+        }
+    ]
+
+
+async def test_smtp_send_message_attaches_snapshot_from_media_dirs(hass: HomeAssistant) -> None:
+    hass.config.media_dirs = {"supernotify": "/config/media/supernotify"}
+    with patch(
+        "custom_components.supernotify.envelope.Envelope.grab_image",
+        return_value=Path("/config/media/supernotify/image/snap.jpg"),
+    ):
+        calls, _ = await _sent_by_smtp_send_message(hass, ["alice@example.com"])
+
+    assert calls[0].data["attachments"][0]["media_source"]["media_content_id"] == (
+        "media-source://media_source/supernotify/image/snap.jpg"
+    )
+
+
+async def test_smtp_send_message_others_go_by_legacy_action(hass: HomeAssistant) -> None:
+    calls, envelope = await _sent_by_smtp_send_message(hass, ["alice@example.com", "bob@example.com"], legacy_action=True)
+
+    assert len(calls) == 1
+    assert [c.action for c in envelope.calls] == ["send_message", "smtp"]
+    assert envelope.calls[1].action_data[ATTR_TARGET] == ["bob@example.com"]  # type: ignore[index]
+
+
+async def test_smtp_send_message_others_left_out_without_legacy_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    calls, _ = await _sent_by_smtp_send_message(hass, ["alice@example.com", "bob@example.com"])
+
+    assert len(calls) == 1
+    assert "Not emailing bob@example.com" in caplog.text
+
+
+async def test_data_keys_select_prunes_passed_on_data() -> None:
+    sent = await _sent_by_notify_smtp({
+        "data": {"html": "<b>hi</b>", "cc": "c@d.com"},
+        CONF_OPTIONS: {"data_keys_select": {"exclude": ["cc"]}},
+    })
+
+    assert sent["data"] == {"html": "<b>hi</b>"}

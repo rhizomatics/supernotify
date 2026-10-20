@@ -75,13 +75,12 @@ class MediaPlayerTransport(Transport):
             # fallback to older idiosyncratic way for backward compatibility
             snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is not None:
-            # absolutize relative URL for external URl, probably preferred by Alexa Show etc
-            return urllib.parse.urljoin(self.hass_api.external_url, snapshot_url)
+            return self.absolute_url(snapshot_url)
+        return await self.image_url(envelope)
 
-        image_path = await envelope.grab_image()
-        if image_path is None:
-            return None
-        return await self.context.media_storage.object_url(image_path)
+    def absolute_url(self, url: str) -> str:
+        # the external URL, probably preferred by Alexa Show etc
+        return urllib.parse.urljoin(self.hass_api.external_url, url)
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

@@ -82,7 +82,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
@@ -109,7 +108,6 @@ if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
 
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 # alandtse/alexa_media_player HACS integration's notify platform module
 HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
@@ -161,6 +159,7 @@ class AlexaMediaPlayerTransport(Transport):
     """
 
     name = TRANSPORT_ALEXA_MEDIA_PLAYER
+    action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [
         DeliveryOption(
             OPTION_MEDIA_AUTO_PAUSE,
@@ -198,18 +197,6 @@ class AlexaMediaPlayerTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is not None
-
-    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
-        # like validate_action() above, an explicit delivery can supply its own action
-        # regardless of whether the service is discoverable here - is_viable() can't see
-        # delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
-        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
-        return True
-
-    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        if self.delivery_defaults.action:
-            return {self.name: {}}
-        return {}
 
     async def _safe_service(
         self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None

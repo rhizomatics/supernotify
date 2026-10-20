@@ -4,7 +4,8 @@
         "snooze_camera_title": "{camera} की सूचनाएँ स्नूज़ करें",
         "snooze_camera_button": "स्नूज़ के मिनट",
         "action_url_title": "कार्रवाई के लिए क्लिक करें",
-        "email_heading": "Home Assistant सूचना"
+        "email_heading": "Home Assistant सूचना",
+        "email_snapshot_desc": "स्नैपशॉट छवि"
     },
     "entity": {
         "binary_sensor": {

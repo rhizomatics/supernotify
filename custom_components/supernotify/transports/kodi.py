@@ -58,7 +58,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
-    ATTR_MEDIA_SNAPSHOT_URL,
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_KODI,
 )
@@ -150,7 +149,7 @@ class KodiTransport(Transport):
         """Validate that action is the kodi call_method service."""
         return action == "kodi.call_method"
 
-    def _absolute_url(self, url: str) -> str:
+    def absolute_url(self, url: str) -> str:
         """Make a relative URL absolute so the Kodi host can fetch it.
 
         Prefers the HA internal URL since Kodi is typically a LAN device;
@@ -165,35 +164,6 @@ class KodiTransport(Transport):
         if not url.startswith("/"):
             url = "/" + url
         return urllib.parse.urljoin(base, url)
-
-    async def _resolve_image_url(self, envelope: Envelope) -> str | None:
-        """Resolve a snapshot image URL reachable from the Kodi host.
-
-        Order of resolution:
-          1. envelope.media snapshot_url (absolutised against HA base URL)
-          2. envelope.grab_image() + media_storage.object_url() (served by
-             the HA web server via the registered media path)
-          3. None (caller keeps the priority/override icon)
-        """
-        snapshot_url = envelope.media.get(ATTR_MEDIA_SNAPSHOT_URL) if envelope.media else None
-        if snapshot_url:
-            return self._absolute_url(str(snapshot_url))
-
-        image_path = None
-        try:
-            image_path = await envelope.grab_image()
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY kodi: failed to grab image: %s", e)
-        if image_path:
-            try:
-                object_url = await self.context.media_storage.object_url(image_path)
-            except Exception as e:
-                _LOGGER.debug("SUPERNOTIFY kodi: object_url failed for %s: %s", image_path, e)
-                object_url = None
-            if object_url:
-                return object_url
-            _LOGGER.debug("SUPERNOTIFY kodi: no shareable URL for %s, image skipped", image_path)
-        return None
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY kodi %s", envelope.message)
@@ -236,7 +206,7 @@ class KodiTransport(Transport):
         if icon_override:
             icon = str(icon_override)
         if attach_image:
-            image_url = await self._resolve_image_url(envelope)
+            image_url = await self.image_url(envelope)
             if image_url:
                 icon = image_url
             else:

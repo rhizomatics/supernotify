@@ -27,9 +27,9 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.model import TargetRequired, TransportFeature
+from custom_components.supernotify.transport import PRIORITY_PREFIX
 from custom_components.supernotify.transports.matrix import (
     _MATRIX_ROOM_RE,
-    _PRIORITY_PREFIX,
     MatrixTransport,
 )
 from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
@@ -310,11 +310,11 @@ async def test_deliver_invalid_format_falls_back_to_default() -> None:
 @pytest.mark.parametrize(
     ("priority", "expected_prefix"),
     [
-        ("critical", _PRIORITY_PREFIX["critical"]),
-        ("high", _PRIORITY_PREFIX["high"]),
+        ("critical", PRIORITY_PREFIX["critical"]),
+        ("high", PRIORITY_PREFIX["high"]),
         ("medium", ""),
-        ("low", _PRIORITY_PREFIX["low"]),
-        ("minimum", _PRIORITY_PREFIX["minimum"]),
+        ("low", PRIORITY_PREFIX["low"]),
+        ("minimum", PRIORITY_PREFIX["minimum"]),
     ],
 )
 async def test_deliver_priority_prefix_opt_in(priority: str, expected_prefix: str) -> None:
@@ -353,7 +353,7 @@ async def test_deliver_priority_prefix_applied_before_html_title() -> None:
 
     await uut.deliver(envelope)
 
-    expected = _PRIORITY_PREFIX["critical"] + "<b>Title</b><br>body"
+    expected = PRIORITY_PREFIX["critical"] + "<b>Title</b><br>body"
     assert _action_data(uut)["message"] == expected
 
 

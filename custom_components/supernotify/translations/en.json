@@ -4,7 +4,8 @@
         "snooze_camera_title": "Snooze notifications from {camera}",
         "snooze_camera_button": "Minutes to snooze",
         "action_url_title": "Click for Action",
-        "email_heading": "Home Assistant Notification"
+        "email_heading": "Home Assistant Notification",
+        "email_snapshot_desc": "Snapshot Image"
     },
     "entity": {
         "binary_sensor": {

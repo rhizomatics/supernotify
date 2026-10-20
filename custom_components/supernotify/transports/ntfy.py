@@ -38,7 +38,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
-    ATTR_MEDIA_SNAPSHOT_URL,
     TRANSPORT_NTFY,
 )
 from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
@@ -193,18 +192,10 @@ class NtfyTransport(Transport):
                 action_data["actions"] = _validate_actions(actions)[:3]
 
         # Image attachment: snapshot_url passthrough > grab_image for camera
-        if envelope.media:
-            snapshot_url = envelope.media.get(ATTR_MEDIA_SNAPSHOT_URL)
-            if snapshot_url:
-                action_data["attach"] = self.hass_api.abs_url(snapshot_url)
-                action_data["filename"] = filename
-            elif attach_image:
-                image_path = await envelope.grab_image()
-                if image_path:
-                    image_url = await self.context.media_storage.object_url(image_path)
-                    if image_url:
-                        action_data["attach"] = image_url
-                        action_data["filename"] = filename
+        image_url: str | None = await self.image_url(envelope, grab=attach_image)
+        if image_url:
+            action_data["attach"] = image_url
+            action_data["filename"] = filename
 
         # Residual generic keys (non ntfy_*) passed to payload
         action_data.update(raw_data)

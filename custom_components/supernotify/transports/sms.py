@@ -4,7 +4,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
-from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_PHONE,
@@ -28,7 +27,6 @@ from custom_components.supernotify.transport import (
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 
@@ -37,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class SMSTransport(Transport):
     name = TRANSPORT_SMS
+    action_configured = True
     MAX_MESSAGE_LENGTH = 158
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -68,18 +67,6 @@ class SMSTransport(Transport):
     @property
     def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_PHONE]
-
-    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
-        # like validate_action() below, an explicit delivery can supply its own action
-        # regardless of whether a gateway service is discoverable here - is_viable() can't
-        # see delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
-        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
-        return True
-
-    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        if self.delivery_defaults.action:
-            return {self.name: {}}
-        return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

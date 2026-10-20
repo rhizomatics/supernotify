@@ -70,14 +70,6 @@ _MATRIX_ROOM_RE = re.compile(r"^[!#][^:]*:.+")
 
 _VALID_FORMATS = ("text", "html")
 
-# Opt-in emoji prefix per SuperNotify priority (medium: no prefix)
-_PRIORITY_PREFIX = {
-    "critical": "\U0001f6a8 ",  # police car light
-    "high": "⚠️ ",  # warning sign
-    "low": "\U0001f539 ",  # small blue diamond
-    "minimum": "\U0001f539 ",  # small blue diamond
-}
-
 
 class MatrixTransport(Transport):
     """Notify via Matrix rooms using Home Assistant matrix integration."""
@@ -179,17 +171,13 @@ class MatrixTransport(Transport):
 
         # Opt-in emoji prefix mapped from SuperNotify priority
         if priority_prefix:
-            message_text = _PRIORITY_PREFIX.get(envelope.priority or "medium", "") + message_text
+            message_text = self.priority_prefix(envelope) + message_text
 
         # Grab camera snapshot if requested; images are local paths and the
         # matrix integration checks them against allowlist_external_dirs
         images: list[str] = []
         if attach_image:
-            image_path = None
-            try:
-                image_path = await envelope.grab_image()
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY matrix: failed to grab image: %s", e)
+            image_path = await self.safe_grab_image(envelope)
             if image_path:
                 images.append(str(image_path))
             else:

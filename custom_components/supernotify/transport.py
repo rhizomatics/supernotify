@@ -32,6 +32,7 @@ from . import DOMAIN
 from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
+    ATTR_MEDIA_SNAPSHOT_URL,
     CONF_DELIVERY_DEFAULTS,
     INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
@@ -71,10 +72,12 @@ def default_inclusion(unique: list[str | TargetEntityCategory], fallback: list[s
 
 
 if TYPE_CHECKING:
+    from anyio import Path
     from homeassistant.helpers.typing import ConfigType
 
     from .context import Context
     from .delivery import Delivery, DeliveryRegistry
+    from .envelope import Envelope
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
 
@@ -101,6 +104,14 @@ SSML_TAG_NAMES = frozenset({
     "voice",
 })
 
+# Emoji prefix per priority, for a transport that offers one (medium: no prefix)
+PRIORITY_PREFIX: dict[str, str] = {
+    "critical": "\U0001f6a8 ",  # police car light
+    "high": "⚠️ ",  # warning sign
+    "low": "\U0001f539 ",  # small blue diamond
+    "minimum": "\U0001f539 ",  # small blue diamond
+}
+
 # Sign characters kept even though their Unicode category (Sm) would otherwise be stripped,
 # so numeric values like "+3" or "-3" aren't left indistinguishable from "3".
 SIGN_CHARS = frozenset("+-=%")
@@ -120,6 +131,9 @@ class Transport:
     # how loudly to log when the transport isn't viable
     integration_domain: ClassVar[str | None] = None
     declared_options: ClassVar[list[DeliveryOption]] = []
+    # a transport sending only through an action the configuration names, with no way of finding one itself,
+    # whose standard delivery is the transport's own when its `delivery_defaults` has an action
+    action_configured: ClassVar[bool] = False
 
     @abstractmethod
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
@@ -216,6 +230,11 @@ class Transport:
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         """Whether this transport currently has what it needs to auto-configure a delivery.
 
+        Always True for an `action_configured` transport: an explicit delivery can supply its own action
+        regardless of whether the service is discoverable here, and is_viable() can't see delivery-level
+        config, so it can't rule that out - DeliveryRegistry prunes the transport entirely once it's
+        confirmed no delivery (explicit or auto) uses it.
+
         Default implementation just defers to `build_standard_deliveries()` and checks for
         a non-empty result - correct for any transport, but builds (and discards) the
         `DeliveryConfig`s to answer what's otherwise a yes/no question. Override with a
@@ -228,7 +247,7 @@ class Transport:
         `pushover`, `sms` - discovering *which* service is available - or `email`, which
         also decides *how* to send based on what's found).
         """
-        return bool(self.build_standard_deliveries(hass_api))
+        return self.action_configured or bool(self.build_standard_deliveries(hass_api))
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         """Build every 'standard' (auto-generatable) delivery this transport contributes,
@@ -241,11 +260,53 @@ class Transport:
         `is_viable()`'s docstring) - those keep their own guard and still return an empty
         dict, simply because there's nothing to gain by trusting the caller there.
         """
+        if self.action_configured and self.delivery_defaults.action:
+            return {self.name: {}}
         return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.delivery_defaults.action
+
+    def priority_prefix(self, envelope: Envelope) -> str:
+        """Emoji to start a message with for its priority, or nothing for medium"""
+        return PRIORITY_PREFIX.get(envelope.priority or "medium", "")
+
+    def validate_notify_action(self, action: str | None) -> bool:
+        """For a transport sending through an integration's `notify.<name>` action, named as the user chose"""
+        if action and action.startswith("notify.") and action.split(".", 1)[1]:
+            return True
+        _LOGGER.warning("SUPERNOTIFY %s: action must be a notify.* service, got: %r", self.name, action)
+        return False
+
+    async def safe_grab_image(self, envelope: Envelope) -> Path | None:
+        """The notification's image, or None, a failure to get one not stopping the delivery"""
+        try:
+            return await envelope.grab_image()
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY %s: failed to grab image: %s", self.name, e)
+            return None
+
+    def absolute_url(self, url: str) -> str | None:
+        """A URL the recipient's device can fetch, for one that may be relative to Home Assistant"""
+        return self.hass_api.abs_url(url)
+
+    async def image_url(self, envelope: Envelope, grab: bool = True) -> str | None:
+        """A URL the recipient's device can fetch the notification's image from - its `snapshot_url`,
+        or else, with `grab`, an image grabbed from its camera and served from the media folder"""
+        snapshot_url: str | None = (envelope.media or {}).get(ATTR_MEDIA_SNAPSHOT_URL)
+        if snapshot_url:
+            return self.absolute_url(str(snapshot_url))
+        if not grab:
+            return None
+        image_path: Path | None = await self.safe_grab_image(envelope)
+        if image_path is None:
+            return None
+        try:
+            return await self.context.media_storage.object_url(image_path)
+        except Exception as e:
+            _LOGGER.debug("SUPERNOTIFY %s: no url for %s: %s", self.name, image_path, e)
+            return None
 
     def attributes(self) -> dict[str, Any]:
         attrs: dict[str, Any] = {
@@ -267,7 +328,7 @@ class Transport:
         return {}
 
     @abstractmethod
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # type: ignore # noqa: F821
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         """Delivery implementation
 
         Args:
@@ -289,7 +350,7 @@ class Transport:
 
     async def call_action(
         self,
-        envelope: Envelope,  # type: ignore # noqa: F821
+        envelope: Envelope,
         qualified_action: str | None = None,
         action_data: dict[str, Any] | None = None,
         target_data: dict[str, Any] | None = None,

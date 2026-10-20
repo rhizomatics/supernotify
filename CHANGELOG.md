@@ -4,10 +4,13 @@
 
 # v2.16.0
 
+## 🚨 Breaking changes
+- *Email*: direct emails are now from the `sender` address alone unless a `sender_name` is set, as for the Home Assistant SMTP integration, where previously they were from "Home Assistant" by default. Add `sender_name: Home Assistant` to the transport's options to keep that
+
 ## ✨ Enhancements
 - More of what Supernotify shows is now in the Home Assistant language
   - *Mobile Push*: the camera snooze button, which now also gives the camera's name rather than its entity id, and the *Click for Action* title given to a link action without one
-  - *Email*: the default subject, heading and preview text, "Home Assistant Notification". A `default_title` configured for the transport still wins
+  - *Email*: the default subject, heading and preview text, "Home Assistant Notification", and the description of a snapshot image for templates. A `default_title` configured for the transport still wins
   - Errors from `supernotify.snooze`, `silence` and `unsnooze`, such as an unknown delivery name, are now shown in the user's language, as is the same reason the AI snooze tool is given
 - `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
   - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
@@ -35,6 +38,13 @@
   - A `snapshot_image_path` in `media` without a `camera_entity_id` is now attached as the image, as it already was for other transports
   - The warning for `mobile_push_clear_notification` without a tag now gives the keys' real names
   - Docs corrected: there's no separate live view setting - the phone is given the camera to stream only when no image can be got - Android is supported, with every `mobile_push_*` key now listed, and device discovery and the default delivery are described properly
+- *Email*
+  - The notification's `media.snapshot_url` was ignored, being only looked for in `data`, so a snapped image wasn't linked to it and templates were given the attachment instead
+  - The SMTP integration's own `html` and `images`, or any other key for the integration such as Google Mail's `cc`, given in `data` or `extra_data` were dropped, being only passed on from a `data` nested inside `data`. They are now passed on as they are, with a given `html` winning over `message_html`. A nested `data`, as the legacy `notify.supernotify` needed, is still taken, with a warning
+  - `sender`, `sender_name` and `default_title` set in a delivery's own `options` were ignored, and only the transport's used
+  - A direct connection without a `sender` generated a default delivery that never sent anything, logging only at debug level. As for the Home Assistant SMTP integration, a `sender` is now needed: there's no default delivery without one, and a warning at startup
+  - Templates had a blank line added after every line
+  - Docs corrected and extended: what's passed on in `data`, the `footer`, when the default delivery is generated, the sender, and that templates are only read once
 
 
 

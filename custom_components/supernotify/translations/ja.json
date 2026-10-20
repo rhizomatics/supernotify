@@ -4,7 +4,8 @@
         "snooze_camera_title": "{camera} の通知をスヌーズ",
         "snooze_camera_button": "スヌーズする分数",
         "action_url_title": "クリックしてアクション",
-        "email_heading": "Home Assistant 通知"
+        "email_heading": "Home Assistant 通知",
+        "email_snapshot_desc": "スナップショット画像"
     },
     "entity": {
         "binary_sensor": {

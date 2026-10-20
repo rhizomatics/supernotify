@@ -3,19 +3,20 @@
 
 ## Functionality
 
-| Function                  | Review Date   | Fix Version |
-| ------------------------- | ------------- | ----------- |
-| Dupe Detection            |               |             |
-| Archiving                 |               |             |
-| Snoozing                  |               |             |
-| Media Grab                |               |             |
-| Diagnostics               |               |             |
-| Home Assistant API        |               |             |
-| Home Assistant Entities   |               |             |
-| LLM and Conversation      |               |             |
-| Person and User           |               |             |
-| Scenarios                 |               |             |
-| Multi-lingual             |               |             |
+| Function                    | Review Date   | Fix Version |
+| --------------------------- | ------------- | ----------- |
+| Dupe Detection              |               |             |
+| Archiving                   |               |             |
+| Snoozing                    |               |             |
+| Media Grab                  |               |             |
+| Diagnostics                 |               |             |
+| Home Assistant API          |               |             |
+| Home Assistant Entities     |               |             |
+| LLM and Conversation        |               |             |
+| Person and User             |               |             |
+| Scenarios                   |               |             |
+| Multi-lingual               |               |             |
+| Transport Base and Delivery |               |             |
 
 ## Transports
 

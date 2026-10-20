@@ -4,7 +4,8 @@
         "snooze_camera_title": "Meldingen van {camera} snoozen",
         "snooze_camera_button": "Minuten snoozen",
         "action_url_title": "Klik voor actie",
-        "email_heading": "Home Assistant-melding"
+        "email_heading": "Home Assistant-melding",
+        "email_snapshot_desc": "Momentopname"
     },
     "entity": {
         "binary_sensor": {

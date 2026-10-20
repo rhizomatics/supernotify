@@ -4,7 +4,8 @@
         "snooze_camera_title": "Suspendre les notifications de {camera}",
         "snooze_camera_button": "Minutes de suspension",
         "action_url_title": "Cliquer pour l'action",
-        "email_heading": "Notification Home Assistant"
+        "email_heading": "Notification Home Assistant",
+        "email_snapshot_desc": "Instantané"
     },
     "entity": {
         "binary_sensor": {

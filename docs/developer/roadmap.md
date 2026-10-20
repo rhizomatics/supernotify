@@ -6,6 +6,9 @@ See also [Principles](./principles.md) for what guides development.
 
 [Github Discussion #202](https://github.com/rhizomatics/supernotify/discussions/202)
 
+## Rolling Architecture Review
+
+Reviews of shared functionality and per transport, see [schedule](rolling_review.md)
 
 ## Home Assistant Version Compatibility
 
@@ -298,7 +301,7 @@ Its possible these are really the same thing as options, but lacking the documen
 | Group                      | Keys                                                                                                                                     | Notes                                                                                                     |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | Prefixed transport options | `chime_*`, `discord_*`, `gotify_*`, `html5_*`, `kodi_*`, `lametric_*`, `matrix_*`, `mobile_push_*`, `ntfy_*`, `pushover_*`, `telegram_*` | Removed by their transport, only the remainder reaches the integration                                    |
-| Email                      | `template`, `footer`, `action_url`, `action_url_title`, `snapshot_url` (or `media.snapshot_url`)                                         | `template` and `footer` are Supernotify's own                                                             |
+| Email                      | `template`, `footer`, `action_url`, `action_url_title`                                                                                   | Supernotify's own, the rest is passed on flat, a legacy nested `data` moved up. `snapshot_url` comes from the notification's `media`, `data` only for compatibility |
 | Alexa Media Player         | `volume`, `type`, `pause_music`, `restore_volume`, `tts_char_speed`, `volume_fallback`, `wait_for_tts`                                   | Unprefixed                                                                                                |
 | Chime                      | `chime_tune`, `chime_volume`, `chime_duration`, `enqueue`, `announce`                                                                    | `enqueue` and `announce` are `media_player` fields                                                        |
 | Generic                    | `variables`, `value`, `media`, `actions`, `token`, `level`                                                                               | `token` and `level` are for `notify_events`; `media` and `actions` are also top level notification fields |

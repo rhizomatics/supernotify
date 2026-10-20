@@ -56,8 +56,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from homeassistant.helpers.typing import ConfigType
-
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
@@ -71,20 +69,11 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
 # Discord message content hard limit
 _MAX_MESSAGE_LENGTH = 2000
-
-# Opt-in emoji prefix per SuperNotify priority (medium: no prefix)
-_PRIORITY_PREFIX = {
-    "critical": "\U0001f6a8 ",  # police car light
-    "high": "⚠️ ",  # warning sign
-    "low": "\U0001f539 ",  # small blue diamond
-    "minimum": "\U0001f539 ",  # small blue diamond
-}
 
 
 class DiscordTransport(Transport):
@@ -94,6 +83,7 @@ class DiscordTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_DISCORD
+    action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
@@ -116,32 +106,8 @@ class DiscordTransport(Transport):
         # with it is unambiguous - safe to auto-select on
         return [ATTR_DISCORD_CHANNEL]
 
-    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
-        # like validate_action() below, an explicit delivery can supply its own notify.*
-        # action regardless of whether the service is discoverable here - is_viable() can't
-        # see delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
-        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
-        return True
-
-    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        if self.delivery_defaults.action:
-            return {self.name: {}}
-        return {}
-
     def validate_action(self, action: str | None) -> bool:
-        """Validate that action is a notify.* service.
-
-        The discord integration registers a legacy notify service whose slug
-        depends on the config entry name (notify.discord, notify.discord_2,
-        ...), so any non-empty notify domain action is accepted.
-        """
-        if action and action.startswith("notify.") and action.split(".", 1)[1]:
-            return True
-        _LOGGER.warning(
-            "SUPERNOTIFY discord: action must be a notify.* service (e.g. notify.discord), got: %r",
-            action,
-        )
-        return False
+        return self.validate_notify_action(action)
 
     def select_channels(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to numeric Discord channel/user IDs.
@@ -200,7 +166,7 @@ class DiscordTransport(Transport):
 
         # Opt-in emoji prefix mapped from SuperNotify priority
         if priority_prefix:
-            message_text = _PRIORITY_PREFIX.get(envelope.priority or "medium", "") + message_text
+            message_text = self.priority_prefix(envelope) + message_text
 
         # Truncate to the Discord content limit
         if len(message_text) > _MAX_MESSAGE_LENGTH:
@@ -211,11 +177,7 @@ class DiscordTransport(Transport):
         # discord integration checks them against allowlist_external_dirs
         images: list[str] = []
         if attach_image:
-            image_path = None
-            try:
-                image_path = await envelope.grab_image()
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY discord: failed to grab image: %s", e)
+            image_path = await self.safe_grab_image(envelope)
             if image_path:
                 images.append(str(image_path))
             else:

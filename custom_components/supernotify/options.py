@@ -120,6 +120,13 @@ MEDIA_OPTIONS: list[DeliveryOption] = [
     ),
 ]
 
+# for a transport passing on what's left of the notification's `data` to the integration
+DATA_KEYS_SELECT_OPTION = DeliveryOption(
+    OPTION_DATA_KEYS_SELECT,
+    "Prune the data block by including/excluding values or by regex pattern",
+    value_type=SelectionRule,
+)
+
 
 def all_options_for(transport_options: list[DeliveryOption]) -> list[DeliveryOption]:
     """Common options plus a transport's own — the full applicable set for one transport."""

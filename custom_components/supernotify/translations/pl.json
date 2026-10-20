@@ -4,7 +4,8 @@
         "snooze_camera_title": "Wycisz powiadomienia z {camera}",
         "snooze_camera_button": "Minuty wyciszenia",
         "action_url_title": "Kliknij, aby wykonać akcję",
-        "email_heading": "Powiadomienie Home Assistant"
+        "email_heading": "Powiadomienie Home Assistant",
+        "email_snapshot_desc": "Zrzut obrazu"
     },
     "entity": {
         "binary_sensor": {

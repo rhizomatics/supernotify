@@ -32,13 +32,13 @@ from custom_components.supernotify.model import (
     DataFilter,
     DebugTrace,
     MessageOnlyPolicy,
-    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
 from custom_components.supernotify.options import (
+    DATA_KEYS_SELECT_OPTION,
     OPTION_DATA_KEYS_SELECT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -68,11 +68,7 @@ class GenericTransport(Transport):
     declared_options: ClassVar[list[DeliveryOption]] = [
         DeliveryOption(OPTION_RAW, "Don't apply domain specific data handling and pruning rules", value_type=cv.boolean),
         DeliveryOption(OPTION_GENERIC_DOMAIN_STYLE, "Treat the action call in the same way as a known domain"),
-        DeliveryOption(
-            OPTION_DATA_KEYS_SELECT,
-            "Prune the data block by including/excluding values or by regex pattern",
-            value_type=SelectionRule,
-        ),
+        DATA_KEYS_SELECT_OPTION,
     ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

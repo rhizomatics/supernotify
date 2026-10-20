@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import email.utils
 import logging
-import os
+import mimetypes
 import os.path
 import smtplib
 import time
@@ -19,6 +19,7 @@ import aiofiles
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -34,13 +35,14 @@ from homeassistant.util.ssl import create_client_context
 
 import custom_components.supernotify
 from custom_components.supernotify import const
-from custom_components.supernotify.common import CallRecord
+from custom_components.supernotify.common import CallRecord, ensure_list
 from custom_components.supernotify.compat import vol
 from custom_components.supernotify.const import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_EMAIL,
     ATTR_MEDIA,
+    ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
     CONF_CONNECTION,
     CONF_DELIVERY_DEFAULTS,
@@ -57,7 +59,9 @@ from custom_components.supernotify.model import (
     TransportFeature,
 )
 from custom_components.supernotify.options import (
+    DATA_KEYS_SELECT_OPTION,
     MEDIA_OPTIONS,
+    OPTION_DATA_KEYS_SELECT,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
     OPTION_PNG,
@@ -77,9 +81,9 @@ if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.hass_api import HomeAssistantAPI
 
-RE_VALID_EMAIL = (
-    r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
-)
+# RE_VALID_EMAIL = (
+#    r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
+# ) re-consider if needed or remove
 OPTION_PREHEADER_BLANK = "preheader_blank"
 OPTION_PREHEADER_LENGTH = "preheader_length"
 OPTION_STRICT_TEMPLATE = "strict_template"
@@ -99,11 +103,26 @@ NULL_RETURN_PATH = "<>"
 # connection is configured here. "server" is smtp-specific; the rest match generic
 # homeassistant.const keys already imported above.
 HA_SMTP_DOMAIN = "smtp"
+SMTP_SEND_MESSAGE = "send_message"
 # Duplicates of the constants in `homeassistant.components.smtp.const`, to be kept aligned with it,
 # since importing from there loads the smtp integration and so needs its `aiosmtplib` requirement,
 # which is only installed where the smtp integration is in use
 CONF_SERVER = "server"
 CONF_SENDER_NAME = "sender_name"
+ATTR_ATTACHMENTS = "attachments"
+ATTR_MEDIA_SOURCE = "media_source"
+ATTR_FILENAME = "filename"
+ATTR_CONTENT_ID = "content_id"
+ATTR_PRIORITY = "priority"
+
+# smtp.send_message's priority, which it sends only as X-Priority
+SMTP_PRIORITY_MAP: dict[str, str] = {
+    const.PRIORITY_CRITICAL: "highest",
+    const.PRIORITY_HIGH: "high",
+    const.PRIORITY_MEDIUM: "normal",
+    const.PRIORITY_LOW: "low",
+    const.PRIORITY_MINIMUM: "lowest",
+}
 
 IMPORTANCE_HEADER_MAP: dict[str, str] = {
     const.PRIORITY_CRITICAL: "high",
@@ -189,6 +208,7 @@ class EmailTransport(Transport):
         DeliveryOption(OPTION_SENDER, "Sender address used in direct SMTP mode"),
         DeliveryOption(OPTION_SENDER_NAME, "Sender display name used in direct SMTP mode"),
         DeliveryOption(OPTION_DEFAULT_TITLE, "Default email subject if none supplied"),
+        DATA_KEYS_SELECT_OPTION,
     ]
 
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
@@ -242,6 +262,11 @@ class EmailTransport(Transport):
             self.sender_name = entry_data.get(CONF_SENDER_NAME)
 
     async def initialize(self) -> None:
+        if self.local_smtp and not self.sender:
+            # as for Home Assistant's own SMTP integration, there's no sending without a sender
+            _LOGGER.warning(
+                "SUPERNOTIFY Email connection to %s has no sender, only deliveries with their own will send", self.host
+            )
         try:
             if self.custom_template_path is not None:
                 if await self.custom_template_path.exists():
@@ -261,7 +286,12 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Valid either with an HA notify action, or a usable direct SMTP connection for
         deliveries that set OPTION_MODE to 'direct'."""
-        return action is not None or self.ha_action is not None or self.local_smtp
+        return (
+            action is not None
+            or self.ha_action is not None
+            or self.local_smtp
+            or self.hass_api.has_service(HA_SMTP_DOMAIN, SMTP_SEND_MESSAGE)
+        )
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # like validate_action() above, an explicit delivery can supply its own action
@@ -275,7 +305,10 @@ class EmailTransport(Transport):
         if (
             self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
             and self.local_smtp
+            and self.sender
         ) or self.ha_action:
+            return {self.name: {}}
+        if hass_api.has_service(HA_SMTP_DOMAIN, SMTP_SEND_MESSAGE) and hass_api.smtp_recipients():
             return {self.name: {}}
         return {}
 
@@ -311,8 +344,7 @@ class EmailTransport(Transport):
             OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
             OPTION_PREHEADER_LENGTH: 100,
             OPTION_MODE: EMAIL_OPTION_MODE_DIRECT,  # default to avoiding the e-mail integration, since it will get locked down to notify entities
-            # only used for deliveries with OPTION_MODE set to 'direct'
-            OPTION_SENDER_NAME: "Home Assistant",
+            OPTION_DATA_KEYS_SELECT: None,
         }
         return config
 
@@ -327,16 +359,31 @@ class EmailTransport(Transport):
         addresses: list[str] = envelope.target.resolved_targets() if envelope.target else []
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, addresses)
 
-        data: dict[str, Any] = envelope.data or {}
-        html: str | None = data.get("html")
-        template_name: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
+        # what's left of `data` once Supernotify's own keys are taken out is the target integration's own,
+        # such as smtp's `html` and `images`, or Google Mail's `cc`
+        data: dict[str, Any] = dict(envelope.data or {})
+        nested: dict[str, Any] | None = data.pop(ATTR_DATA, None)
+        if nested:
+            # notify.supernotify needed a `data` inside `data` for the integration's own keys
+            _LOGGER.warning(
+                "SUPERNOTIFY email %s: give %s directly in `data` or `extra_data`, rather than in a nested `data`",
+                envelope.delivery_name,
+                ", ".join(nested),
+            )
+            data = nested | data
+        template_name: str | None = data.pop(CONF_TEMPLATE, envelope.delivery.template)
         strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
-        snapshot_url: str | None = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
-        if snapshot_url is None:
-            # older location for backward compatibility
-            snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
+        # `media` is a notification field, also once looked for in `data`
+        legacy_media: dict[str, Any] = data.pop(ATTR_MEDIA, None) or {}
+        legacy_snapshot_url: str | None = data.pop(ATTR_MEDIA_SNAPSHOT_URL, None)
+        snapshot_url: str | None = (
+            (envelope.media or {}).get(ATTR_MEDIA_SNAPSHOT_URL)
+            or legacy_media.get(ATTR_MEDIA_SNAPSHOT_URL)
+            or legacy_snapshot_url
+        )
+        template_data: dict[str, Any] = {k: data.pop(k) for k in (ATTR_ACTION_URL, ATTR_ACTION_URL_TITLE) if k in data}
         # TODO: centralize in config
-        footer_template = data.get("footer")
+        footer_template = data.pop("footer", None)
         footer = None
         if footer_template:
             try:
@@ -345,52 +392,49 @@ class EmailTransport(Transport):
                 _LOGGER.warning("SUPERNOTIFY email: failed to render footer template: %s", ex)
 
         action_data: dict[str, Any] = envelope.core_action_data()
-        extra_data: dict[str, Any] = {k: v for k, v in data.items() if k not in action_data}
 
         if len(addresses) > 0:
             action_data[ATTR_TARGET] = addresses
             # default to SMTP platform default recipients if no explicit addresses
 
-        if data and data.get("data"):
-            action_data[ATTR_DATA] = data.get("data")
-
         image_path: Path | None = await envelope.grab_image()
         if image_path:
-            action_data.setdefault("data", {})
-            action_data["data"]["images"] = [str(image_path)]
+            data["images"] = [*ensure_list(data.get("images")), str(image_path)]
 
-        if not template_name:
-            if footer and action_data.get(ATTR_MESSAGE):
-                action_data[ATTR_MESSAGE] = f"{action_data[ATTR_MESSAGE]}\n\n{footer}"
+        if not template_name and footer and action_data.get(ATTR_MESSAGE):
+            action_data[ATTR_MESSAGE] = f"{action_data[ATTR_MESSAGE]}\n\n{footer}"
 
-            if envelope.message_html:
-                action_data.setdefault("data", {})
-                html = envelope.message_html
-                if image_path:
-                    image_name = image_path.name
-                    if html and not html.rstrip().endswith("</html>"):
-                        if snapshot_url:
-                            html += f'<div><p><a href="{snapshot_url}">'
-                            html += f'<img src="cid:{image_name}"/></a>'
-                            html += "</p></div>"
-                        else:
-                            html += f'<div><p><img src="cid:{image_name}"></p></div>'
-
-                action_data["data"]["html"] = html
-        else:
-            html = await self.render_template(
-                template_name,
-                envelope,
-                action_data,
-                debug_trace,
-                image_path=image_path,
-                snapshot_url=snapshot_url,
-                extra_data=extra_data,
-                strict_template=strict_template,
-            )
-            if html:
-                action_data.setdefault("data", {})
-                action_data["data"]["html"] = html
+        # message_html is Supernotify's own for smtp's `html`, which wins when given itself
+        if "html" not in data:
+            if not template_name:
+                if envelope.message_html:
+                    html: str = envelope.message_html
+                    if image_path:
+                        image_name = image_path.name
+                        if not html.rstrip().endswith("</html>"):
+                            if snapshot_url:
+                                html += f'<div><p><a href="{snapshot_url}">'
+                                html += f'<img src="cid:{image_name}"/></a>'
+                                html += "</p></div>"
+                            else:
+                                html += f'<div><p><img src="cid:{image_name}"></p></div>'
+                    data["html"] = html
+            else:
+                rendered: str | None = await self.render_template(
+                    template_name,
+                    envelope,
+                    action_data,
+                    debug_trace,
+                    image_path=image_path,
+                    snapshot_url=snapshot_url,
+                    extra_data=template_data,
+                    strict_template=strict_template,
+                )
+                if rendered:
+                    data["html"] = rendered
+        data = envelope.customize_data(data)
+        if data:
+            action_data[ATTR_DATA] = data
         return await self._send(envelope, action_data)
 
     async def _send(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
@@ -404,14 +448,90 @@ class EmailTransport(Transport):
             return await self.call_action(envelope, action_data=action_data)
         if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT and self.local_smtp:
             return await self._send_direct_smtp(envelope, action_data)
-        return await self.call_action(envelope, action_data=action_data, qualified_action=self.ha_action)
+        return await self._send_ha_smtp(envelope, action_data)
+
+    async def _send_ha_smtp(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
+        """Through Home Assistant's SMTP integration - smtp.send_message to the addresses set up there as
+        recipients, and its legacy notify action, where there is one, for any others"""
+        addresses: list[str] = action_data.get(ATTR_TARGET) or []
+        recipients: dict[str, str] = (
+            self.hass_api.smtp_recipients() if self.hass_api.has_service(HA_SMTP_DOMAIN, SMTP_SEND_MESSAGE) else {}
+        )
+        entity_ids: list[str] = [recipients[address] for address in addresses if address in recipients]
+        if not entity_ids:
+            return await self.call_action(envelope, action_data=action_data, qualified_action=self.ha_action)
+
+        sent: bool = await self.call_action(
+            envelope,
+            qualified_action=f"{HA_SMTP_DOMAIN}.{SMTP_SEND_MESSAGE}",
+            action_data=await self._send_message_data(envelope, action_data),
+            target_data={ATTR_ENTITY_ID: entity_ids},
+        )
+        others: list[str] = [address for address in addresses if address not in recipients]
+        if others:
+            if self.ha_action:
+                sent = (
+                    await self.call_action(
+                        envelope, action_data={**action_data, ATTR_TARGET: others}, qualified_action=self.ha_action
+                    )
+                    or sent
+                )
+            else:
+                _LOGGER.warning(
+                    "SUPERNOTIFY Not emailing %s for %s, not set up as recipients in the SMTP integration",
+                    ", ".join(others),
+                    envelope.delivery_name,
+                )
+        return sent
+
+    async def _send_message_data(self, envelope: Envelope, action_data: dict[str, Any]) -> dict[str, Any]:
+        """The fields of smtp.send_message, which takes images as media sources rather than files"""
+        call_data: dict[str, Any] = {k: v for k, v in action_data.items() if k in (ATTR_MESSAGE, ATTR_TITLE)}
+        call_data.update(action_data.get(ATTR_DATA) or {})
+        attachments: list[dict[str, Any]] = ensure_list(call_data.get(ATTR_ATTACHMENTS))
+        for image in ensure_list(call_data.pop("images", None)):
+            if attachment := self._media_source_attachment(envelope, image):
+                attachments.append(attachment)
+        if attachments:
+            call_data[ATTR_ATTACHMENTS] = attachments
+        if envelope.priority in SMTP_PRIORITY_MAP:
+            call_data[ATTR_PRIORITY] = SMTP_PRIORITY_MAP[envelope.priority]
+        # anything smtp.send_message doesn't take, such as another integration's keys, is left out
+        return self.hass_api.coerce_schema(HA_SMTP_DOMAIN, SMTP_SEND_MESSAGE, call_data)
+
+    def _media_source_attachment(self, envelope: Envelope, image: str) -> dict[str, Any] | None:
+        """An image file as an attachment from one of Home Assistant's media folders, or else as a
+        fresh snapshot of the notification's camera, named as the html refers to it with `cid:`"""
+        name: str = os.path.basename(image)
+        image_path: str = os.path.abspath(image)
+        media_content_id: str | None = None
+        for media_dir, root in self.hass_api.media_dirs.items():
+            root_path: str = os.path.abspath(root)
+            if os.path.commonpath([image_path, root_path]) == root_path:
+                media_content_id = f"media-source://media_source/{media_dir}/{os.path.relpath(image_path, root_path)}"
+                break
+        camera_entity_id: str | None = (envelope.media or {}).get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+        if media_content_id is None and camera_entity_id:
+            media_content_id = f"media-source://camera/{camera_entity_id}"
+        if media_content_id is None:
+            _LOGGER.warning("SUPERNOTIFY Leaving %s out of the email, as it's not in one of Home Assistant's media_dirs", image)
+            return None
+        return {
+            ATTR_MEDIA_SOURCE: {
+                "media_content_id": media_content_id,
+                "media_content_type": mimetypes.guess_type(name)[0] or "image/jpeg",
+            },
+            ATTR_FILENAME: name,
+            ATTR_CONTENT_ID: name,
+        }
 
     async def _send_direct_smtp(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
         addresses: list[str] = action_data.get(ATTR_TARGET) or []
         start_time = time.time()
         timestamp = dt.datetime.now(tz=dt_util.get_default_time_zone())
-        if not self.host or not self.sender:
-            _LOGGER.debug("SUPERNOTIFY Skipping direct smtp delivery %s, no connection configured", envelope.delivery.name)
+        sender: str | None = envelope.delivery.options.get(OPTION_SENDER) or self.sender
+        if not self.host or not sender:
+            _LOGGER.warning("SUPERNOTIFY Skipping direct smtp delivery %s, no sender configured", envelope.delivery.name)
             envelope.skipped = 1
             envelope.skip_reason = SuppressionReason.NO_ACTION
             return False
@@ -422,8 +542,8 @@ class EmailTransport(Transport):
             return False
 
         try:
-            msg = await self._build_message(action_data, addresses, envelope.priority, envelope.id)
-            await self.hass_api.create_job(self._send_smtp, msg, addresses)
+            msg = await self._build_message(action_data, addresses, envelope.priority, envelope.id, envelope.delivery.options)
+            await self.hass_api.create_job(self._send_smtp, msg, addresses, sender)
             envelope.calls.append(
                 CallRecord(
                     timestamp,
@@ -457,8 +577,18 @@ class EmailTransport(Transport):
             return False
 
     async def _build_message(
-        self, action_data: dict[str, Any], addresses: list[str], priority: str | None, id: str | None
+        self,
+        action_data: dict[str, Any],
+        addresses: list[str],
+        priority: str | None,
+        id: str | None,
+        options: dict[str, Any] | None = None,
     ) -> MIMEMultipart | MIMEText:
+        """`options` are the delivery's own, falling back to the transport's, then those of HA's smtp integration"""
+        options = options or {}
+        sender: str | None = options.get(OPTION_SENDER) or self.sender
+        # as Home Assistant's own SMTP has no default sender name, the home's name is used, as more use than none
+        sender_name: str | None = options.get(OPTION_SENDER_NAME) or self.sender_name or self.hass_api.hass_name
         title: str | None = action_data.get(ATTR_TITLE)
         message: str = action_data.get(ATTR_MESSAGE) or ""
         data: dict[str, Any] = action_data.get(ATTR_DATA) or {}
@@ -480,14 +610,14 @@ class EmailTransport(Transport):
         else:
             msg = MIMEText(message)
 
-        msg["Subject"] = title or self.default_title or await self.common_string("email_heading")
+        msg["Subject"] = (
+            title or options.get(OPTION_DEFAULT_TITLE) or self.default_title or await self.common_string("email_heading")
+        )
         msg["To"] = ", ".join(addresses)
-        if self.sender_name or self.sender:
-            sender: str = email.utils.formataddr((self.sender_name or "", self.sender or ""))
+        if sender_name or sender:
+            msg["From"] = email.utils.formataddr((sender_name or "", sender or ""))
         else:
-            sender = NULL_RETURN_PATH
-
-        msg["From"] = sender
+            msg["From"] = NULL_RETURN_PATH
         msg["X-Mailer"] = "Home Assistant Supernotify"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid(idstring=id)
@@ -516,7 +646,7 @@ class EmailTransport(Transport):
         attachment.add_header("Content-ID", f"<{content_id}>")
         return attachment
 
-    def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str]) -> None:
+    def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str], sender: str | None = None) -> None:
         if not self.local_smtp or not self.host or not self.port:  # redundant but quietens mypy
             _LOGGER.warning("SUPERNOTIFY Direct SMTP connection not configured")
             return
@@ -534,7 +664,7 @@ class EmailTransport(Transport):
                 client.ehlo()
             if self.username and self.password:
                 client.login(self.username, self.password)
-            client.sendmail(self.sender or NULL_RETURN_PATH, addresses, msg.as_string())
+            client.sendmail(sender or self.sender or NULL_RETURN_PATH, addresses, msg.as_string())
         finally:
             with suppress(smtplib.SMTPException):
                 client.quit()
@@ -554,7 +684,7 @@ class EmailTransport(Transport):
                 if await template_path.exists():
                     template: str
                     async with aiofiles.open(template_path) as file:
-                        template = os.linesep.join(await file.readlines())
+                        template = await file.read()
                         self.template_cache[template_name] = template
                         return template
         return None
@@ -599,7 +729,7 @@ class EmailTransport(Transport):
             )
 
             if snapshot_url:
-                alert["img"] = AlertImage(url=snapshot_url, desc="Snapshot Image")
+                alert["img"] = AlertImage(url=snapshot_url, desc=await self.common_string("email_snapshot_desc"))
             elif image_path:
                 alert["img"] = AlertImage(url=f"cid:{image_path.name}", desc=image_path.name)
 

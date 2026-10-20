@@ -94,6 +94,7 @@ from custom_components.supernotify.model import (
     TransportFeature,
 )
 from custom_components.supernotify.options import (
+    DATA_KEYS_SELECT_OPTION,
     MEDIA_OPTIONS,
     OPTION_DATA_KEYS_SELECT,
     OPTION_DEVICE_DISCOVERY,
@@ -138,11 +139,7 @@ class MobilePushTransport(Transport):
     integration_domain = "mobile_app"
     declared_options: ClassVar[list[DeliveryOption]] = [
         *MEDIA_OPTIONS,
-        DeliveryOption(
-            OPTION_DATA_KEYS_SELECT,
-            "Prune the data block by including/excluding values or by regex pattern",
-            value_type=SelectionRule,
-        ),
+        DATA_KEYS_SELECT_OPTION,
     ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

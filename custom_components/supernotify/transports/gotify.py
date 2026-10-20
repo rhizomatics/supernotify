@@ -41,10 +41,9 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL, TRANSPORT_GOTIFY
+from custom_components.supernotify.const import TRANSPORT_GOTIFY
 from custom_components.supernotify.model import (
     DebugTrace,
     TransportConfig,
@@ -55,7 +54,6 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 # Gotify's HACS notify platform module (no longer bundled with HA core)
 HA_GOTIFY_MODULE = "custom_components.gotify.notify"
@@ -101,6 +99,7 @@ class GotifyTransport(Transport):
     """Notify via Gotify self-hosted push notification server."""
 
     name = TRANSPORT_GOTIFY
+    action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -116,26 +115,8 @@ class GotifyTransport(Transport):
         config.delivery_defaults.action = self.hass_api.find_service("notify", HA_GOTIFY_MODULE)
         return config
 
-    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
-        # a manually configured delivery can set its own action: notify.<name> regardless
-        # of whether the service is discoverable here - is_viable() can't see delivery-level
-        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
-        # once it's confirmed no delivery (explicit or auto) uses it
-        return True
-
-    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        if self.delivery_defaults.action:
-            return {self.name: {}}
-        return {}
-
     def validate_action(self, action: str | None) -> bool:
-        if action and action.startswith("notify."):
-            return True
-        _LOGGER.warning(
-            "SUPERNOTIFY gotify: action must be a notify.* service (e.g. notify.gotify), got: %r",
-            action,
-        )
-        return False
+        return self.validate_notify_action(action)
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY gotify %s", envelope.message)
@@ -171,14 +152,8 @@ class GotifyTransport(Transport):
         action_data = envelope.core_action_data()
 
         # --- Resolve image_url (bigImageUrl): explicit > snapshot_url > grab_image ---
-        if not image_url and envelope.media:
-            snapshot_url = envelope.media.get(ATTR_MEDIA_SNAPSHOT_URL)
-            if snapshot_url:
-                image_url = self.hass_api.abs_url(snapshot_url)
-            elif attach_image:
-                image_path = await envelope.grab_image()
-                if image_path:
-                    image_url = await self.context.media_storage.object_url(image_path)
+        if not image_url:
+            image_url = await self.image_url(envelope, grab=attach_image)
 
         # --- Build nested payload_data ---
         payload_data: dict[str, Any] = {"priority": gotify_priority}

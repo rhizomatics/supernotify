@@ -56,7 +56,6 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_PUSHOVER
@@ -70,7 +69,6 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +92,7 @@ class PushoverTransport(Transport):
     """Notify via Pushover push notification service."""
 
     name = TRANSPORT_PUSHOVER
+    action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -109,26 +108,8 @@ class PushoverTransport(Transport):
         config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.pushover.notify")
         return config
 
-    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
-        # a manually configured delivery can set its own action: notify.<name> regardless
-        # of whether the service is discoverable here - is_viable() can't see delivery-level
-        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
-        # once it's confirmed no delivery (explicit or auto) uses it
-        return True
-
-    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        if self.delivery_defaults.action:
-            return {self.name: {}}
-        return {}
-
     def validate_action(self, action: str | None) -> bool:
-        if action and action.startswith("notify."):
-            return True
-        _LOGGER.warning(
-            "SUPERNOTIFY pushover: action must be a notify.* service (e.g. notify.pushover_home), got: %r",
-            action,
-        )
-        return False
+        return self.validate_notify_action(action)
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY pushover %s", envelope.message)
@@ -253,13 +234,10 @@ class PushoverTransport(Transport):
 
         # --- Camera image attachment via envelope.grab_image() (v1.14.0+) ---
         if attach_image:
-            try:
-                image_path = await envelope.grab_image()
-                if image_path:
-                    push_data["attachment"] = str(image_path)
-                    _LOGGER.debug("SUPERNOTIFY pushover: attaching image %s", image_path)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY pushover: failed to grab image: %s", e)
+            image_path = await self.safe_grab_image(envelope)
+            if image_path:
+                push_data["attachment"] = str(image_path)
+                _LOGGER.debug("SUPERNOTIFY pushover: attaching image %s", image_path)
 
         action_data[ATTR_DATA] = push_data
 

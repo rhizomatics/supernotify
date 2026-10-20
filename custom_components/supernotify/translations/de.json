@@ -4,7 +4,8 @@
         "snooze_camera_title": "Benachrichtigungen von {camera} pausieren",
         "snooze_camera_button": "Minuten pausieren",
         "action_url_title": "Für Aktion klicken",
-        "email_heading": "Home Assistant Benachrichtigung"
+        "email_heading": "Home Assistant Benachrichtigung",
+        "email_snapshot_desc": "Schnappschuss"
     },
     "entity": {
         "binary_sensor": {

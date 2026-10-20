@@ -81,7 +81,6 @@ from homeassistant.helpers.typing import ConfigType
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_DATA,
-    ATTR_MEDIA_SNAPSHOT_URL,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_HTML5,
 )
@@ -164,31 +163,6 @@ class HTML5Transport(Transport):
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         return {self.name: {}}
-
-    async def _resolve_image_url(self, envelope: Envelope) -> str | None:
-        """Resolve a browser-reachable snapshot URL.
-
-        Order of resolution:
-          1. snapshot URL already in envelope media, absolutised
-          2. envelope.grab_image() + media_storage.object_url() (shared
-             media pipeline; never a local path)
-          3. None
-        """
-        snapshot_url = envelope.media.get(ATTR_MEDIA_SNAPSHOT_URL) if envelope.media else None
-        if snapshot_url:
-            return self.hass_api.abs_url(snapshot_url)
-
-        image_path = None
-        try:
-            image_path = await envelope.grab_image()
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY html5: failed to grab image: %s", e)
-        if image_path:
-            try:
-                return await self.context.media_storage.object_url(image_path)
-            except Exception as e:
-                _LOGGER.debug("SUPERNOTIFY html5: object_url failed for %s: %s", image_path, e)
-        return None
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY html5 %s", envelope.message)
@@ -277,7 +251,7 @@ class HTML5Transport(Transport):
 
         # Attach camera snapshot as browser-reachable URL (never a local path)
         if attach_image:
-            image_url = await self._resolve_image_url(envelope)
+            image_url = await self.image_url(envelope)
             if image_url:
                 action_data["image"] = str(image_url)
             else:
