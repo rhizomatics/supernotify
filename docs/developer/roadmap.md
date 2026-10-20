@@ -231,7 +231,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/0001-auto_notifier.md)
+- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/0003-auto_notifier.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 

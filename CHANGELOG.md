@@ -154,7 +154,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 - Add a recipe for [Pyscript](https://hacs-pyscript.readthedocs.io/en/latest/) usage
 - Add a [Rain Alert recipe](https://supernotify.rhizomatics.org.uk/recipes/rain_alert/), using the Alert integration with a scenario notify entity
 - The dashboard recipe now shows how to install the pre-built [SuperNotify Cards Dashboard](https://github.com/lollox80/supernotify-cards/blob/main/docs/dashboard.md)
-- New section on [Android Commands and Spoken Text](docs/transports/mobile_push.md#android-commands-and-spoken-text)
+- New section on [Android Commands and Spoken Text](./transports/mobile_push.md#android-commands-and-spoken-text)
 - Updated the [Targets](./usage/targets.md) documentation for the `target_usage` control
 - New developer page on using the Supernotify plugin for the [ha-repl](https://homeassistant-repl.rhizomatics.org.uk) developer shell.
 
