@@ -4061,9 +4061,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------- |
 | `alexa_devices` | [`alexa_devices.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_devices.py) | [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/) | -        |
 
-## Discovery
-
-**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 
 ## Example
 
@@ -4074,8 +4072,6 @@ Example Notification
   data:
     message: "Motion detected at the front door"
 ```
-
-Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
@@ -4094,6 +4090,10 @@ When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skill
 ## Voice specific message
 
 Use `spoken_message` in the notification call to provide a different message for a voice notification than used for other transports like email or mobile push.
+
+## Discovery
+
+**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
 
 ## References
 
@@ -4114,9 +4114,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_pla
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
 | `alexa_media_player` | [`alexa_media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_media_player.py) | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player) | -        |
 
-## Discovery
-
-**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
+Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 
 ## Example
 
@@ -4131,8 +4129,6 @@ Example Notification
             target:
                 - media_player.kitchen_echo
 ```
-
-Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
@@ -4228,6 +4224,10 @@ Convert an existing file with:
 ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
 ```
 
+## Discovery
+
+**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
+
 ## References
 
 ### Home Assistant Core
@@ -4246,17 +4246,9 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/chime/
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `chime`      | [`chime.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/chime.py) | -            | [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/), [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player), [RFLink](https://www.home-assistant.io/integrations/rflink/), [MQTT Siren](https://www.home-assistant.io/integrations/siren.mqtt/) etc. |
 
-## Discovery
+*Chime* supports a variety of audio, non-spoken devices, such as doorbell chimes, sirens, and voice assistants like *Alexa Devices* that can also make noises.
 
-**Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several underlying mechanisms (switch, siren, script, rest_command, media_player) with no single integration to discover, so it stays unconfigured until a transport-level `chime_aliases` option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own to use it directly.
-
-The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune.
-
-Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording. This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
-
-You can mix and match any of these devices in a single notification call, and combine them with mobile_push, e-mail etc.
-
-The range of tunes from modern devices gives a good alternative to being bothered with lots of push notifications. For example, if a PIR detects motion and the alarm panel is disarmed you could have a *ping* sound from Amazon Echos and chime devices.
+One of the goals of `chime` is to take a disparate set of devices, entities and API calls, and turn them into a consistent simple thing to call, which is referred to as an **alias**. So you could have a `red_alert` alias, that rings bells, sets off sirens, makes Alexa do dive-dive-dive noises, and then in automations simply refer to it by the `red_alert` name.
 
 ## Aliases
 
@@ -4494,6 +4486,18 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 
 Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
 
+## Discovery
+
+**Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several underlying mechanisms (switch, siren, script, rest_command, media_player) with no single integration to discover, so it stays unconfigured until a transport-level `chime_aliases` option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own to use it directly.
+
+The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune.
+
+Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording. This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
+
+You can mix and match any of these devices in a single notification call, and combine them with mobile_push, e-mail etc.
+
+The range of tunes from modern devices gives a good alternative to being bothered with lots of push notifications. For example, if a PIR detects motion and the alarm panel is disarmed you could have a *ping* sound from Amazon Echos and chime devices.
+
 ## References
 
 ### Home Assistant Core
@@ -4523,10 +4527,6 @@ Chimes work well with scenarios, you can easily add a chime for all critical not
 # Discord Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/discord/
-
-## Discovery
-
-**Delivery (default selection).** If the `discord` integration is already configured and no `discord` delivery is defined, a `discord` delivery is generated automatically (discovering whichever `notify.discord*` service slug your bot's config entry registered). The channel/user ID itself can't be auto-detected from a bare, unqualified value, but `discord_channel` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {discord_channel: "123456789012345678"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `discord` in `delivery:` or a scenario. With nothing qualified as `discord_channel` given, the delivery is simply skipped.
 
 ## Motivation
 
@@ -4595,6 +4595,10 @@ data:
           color: 15158332
 ```
 
+## Discovery
+
+**Delivery (default selection).** If the `discord` integration is already configured and no `discord` delivery is defined, a `discord` delivery is generated automatically (discovering whichever `notify.discord*` service slug your bot's config entry registered). The channel/user ID itself can't be auto-detected from a bare, unqualified value, but `discord_channel` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {discord_channel: "123456789012345678"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `discord` in `delivery:` or a scenario. With nothing qualified as `discord_channel` given, the delivery is simply skipped.
+
 ## Notes
 
 - Discord has no native message priority: the emoji prefix is the only mapping offered.
@@ -4608,22 +4612,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/email/
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `email`      | [`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
 
-Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
-
-## Discovery
-
-**Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically and fires on every notification, when either:
-
-- a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
-- the Home Assistant SMTP integration has recipients set up, or its notify action is available
-
-To stop it being generated, switch the transport off:
-
-```yaml
-transports:
-  email:
-    enabled: false
-```
+Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML. It will work with Home Assistant's SMTP integrations, and has its own better internal SMTP integration that can handle plain e-mail addresses as well as notify entities.
 
 ## Example
 
@@ -4826,6 +4815,21 @@ Initially this only preserves the original easier to use functionality of Home A
 
 It is anticipated that this will also open up more features, such as modern email features like DKIM.
 
+## Discovery
+
+**Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically and fires on every notification, when either:
+
+- a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
+- the Home Assistant SMTP integration has recipients set up, or its notify action is available
+
+To stop it being generated, switch the transport off:
+
+```yaml
+transports:
+  email:
+    enabled: false
+```
+
 ## Reference
 
 ### Home Assistant Core
@@ -4851,13 +4855,15 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/generic/
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------------------------------------------------------- |
 | `generic`    | [`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | -            | *Any Home Assistant action from core or custom integration* |
 
-## Discovery
-
-**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all for user-defined actions, so there's nothing for Supernotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
-
 Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service') and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
 
-To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list. In raw mode, `message`, `title` and all `data` elements are passed as Action Data, along with all the targets in `target`, exactly as for the *default* row in [Known Integrations](#known-integrations), and no checking against the action's schema is made.
+### Raw Mode
+
+If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list. In raw mode, `message`, `title` and all `data` elements are passed as Action Data, along with all the targets in `target`, exactly as for the *default* row in [Known Integrations](#known-integrations), and no checking against the action's schema is made.
+
+### Known Integration Mode
+
+To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more.
 
 Outside of raw mode, the Action Data is checked against the schema the action declares, where it has one, and any fields the action doesn't accept are quietly dropped, so a `data` section can carry values meant for other deliveries without breaking this one.
 
@@ -5083,6 +5089,12 @@ If using Generic to trigger bells, sirens or other noises, consider the [Chime T
 
 See the core [AWS Integration](https://www.home-assistant.io/integrations/aws/) for how to use notify to send messages to AWS Lambda, SNS, SQS and EventBridge.
 
+## Discovery
+
+**Not auto-detected, unless an `action` is set at transport level.**
+
+Generic is a catch-all for user-defined actions, so there's nothing for Supernotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
+
 # Gotify Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
@@ -5224,10 +5236,6 @@ ______________________________________________________________________
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
 
-## Discovery
-
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
-
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant [`html5`](https://www.home-assistant.io/integrations/html5/) integration. The transport calls the modern `html5.send_message` entity service rather than the legacy `notify.html5` platform: the legacy platform reads `ttl` and `priority` from keyword arguments the notify bridge never populates, so urgency would silently always be "normal". With the entity service, urgency is mapped natively from the SuperNotify priority.
@@ -5272,6 +5280,10 @@ delivery:
 - `html5_ttl` — time-to-live in seconds or an HA duration mapping
 - `html5_data` — extra keys merged into the custom `data` field (`html5_url` wins on `url`)
 
+## Discovery
+
+**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
+
 ## Notes
 
 - The `html5.send_message` schema is a strict whitelist: unknown top-level keys fail the whole call, so residual generic data keys are not forwarded (debug log); `html5_data` is the explicit passthrough.
@@ -5281,10 +5293,6 @@ delivery:
 # Kodi Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/kodi/
-
-## Discovery
-
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
 
 ## Motivation
 
@@ -5320,6 +5328,10 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 - `kodi_icon` — `info` | `warning` | `error` or an image URL; overrides the priority mapping
 - `kodi_attach_image` — camera snapshot as the icon (default `false`); a resolved image URL wins over `kodi_icon`
 
+## Discovery
+
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
+
 ## Notes
 
 - `kodi.call_method` forwards every extra key as a JSON-RPC parameter, which makes the whole `GUI.ShowNotification` call fail on the Kodi side: residual generic data keys are therefore dropped with a debug log, unlike the standard transport pattern.
@@ -5328,10 +5340,6 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 # LaMetric TIME Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/lametric/
-
-## Discovery
-
-**Delivery (explicit selection).** If the `lametric` integration is already configured and no `lametric` delivery is defined, a `lametric` delivery is generated automatically — but since `device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [lametric]}` or a scenario), not by default. You'll still need to supply `device_id` yourself.
 
 ## Motivation
 
@@ -5454,13 +5462,13 @@ And the resulting archived notification looks like:
 }
 ```
 
+## Discovery
+
+**Delivery (explicit selection).** If the `lametric` integration is already configured and no `lametric` delivery is defined, a `lametric` delivery is generated automatically — but since `device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [lametric]}` or a scenario), not by default. You'll still need to supply `device_id` yourself.
+
 # Matrix Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/matrix/
-
-## Discovery
-
-**Delivery (default selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically. A room ID/alias itself can't be auto-detected from a bare, unqualified value, but `matrix_room` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {matrix_room: "!room:server"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `matrix` in `delivery:` or a scenario. With nothing qualified as `matrix_room` given, the delivery is simply skipped.
 
 ## Motivation
 
@@ -5502,6 +5510,10 @@ For snapshots the integration checks local paths with `is_allowed_path`, so the 
 - There is no title field: the title is composed into the body (bold + line break in HTML, plain line break in text).
 - With `format: html` the core sets both `formatted_body` and the plain `body` to the same string, so clients without HTML support show raw tags — this mirrors core behaviour.
 
+## Discovery
+
+**Delivery (default selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically. A room ID/alias itself can't be auto-detected from a bare, unqualified value, but `matrix_room` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {matrix_room: "!room:server"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `matrix` in `delivery:` or a scenario. With nothing qualified as `matrix_room` given, the delivery is simply skipped.
+
 # Media Player Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
@@ -5509,10 +5521,6 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 | Transport ID | Source                                                                                                                             | Requirements | Optional                                                                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `media`      | [`media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/media_player.py) | -            | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player), other [Media Player Integration](https://www.home-assistant.io/integrations/?cat=media-player) |
-
-## Discovery
-
-**Delivery (explicit selection).** If at least one `media_player` entity exists in the house and no `media` delivery is defined, a `media` delivery is generated automatically — but since `media_player` targets vary too much between devices to safely assume a default, it only fires when selected explicitly (`data: {delivery: [media]}` or a scenario), not by default.
 
 Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
@@ -5584,6 +5592,10 @@ There are a few limitations and considerations with this use:
 - The image must be on an `https` URL with valid certificate.
 - The `image` value required by Alexa Media Player is not one of the recommended values in the Home Assistant documentation.
 
+## Discovery
+
+**Delivery (explicit selection).** If at least one `media_player` entity exists in the house and no `media` delivery is defined, a `media` delivery is generated automatically — but since `media_player` targets vary too much between devices to safely assume a default, it only fires when selected explicitly (`data: {delivery: [media]}` or a scenario), not by default.
+
 ## References
 
 - [Set Echo Show Background](https://github.com/alandtse/alexa_media_player/wiki#set-echo-show-background) on Alexa Media Player Documentation
@@ -5597,10 +5609,6 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/
 | Transport ID  | Source                                                                                                                           | Requirements                                                                                              | Optional |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------- |
 | `mobile_push` | [`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic) | -        |
-
-## Discovery
-
-**Default delivery.** If at least one Companion App device is registered (a `mobile_app` config entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is generated automatically and fires on every notification, with targets resolved per-recipient from the HA Companion App at delivery time.
 
 Send a push message to the Companion App on iPhone, iPad, Mac and Android, with camera images, mobile actions, and Supernotify's priority translated into what each platform uses for it.
 
@@ -5805,6 +5813,10 @@ delivery:
 
 `notify.mobile_app_my_phone` is the name of the Companion App's notify action, not a `mobile_app_id` - as a target it's taken as an `entity_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#target-categories)).
 
+## Discovery
+
+**Default delivery.** If at least one Companion App device is registered (a `mobile_app` config entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is generated automatically and fires on every notification, with targets resolved per-recipient from the HA Companion App at delivery time.
+
 ## References
 
 ### Home Assistant Core
@@ -5821,16 +5833,11 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 | ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
 | `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |
 
-## Discovery
-
-**Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
-
-A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
-
-Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
+Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, this specific MQTT integration can be easier to use.
 
 - Payloads can be defined in YAML rather than escaped JSON, and will be JSONified if needed on delivery
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
+- A `topic:xxxx` target can be blended into a big list of targets, and the MQTT transport will be used automatically for it.
 
 ## Example
 
@@ -5885,6 +5892,12 @@ Example Notification with legacy data.topic
                     level: low
 ```
 
+## Discovery
+
+**Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
+
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+
 ## Reference
 
 ### Home Assistant
@@ -5911,10 +5924,6 @@ This is the catch-all for notify entities. Ones that belong to an integration wi
 Supernotify's own notify entities - for a recipient, or for a scenario or delivery with a `notify_entity` - are not called when given as a target in a notification action. The recipient is targeted, or the scenario applied or delivery selected, directly instead.
 
 This transport never sends to Supernotify's own notify entities. In the `target` of a delivery, scenario or recipient, a recipient's entity is replaced by the recipient, and a scenario's or delivery's is dropped with a warning. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) for the current limitations.
-
-## Discovery
-
-**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically. It is used whenever a notification targets a notify entity that no more specific transport has taken.
 
 ## Default Delivery
 
@@ -5949,13 +5958,13 @@ Example Notification to every notify entity in the kitchen, and those labelled d
         label_id: display
 ```
 
+## Discovery
+
+**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically. It is used whenever a notification targets a notify entity that no more specific transport has taken.
+
 # ntfy Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/
-
-## Discovery
-
-**Delivery (explicit selection).** If the `ntfy` integration is already configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since `ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [ntfy]}` or a scenario), not by default. You'll still need to supply `ntfy_device_id` yourself.
 
 ## Motivation
 
@@ -6083,6 +6092,10 @@ Or: Settings → Devices & Services → ntfy → click the topic device.
 
 ______________________________________________________________________
 
+## Discovery
+
+**Delivery (explicit selection).** If the `ntfy` integration is already configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since `ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [ntfy]}` or a scenario), not by default. You'll still need to supply `ntfy_device_id` yourself.
+
 ## Notes
 
 - `TargetRequired.NEVER`: the topic target is conveyed via `ntfy_device_id` in `data`, not via HA's standard `target` field. This avoids the transport being suppressed when no person target is present in the notification call.
@@ -6126,10 +6139,6 @@ Persistent notification has a Delivery automatically discovered where the integr
 # Pushover Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/pushover/
-
-## Discovery
-
-**Default delivery.** If the official Pushover integration is already configured and no `pushover` delivery is defined, a `pushover` delivery is generated automatically and fires on every notification — once discovered, the `notify.pushover_*` service is fully self-contained (it already knows its own recipients), so no extra per-delivery data is needed.
 
 ## Motivation
 
@@ -6262,6 +6271,10 @@ data:
 }
 ```
 
+## Discovery
+
+**Default delivery.** If the official Pushover integration is already configured and no `pushover` delivery is defined, a `pushover` delivery is generated automatically and fires on every notification — once discovered, the `notify.pushover_*` service is fully self-contained (it already knows its own recipients), so no extra per-delivery data is needed.
+
 # SMS (Text Messaging) Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
@@ -6270,13 +6283,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sms`        | [`sms.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/sms.py) | -            | [SMS Notification Integrations](https://www.home-assistant.io/integrations/?search=sms&cat=notifications), [Mikrotik SMS Integration](https://github.com/jeyrb/hass_mikrotik_sms) |
 
-This can work with any SMS integration that follows Home Assistant Notification model.
-
-Configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`
-
-## Discovery
-
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and fires on every notification, since the target phone number is positively identified from the recipient's registered `phone` attribute — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+Send text messages using any SMS integration that follows Home Assistant Notification model - configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`.
 
 Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
 
@@ -6298,13 +6305,13 @@ Example Notification
         - person.house_owner
 ```
 
+## Discovery
+
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and fires on every notification, since the target phone number is positively identified from the recipient's registered `phone` attribute — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+
 # Telegram Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/telegram/
-
-## Discovery
-
-**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [telegram]}` or a scenario), not by default. You'll still need to supply `telegram_chat_id` yourself, per the examples below.
 
 ## Motivation
 
@@ -6383,6 +6390,10 @@ data:
 
 Or use the `telegram_bot.send_message` service from HA Developer Tools to test with your chat_id before committing it to your delivery configuration
 
+## Discovery
+
+**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [telegram]}` or a scenario), not by default. You'll still need to supply `telegram_chat_id` yourself, per the examples below.
+
 ## Notes
 
 - `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target` or from the `telegram_chat_id` data key.
@@ -6398,10 +6409,6 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 | Transport ID | Source                                                                                                           | Requirements                                                       | Optional |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
 | `tts`        | [`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | [TTS Integration](https://www.home-assistant.io/integrations/tts/) | -        |
-
-## Discovery
-
-**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [tts]}` or a scenario), not by default.
 
 Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
@@ -6529,6 +6536,10 @@ Use `spoken_message` in the notification call to provide a different message for
 For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md) and [Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) transport adaptors.
 
 To get canned sounds rather than speech, use the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport adaptor.
+
+## Discovery
+
+**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [tts]}` or a scenario), not by default.
 
 ## References
 

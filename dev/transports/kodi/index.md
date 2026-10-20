@@ -2,10 +2,6 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/kodi/
 
-## Discovery
-
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
-
 ## Motivation
 
 Shows on-screen overlay notifications on Kodi media centers through the Home Assistant [`kodi`](https://www.home-assistant.io/integrations/kodi/) integration, calling the entity-based `kodi.call_method` service with the JSON-RPC method `GUI.ShowNotification`. Through the `generic` transport only the legacy YAML notify platform is reachable; the native transport targets the modern config-entry integration on any `media_player.kodi_*` entity — no extra YAML, multiple instances, and the camera snapshot as the overlay icon.
@@ -39,6 +35,10 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 - `kodi_displaytime` — overlay duration in ms (default 10000, minimum 1500)
 - `kodi_icon` — `info` | `warning` | `error` or an image URL; overrides the priority mapping
 - `kodi_attach_image` — camera snapshot as the icon (default `false`); a resolved image URL wins over `kodi_icon`
+
+## Discovery
+
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
 
 ## Notes
 

@@ -2,10 +2,6 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
 
-## Discovery
-
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
-
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant [`html5`](https://www.home-assistant.io/integrations/html5/) integration. The transport calls the modern `html5.send_message` entity service rather than the legacy `notify.html5` platform: the legacy platform reads `ttl` and `priority` from keyword arguments the notify bridge never populates, so urgency would silently always be "normal". With the entity service, urgency is mapped natively from the SuperNotify priority.
@@ -49,6 +45,10 @@ delivery:
 - `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`
 - `html5_ttl` — time-to-live in seconds or an HA duration mapping
 - `html5_data` — extra keys merged into the custom `data` field (`html5_url` wins on `url`)
+
+## Discovery
+
+**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
 
 ## Notes
 

@@ -6,13 +6,15 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/generic/
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------------------------------------------------------- |
 | `generic`    | [`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | -            | *Any Home Assistant action from core or custom integration* |
 
-## Discovery
-
-**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all for user-defined actions, so there's nothing for Supernotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
-
 Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service') and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
 
-To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list. In raw mode, `message`, `title` and all `data` elements are passed as Action Data, along with all the targets in `target`, exactly as for the *default* row in [Known Integrations](#known-integrations), and no checking against the action's schema is made.
+### Raw Mode
+
+If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list. In raw mode, `message`, `title` and all `data` elements are passed as Action Data, along with all the targets in `target`, exactly as for the *default* row in [Known Integrations](#known-integrations), and no checking against the action's schema is made.
+
+### Known Integration Mode
+
+To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more.
 
 Outside of raw mode, the Action Data is checked against the schema the action declares, where it has one, and any fields the action doesn't accept are quietly dropped, so a `data` section can carry values meant for other deliveries without breaking this one.
 
@@ -237,3 +239,9 @@ If using Generic to trigger bells, sirens or other noises, consider the [Chime T
 ### AWS
 
 See the core [AWS Integration](https://www.home-assistant.io/integrations/aws/) for how to use notify to send messages to AWS Lambda, SNS, SQS and EventBridge.
+
+## Discovery
+
+**Not auto-detected, unless an `action` is set at transport level.**
+
+Generic is a catch-all for user-defined actions, so there's nothing for Supernotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.

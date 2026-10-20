@@ -18,10 +18,6 @@ Supernotify's own notify entities - for a recipient, or for a scenario or delive
 
 This transport never sends to Supernotify's own notify entities. In the `target` of a delivery, scenario or recipient, a recipient's entity is replaced by the recipient, and a scenario's or delivery's is dropped with a warning. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) for the current limitations.
 
-## Discovery
-
-**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically. It is used whenever a notification targets a notify entity that no more specific transport has taken.
-
 ## Default Delivery
 
 If you don't want to use the automatically generated default delivery, then use configuration as below, or configure your own delivery for the transport.
@@ -54,3 +50,7 @@ Example Notification to every notify entity in the kitchen, and those labelled d
         area_id: kitchen
         label_id: display
 ```
+
+## Discovery
+
+**Default delivery.** If at least one `notify.*` entity exists in the house and no `notify_entity` delivery is configured, a `notify_entity` delivery is generated automatically. It is used whenever a notification targets a notify entity that no more specific transport has taken.
