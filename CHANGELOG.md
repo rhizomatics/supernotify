@@ -2,7 +2,16 @@
 
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
 
-# v2.15.1
+# v2.16.0
+
+## ✨ Enhancements
+- More of what Supernotify shows is now in the Home Assistant language
+  - *Mobile Push*: the camera snooze button, which now also gives the camera's name rather than its entity id, and the *Click for Action* title given to a link action without one
+  - *Email*: the default subject, heading and preview text, "Home Assistant Notification". A `default_title` configured for the transport still wins
+  - Errors from `supernotify.snooze`, `silence` and `unsnooze`, such as an unknown delivery name, are now shown in the user's language, as is the same reason the AI snooze tool is given
+- `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
+  - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
+
 ## 🐛 Bug fixes
 - `title` was missing as a top level field in the archived notification, now appears next to `message` fields at the top
 - The name is now spelt `Supernotify` throughout, as in the integration list, rather than sometimes `SuperNotify`. This changes the device name, and so the friendly names of its entities, e.g. `Supernotify Reset overrides`, unless the device has been renamed. Entity ids are unchanged
@@ -24,17 +33,10 @@
   - A `push` block given in `data`, such as a `sound` for the notification, was replaced by Supernotify's own, leaving only the `interruption-level`. It is now added to, and a `critical` notification keeps the given sound and volume, with a sound given as just a name also accepted
   - Whether a phone is Android or Apple now comes from the `os_name` the Companion App registers, rather than guessing from the manufacturer, which is still used if there's no `os_name`
   - A `snapshot_image_path` in `media` without a `camera_entity_id` is now attached as the image, as it already was for other transports
-  - The camera snooze button, and the *Click for Action* title given to a link action without one, are now in the Home Assistant language, and the snooze button uses the camera's name rather than its entity id
   - The warning for `mobile_push_clear_notification` without a tag now gives the keys' real names
   - Docs corrected: there's no separate live view setting - the phone is given the camera to stream only when no image can be got - Android is supported, with every `mobile_push_*` key now listed, and device discovery and the default delivery are described properly
 
-- *Email*
-  - The default subject, heading and preview text, "Home Assistant Notification", are now in the Home Assistant language. A `default_title` configured for the transport still wins
-- Errors from `supernotify.snooze`, `silence` and `unsnooze`, such as an unknown delivery name, are now shown in the user's language, as is the same reason the AI snooze tool is given
 
-## ✨ Enhancements
-- `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
-  - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
 
 # v2.15.0
 ## 🐛 Bug fixes

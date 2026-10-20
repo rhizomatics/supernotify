@@ -190,7 +190,7 @@ The logbook shows a short `supernotify_notification` event per notification, wit
 
 **Archive to logbook and traces.** The archive's `original_context` holds only the raw context ids. Make it readable and linkable:
 
-- The run in progress when a notification is made is recorded as `original_trace` (`key`, `run_id`), from `homeassistant.helpers.trace.trace_id_get()` (v2.15.1). Still to do:
+- The run in progress when a notification is made is recorded as `original_trace` (`key`, `run_id`), from `homeassistant.helpers.trace.trace_id_get()` (v2.16.0). Still to do:
   - Link it in the viewer as `/config/automation/trace/<id>?run_id=<run_id>`. The key holds the automation's config `id`, which the URL needs. Traces are only kept for the last 5 runs by default, so the link goes stale
   - Context vars are copied into tasks and event listeners, so an integration reacting to an event an automation fired inherits that automation's trace id, and HA never resets it when a run ends. So it is the run in progress, not proof of the sender. A stored trace's context id matches `original_context` when the run really made the call, so check the two in the viewer with the `trace/get` websocket command, not in Python: `hass.data[DATA_TRACE]` is internal, and its layout changed between 2026.10.1 and 2026.10.2
   - Consider replacing the best-effort state scan in `HomeAssistantAPI.sender_entity_ids()`, used for snoozing by sender, once it is known how often the inherited case happens

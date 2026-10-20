@@ -24,12 +24,12 @@ Review the transport, including architecture alignment with current Supernotify 
 
 | Transport            | Review Date   | Fix Version |
 | -------------------- | ------------- | ----------- |
-| `chime`              | 19th Oct 2026 | `v2.15.1`   |
-| `notify_entity`      | 19th Oct 2026 | `v2.15.1`   |
-| `mobile_push`        | 20th Oct 2026 | `v2.15.1`   |
+| `chime`              | 19th Oct 2026 | `v2.16.0`   |
+| `notify_entity`      | 19th Oct 2026 | `v2.16.0`   |
+| `mobile_push`        | 20th Oct 2026 | `v2.16.0`   |
 | `alexa_devices`      |               |             |
 | `alexa_media_player` |               |             |
-| `email`              |               |             |
+| `email`              | 20th Oct 2026 | `v2.16.0`   |
 | `generic`            |               |             |
 | `tts`                |               |             |
 | `sms`                |               |             |

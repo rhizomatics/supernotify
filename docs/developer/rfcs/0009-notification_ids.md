@@ -30,7 +30,7 @@ This RFC sets out what the id should do. It should let a person get from a row i
 | Email | `Envelope.id` (`<notification id>_<delivery>`) as the `idstring` of `make_msgid()`, which adds its own time, random part and domain |
 | Logbook | `supernotify_notification` event with `notification_id`, a 100 character summary, outcome and delivery names, fired with the notification's context |
 | Recipient notify entities | `notify.recipient_<name>` state is set once per notification for each recipient reached, with the notification's context, so each delivery to a person is in the History and Activity views |
-| Archive linkage | `original_context` (context `id`, `parent_id`, `user_id`, and the resolved `user`). From v2.15.1, `original_trace` (trace `key` and `run_id`) |
+| Archive linkage | `original_context` (context `id`, `parent_id`, `user_id`, and the resolved `user`). From v2.16.0, `original_trace` (trace `key` and `run_id`) |
 | Lookup | `ArchiveDirectory.read_entry()` returns the first file whose name *contains* the given string, used by the archive enquiry action |
 
 ## What Home Assistant Allows
