@@ -11,6 +11,7 @@
 - *Email*
   - With `mode: ha_smtp`, addresses set up as recipients in the Home Assistant SMTP integration are sent to with its `smtp.send_message` action, with the notification's priority, html and images. Other addresses still go by its notify action, where there is one
   - `data_keys_select` prunes what's passed on to the integration, as it does for Mobile Push and Generic
+- `highest`, `normal` and `lowest` can be given as the priority of a notification, a delivery's priority filter or a priority snooze, for `critical`, `medium` and `minimum`, as Home Assistant's SMTP integration names them
 - More of what Supernotify shows is now in the Home Assistant language
   - *Mobile Push*: the camera snooze button, which now also gives the camera's name rather than its entity id, and the *Click for Action* title given to a link action without one
   - *Email*: the default subject, heading and preview text, "Home Assistant Notification", and the description of a snapshot image for templates. A `default_title` configured for the transport still wins
