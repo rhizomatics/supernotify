@@ -75,6 +75,7 @@ from custom_components.supernotify.transports.alexa_devices import (
     STANDARD_DELIVERY_SPEAK_ALL,
 )
 from custom_components.supernotify.transports.chime import OPTION_CHIME_ALIASES, STANDARD_DELIVERY_SIREN_ALL
+from custom_components.supernotify.transports.discord import DiscordTransport
 from custom_components.supernotify.transports.kodi import KodiTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -116,6 +117,20 @@ async def test_not_viable_log_level_depends_on_integration_presence(
     with caplog.at_level(logging.DEBUG, logger="custom_components.supernotify"):
         await ctx.test_initialize()
     records = [r for r in caplog.records if "kodi transport has no viable configuration" in r.getMessage()]
+    assert [r.levelno for r in records] == [level]
+
+
+@pytest.mark.parametrize(("configured", "level"), [(False, logging.DEBUG), (True, logging.INFO)])
+async def test_unused_transport_log_level_depends_on_config(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, configured: bool, level: int
+) -> None:
+    """An action-configured transport nobody asked for is routine to unload, so only debug"""
+    ctx = TestingContext(
+        homeassistant=hass, transport_types=[DiscordTransport], transports={TRANSPORT_DISCORD: {}} if configured else None
+    )
+    with caplog.at_level(logging.DEBUG, logger="custom_components.supernotify"):
+        await ctx.test_initialize()
+    records = [r for r in caplog.records if "discord transport has no deliveries" in r.getMessage()]
     assert [r.levelno for r in records] == [level]
 
 

@@ -487,7 +487,9 @@ class DeliveryRegistry:
         used_transport_names = {d.transport.name for d in self._deliveries.values()}
         for name in list(self.transports):
             if name not in used_transport_names:
-                _LOGGER.info("SUPERNOTIFY %s transport has no deliveries, unloading", name)
+                # routine for a transport never mentioned in config, only worth an info if it was
+                level = logging.INFO if name in self._transport_configs else logging.DEBUG
+                _LOGGER.log(level, "SUPERNOTIFY %s transport has no deliveries, unloading", name)
                 del self.transports[name]
 
     def register_entity(self, unique_id: str, entity: SupernotifyLegacyBinarySensor) -> None:
