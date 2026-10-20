@@ -55,7 +55,7 @@ Elke persoon die Supernotify kent heeft een `switch`-entiteit in Home Assistant,
 
 ## Alleen bepaalde apparaten melden { #notify-just-some-devices }
 
-Doelen kunnen naast een persoon of apparaat ook een **Ruimte**, **Verdieping** of **Label** zijn, zodat een melding naar de speakers beneden kan gaan, of naar alles met het label voor de keuken. Zie [Targets](../../usage/targets.md) en de [veelgestelde vragen](../../faqs.md).
+Doelen kunnen naast een persoon of apparaat ook een **Ruimte**, **Verdieping** of **Label** zijn, zodat een melding naar de speakers beneden kan gaan, of naar alles met het label voor de keuken. Zie [Targets](../../usage/targets.md) en de [veelgestelde vragen](../../help/faqs.md).
 
 ## De instellingen aanpassen { #tune-the-settings }
 
@@ -78,4 +78,4 @@ Met wat YAML-configuratie kan er meer, en alles daarvan is optioneel:
 
 ## Hulp krijgen { #get-help }
 
-Stel je vraag op de pagina [Discussions](https://github.com/rhizomatics/supernotify/discussions), of gebruik een AI-agent - zie het laatste antwoord in de [veelgestelde vragen](../../faqs.md).
+Stel je vraag op de pagina [Discussions](https://github.com/rhizomatics/supernotify/discussions), of gebruik een AI-agent - zie het laatste antwoord in de [veelgestelde vragen](../../help/faqs.md).

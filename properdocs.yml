@@ -146,7 +146,8 @@ plugins:
           - quick_start/basic_concepts.md: Basic concepts - targets, recipients, deliveries and priority
           - quick_start/advanced_concepts.md: Advanced concepts - transports, deliveries, scenarios, recipients and targets
           - quick_start/removing.md: Remove Supernotify and clean up what it leaves behind
-          - faqs.md: Frequently asked questions, with short answers
+          - help/faqs.md: Frequently asked questions, with short answers
+          - help/troubleshooting.md: Debug and problem solving tips
         Using Supernotify:
           - usage/*.md
         Configuration:

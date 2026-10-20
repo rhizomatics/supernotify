@@ -55,7 +55,7 @@ Cada pessoa que o Supernotify conhece tem uma entidade `switch` no Home Assistan
 
 ## Notificar apenas alguns dispositivos { #notify-just-some-devices }
 
-Os destinos podem ser uma **Área**, um **Andar** ou uma **Etiqueta**, além de uma pessoa ou um dispositivo, por isso uma notificação pode ir para os alto-falantes do térreo, ou para tudo o que tem a etiqueta da cozinha. Veja [Targets](../../usage/targets.md) e as [perguntas frequentes](../../faqs.md).
+Os destinos podem ser uma **Área**, um **Andar** ou uma **Etiqueta**, além de uma pessoa ou um dispositivo, por isso uma notificação pode ir para os alto-falantes do térreo, ou para tudo o que tem a etiqueta da cozinha. Veja [Targets](../../usage/targets.md) e as [perguntas frequentes](../../help/faqs.md).
 
 ## Ajustar as configurações { #tune-the-settings }
 
@@ -78,4 +78,4 @@ Com alguma configuração YAML é possível fazer mais, e tudo isto é opcional:
 
 ## Obter ajuda { #get-help }
 
-Pergunte na página [Discussions](https://github.com/rhizomatics/supernotify/discussions), ou use um agente de IA - veja a última resposta nas [perguntas frequentes](../../faqs.md).
+Pergunte na página [Discussions](https://github.com/rhizomatics/supernotify/discussions), ou use um agente de IA - veja a última resposta nas [perguntas frequentes](../../help/faqs.md).

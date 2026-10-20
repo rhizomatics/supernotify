@@ -55,7 +55,7 @@ Supernotify が把握している人には、それぞれ Home Assistant の `sw
 
 ## 一部のデバイスだけに通知する { #notify-just-some-devices }
 
-ターゲットには、人やデバイスのほかに**エリア**、**フロア**、**ラベル**も指定できます。そのため、1階のスピーカーだけ、あるいはキッチン用のラベルが付いたものすべてに通知を送れます。[Targets](../../usage/targets.md) と、よくある質問をまとめた [FAQ](../../faqs.md) を参照してください。
+ターゲットには、人やデバイスのほかに**エリア**、**フロア**、**ラベル**も指定できます。そのため、1階のスピーカーだけ、あるいはキッチン用のラベルが付いたものすべてに通知を送れます。[Targets](../../usage/targets.md) と、よくある質問をまとめた [FAQ](../../help/faqs.md) を参照してください。
 
 ## 設定を調整する { #tune-the-settings }
 
@@ -78,4 +78,4 @@ YAML で少し設定すると、できることが増えます。いずれも任
 
 ## 助けを求める { #get-help }
 
-[Discussions](https://github.com/rhizomatics/supernotify/discussions) のページで質問するか、AI エージェントを使ってください - [FAQ](../../faqs.md) の最後の回答を参照してください。
+[Discussions](https://github.com/rhizomatics/supernotify/discussions) のページで質問するか、AI エージェントを使ってください - [FAQ](../../help/faqs.md) の最後の回答を参照してください。

@@ -55,7 +55,7 @@ Jede Person, die Supernotify kennt, hat eine `switch`-Entität in Home Assistant
 
 ## Nur bestimmte Geräte benachrichtigen { #notify-just-some-devices }
 
-Ziele können neben einer Person oder einem Gerät auch ein **Bereich**, eine **Etage** oder ein **Label** sein. So geht eine Benachrichtigung an die Lautsprecher im Erdgeschoss oder an alles mit dem Label für die Küche. Siehe [Targets](../../usage/targets.md) und die [FAQs](../../faqs.md) für häufige Fragen.
+Ziele können neben einer Person oder einem Gerät auch ein **Bereich**, eine **Etage** oder ein **Label** sein. So geht eine Benachrichtigung an die Lautsprecher im Erdgeschoss oder an alles mit dem Label für die Küche. Siehe [Targets](../../usage/targets.md) und die [FAQs](../../help/faqs.md) für häufige Fragen.
 
 ## Die Einstellungen anpassen { #tune-the-settings }
 
@@ -78,4 +78,4 @@ Mit etwas YAML-Konfiguration ist mehr möglich, und alles davon ist optional:
 
 ## Hilfe bekommen { #get-help }
 
-Fragen Sie auf der Seite [Discussions](https://github.com/rhizomatics/supernotify/discussions) oder nutzen Sie einen KI-Agenten - siehe die letzte Antwort in den [FAQs](../../faqs.md).
+Fragen Sie auf der Seite [Discussions](https://github.com/rhizomatics/supernotify/discussions) oder nutzen Sie einen KI-Agenten - siehe die letzte Antwort in den [FAQs](../../help/faqs.md).

@@ -55,7 +55,7 @@ Supernotify 知道的每个人在 Home Assistant 中都有一个 `switch` 实体
 
 ## 只通知部分设备 { #notify-just-some-devices }
 
-除了人或设备，目标还可以是**区域**、**楼层**或**标签**，因此通知可以只发到楼下的音箱，或发到所有带厨房标签的设备。请参阅 [Targets](../../usage/targets.md)，常见问题见 [FAQ](../../faqs.md)。
+除了人或设备，目标还可以是**区域**、**楼层**或**标签**，因此通知可以只发到楼下的音箱，或发到所有带厨房标签的设备。请参阅 [Targets](../../usage/targets.md)，常见问题见 [FAQ](../../help/faqs.md)。
 
 ## 调整设置 { #tune-the-settings }
 
@@ -78,4 +78,4 @@ Supernotify 知道的每个人在 Home Assistant 中都有一个 `switch` 实体
 
 ## 获取帮助 { #get-help }
 
-可以在 [Discussions](https://github.com/rhizomatics/supernotify/discussions) 页面提问，或使用 AI 助手 - 参见 [FAQ](../../faqs.md) 中的最后一个回答。
+可以在 [Discussions](https://github.com/rhizomatics/supernotify/discussions) 页面提问，或使用 AI 助手 - 参见 [FAQ](../../help/faqs.md) 中的最后一个回答。

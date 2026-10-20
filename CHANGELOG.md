@@ -191,7 +191,7 @@ These are now evaluated more thoroughly at start-up, so you may find old overloo
 - *Getting Started* and *Concepts* pages now replaced by an expanded **Quick Start** section, and concepts split into *Basic* and *Advanced*, and full translations for the entire section
 - New recipe - [Someone at the Door](./recipes/someone_at_the_door.md)
 - Recipes page now has improved navigation
-- New [Frequently Asked Questions](./faqs.md)
+- New [Frequently Asked Questions](./help/faqs.md)
 - Stub re-direct pages to make it easier for agents to find help and reference material despite the versioned setup
 
 

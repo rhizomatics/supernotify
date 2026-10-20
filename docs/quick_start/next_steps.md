@@ -55,7 +55,7 @@ Each person Supernotify knows about has a Home Assistant `switch` entity, and so
 
 ## Notify Just Some Devices
 
-Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](../usage/targets.md), and the [FAQs](../faqs.md) for common questions.
+Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](../usage/targets.md), and the [FAQs](../help/faqs.md) for common questions.
 
 ## Tune the Settings
 
@@ -78,4 +78,4 @@ More is possible with some YAML configuration, and all of it is optional:
 
 ## Get Help
 
-Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](../faqs.md).
+Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](../help/faqs.md).
