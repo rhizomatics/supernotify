@@ -66,6 +66,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_conce
 - An urgency level for notifications
 - There is no standard way to prioritize notifications, within or outside Home Assistant
 - Supernotify has its own 5 level scheme, which follows the most common practices, from `minimum` to `critical`
+- `highest`, `normal` and `lowest`, as Home Assistant's SMTP integration has them, are taken as `critical`, `medium` and `minimum`
 - Priority can be used for things like scenario and delivery rules, and passed onto notify integrations that support it
 - Supernotify has its own e-mail integration, which will translate priority into a way Outlook, Apple Mail etc can understand
 

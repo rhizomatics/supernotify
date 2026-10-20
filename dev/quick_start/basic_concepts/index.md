@@ -34,7 +34,7 @@ Leave deliveries out, and Supernotify uses the ones that can work out for themse
 
 ## Priority
 
-Priority is **how urgent a notification is**, on five levels: `minimum`, `low`, `medium`, `high` and `critical`. It is optional, and `medium` if not given. Priority is passed on to the phones, e-mail programs and other things that understand it.
+Priority is **how urgent a notification is**, on five levels: `minimum`, `low`, `medium`, `high` and `critical`. It is optional, and `medium` if not given. `highest`, `normal` and `lowest` can also be used, for `critical`, `medium` and `minimum`. Priority is passed on to the phones, e-mail programs and other things that understand it.
 
 ## Two More, for Later
 
