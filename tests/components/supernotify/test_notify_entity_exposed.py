@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
@@ -351,7 +351,8 @@ async def _relay_setup(hass: HomeAssistant, relay: dict[str, Any]) -> list[dict[
     """A delivery exposed as notify.relay, with dupe checking off, so nothing else stops a loop,
     returning the action calls made"""
     calls: list[dict[str, Any]] = []
-    hass.bus.async_listen("call_service", lambda event: calls.append(dict(event.data)))
+    # a callback, so run in the event loop as each call is made, rather than racing in the executor
+    hass.bus.async_listen("call_service", callback(lambda event: calls.append(dict(event.data))))
     assert await async_setup_component(
         hass,
         DOMAIN,
