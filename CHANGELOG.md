@@ -11,11 +11,15 @@
 - *Email*
   - With `mode: ha_smtp`, addresses set up as recipients in the Home Assistant SMTP integration are sent to with its `smtp.send_message` action, with the notification's priority, html and images. Other addresses still go by its notify action, where there is one
   - `data_keys_select` prunes what's passed on to the integration, as it does for Mobile Push and Generic
-- `highest`, `normal` and `lowest` can be given as the priority of a notification, a delivery's priority filter or a priority snooze, for `critical`, `medium` and `minimum`, as Home Assistant's SMTP integration names them
+- `highest`, `normal` and `lowest` can be used as aliases for `critical`, `medium` and `minimum` as the priority of a notification, for compatibility with Home Assistant's SMTP integration priority added in 2026.9
 - More of what Supernotify shows is now in the Home Assistant language
   - *Mobile Push*: the camera snooze button, which now also gives the camera's name rather than its entity id, and the *Click for Action* title given to a link action without one
   - *Email*: the default subject, heading and preview text, "Home Assistant Notification", and the description of a snapshot image for templates. A `default_title` configured for the transport still wins
   - Errors from `supernotify.snooze`, `silence` and `unsnooze`, such as an unknown delivery name, are now shown in the user's language, as is the same reason the AI snooze tool is given
+  - *Kodi* and *HTML5*: the title given to a notification without one, now "Notification" in the Home Assistant language. For HTML5 this was previously "Home Assistant"
+  - The message shown on the integrations page when Supernotify fails to start and will retry
+  - The repair issue for a scenario condition that can't be checked no longer starts with "Schema error" or "Unknown error" in English
+  - What the built-in agent says back is now in the translations, under `common.voice`, so a language can be added there alongside its sentences. English and Italian for now
 - `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.
   - Left out for a call from outside an automation or script, and for an automation without an `id`, since Home Assistant keeps no trace for those
 
