@@ -5,10 +5,6 @@ tags:
 ---
 # Kodi Transport Adaptor
 
-## Discovery
-
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
-
 ## Motivation
 
 Shows on-screen overlay notifications on Kodi media centers through the Home Assistant
@@ -51,6 +47,10 @@ than an mDNS `.local` hostname, which some players cannot resolve when fetching 
 * `kodi_displaytime` — overlay duration in ms (default 10000, minimum 1500)
 * `kodi_icon` — `info` | `warning` | `error` or an image URL; overrides the priority mapping
 * `kodi_attach_image` — camera snapshot as the icon (default `false`); a resolved image URL wins over `kodi_icon`
+
+## Discovery
+
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
 
 ## Notes
 

@@ -17,28 +17,9 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `chime` | :material-github:[`chime.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/chime.py) | - | :material-home-assistant: [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/),:simple-homeassistantcommunitystore: [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player),:material-home-assistant: [RFLink](https://www.home-assistant.io/integrations/rflink/),:material-home-assistant: [MQTT Siren](https://www.home-assistant.io/integrations/siren.mqtt/) etc. |
 
-## Discovery
+*Chime* supports a variety of audio, non-spoken devices, such as doorbell chimes, sirens, and voice assistants like *Alexa Devices* that can also make noises.
 
-**Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several
-underlying mechanisms (switch, siren, script, rest_command, media_player) with no single
-integration to discover, so it stays unconfigured until a transport-level `chime_aliases`
-option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own
-to use it directly.
-
-The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is
-created that targets all of them. It is explicit-only, so it is used only when named in an action
-call or scenario, and needs no aliases since a siren can be turned on without a tune.
-
-Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
-This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
-
-You can mix and match any of these devices in a single notification call, and combine them
-with mobile_push, e-mail etc.
-
-The range of tunes from modern devices gives a good alternative to being bothered with lots
-of push notifications. For example, if a PIR detects motion and the alarm panel is disarmed
-you could have a *ping* sound from Amazon Echos and chime devices.
-
+One of the goals of `chime` is to take a disparate set of devices, entities and API calls, and turn them into a consistent simple thing to call, which is referred to as an **alias**. So you could have a `red_alert` alias, that rings bells, sets off sirens, makes Alexa do dive-dive-dive noises, and then in automations simply refer to it by the `red_alert` name.
 
 ## Aliases
 
@@ -296,6 +277,28 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 Chimes work well with scenarios, you can easily add a chime for all critical notifications without
 having to change any of the automations. See [Scenarios](../configuration/scenarios.md) and [Recipes](../recipes/index.md)
 for more details.
+
+## Discovery
+
+**Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several
+underlying mechanisms (switch, siren, script, rest_command, media_player) with no single
+integration to discover, so it stays unconfigured until a transport-level `chime_aliases`
+option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own
+to use it directly.
+
+The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is
+created that targets all of them. It is explicit-only, so it is used only when named in an action
+call or scenario, and needs no aliases since a siren can be turned on without a tune.
+
+Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
+This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
+
+You can mix and match any of these devices in a single notification call, and combine them
+with mobile_push, e-mail etc.
+
+The range of tunes from modern devices gives a good alternative to being bothered with lots
+of push notifications. For example, if a PIR detects motion and the alarm panel is disarmed
+you could have a *ping* sound from Amazon Echos and chime devices.
 
 ## References
 

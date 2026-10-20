@@ -5,13 +5,6 @@ tags:
 ---
 # HTML5 Browser Push Transport Adaptor
 
-## Discovery
-
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no
-`html5` delivery is defined, an `html5` delivery is generated automatically — but since a
-browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when
-selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
-
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant
@@ -66,6 +59,13 @@ delivery:
 * `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`
 * `html5_ttl` — time-to-live in seconds or an HA duration mapping
 * `html5_data` — extra keys merged into the custom `data` field (`html5_url` wins on `url`)
+
+## Discovery
+
+**Delivery (explicit selection).** If the `html5` integration's config entry exists and no
+`html5` delivery is defined, an `html5` delivery is generated automatically — but since a
+browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when
+selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
 
 ## Notes
 

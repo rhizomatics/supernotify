@@ -11,12 +11,6 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `mobile_push` | :material-github:[`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | :material-home-assistant: [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic) | - |
 
-## Discovery
-
-**Default delivery.** If at least one Companion App device is registered (a `mobile_app` config
-entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is
-generated automatically and fires on every notification, with targets resolved per-recipient
-from the HA Companion App at delivery time.
 
 Send a push message to the Companion App on iPhone, iPad, Mac and Android, with camera images,
 mobile actions, and Supernotify's priority translated into what each platform uses for it.
@@ -239,6 +233,13 @@ delivery:
 
 `notify.mobile_app_my_phone` is the name of the Companion App's notify action, not a `mobile_app_id` - as a target it's taken as an `entity_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
 and [Targets](../usage/targets.md#target-categories)).
+
+## Discovery
+
+**Default delivery.** If at least one Companion App device is registered (a `mobile_app` config
+entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is
+generated automatically and fires on every notification, with targets resolved per-recipient
+from the HA Companion App at delivery time.
 
 ## References
 

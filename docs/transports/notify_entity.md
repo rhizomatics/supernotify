@@ -31,12 +31,6 @@ scenario or recipient, a recipient's entity is replaced by the recipient, and a 
 delivery's is dropped with a warning. See [Scenario Notify Entity](../configuration/scenarios.md#notify-entity)
 for the current limitations.
 
-## Discovery
-
-**Default delivery.** If at least one `notify.*` entity exists in the house and no
-`notify_entity` delivery is configured, a `notify_entity` delivery is generated
-automatically. It is used whenever a notification targets a notify entity that no more specific
-transport has taken.
 
 ## Default Delivery
 
@@ -67,3 +61,10 @@ transports:
         area_id: kitchen
         label_id: display
 ```
+
+## Discovery
+
+**Default delivery.** If at least one `notify.*` entity exists in the house and no
+`notify_entity` delivery is configured, a `notify_entity` delivery is generated
+automatically. It is used whenever a notification targets a notify entity that no more specific
+transport has taken.

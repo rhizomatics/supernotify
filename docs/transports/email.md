@@ -12,23 +12,7 @@ tags:
 | `email`      | :material-github:[`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | :material-home-assistant: [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), :material-home-assistant: [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
 
 
-Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
-
-## Discovery
-
-**Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically
-and fires on every notification, when either:
-
-- a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
-- the Home Assistant SMTP integration has recipients set up, or its notify action is available
-
-To stop it being generated, switch the transport off:
-
-```yaml
-transports:
-  email:
-    enabled: false
-```
+Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML. It will work with Home Assistant's SMTP integrations, and has its own better internal SMTP integration that can handle plain e-mail addresses as well as notify entities.
 
 ## Example
 
@@ -243,6 +227,22 @@ If no `connection` block is configured, this transport falls back to the connect
 Initially this only preserves the original easier to use functionality of Home Assistant SMTP prior to the enforcement of pre-registering every e-mail address as an `entity`, and mapping envelope priority to common headers.
 
 It is anticipated that this will also open up more features, such as modern email features like DKIM.
+
+## Discovery
+
+**Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically
+and fires on every notification, when either:
+
+- a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
+- the Home Assistant SMTP integration has recipients set up, or its notify action is available
+
+To stop it being generated, switch the transport off:
+
+```yaml
+transports:
+  email:
+    enabled: false
+```
 
 
 ## Reference

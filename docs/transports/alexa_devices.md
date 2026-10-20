@@ -11,9 +11,7 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `alexa_devices` | :material-github:[`alexa_devices.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_devices.py) | :material-home-assistant: [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/) | - |
 
-## Discovery
-
-**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 
 ## Example
 
@@ -22,8 +20,6 @@ tags:
   data:
     message: "Motion detected at the front door"
 ```
-
-Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
@@ -43,6 +39,11 @@ When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skill
 
 Use `spoken_message` in the notification call to provide a different message for a voice
 notification than used for other transports like email or mobile push.
+
+## Discovery
+
+**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+
 
 ## References
 
