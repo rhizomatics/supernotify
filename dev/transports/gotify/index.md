@@ -2,10 +2,6 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
-## Discovery
-
-**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
-
 ## Motivation
 
 Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires the [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
@@ -125,6 +121,10 @@ ______________________________________________________________________
 **No `raw_data` passthrough** (CLAUDE.md §4 pattern): The standard pattern passes residual `raw_data` keys to `action_data`. For Gotify this is deliberately omitted — the HACS service has a fixed schema and unknown top-level keys cause silent failures or HTTP 400s on future integration updates. This decision is documented with an inline comment in `deliver()`.
 
 **No static default `action:`**: `default_config` sets no fixed `action`, since the HACS service name is user-controlled. `auto_configure()` fills it in dynamically once discovered (see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a manually configured delivery omits `action:`.
+
+## Discovery
+
+**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
 
 ______________________________________________________________________
 
