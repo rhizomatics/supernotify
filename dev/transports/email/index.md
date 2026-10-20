@@ -13,7 +13,7 @@ Can be used for plain or HTML template emails, and handle images as attachments 
 **Default delivery.** If no `email` delivery is defined, an `email` delivery is generated automatically and fires on every notification, when either:
 
 - a [direct connection](#direct-connection) with a `sender` is configured, or can be reused from the Home Assistant SMTP integration
-- the Home Assistant SMTP integration's notify action is available
+- the Home Assistant SMTP integration has recipients set up, or its notify action is available
 
 To stop it being generated, switch the transport off:
 
@@ -52,6 +52,8 @@ Example Notification with Pass-through Data
       images:
         - /config/www/floorplan.png
 ```
+
+What's passed on can be pruned with the `data_keys_select` option, see [Selection Rules](https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/index.md).
 
 These keys in `data` are Supernotify's own, and not passed on:
 
@@ -138,6 +140,12 @@ If you already have the SMTP integration installed, Supernotify can reuse the co
 
 If you really want to use only the native Home Assistant integration, then override the defaults using `mode: ha_smtp` in the `options` section of a delivery or transport, see section below on configuring.
 
+### Sending through the Home Assistant SMTP Integration
+
+With `mode: ha_smtp`, addresses set up as recipients in the [SMTP integration](https://www.home-assistant.io/integrations/smtp/) are sent to with its `smtp.send_message` action, which has `html`, `attachments` and `priority`. Any other address goes by the integration's older notify action, where there is one, or else is left out with a warning.
+
+`smtp.send_message` takes images as media sources rather than files, so an image Supernotify grabs is attached from one of Home Assistant's `media_dirs` if it was saved in one, or else as a fresh snapshot of the notification's camera. To attach the image exactly as grabbed, add Supernotify's media folder to `media_dirs`, as in [Browse Snapshots via Home Assistant](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#browse-snapshots-via-home-assistant). Anything in `data` that `smtp.send_message` doesn't take, such as another integration's own keys, is left out.
+
 ### Configuring
 
 By default, the `mode` option is set to `direct`, so deliveries go through Supernotify's own SMTP capability rather than the Home Assistant notify integration. This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
@@ -152,7 +160,7 @@ transports:
         sender_name: Home Assistant
 ```
 
-As for the Home Assistant SMTP integration, a `sender` is needed: without one, direct emails aren't sent, no default delivery is generated, and a warning is logged at startup. The email is from the `sender` alone unless a `sender_name` is given. `sender`, `sender_name` and `default_title` can also be set in the `options` of a single delivery, to send that delivery's emails from a different address.
+As for the Home Assistant SMTP integration, a `sender` is needed: without one, direct emails aren't sent, no default delivery is generated, and a warning is logged at startup. Without a `sender_name`, the email is from the home's name, as set in Home Assistant's settings. `sender`, `sender_name` and `default_title` can also be set in the `options` of a single delivery, to send that delivery's emails from a different address.
 
 This avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality but without setting up each email address in Home Assistant first.
 
@@ -160,12 +168,15 @@ In addition to reverting to the previous simpler Home Assistant usage, it also o
 
 #### Priority
 
-Envelope priority is mapped to common header fields used for internet mail:
+The notification's priority is mapped to the header fields different email apps look at. Sending through the SMTP integration's `smtp.send_message` sets only `X-Priority`, which some apps, such as Outlook, ignore.
 
-- Priority
-- Importance
-- X-Priority
-- X-MSMail-Priority
+| Priority   | `Importance` | `Priority` | `X-Priority` | `X-MSMail-Priority` | `smtp.send_message` |
+| ---------- | ------------ | ---------- | ------------ | ------------------- | ------------------- |
+| `critical` | high         | urgent     | 1            | High                | highest             |
+| `high`     | high         | urgent     | 2            | High                | high                |
+| `medium`   | normal       | normal     | 3            | Normal              | normal              |
+| `low`      | low          | non-urgent | 4            | Low                 | low                 |
+| `minimum`  | low          | non-urgent | 5            | Low                 | lowest              |
 
 #### Message-ID
 
