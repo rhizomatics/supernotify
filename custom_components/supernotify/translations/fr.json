@@ -453,6 +453,10 @@
             "title": "La livraison a une action invalide",
             "description": "La livraison {delivery} a une action invalide {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Action obsolète du transport générique",
+            "description": "Une livraison utilise le transport générique avec l'action {action}, ce qui est obsolète et sera supprimé dans une version future. Modifiez la livraison pour utiliser le transport {transport} à la place."
+        },
         "recipient_mobile_app_not_found": {
             "title": "Application mobile introuvable pour le destinataire",
             "description": "Le destinataire {recipient} a un appareil mobile {mobile_app}, mais il n'existe aucune action `notify.{mobile_app}` dans Home Assistant, les notifications ne peuvent donc pas l'atteindre. Si l'appareil ou son application Home Assistant n'existe plus, supprimez-le de Home Assistant ou désactivez-le dans les `mobile_devices` du destinataire. Ignorez cette réparation si l'appareil n'est absent que temporairement."

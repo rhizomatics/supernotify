@@ -453,6 +453,10 @@
             "title": "Bezorging heeft een ongeldige actie",
             "description": "Bezorging {delivery} heeft een ongeldige actie {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Verouderde actie in generiek transport",
+            "description": "Een levering gebruikt het generieke transport met de actie {action}. Dit is verouderd en wordt in een toekomstige versie verwijderd. Wijzig de levering zodat deze het {transport}-transport gebruikt."
+        },
         "recipient_mobile_app_not_found": {
             "title": "Mobiele app niet gevonden voor ontvanger",
             "description": "Ontvanger {recipient} heeft een mobiel apparaat {mobile_app}, maar er is geen actie `notify.{mobile_app}` in Home Assistant, dus meldingen kunnen het niet bereiken. Als het apparaat of de Home Assistant app ervan niet meer bestaat, verwijder het dan uit Home Assistant of schakel het uit in de `mobile_devices` van de ontvanger. Negeer deze reparatie als het apparaat slechts tijdelijk ontbreekt."

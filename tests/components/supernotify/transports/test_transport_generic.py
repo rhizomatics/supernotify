@@ -31,7 +31,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DataFilter, Target
+from custom_components.supernotify.model import DataFilter, SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
@@ -333,7 +333,7 @@ async def test_ntfy_publish() -> None:
                 "publish",
                 service_data={"message": "test message", "tags": ["a", "b"], "email": "joe@mctest.org"},
                 blocking=False,
-                target=None,
+                target={"entity_id": ["notify.topic_1", "notify.topic_2"]},
                 context=None,
                 return_response=False,
             ),
@@ -342,15 +342,6 @@ async def test_ntfy_publish() -> None:
                 "publish",
                 service_data={"message": "test message", "tags": ["a", "b"], "email": "mary@mctest.org"},
                 blocking=False,
-                target=None,
-                context=None,
-                return_response=False,
-            ),
-            call(
-                "ntfy",
-                "publish",
-                service_data={"message": "test message", "tags": ["a", "b"]},
-                blocking=False,
                 target={"entity_id": ["notify.topic_1", "notify.topic_2"]},
                 context=None,
                 return_response=False,
@@ -358,6 +349,7 @@ async def test_ntfy_publish() -> None:
         ],
         any_order=True,
     )
+    assert uut.context.hass_api._hass.services.async_call.call_count == 2  # type:ignore [union-attr]
 
 
 async def test_raw() -> None:
@@ -548,6 +540,9 @@ async def test_tts_delivery() -> None:
             tts_announce:
                 transport: generic
                 action: tts.speak
+                target:
+                    - tts.piper
+                    - media_player.kitchen
             """,
         services={"tts": ["speak"]},
         transport_types=[GenericTransport],
@@ -561,9 +556,9 @@ async def test_tts_delivery() -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
         "tts",
         "speak",
-        service_data={"message": "hello tts"},
+        service_data={"message": "hello tts", "media_player_entity_id": "media_player.kitchen"},
         blocking=False,
-        target=None,
+        target={"entity_id": ["tts.piper"]},
         context=None,
         return_response=False,
     )
@@ -659,6 +654,7 @@ async def test_ntfy_with_priority() -> None:
             ntfy:
                 transport: generic
                 action: ntfy.publish
+                target: notify.topic_1
             """,
         services={"ntfy": ["publish"]},
         transport_types=[GenericTransport],
@@ -691,7 +687,7 @@ async def test_ntfy_with_priority() -> None:
         },
         blocking=False,
         context=None,
-        target={"entity_id": []},
+        target={"entity_id": ["notify.topic_1"]},
         return_response=False,
     )
 
@@ -742,7 +738,12 @@ async def test_ntfy_with_phone() -> None:
     )
 
     await ctx.test_initialize()
-    uut = Notification(ctx, message="test message", action_data={"delivery": {"ntfy": {"enabled": True}}}, target="person.bob")
+    uut = Notification(
+        ctx,
+        message="test message",
+        action_data={"delivery": {"ntfy": {"enabled": True}}},
+        target=["person.bob", "notify.topic_1"],
+    )
     await uut.initialize()
     await uut.deliver()
 
@@ -751,7 +752,7 @@ async def test_ntfy_with_phone() -> None:
         "publish",
         service_data={"message": "test message", "call": "+447979123456", "priority": 3},
         blocking=False,
-        target=None,
+        target={"entity_id": ["notify.topic_1"]},
         context=None,
         return_response=False,
     )
@@ -818,8 +819,8 @@ SCHEMA_CASES: dict[str, SchemaCase] = {
     ),
     "tts": SchemaCase(
         GenericTransport,
-        expected={"tts.speak"},
-        data={"entity_id": "tts.home_assistant_cloud", "media_player_entity_id": "media_player.kitchen_speakers"},
+        ["tts.home_assistant_cloud", "media_player.kitchen_speakers"],
+        {"tts.speak"},
         maximal_data={"language": "en-GB", "cache": False},
     ),
     "ntfy": SchemaCase(
@@ -874,3 +875,216 @@ def test_validate_action_warns_ntfy_deprecated(caplog: pytest.LogCaptureFixture)
     uut = GenericTransport(Mock())
     assert uut.validate_action("ntfy.publish")
     assert "Deprecated use of ntfy.publish" in caplog.text
+
+
+async def generic_envelope(
+    deliveries: str, target: list[str], data: dict | None = None, services: dict | None = None
+) -> tuple[GenericTransport, Envelope]:
+    ctx = TestingContext(deliveries=deliveries, services=services or {}, transport_types=[GenericTransport])
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC)
+    assert isinstance(uut, GenericTransport)
+    envelope = Envelope(
+        Delivery("uut", ctx.delivery_config("uut"), uut),
+        Notification(ctx, message="hello there"),
+        target=Target(target),
+        data=data,
+    )
+    return uut, envelope
+
+
+async def test_equiv_domain_keeps_targets_of_handled_domain() -> None:
+    """Regression: handle_as_domain dropped entities of the handled-as domain, so the call went out with none"""
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: flashywashy.flash_me_now
+            options:
+                handle_as_domain: light
+        """,
+        ["light.kitchen", "flashywashy.porch"],
+        data={"flash": "short"},
+        services={"flashywashy": ["flash_me_now"]},
+    )
+    assert await uut.deliver(envelope)
+    uut.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "flashywashy",
+        "flash_me_now",
+        service_data={"flash": "short"},
+        blocking=False,
+        target={"entity_id": ["flashywashy.porch", "light.kitchen"]},
+        context=None,
+        return_response=False,
+    )
+
+
+@pytest.mark.parametrize(
+    "action",
+    ["switch.turn_on", "light.turn_on", "siren.turn_on", "input_text.set_value", "notify.send_message", "tts.speak"],
+)
+async def test_no_matching_entities_skipped(action: str) -> None:
+    """Regression: an entity-targeted call with no matching entities was made anyway, doing nothing, as a success"""
+    domain, service = action.split(".")
+    uut, envelope = await generic_envelope(
+        f"""
+        uut:
+            transport: generic
+            action: {action}
+        """,
+        ["joe@test.org"],
+        services={domain: [service]},
+    )
+    assert await uut.deliver(envelope) is False
+    assert envelope.skipped == 1
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    uut.hass_api._hass.services.async_call.assert_not_called()  # type:ignore [union-attr]
+
+
+async def test_tts_legacy_say_targets_media_players() -> None:
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: tts.cloud_say
+        """,
+        ["media_player.kitchen"],
+        services={"tts": ["cloud_say"]},
+    )
+    assert await uut.deliver(envelope)
+    uut.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "tts",
+        "cloud_say",
+        service_data={"message": "hello there"},
+        blocking=False,
+        target={"entity_id": ["media_player.kitchen"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_tts_speak_multiple_media_players() -> None:
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: tts.speak
+        """,
+        ["tts.piper", "media_player.kitchen", "media_player.hall"],
+        services={"tts": ["speak"]},
+    )
+    assert await uut.deliver(envelope)
+    assert uut.hass_api._hass.services.async_call.call_args.kwargs["service_data"] == {  # type:ignore [union-attr]
+        "message": "hello there",
+        "media_player_entity_id": ["media_player.kitchen", "media_player.hall"],
+    }
+
+
+async def test_ntfy_data_keys_select_applies_to_email() -> None:
+    """Regression: data_keys_select was applied only after the per-email calls were already built"""
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: ntfy.publish
+            options:
+                data_keys_select:
+                    exclude: [tags]
+        """,
+        ["notify.topic", "joe@test.org"],
+        data={"tags": ["x"]},
+        services={"ntfy": ["publish"]},
+    )
+    assert await uut.deliver(envelope)
+    uut.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "ntfy",
+        "publish",
+        service_data={"message": "hello there", "priority": 3, "email": "joe@test.org"},
+        blocking=False,
+        target={"entity_id": ["notify.topic"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_ntfy_without_topic_skipped() -> None:
+    """Regression: ntfy.publish was called without a topic entity, which it requires"""
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: ntfy.publish
+        """,
+        ["joe@test.org"],
+        services={"ntfy": ["publish"]},
+    )
+    assert await uut.deliver(envelope) is False
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    uut.hass_api._hass.services.async_call.assert_not_called()  # type:ignore [union-attr]
+
+
+@pytest.mark.parametrize(
+    ("action", "data"),
+    [("mqtt.publish", {"topic": "alerts"}), ("script.turn_on", {"variables": {"zone": "porch"}})],
+)
+async def test_envelope_data_not_changed(action: str, data: dict) -> None:
+    """Regression: mqtt added `payload`, and script removed `variables`, from the envelope's own data"""
+    domain, service = action.split(".")
+    uut, envelope = await generic_envelope(
+        f"""
+        uut:
+            transport: generic
+            action: {action}
+        """,
+        ["script.dazzle"],
+        data=data,
+        services={domain: [service]},
+    )
+    before = dict(envelope.data)
+    assert await uut.deliver(envelope)
+    assert envelope.data == before
+
+
+def test_validate_action_needs_domain_and_service() -> None:
+    uut = GenericTransport(Mock())
+    assert uut.validate_action("notify.") is False
+    assert uut.validate_action(".foo") is False
+
+
+def test_validate_action_raises_ntfy_deprecation_repair() -> None:
+    uut = GenericTransport(Mock())
+    assert uut.validate_action("ntfy.publish")
+    uut.hass_api.raise_issue.assert_called_once_with(  # type:ignore [attr-defined]
+        "generic_ntfy_publish_deprecated",
+        issue_key="generic_action_deprecated",
+        issue_map={"action": "ntfy.publish", "transport": "ntfy"},
+        learn_more_url="https://supernotify.rhizomatics.org.uk/transports/ntfy/",
+    )
+
+
+def test_standard_delivery_only_with_transport_action() -> None:
+    uut = GenericTransport(Mock())
+    assert uut.build_standard_deliveries(Mock()) == {}
+    uut.delivery_defaults.action = "notify.custom"
+    assert uut.build_standard_deliveries(Mock()) == {"generic": {}}
+
+
+async def test_notify_events_passes_data_and_native_priority() -> None:
+    uut, envelope = await generic_envelope(
+        """
+        uut:
+            transport: generic
+            action: notify.eventer
+            options:
+                handle_as_domain: notify_events
+        """,
+        [],
+        data={"data": {"source": "porch"}},
+        services={"notify": ["eventer"]},
+    )
+    envelope.priority = "highest"
+    assert await uut.deliver(envelope)
+    assert uut.hass_api._hass.services.async_call.call_args.kwargs["service_data"] == {  # type:ignore [union-attr]
+        "message": "hello there",
+        "data": {"source": "porch", "priority": "highest"},
+    }

@@ -32,6 +32,7 @@ from custom_components.supernotify.model import (
     DataFilter,
     DebugTrace,
     MessageOnlyPolicy,
+    SuppressionReason,
     Target,
     TargetRequired,
     TransportConfig,
@@ -58,6 +59,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 OPTION_RAW = "raw"
+ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # as in tts transport
+# actions handled here that now have their own transport, mapped to that transport
+DEPRECATED_ACTIONS: dict[str, str] = {"ntfy.publish": "ntfy"}
 OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
 
 
@@ -96,10 +100,18 @@ class GenericTransport(Transport):
         return config
 
     def validate_action(self, action: str | None) -> bool:
-        if action is not None and "." in action:
-            if action == "ntfy.publish":
+        domain, _, service = (action or "").partition(".")
+        if domain and service:
+            replacement: str | None = DEPRECATED_ACTIONS.get(action or "")
+            if replacement:
                 _LOGGER.warning(
-                    "SUPERNOTIFY Deprecated use of ntfy.publish with the generic transport - use the ntfy transport"
+                    "SUPERNOTIFY Deprecated use of %s with the generic transport - use the %s transport", action, replacement
+                )
+                self.hass_api.raise_issue(
+                    f"generic_{domain}_{service}_deprecated",
+                    issue_key="generic_action_deprecated",
+                    issue_map={"action": action or "", "transport": replacement},
+                    learn_more_url=f"https://supernotify.rhizomatics.org.uk/transports/{replacement}/",
                 )
             return True
         _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
@@ -122,8 +134,8 @@ class GenericTransport(Transport):
         return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        # inputs
-        data: dict[str, Any] = envelope.data or {}
+        # inputs - copied, since some domains rework it, and the envelope's own is archived
+        data: dict[str, Any] = dict(envelope.data or {})
         core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
         raw_mode: bool = envelope.delivery.options.get(OPTION_RAW, False)
         qualified_action: str | None = envelope.delivery.action
@@ -137,10 +149,14 @@ class GenericTransport(Transport):
         if envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE):
             equiv_domain = envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE)
             _LOGGER.debug("SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
+        # entities of the action's own domain, plus those of the domain it's handled as
+        entity_ids: list[str] = envelope.target.domain_entity_ids(domain)
+        if equiv_domain != domain:
+            entity_ids += envelope.target.domain_entity_ids(equiv_domain)
 
         # outputs
         action_data: dict[str, Any] = {}
-        target_data: dict[str, Any] | None = {}
+        target_data: dict[str, Any] | None = None
         build_targets: bool = False
         prune_data: bool = True
         mini_envelopes: list[MiniEnvelope] = []  # only used for script and ntfy
@@ -161,22 +177,29 @@ class GenericTransport(Transport):
                 action_data[ATTR_DATA] = data
                 build_targets = True
         elif equiv_domain == "input_text":
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = {ATTR_ENTITY_ID: entity_ids}
             if "value" in data:
                 action_data = {"value": data["value"]}
             else:
                 action_data = {"value": core_action_data[ATTR_MESSAGE]}
         elif equiv_domain == "switch":
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = {ATTR_ENTITY_ID: entity_ids}
         elif equiv_domain == "mqtt":
             action_data = data
             if "payload" not in action_data:
                 action_data["payload"] = envelope.message
-                # add `payload:` with empty value for empty topic
         elif equiv_domain == "tts":
             action_data = core_action_data
             action_data.update(data)
-            build_targets = True
+            media_players: list[str] = envelope.target.domain_entity_ids("media_player")
+            if service == "speak":
+                # tts entity as target, media players as data
+                target_data = {ATTR_ENTITY_ID: entity_ids}
+                if media_players and ATTR_MEDIA_PLAYER_ENTITY_ID not in action_data:
+                    action_data[ATTR_MEDIA_PLAYER_ENTITY_ID] = media_players[0] if len(media_players) == 1 else media_players
+            else:
+                # legacy `<platform>_say` actions, targeting the media players directly
+                target_data = {ATTR_ENTITY_ID: media_players}
         elif equiv_domain == "notify_events":
             mini_envelopes.extend(
                 notify_events(envelope.message, envelope.title, core_action_data, data, envelope.delivery, envelope.priority)
@@ -186,7 +209,7 @@ class GenericTransport(Transport):
                 ntfy(core_action_data, data, envelope.target, envelope.delivery, envelope.priority, self.hass_api)
             )
         elif equiv_domain in ("siren", "light"):
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = {ATTR_ENTITY_ID: entity_ids}
             action_data = data
         elif equiv_domain == "rest_command":
             action_data = data
@@ -200,6 +223,9 @@ class GenericTransport(Transport):
             build_targets = True
 
         if mini_envelopes:
+            mini_envelopes = [m for m in mini_envelopes if not _missing_entities(m.target_data)]
+            if not mini_envelopes:
+                return self._skip_no_target(envelope, qualified_action)
             results: list[bool] = [
                 await self.call_action(
                     envelope, qualified_action, action_data=mini_envelope.action_data, target_data=mini_envelope.target_data
@@ -207,6 +233,9 @@ class GenericTransport(Transport):
                 for mini_envelope in mini_envelopes
             ]
             return all(results)
+
+        if _missing_entities(target_data):
+            return self._skip_no_target(envelope, qualified_action)
 
         if build_targets:
             all_targets: list[str] = []
@@ -226,7 +255,20 @@ class GenericTransport(Transport):
             # use the service schema to remove unsupported fields or force type
             action_data = self.context.hass_api.coerce_schema(domain, service, action_data)
 
-        return await self.call_action(envelope, qualified_action, action_data=action_data, target_data=target_data or None)
+        return await self.call_action(envelope, qualified_action, action_data=action_data, target_data=target_data)
+
+    def _skip_no_target(self, envelope: Envelope, qualified_action: str | None) -> bool:
+        _LOGGER.debug(
+            "SUPERNOTIFY Skipping %s call to %s, no matching entity targets", envelope.delivery.name, qualified_action
+        )
+        envelope.skipped = 1
+        envelope.skip_reason = SuppressionReason.NO_TARGET
+        return False
+
+
+def _missing_entities(target_data: dict[str, Any] | None) -> bool:
+    """An entity-targeted call, with no entities - which Home Assistant would quietly do nothing with"""
+    return target_data is not None and ATTR_ENTITY_ID in target_data and not target_data[ATTR_ENTITY_ID]
 
 
 @dataclass
@@ -292,6 +334,9 @@ def ntfy(
         if first_action.get(ATTR_ACTION_URL) and "click" not in action_data:
             action_data["click"] = first_action.get(ATTR_ACTION_URL)
 
+    rules = delivery.options.get(OPTION_DATA_KEYS_SELECT)
+    action_data = DataFilter(rules).apply(action_data)
+
     if target.email and "email" not in action_data:
         for email in target.email:
             call_data: dict[str, Any] = dict(action_data)
@@ -308,16 +353,12 @@ def ntfy(
             else:
                 call_data["call"] = phone
                 results.append(MiniEnvelope(action_data=call_data))
+    if not results:
+        results.append(MiniEnvelope(action_data=dict(action_data)))
+    # every publish goes through the ntfy topic entities, including those adding an email or call
     notify_entities = target.domain_entity_ids(NOTIFY_DOMAIN)
-
-    rules = delivery.options.get(OPTION_DATA_KEYS_SELECT)
-    action_data = DataFilter(rules).apply(action_data)
-
-    if not results or notify_entities:
-        if len(results) == 1:
-            results[0].target_data = {"entity_id": notify_entities}
-        else:
-            results.append(MiniEnvelope(action_data=dict(action_data), target_data={"entity_id": notify_entities}))
+    for result in results:
+        result.target_data = {ATTR_ENTITY_ID: notify_entities}
 
     return results
 

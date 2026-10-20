@@ -24,6 +24,7 @@ async def support_case_fixture(hass: HomeAssistant):
       cloud_tts:
         transport: generic
         action: tts.cloud_say
+        target: media_player.kitchen
         inclusion: default
         options:
           data_keys_exclude_re: title

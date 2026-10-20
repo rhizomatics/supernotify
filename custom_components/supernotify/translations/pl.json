@@ -453,6 +453,10 @@
             "title": "Dostarczenie ma nieprawidłową akcję",
             "description": "Dostarczenie {delivery} ma nieprawidłową akcję {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Przestarzała akcja transportu ogólnego",
+            "description": "Dostawa używa transportu ogólnego z akcją {action}, co jest przestarzałe i zostanie usunięte w przyszłej wersji. Zmień dostawę, aby używała transportu {transport}."
+        },
         "recipient_mobile_app_not_found": {
             "title": "Nie znaleziono aplikacji mobilnej dla odbiorcy",
             "description": "Odbiorca {recipient} ma urządzenie mobilne {mobile_app}, ale w Home Assistant nie ma akcji `notify.{mobile_app}`, więc powiadomienia nie mogą do niego dotrzeć. Jeśli urządzenie lub jego aplikacja Home Assistant już nie istnieje, usuń je z Home Assistant albo wyłącz w `mobile_devices` odbiorcy. Zignoruj tę naprawę, jeśli urządzenie jest niedostępne tylko tymczasowo."

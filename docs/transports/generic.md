@@ -9,8 +9,6 @@ tags:
   - mqtt
   - input_text
   - ntfy
-  - siren
-  - light
   - switch
   - sns
   - sqs
@@ -29,18 +27,20 @@ tags:
 
 ## Discovery
 
-**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all for user-defined actions, so there's nothing for SuperNotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
+**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all for user-defined actions, so there's nothing for Supernotify to discover on its own — either set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery is generated automatically once selected), or add a `generic` delivery of your own with your chosen `action:` directly.
 
-Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service' ) and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
+Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service') and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
 
-To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list.
+To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more. If you really want it to be a blank slate and override what it knows about domain rules, then use `raw: true` in the delivery `options` list. In raw mode, `message`, `title` and all `data` elements are passed as Action Data, along with all the targets in `target`, exactly as for the *default* row in [Known Integrations](#known-integrations), and no checking against the action's schema is made.
+
+Outside of raw mode, the Action Data is checked against the schema the action declares, where it has one, and any fields the action doesn't accept are quietly dropped, so a `data` section can carry values meant for other deliveries without breaking this one.
 
 !!! info
     This transport has also been used to add some minor support for an integration that doesn't yet warrant a full scale transport. For example, this was the case for [ntfy.sh](https://ntfy.sh) before the [ntfy transport](../transports/ntfy.md) was contributed, and remains the case for the [notify.events](https://notify.events) vendor service.
 
 ### Notify Actions
 
-If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be passed in the Action (Service) Data.
+If an action is in the `notify` domain, then `message`,`title`,`target` and `data` will be passed in the Action (Service) Data.
 
 ```yaml title="Example Configuration"
 delivery:
@@ -49,7 +49,7 @@ delivery:
     action: notify.custom_chat
 ```
 
-Use this deliveries with action calls like this:
+Use this delivery with action calls like this:
 
 ```yaml title="Example Action Call"
     - action: supernotify.notify
@@ -79,7 +79,7 @@ delivery:
       target_categories: entity_id
 ```
 
-If it's not a standard target type, then make one up. In this example, for personal Slack channels,which in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could have separate categories for "slack_group_dm", "slack_user" etc)
+If it's not a standard target type, then make one up. In this example, for personal Slack channels, which in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could have separate categories for "slack_group_dm", "slack_user" etc)
 
 ```yaml title="Config Snippets"
 recipients:
@@ -103,7 +103,7 @@ This can also be used in a notification call:
       data:
         message: "Notify via slack"
         target:
-            slack_channel: #JH838434
+            slack_channel: "#JH838434"
 ```
 
 ### Known Integrations
@@ -116,21 +116,24 @@ Several of these now have their own transports, and are effectively deprecated i
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
 | notify ( `send_message` only) | `message` and `title` only                                                                                                                                  | `entity_id` map         |
 | notify ( other actions )      | `message` and `title` plus all `data` elements                                                                                                              | big list of all targets |
-| input_text                    | `value` with message                                                                                                                                        | `entity_id` map         |
+| input_text                    | `value` with message, or `value` from `data` if supplied                                                                                                    | `entity_id` map         |
 | switch                        | Empty                                                                                                                                                       | `entity_id` map         |
 | mqtt                          | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined | Empty                   |
 | siren                         | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                      | `entity_id` map         |
 | light                         | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                      | `entity_id` map         |
-| rest_command | All of `data | Empty |
+| rest_command | All of `data` | Empty |
 | notify_events | All [permitted](https://www.home-assistant.io/integrations/notify_events#message-optional-parameters) `data` elements | Empty |
-| ntfy (`ntfy.publish`) | **Deprecated**, use the [ntfy transport](ntfy.md), a warning is logged at start up. All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
+| ntfy (`ntfy.publish`) | **Deprecated**, use the [ntfy transport](ntfy.md), a repair issue is raised at start up. All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `attach` and `action_url` for `click`. A separate publish is made for each `email` or `call` target | `entity_id` map of `notify` domain targets (the ntfy topics), required |
 | script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right  | `entity_id` map |
-| script (script name as action) | `message` and `title` plus all `data` elements | `entity_id` map |
-| tts | All [permitted](https://www.home-assistant.io/integrations/tts/) data elements | `entity_id` map |
+| script (script name as action) | `message` and `title` plus all `data` elements | Empty |
+| tts (`speak`) | `message` plus all [permitted](https://www.home-assistant.io/integrations/tts/#action-speak) data elements. `media_player_entity_id` set from `media_player` targets, if not already in `data` | `entity_id` map of `tts` targets |
+| tts (legacy `*_say` actions) | `message` plus all permitted data elements | `entity_id` map of `media_player` targets |
 | *default* |  `message` and `title` plus all `data` elements | big list of all targets |
 
+Where the Target Data is an `entity_id` map, only entities from that domain are passed (or from the domain set by `handle_as_domain`, as well as the action's own). If none of the targets match, the delivery is skipped rather than calling the action with no entities, which Home Assistant would quietly do nothing with.
+
 !!! tip "Notify Events"
-  `notify_events` has no definite action call in Home Assistant, so use `handle_as_domain: notify_event` in the `option` section of the *Delivery* configuration to switch on the special processing in Generic Transport, otherwise the same `data` section will be passed on as received in the action.
+    `notify_events` has no definite action call in Home Assistant, so use `handle_as_domain: notify_events` in the `options` section of the *Delivery* configuration to switch on the special processing in Generic Transport, otherwise the same `data` section will be passed on as received in the action.
 
 ### Input Text Integration
 
@@ -150,56 +153,62 @@ The `message` value on the notification will be passed as the `value` on the `da
 
 ### Other Actions
 
-The `data` supplied will be passed directly as the Action Data, message and title will be dropped as likely to be a problem for `switch`,`script` etc integrations.
+For the `switch`, `siren`, `light`, `mqtt` and `rest_command` domains, the `data` supplied will be passed directly as the Action Data, and message and title dropped as likely to be a problem for those integrations. Any other action not in the [Known Integrations](#known-integrations) table gets the *default* handling, of `message`, `title` and all `data` elements, with all the targets.
 
 If you have an action that is not supported, but it requires a similar Home Assistant Action call as one it does support, then the `handle_as_domain` option can be used.
 
 ```yaml
 delivery:
   light_flasher:
-  action: flashywashy.flash_me_now
-  options:
-    handle_as_domain: light
+    transport: generic
+    action: flashywashy.flash_me_now
+    options:
+      handle_as_domain: light
 ```
+
+Entities targeted are those in the action's own domain, here `flashywashy`, and those in the domain it's handled as, here `light`.
 
 Alternatively, if the custom action call is failing because of `data` elements from the notification it can't handle, you can control which keys are included, in this example, all keys that don't match the pattern will be dropped (test is made using Python's `re.fullmatch`):
 
 ```yaml
 delivery:
-  light_flasher:
-  action: zigzag.zig
-  options:
-    data_keys_select:
-      - enabled
-      - value
-      - zig.*
+  zigzag:
+    transport: generic
+    action: zigzag.zig
+    options:
+      data_keys_select:
+        - enabled
+        - value
+        - zig.*
 ```
 
 This can be more explicitly expressed with an `include` block, the shortcut style is simpler to edit and read but only works when including a simple flat list.
 
 ```yaml
 delivery:
-  light_flasher:
-  action: zigzag.zig
-  options:
-    data_keys_select:
-      include:
-        - enabled
-        - value
-        - zig.*
+  zigzag:
+    transport: generic
+    action: zigzag.zig
+    options:
+      data_keys_select:
+        include:
+          - enabled
+          - value
+          - zig.*
 ```
 
-It also works the other way round, or indeed both together, with excluding, so all `data` keys are passed, except selected ones
+It also works the other way round, or indeed both together, with excluding, so all `data` keys are passed, except selected ones:
 
 ```yaml
 delivery:
-  light_flasher:
-  action: zigzag.zig
-  options:
-    data_keys_select:
-      exclude:
-        - duration
-        - volume
+  zigzag:
+    transport: generic
+    action: zigzag.zig
+    options:
+      data_keys_select:
+        exclude:
+          - duration
+          - volume
 ```
 
 Nested dicts (such as the `data:` block inside a Home Assistant notification `data:` section) can also be filtered at arbitrary depth. When `exclude` is a mapping, a null value excludes that key; a dict value keeps the key but recurses into it with the same tree logic:
@@ -207,15 +216,16 @@ Nested dicts (such as the `data:` block inside a Home Assistant notification `da
 ```yaml
 delivery:
   mobile_notify:
-  action: notify.mobile_app_my_phone
-  options:
-    data_keys_select:
-      exclude:
-        data:             # descend into `data`
-          attachment:     # exclude `attachment` from `data`
-          video:          # exclude `video` from `data`
-          media:          # descend into `data.media`
-            url:          # exclude `url` from `data.media`
+    transport: generic
+    action: notify.mobile_app_my_phone
+    options:
+      data_keys_select:
+        exclude:
+          data:             # descend into `data`
+            attachment:     # exclude `attachment` from `data`
+            video:          # exclude `video` from `data`
+            media:          # descend into `data.media`
+              url:          # exclude `url` from `data.media`
 ```
 
 **Named sub-filter** — any non-reserved key in the config dict is a full `data_keys_select` config applied recursively to that key's value:

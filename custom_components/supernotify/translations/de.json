@@ -453,6 +453,10 @@
             "title": "Lieferung hat eine ungültige Aktion",
             "description": "Die Lieferung {delivery} hat eine ungültige Aktion {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Veraltete Aktion im Generic-Transport",
+            "description": "Eine Lieferung verwendet den Generic-Transport mit der Aktion {action}. Dies ist veraltet und wird in einer zukünftigen Version entfernt. Stelle die Lieferung stattdessen auf den Transport {transport} um."
+        },
         "recipient_mobile_app_not_found": {
             "title": "Mobile App für Empfänger nicht gefunden",
             "description": "Empfänger {recipient} hat ein Mobilgerät {mobile_app}, aber es gibt keine Aktion `notify.{mobile_app}` in Home Assistant, sodass Benachrichtigungen es nicht erreichen können. Wenn das Gerät oder seine Home Assistant App nicht mehr existiert, entferne es aus Home Assistant oder deaktiviere es in den `mobile_devices` des Empfängers. Ignoriere diese Reparatur, wenn das Gerät nur vorübergehend fehlt."

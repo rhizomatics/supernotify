@@ -600,6 +600,10 @@
             "title": "Delivery Has Invalid Action",
             "description": "The delivery {delivery} has an invalid action {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Deprecated Generic Transport Action",
+            "description": "A delivery uses the generic transport with the {action} action, which is deprecated and will be removed in a future version. Change the delivery to use the {transport} transport instead."
+        },
         "recipient_mobile_app_not_found": {
             "title": "Mobile App Not Found for Recipient",
             "description": "Recipient {recipient} has a mobile device {mobile_app}, but there is no `notify.{mobile_app}` action in Home Assistant, so notifications can't reach it. If the device or its Home Assistant app has gone, remove it from Home Assistant, or disable it in the recipient's `mobile_devices`. Ignore this repair if the device is only away temporarily."

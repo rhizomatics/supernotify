@@ -49,6 +49,14 @@
   - A direct connection without a `sender` generated a default delivery that never sent anything, logging only at debug level. As for the Home Assistant SMTP integration, a `sender` is now needed: there's no default delivery without one, and a warning at startup
   - Templates had a blank line added after every line
   - Docs corrected and extended: what's passed on in `data`, the `footer`, when the default delivery is generated, the sender, and that templates are only read once
+- *Generic*
+  - With `handle_as_domain`, target entities from the domain handled as were dropped, so e.g. `handle_as_domain: light` on a custom action called it with no lights
+  - `tts.speak` was given its targets in a `target` field it doesn't accept, rather than the `tts` entity as its target and `media_player` entities as `media_player_entity_id`. Legacy `*_say` actions now target the media players
+  - An action needing entities, such as `switch`, `light`, `siren`, `input_text`, `notify.send_message` or `tts`, with none of the targets in its domain, was still called, doing nothing and recorded as a success. The delivery is now skipped
+  - *ntfy* (deprecated): `data_keys_select` was ignored for publishes to `email` or `call` targets, and those publishes were made without the topic entity that `ntfy.publish` requires. Each now goes through the topics, and the deprecation is raised as a repair issue as well as logged
+  - The notification's own `data` was changed by `mqtt` and `script` deliveries, adding `payload` or removing `variables` from the archived copy
+  - An action with an empty name after the domain, like `notify.`, was accepted
+  - Docs corrected and extended: invalid YAML in the `handle_as_domain` and `data_keys_select` examples, the Slack channel example, `handle_as_domain: notify_events` misspelt, what's passed for `tts`, `script`, `ntfy` and other actions, `raw` mode, and schema pruning
 
 
 

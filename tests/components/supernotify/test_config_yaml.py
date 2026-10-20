@@ -43,7 +43,7 @@ SIMPLE_CONFIG = {
     "delivery": {
         "testing": {
             "transport": "generic",
-            "target": ["testy.testy"],
+            "target": ["notify.testy"],
             "action": "notify.send_message",
             "inclusion": ["default"],
         },
@@ -591,7 +591,7 @@ async def test_enquire_configuration_with_template_condition(hass: HomeAssistant
         "delivery": {
             "testing": {
                 "transport": "generic",
-                "target": ["testy.testy"],
+                "target": ["notify.testy"],
                 "action": "notify.send_message",
                 "inclusion": ["default"],
                 "conditions": {

@@ -453,6 +453,10 @@
             "title": "配信のアクションが無効です",
             "description": "配信 {delivery} には無効なアクション {action} があります"
         },
+        "generic_action_deprecated": {
+            "title": "汎用トランスポートの非推奨アクション",
+            "description": "配信が汎用トランスポートで {action} アクションを使用しています。これは非推奨で、将来のバージョンで削除されます。代わりに {transport} トランスポートを使用するよう配信を変更してください。"
+        },
         "recipient_mobile_app_not_found": {
             "title": "受信者のモバイルアプリが見つかりません",
             "description": "受信者 {recipient} にはモバイルデバイス {mobile_app} がありますが、Home Assistant に `notify.{mobile_app}` アクションがないため、通知を届けられません。デバイスまたはその Home Assistant アプリがなくなった場合は、Home Assistant から削除するか、受信者の `mobile_devices` で無効にしてください。デバイスが一時的に利用できないだけの場合は、この修復を無視してください。"

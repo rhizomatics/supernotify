@@ -453,6 +453,10 @@
             "title": "La consegna ha un'azione non valida",
             "description": "La consegna {delivery} ha un'azione non valida {action}"
         },
+        "generic_action_deprecated": {
+            "title": "Azione deprecata nel transport generic",
+            "description": "Una delivery usa il transport generic con l'azione {action}, che è deprecata e verrà rimossa in una versione futura. Modifica la delivery per usare invece il transport {transport}."
+        },
         "recipient_mobile_app_not_found": {
             "title": "App mobile non trovata per il recipient",
             "description": "Il recipient {recipient} ha un dispositivo mobile {mobile_app}, ma in Home Assistant non esiste l'azione `notify.{mobile_app}`, quindi le notifiche non possono raggiungerlo. Se il dispositivo o la sua app Home Assistant non esiste più, rimuovilo da Home Assistant oppure disabilitalo in `mobile_devices` del recipient. Ignora questa riparazione se il dispositivo manca solo temporaneamente."

@@ -32,7 +32,7 @@ Review the transport, including architecture alignment with current Supernotify 
 | `alexa_devices`      |               |             |
 | `alexa_media_player` |               |             |
 | `email`              | 20th Oct 2026 | `v2.16.0`   |
-| `generic`            |               |             |
+| `generic`            | 20th Oct 2026 | `v2.16.0`   |
 | `tts`                |               |             |
 | `sms`                |               |             |
 | `mqtt`               |               |             |
