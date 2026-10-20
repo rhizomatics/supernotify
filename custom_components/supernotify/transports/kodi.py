@@ -82,9 +82,6 @@ HA_KODI_DOMAIN = "kodi"
 DEFAULT_DISPLAYTIME = 10000
 MIN_DISPLAYTIME = 1500
 
-# GUI.ShowNotification requires a non-empty title
-DEFAULT_TITLE = "Notification"
-
 # SuperNotify priority -> Kodi native notification icon
 _PRIORITY_ICON = {
     "critical": "error",
@@ -218,7 +215,8 @@ class KodiTransport(Transport):
         # fails the whole JSON-RPC call on the Kodi side.
         action_data: dict[str, Any] = {
             "method": "GUI.ShowNotification",
-            "title": envelope.title or DEFAULT_TITLE,
+            # GUI.ShowNotification requires a non-empty title
+            "title": envelope.title or await self.common_string("default_title"),
             "message": envelope.message or "",
             "image": icon,
             "displaytime": displaytime,

@@ -101,9 +101,6 @@ HA_HTML5_DOMAIN = "html5"
 
 _LOGGER = logging.getLogger(__name__)
 
-# HA schema default for the required title field
-_DEFAULT_TITLE = "Home Assistant"
-
 _VALID_URGENCY = ("low", "normal", "high")
 
 # SuperNotify priority -> web push urgency
@@ -220,7 +217,7 @@ class HTML5Transport(Transport):
 
         # Build the payload: title is REQUIRED by the service schema
         action_data: dict[str, Any] = {
-            "title": envelope.title or _DEFAULT_TITLE,
+            "title": envelope.title or await self.common_string("default_title"),
             "message": envelope.message or "",
             "urgency": urgency,
         }

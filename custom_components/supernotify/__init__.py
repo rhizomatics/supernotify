@@ -158,7 +158,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
         await engine.initialize()
     except Exception as err:
         _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
-        raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="setup_failed", translation_placeholders={"error": str(err)}
+        ) from err
 
     entry.runtime_data = engine
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

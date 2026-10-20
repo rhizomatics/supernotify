@@ -6,7 +6,7 @@ Coverage:
 - TransportFeature flags, default_config, validate_action, transport name
 - Target filtering (notify.* entity prefix, dedupe, empty -> False +
   record_error)
-- deliver(): happy path, required title fallback "Home Assistant",
+- deliver(): happy path, required title translated fallback,
   urgency mapping for all 5 priorities, html5_urgency override
   (valid / invalid / case normalisation), tag / actions / vibrate / ttl
   passthrough, html5_url and html5_data merge into the custom data field,
@@ -51,6 +51,10 @@ SNAPSHOT_ABS_URL = "https://ha.example.com/media/supernotify/snapshot.jpg"
 OBJECT_URL = "https://ha.example.com/supernotify/media/processed.jpg"
 
 
+# the translated title, in Italian to show it comes from the translations
+DEFAULT_TITLE = "Notifica"
+
+
 def _make_transport(call_action_result: bool = True) -> Any:  # ruff: ignore[any-type]
     """Construct an HTML5Transport with hass_api / context / call_action mocked.
 
@@ -61,6 +65,7 @@ def _make_transport(call_action_result: bool = True) -> Any:  # ruff: ignore[any
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.hass_api.abs_url = MagicMock(return_value=SNAPSHOT_ABS_URL)
+    transport.hass_api.translations = AsyncMock(return_value={"component.supernotify.common.default_title": DEFAULT_TITLE})
     transport.context = MagicMock()
     transport.context.media_storage.object_url = AsyncMock(return_value=OBJECT_URL)
     transport.call_action = AsyncMock(return_value=call_action_result)
@@ -264,7 +269,7 @@ async def test_deliver_title_fallback_when_absent() -> None:
 
     await uut.deliver(envelope)
 
-    assert _action_data(uut)["title"] == "Home Assistant"
+    assert _action_data(uut)["title"] == DEFAULT_TITLE
 
 
 @pytest.mark.asyncio
@@ -274,7 +279,7 @@ async def test_deliver_title_fallback_when_empty() -> None:
 
     await uut.deliver(envelope)
 
-    assert _action_data(uut)["title"] == "Home Assistant"
+    assert _action_data(uut)["title"] == DEFAULT_TITLE
 
 
 @pytest.mark.asyncio

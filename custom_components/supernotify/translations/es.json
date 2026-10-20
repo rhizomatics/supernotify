@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minutos a posponer",
         "action_url_title": "Haz clic para la acción",
         "email_heading": "Notificación de Home Assistant",
-        "email_snapshot_desc": "Instantánea"
+        "email_snapshot_desc": "Instantánea",
+        "default_title": "Notificación"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "No se puede posponer: {person} no es un destinatario"
+        },
+        "setup_failed": {
+            "message": "Supernotify no pudo iniciarse y lo volverá a intentar: {error}"
         }
     },
     "options": {

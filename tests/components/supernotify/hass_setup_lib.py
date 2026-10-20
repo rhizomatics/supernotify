@@ -412,7 +412,7 @@ class TestingContext(Context):
 
         hass_api = HomeAssistantAPI(self.hass)
         if isinstance(self.hass, Mock):
-            hass_api.translations = english_translations  # type: ignore[method-assign]  # ty: ignore[invalid-assignment]
+            hass_api.translations = english_translations  # type: ignore[assignment,method-assign]  # ty: ignore[invalid-assignment]
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
         scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {}, {}, people_registry)
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)

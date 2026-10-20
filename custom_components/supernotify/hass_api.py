@@ -625,10 +625,10 @@ class HomeAssistantAPI:
         """Client aiohttp session for async web requests"""
         return async_get_clientsession(self._hass)
 
-    async def translations(self, category: str) -> dict[str, str]:
-        """Supernotify's own strings for a translation category, in the configured language,
-        keyed `component.supernotify.<category>.<key>`, English filling in any not translated"""
-        return await async_get_translations(self._hass, self._hass.config.language, category, [DOMAIN])
+    async def translations(self, category: str, language: str | None = None) -> dict[str, str]:
+        """Supernotify's own strings for a translation category, in the given language or else the
+        configured one, keyed `component.supernotify.<category>.<key>`, English filling in any not translated"""
+        return await async_get_translations(self._hass, language or self._hass.config.language, category, [DOMAIN])
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         return expand_entity_ids(self._hass, entity_ids)

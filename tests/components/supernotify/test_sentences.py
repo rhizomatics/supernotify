@@ -7,6 +7,8 @@ commands are called directly, and the trigger registration is checked with it pa
 from __future__ import annotations
 
 import datetime as dt
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -19,7 +21,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS, PRIORITY_CRITICAL
 from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType
-from custom_components.supernotify.sentences import RESPONSES, SENTENCES, async_respond
+from custom_components.supernotify.sentences import SENTENCES, async_respond
 
 if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory
@@ -27,6 +29,11 @@ if TYPE_CHECKING:
     from custom_components.supernotify.engine import SupernotifyEngine
 
 JEY_USER_ID = "jey-user-id"
+TRANSLATIONS_DIR = Path(__file__).parents[3] / "custom_components" / "supernotify" / "translations"
+
+
+def _responses(language: str) -> dict[str, str]:
+    return json.loads((TRANSLATIONS_DIR / f"{language}.json").read_text())["common"]["voice"]
 
 
 async def _setup(
@@ -545,9 +552,14 @@ def test_every_language_has_every_command_and_response() -> None:
     for language, commands in SENTENCES.items():
         assert commands.keys() == SENTENCES["en"].keys(), language
         assert all(commands.values()), language
-    assert RESPONSES.keys() == SENTENCES.keys()
-    for language, responses in RESPONSES.items():
-        assert responses.keys() == RESPONSES["en"].keys(), language
+
+
+async def test_language_without_responses_answers_in_english(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "notify", {"name": "Jey Burrows", "message": "Abendessen"}, Context(), "de")
+
+    assert response == "Sent to Jey Burrows"
 
 
 async def test_italian_notify_named_recipient(hass: HomeAssistant) -> None:
@@ -747,5 +759,5 @@ def test_silence_even_critical_sentences_in_every_language() -> None:
     for language, commands in SENTENCES.items():
         assert commands["silence_everything"], language
         assert all("critic" in sentence for sentence in commands["silence_everything"]), language
-        assert "silenced_everything_yours" in RESPONSES[language]
-        assert "silenced_everything_all" in RESPONSES[language]
+        assert "silenced_everything_yours" in _responses(language)
+        assert "silenced_everything_all" in _responses(language)

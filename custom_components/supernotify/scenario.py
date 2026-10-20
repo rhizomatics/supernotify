@@ -324,12 +324,12 @@ class Scenario:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"
                 )
-                error = f"Schema error {vi}"
+                error = str(vi)
             except Exception as e:
                 _LOGGER.error(
                     "SUPERNOTIFY Disabling scenario %s with error validating %s: %s", self.name, self.conditions_config, e
                 )
-                error = f"Unknown error {e}"
+                error = str(e)
             if error is not None:
                 self.startup_issue_count += 1
                 self.hass_api.raise_issue(

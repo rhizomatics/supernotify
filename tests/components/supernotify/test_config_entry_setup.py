@@ -183,6 +183,8 @@ async def test_setup_entry_raises_config_entry_not_ready_on_initialize_failure(h
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "setup_failed"
+    assert entry.error_reason_translation_placeholders == {"error": "boom"}
 
 
 async def test_setup_entry_registers_notify_action(hass: HomeAssistant) -> None:

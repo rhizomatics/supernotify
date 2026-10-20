@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minuten pausieren",
         "action_url_title": "Für Aktion klicken",
         "email_heading": "Home Assistant Benachrichtigung",
-        "email_snapshot_desc": "Schnappschuss"
+        "email_snapshot_desc": "Schnappschuss",
+        "default_title": "Benachrichtigung"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "Pausieren nicht möglich: {person} ist kein Empfänger"
+        },
+        "setup_failed": {
+            "message": "Supernotify konnte nicht gestartet werden und versucht es erneut: {error}"
         }
     },
     "options": {

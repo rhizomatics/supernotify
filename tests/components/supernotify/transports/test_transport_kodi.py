@@ -5,7 +5,7 @@ Target file: custom_components/supernotify/transports/kodi.py
 Coverage:
 - TransportFeature flags, default_config, validate_action, transport name
 - Target entity filtering (media_player.* prefix, dedupe, non-string skip)
-- deliver(): happy path, title fallback "Notification", priority -> icon
+- deliver(): happy path, translated title fallback, priority -> icon
   mapping (all 5 priorities + unknown/None), kodi_icon override,
   kodi_displaytime coercion (str / float / invalid / below minimum clamp),
   kodi_attach_image (snapshot_url from envelope.media wins, fallback
@@ -32,7 +32,6 @@ from homeassistant.core import HomeAssistant
 from custom_components.supernotify.model import TargetRequired, TransportFeature
 from custom_components.supernotify.transports.kodi import (
     DEFAULT_DISPLAYTIME,
-    DEFAULT_TITLE,
     MIN_DISPLAYTIME,
     KodiTransport,
     _coerce_int,
@@ -47,6 +46,10 @@ KODI_ENTITY = "media_player.kodi_living_room"
 KODI_ENTITY_2 = "media_player.kodi_bedroom"
 INTERNAL_URL = "http://192.168.0.123:8123"
 OBJECT_URL = "http://192.168.0.123:8123/supernotify/media/snapshot.jpg"
+
+
+# the translated title, in Italian to show it comes from the translations
+DEFAULT_TITLE = "Notifica"
 
 
 def _make_transport(
@@ -65,6 +68,7 @@ def _make_transport(
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.hass_api.internal_url = internal_url
     transport.hass_api.external_url = "https://example.duckdns.org"
+    transport.hass_api.translations = AsyncMock(return_value={"component.supernotify.common.default_title": DEFAULT_TITLE})
     transport.context = MagicMock()
     if object_url_raises:
         transport.context.media_storage.object_url = AsyncMock(side_effect=OSError("no media path"))

@@ -5,7 +5,45 @@
         "snooze_camera_button": "Minuti di posticipo",
         "action_url_title": "Clicca per l'azione",
         "email_heading": "Notifica di Home Assistant",
-        "email_snapshot_desc": "Istantanea"
+        "email_snapshot_desc": "Istantanea",
+        "default_title": "Notifica",
+        "voice": {
+            "sent": "Inviata",
+            "sent_to": "Inviata a {name}",
+            "not_sent": "Mi dispiace, la notifica non è stata inviata",
+            "which": "Quale {name} intendi: {choices}?",
+            "or": " o ",
+            "unknown_name": "Non conosco nessuno che si chiama {name}. Posso avvisare {known}, oppure tutti",
+            "nobody_yet": "ancora nessuno",
+            "minutes_as_number": "Dimmi i minuti con un numero, per esempio posticipa le notifiche per 30 minuti",
+            "time_as_clock": "Dimmi un orario come 15 o 15:30, per esempio posticipa le notifiche fino alle 15:30",
+            "resumed_yours": "Ho riattivato le tue notifiche{about}",
+            "resumed_all": "Ho riattivato tutte le notifiche{about}",
+            "silenced_yours": "Ho silenziato le tue notifiche{about} finché non le riattivi",
+            "silenced_all": "Ho silenziato tutte le notifiche{about} finché non le riattivi",
+            "silenced_everything_yours": "Ho silenziato le tue notifiche, anche quelle critiche, finché non le riattivi",
+            "silenced_everything_all": "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi",
+            "snoozed_yours": "Ho posticipato le tue notifiche{about} fino alle {until}",
+            "snoozed_all": "Ho posticipato tutte le notifiche{about} fino alle {until}",
+            "about": " di {tag}",
+            "unknown_tag": "Non trovo nessuno scenario o entità chiamato {tag}, quindi non ho cambiato niente",
+            "which_camera": "{tag} può essere {cameras}. Dimmi quale",
+            "no_last": "Non ci sono state notifiche da quando Home Assistant si è avviato",
+            "last_sent": "Alle {when}: {message}. Inviata tramite {sent}",
+            "last_not_sent": "Alle {when}: {message}. Non è stata inviata{why}",
+            "why_no_delivery": " perché niente è configurato per inviarla",
+            "why_error": " a causa di un errore",
+            "why_snoozed": " perché le notifiche erano posticipate o silenziate",
+            "why_dupe": " perché era un duplicato",
+            "why_no_scenario": " perché uno scenario richiesto non era attivo",
+            "why_priority": " per via della sua priorità",
+            "why_delivery_condition": " perché le sue condizioni non erano soddisfatte",
+            "why_occupancy": " per via di chi era in casa",
+            "why_transport_disabled": " perché il transport è disattivato",
+            "why_no_target": " perché non c'era nessuno a cui inviarla",
+            "help": "L'aiuto per Supernotify è online su {url}",
+            "unknown_command": "Supernotify non conosce il comando {command}"
+        }
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +579,9 @@
         },
         "snooze_not_recipient": {
             "message": "Impossibile mettere in pausa: {person} non è un recipient"
+        },
+        "setup_failed": {
+            "message": "Supernotify non è riuscito ad avviarsi e riproverà: {error}"
         }
     },
     "options": {

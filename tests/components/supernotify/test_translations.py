@@ -1,9 +1,13 @@
 import json
 from pathlib import Path
 
+from custom_components.supernotify.sentences import SENTENCES
+
 COMPONENT_DIR = Path(__file__).parents[3] / "custom_components" / "supernotify"
 TRANSLATIONS_DIR = COMPONENT_DIR / "translations"
 ENGLISH_FILE = TRANSLATIONS_DIR / "en.json"
+# What the built-in agent says back - only for the languages it has sentences in
+VOICE_PREFIX = "common.voice."
 
 
 def _leaf_keys(obj: dict, prefix: str = "") -> set[str]:
@@ -49,6 +53,7 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("it", "services.notify.fields.debug.name"),  # "Debug" is a standard Italian tech loanword
     ("nl", "services.notify.fields.debug.name"),  # "Debug" is a standard Dutch tech loanword
     ("nl", "services.notify.fields.camera_entity_id.name"),  # "Camera" is also the Dutch word for camera
+    ("fr", "common.default_title"),  # "Notification" is also the French word for notification
     ("fr", "services.notify.fields.message.name"),  # "Message" is also the French word for message
     ("fr", "services.notify.fields.actions.name"),  # "Actions" is also the French word for actions
     ("fr", "services.notify.fields.dry_run.name"),  # "Simulation" is also the French word for simulation
@@ -102,10 +107,20 @@ def test_all_translations_match_english():
     for path in translation_files:
         translation = json.loads(path.read_text())
         actual_keys = _leaf_keys(translation)
-        missing = expected_keys - actual_keys
-        extra = actual_keys - expected_keys
+        if path.stem not in SENTENCES:
+            expected_keys_here = {k for k in expected_keys if not k.startswith(VOICE_PREFIX)}
+            assert not {k for k in actual_keys if k.startswith(VOICE_PREFIX)}, f"{path.name} has responses but no sentences"
+        else:
+            expected_keys_here = expected_keys
+        missing = expected_keys_here - actual_keys
+        extra = actual_keys - expected_keys_here
         assert not missing, f"{path.name} is missing keys: {sorted(missing)}"
         assert not extra, f"{path.name} has unexpected keys: {sorted(extra)}"
+
+
+def test_every_sentence_language_has_a_translation_file():
+    for language in SENTENCES:
+        assert (TRANSLATIONS_DIR / f"{language}.json").exists(), language
 
 
 def test_no_angle_brackets_in_translations():

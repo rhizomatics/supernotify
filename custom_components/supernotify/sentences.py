@@ -150,88 +150,22 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
     },
 }
 
-# What to say back, by the language of the sentence that matched
-RESPONSES: dict[str, dict[str, str]] = {
-    "en": {
-        "sent": "Sent",
-        "sent_to": "Sent to {name}",
-        "not_sent": "Sorry, the notification wasn't sent",
-        "which": "Which {name} do you mean: {choices}?",
-        "or": " or ",
-        "unknown_name": "I don't know anyone called {name}. I can notify {known}, or everyone",
-        "nobody_yet": "nobody yet",
-        "minutes_as_number": "Say how many minutes as a number, for example snooze notifications for 30 minutes",
-        "time_as_clock": "Say a time like 15:30 or 3:30pm, for example snooze notifications until 15:30",
-        "resumed_yours": "Turned your notifications{about} back on",
-        "resumed_all": "Turned all notifications{about} back on",
-        "silenced_yours": "Silenced your notifications{about} until you turn them back on",
-        "silenced_all": "Silenced all notifications{about} until you turn them back on",
-        "silenced_everything_yours": "Silenced your notifications, critical ones too, until you turn them back on",
-        "silenced_everything_all": "Silenced all notifications, critical ones too, until you turn them back on",
-        "snoozed_yours": "Snoozed your notifications{about} until {until}",
-        "snoozed_all": "Snoozed all notifications{about} until {until}",
-        "about": " for {tag}",
-        "unknown_tag": "I can't find a scenario or entity called {tag}, so nothing was changed",
-        "which_camera": "{tag} could be {cameras}. Say which one",
-        "no_last": "There haven't been any notifications since Home Assistant started",
-        "last_sent": "At {when}: {message}. Sent via {sent}",
-        "last_not_sent": "At {when}: {message}. It wasn't sent{why}",
-        "why_no_delivery": " because nothing is set up to send it",
-        "why_error": " because of an error",
-        "why_snoozed": " because notifications were snoozed or silenced",
-        "why_dupe": " because it was a duplicate",
-        "why_no_scenario": " because a scenario it needs wasn't active",
-        "why_priority": " because of its priority",
-        "why_delivery_condition": " because its conditions weren't met",
-        "why_occupancy": " because of who was home",
-        "why_transport_disabled": " because the transport is switched off",
-        "why_no_target": " because there was nobody to send it to",
-        "help": "Help for Supernotify is online at {url}",
-        "unknown_command": "Supernotify doesn't know the command {command}",
-    },
-    "it": {
-        "sent": "Inviata",
-        "sent_to": "Inviata a {name}",
-        "not_sent": "Mi dispiace, la notifica non è stata inviata",
-        "which": "Quale {name} intendi: {choices}?",
-        "or": " o ",
-        "unknown_name": "Non conosco nessuno che si chiama {name}. Posso avvisare {known}, oppure tutti",
-        "nobody_yet": "ancora nessuno",
-        "minutes_as_number": "Dimmi i minuti con un numero, per esempio posticipa le notifiche per 30 minuti",
-        "time_as_clock": "Dimmi un orario come 15 o 15:30, per esempio posticipa le notifiche fino alle 15:30",
-        "resumed_yours": "Ho riattivato le tue notifiche{about}",
-        "resumed_all": "Ho riattivato tutte le notifiche{about}",
-        "silenced_yours": "Ho silenziato le tue notifiche{about} finché non le riattivi",
-        "silenced_all": "Ho silenziato tutte le notifiche{about} finché non le riattivi",
-        "silenced_everything_yours": "Ho silenziato le tue notifiche, anche quelle critiche, finché non le riattivi",
-        "silenced_everything_all": "Ho silenziato tutte le notifiche, anche quelle critiche, finché non le riattivi",
-        "snoozed_yours": "Ho posticipato le tue notifiche{about} fino alle {until}",
-        "snoozed_all": "Ho posticipato tutte le notifiche{about} fino alle {until}",
-        "about": " di {tag}",
-        "unknown_tag": "Non trovo nessuno scenario o entità chiamato {tag}, quindi non ho cambiato niente",
-        "which_camera": "{tag} può essere {cameras}. Dimmi quale",
-        "no_last": "Non ci sono state notifiche da quando Home Assistant si è avviato",
-        "last_sent": "Alle {when}: {message}. Inviata tramite {sent}",
-        "last_not_sent": "Alle {when}: {message}. Non è stata inviata{why}",
-        "why_no_delivery": " perché niente è configurato per inviarla",
-        "why_error": " a causa di un errore",
-        "why_snoozed": " perché le notifiche erano posticipate o silenziate",
-        "why_dupe": " perché era un duplicato",
-        "why_no_scenario": " perché uno scenario richiesto non era attivo",
-        "why_priority": " per via della sua priorità",
-        "why_delivery_condition": " perché le sue condizioni non erano soddisfatte",
-        "why_occupancy": " per via di chi era in casa",
-        "why_transport_disabled": " perché il transport è disattivato",
-        "why_no_target": " perché non c'era nessuno a cui inviarla",
-        "help": "L'aiuto per Supernotify è online su {url}",
-        "unknown_command": "Supernotify non conosce il comando {command}",
-    },
-}
 
+class Voice(NamedTuple):
+    """What to say back, in the language of the sentence that matched
 
-def _say(language: str, key: str, **values: Any) -> str:
-    """A response in the given language, or in English if there's none"""
-    return RESPONSES.get(language, RESPONSES[DEFAULT_LANGUAGE])[key].format(**values)
+    The responses are in the translations, under `common.voice`. A language with sentences needs its
+    responses there too, while English fills in for any language without them.
+    """
+
+    language: str
+    responses: dict[str, str]
+
+    def say(self, key: str, **values: Any) -> str:
+        return self.responses[f"component.{DOMAIN}.common.voice.{key}"].format(**values)
+
+    def can_say(self, key: str) -> bool:
+        return f"component.{DOMAIN}.common.voice.{key}" in self.responses
 
 
 async def async_register_sentences(hass: HomeAssistant, engine: SupernotifyEngine) -> CALLBACK_TYPE | None:
@@ -274,48 +208,49 @@ async def async_respond(
     engine: SupernotifyEngine, command: str, slots: dict[str, Any], context: HAContext, language: str = DEFAULT_LANGUAGE
 ) -> str:
     """Carry out a command, returning what to say back in the language of the sentence"""
+    voice = Voice(language, await engine.context.hass_api.translations("common", language))
     if command == "notify":
-        return await _notify(engine, str(slots.get("name", "")), str(slots.get("message", "")), context, language)
+        return await _notify(engine, str(slots.get("name", "")), str(slots.get("message", "")), context, voice)
     if command == "last":
-        return _last(engine, language)
+        return _last(engine, voice)
     if command == "help":
-        return _say(language, "help", url=HELP_URL)
+        return voice.say("help", url=HELP_URL)
     tag: str | None = _tag(str(slots["tag"])) if slots.get("tag") else None
     subject: Subject | None = None
     if tag is not None:
-        subject_or_reply: Subject | str = _subject(engine, tag, command, language)
+        subject_or_reply: Subject | str = _subject(engine, tag, command, voice)
         if isinstance(subject_or_reply, str):
             return subject_or_reply
         subject = subject_or_reply
     if command == "snooze_minutes":
         minutes = _minutes(str(slots.get("minutes", "")))
         if not minutes.isdigit() or int(minutes) < 1:
-            return _say(language, "minutes_as_number")
-        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(minutes=int(minutes)), subject)
+            return voice.say("minutes_as_number")
+        return _snooze(engine, CommandType.SNOOZE, context, voice, dt.timedelta(minutes=int(minutes)), subject)
     if command == "snooze_until":
         spoken = str(slots.get("time", ""))
         if spoken.strip().casefold() == "i say":
-            return _snooze(engine, CommandType.SILENCE, context, language, subject=subject)
-        until = _next_time(spoken, language)
+            return _snooze(engine, CommandType.SILENCE, context, voice, subject=subject)
+        until = _next_time(spoken, voice.language)
         if until is None:
-            return _say(language, "time_as_clock")
-        return _snooze(engine, CommandType.SNOOZE, context, language, until - dt_util.now(), subject)
+            return voice.say("time_as_clock")
+        return _snooze(engine, CommandType.SNOOZE, context, voice, until - dt_util.now(), subject)
     if command == "snooze_hour":
-        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(hours=1), subject)
+        return _snooze(engine, CommandType.SNOOZE, context, voice, dt.timedelta(hours=1), subject)
     if command == "silence":
-        return _snooze(engine, CommandType.SILENCE, context, language)
+        return _snooze(engine, CommandType.SILENCE, context, voice)
     if command == "silence_everything":
-        return _snooze(engine, CommandType.SILENCE, context, language, everything=True)
+        return _snooze(engine, CommandType.SILENCE, context, voice, everything=True)
     if command == "resume":
-        return _snooze(engine, CommandType.NORMAL, context, language, subject=subject)
-    return _say(language, "unknown_command", command=command)
+        return _snooze(engine, CommandType.NORMAL, context, voice, subject=subject)
+    return voice.say("unknown_command", command=command)
 
 
-def _subject(engine: SupernotifyEngine, tag: str, command: str, language: str) -> Subject | str:
+def _subject(engine: SupernotifyEngine, tag: str, command: str, voice: Voice) -> Subject | str:
     """A camera snooze when the tag names one camera, otherwise a tag snooze - or what to say back
     when it names several cameras, or nothing at all"""
     words: list[str] = tag.split()
-    camera_word: str = CAMERA_WORDS.get(language, CAMERA_WORDS[DEFAULT_LANGUAGE])
+    camera_word: str = CAMERA_WORDS.get(voice.language, CAMERA_WORDS[DEFAULT_LANGUAGE])
     if len(words) > 1 and camera_word in (words[0].casefold(), words[-1].casefold()):
         name: str = " ".join(words[1:] if words[0].casefold() == camera_word else words[:-1])
         hass_api = engine.context.hass_api
@@ -323,11 +258,11 @@ def _subject(engine: SupernotifyEngine, tag: str, command: str, language: str) -
             e for e in hass_api.entity_ids_named(name) + hass_api.entity_ids_named(tag) if e.startswith("camera.")
         })
         if len(cameras) > 1:
-            return _say(language, "which_camera", tag=tag, cameras=_say(language, "or").join(cameras))
+            return voice.say("which_camera", tag=tag, cameras=voice.say("or").join(cameras))
         if cameras:
             return Subject(QualifiedTargetType.CAMERA, cameras[0], tag)
     if command != "resume" and not engine.tag_matches(tag):
-        return _say(language, "unknown_tag", tag=tag)
+        return voice.say("unknown_tag", tag=tag)
     return Subject(QualifiedTargetType.TAG, tag, tag)
 
 
@@ -347,22 +282,22 @@ def _minutes(spoken: str) -> str:
     return " ".join(words)
 
 
-async def _notify(engine: SupernotifyEngine, name: str, message: str, context: HAContext, language: str) -> str:
+async def _notify(engine: SupernotifyEngine, name: str, message: str, context: HAContext, voice: Voice) -> str:
     people = engine.context.people_registry
     target: list[str] | None = None
     if name.strip().casefold() not in EVERYONE:
         named = people.people_named(name)
         if len(named) > 1:
-            choices = _say(language, "or").join(sorted(r.alias or r.name for r in named))
-            return _say(language, "which", name=name, choices=choices)
+            choices = voice.say("or").join(sorted(r.alias or r.name for r in named))
+            return voice.say("which", name=name, choices=choices)
         if not named:
-            known = ", ".join(sorted(r.alias or r.name for r in people.enabled_recipients())) or _say(language, "nobody_yet")
-            return _say(language, "unknown_name", name=name, known=known)
+            known = ", ".join(sorted(r.alias or r.name for r in people.enabled_recipients())) or voice.say("nobody_yet")
+            return voice.say("unknown_name", name=name, known=known)
         target = [named[0].entity_id]
     notification = await engine.async_send_message(message, target=target, context=context)
     if notification is None or not notification.delivered:
-        return _say(language, "not_sent")
-    return _say(language, "sent") if target is None else _say(language, "sent_to", name=name)
+        return voice.say("not_sent")
+    return voice.say("sent") if target is None else voice.say("sent_to", name=name)
 
 
 def _next_time(spoken: str, language: str = DEFAULT_LANGUAGE) -> dt.datetime | None:
@@ -405,7 +340,7 @@ def _snooze(
     engine: SupernotifyEngine,
     cmd: CommandType,
     context: HAContext,
-    language: str,
+    voice: Voice,
     snooze_for: dt.timedelta | None = None,
     subject: Subject | None = None,
     everything: bool = False,
@@ -433,13 +368,13 @@ def _snooze(
         matches: list[str] = (
             [subject.target] if subject.target_type == QualifiedTargetType.CAMERA else engine.tag_matches(subject.target)
         )
-        about = _say(language, "about", tag=subject.spoken) + (f" ({', '.join(matches)})" if matches else "")
+        about = voice.say("about", tag=subject.spoken) + (f" ({', '.join(matches)})" if matches else "")
     if cmd == CommandType.NORMAL:
-        return _say(language, f"resumed_{whose}", about=about)
+        return voice.say(f"resumed_{whose}", about=about)
     if cmd == CommandType.SILENCE:
-        return _say(language, f"silenced_everything_{whose}" if everything else f"silenced_{whose}", about=about)
+        return voice.say(f"silenced_everything_{whose}" if everything else f"silenced_{whose}", about=about)
     until = dt_util.as_local(dt_util.now() + (snooze_for or engine.context.snoozer.snooze_period))
-    return _say(language, f"snoozed_{whose}", about=about, until=_clock(until, language))
+    return voice.say(f"snoozed_{whose}", about=about, until=_clock(until, voice.language))
 
 
 def _clock(when: dt.datetime, language: str) -> str:
@@ -449,25 +384,25 @@ def _clock(when: dt.datetime, language: str) -> str:
     return f"{when.hour % 12 or 12}:{when.minute:02d}{'am' if when.hour < 12 else 'pm'}"
 
 
-def _last(engine: SupernotifyEngine, language: str) -> str:
+def _last(engine: SupernotifyEngine, voice: Voice) -> str:
     notification = engine.last_notification
     if notification is None:
-        return _say(language, "no_last")
+        return voice.say("no_last")
     when = dt_util.as_local(notification.created).strftime("%H:%M")
     sent = [name for name, outcomes in notification.deliveries.items() if outcomes.get(EnvelopeOutcome.SUCCESS)]
     if sent:
-        return _say(language, "last_sent", when=when, message=notification.message, sent=", ".join(sent))
-    return _say(language, "last_not_sent", when=when, message=notification.message, why=_why_not_sent(notification, language))
+        return voice.say("last_sent", when=when, message=notification.message, sent=", ".join(sent))
+    return voice.say("last_not_sent", when=when, message=notification.message, why=_why_not_sent(notification, voice))
 
 
-def _why_not_sent(notification: Notification, language: str) -> str:
+def _why_not_sent(notification: Notification, voice: Voice) -> str:
     """Why nothing was sent, or nothing to add when there's no plain way to say it"""
     if notification.failed:
-        return _say(language, "why_error")
+        return voice.say("why_error")
     if not notification.deliveries and not notification._skip_reasons:
-        return _say(language, "why_no_delivery")
+        return voice.say("why_no_delivery")
     for reason in notification._skip_reasons:
         key: str = f"why_{reason.lower()}"
-        if key in RESPONSES[DEFAULT_LANGUAGE]:
-            return _say(language, key)
+        if voice.can_say(key):
+            return voice.say(key)
     return ""

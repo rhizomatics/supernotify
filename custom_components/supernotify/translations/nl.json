@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minuten snoozen",
         "action_url_title": "Klik voor actie",
         "email_heading": "Home Assistant-melding",
-        "email_snapshot_desc": "Momentopname"
+        "email_snapshot_desc": "Momentopname",
+        "default_title": "Melding"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "Sluimeren niet mogelijk: {person} is geen ontvanger"
+        },
+        "setup_failed": {
+            "message": "Supernotify kon niet starten en probeert het opnieuw: {error}"
         }
     },
     "options": {

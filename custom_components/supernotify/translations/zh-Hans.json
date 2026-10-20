@@ -5,7 +5,8 @@
         "snooze_camera_button": "暂停分钟数",
         "action_url_title": "点击执行操作",
         "email_heading": "Home Assistant 通知",
-        "email_snapshot_desc": "快照图像"
+        "email_snapshot_desc": "快照图像",
+        "default_title": "通知"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "无法暂停：{person} 不是接收者"
+        },
+        "setup_failed": {
+            "message": "Supernotify 启动失败，将重试：{error}"
         }
     },
     "options": {

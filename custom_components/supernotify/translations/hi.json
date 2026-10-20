@@ -5,7 +5,8 @@
         "snooze_camera_button": "स्नूज़ के मिनट",
         "action_url_title": "कार्रवाई के लिए क्लिक करें",
         "email_heading": "Home Assistant सूचना",
-        "email_snapshot_desc": "स्नैपशॉट छवि"
+        "email_snapshot_desc": "स्नैपशॉट छवि",
+        "default_title": "सूचना"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "स्नूज़ नहीं हो सका: {person} प्राप्तकर्ता नहीं है"
+        },
+        "setup_failed": {
+            "message": "Supernotify शुरू नहीं हो सका, और फिर से प्रयास करेगा: {error}"
         }
     },
     "options": {

@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minutes de suspension",
         "action_url_title": "Cliquer pour l'action",
         "email_heading": "Notification Home Assistant",
-        "email_snapshot_desc": "Instantané"
+        "email_snapshot_desc": "Instantané",
+        "default_title": "Notification"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "Mise en pause impossible : {person} n’est pas un destinataire"
+        },
+        "setup_failed": {
+            "message": "Supernotify n'a pas pu démarrer et va réessayer : {error}"
         }
     },
     "options": {

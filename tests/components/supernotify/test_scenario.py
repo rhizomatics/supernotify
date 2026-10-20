@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS, CONF_ENABLED
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -82,6 +82,21 @@ async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry)
         issue_map={"scenario": "testing", "action_group": "lights", "action_groups": "snoozes"},
         learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
         severity=IssueSeverity.WARNING,
+    )
+
+
+async def test_repair_for_bad_conditions(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    mock_hass_api.build_conditions = AsyncMock(side_effect=Exception("integrations"))  # type: ignore[method-assign]
+    uut = Scenario("testing", {CONF_CONDITIONS: [{"condition": "xor"}]}, mock_delivery_registry, mock_hass_api)
+    await uut.validate()
+    # the error alone, since the repair's own text says what's wrong, in the user's language
+    mock_hass_api.raise_issue.assert_called_with(  # type: ignore[attr-defined]
+        "scenario_testing_condition",
+        is_fixable=False,
+        issue_key="scenario_condition",
+        issue_map={"scenario": "testing", "error": "integrations"},
+        severity=IssueSeverity.ERROR,
+        learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
     )
 
 

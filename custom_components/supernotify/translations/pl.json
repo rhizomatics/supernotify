@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minuty wyciszenia",
         "action_url_title": "Kliknij, aby wykonać akcję",
         "email_heading": "Powiadomienie Home Assistant",
-        "email_snapshot_desc": "Zrzut obrazu"
+        "email_snapshot_desc": "Zrzut obrazu",
+        "default_title": "Powiadomienie"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "Nie można wstrzymać: {person} nie jest odbiorcą"
+        },
+        "setup_failed": {
+            "message": "Nie udało się uruchomić Supernotify, nastąpi ponowna próba: {error}"
         }
     },
     "options": {

@@ -5,7 +5,8 @@
         "snooze_camera_button": "Minutos a adiar",
         "action_url_title": "Clique para a ação",
         "email_heading": "Notificação do Home Assistant",
-        "email_snapshot_desc": "Imagem instantânea"
+        "email_snapshot_desc": "Imagem instantânea",
+        "default_title": "Notificação"
     },
     "entity": {
         "binary_sensor": {
@@ -541,6 +542,9 @@
         },
         "snooze_not_recipient": {
             "message": "Não é possível adiar: {person} não é um destinatário"
+        },
+        "setup_failed": {
+            "message": "O Supernotify não conseguiu iniciar e vai tentar novamente: {error}"
         }
     },
     "options": {
