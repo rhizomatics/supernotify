@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "{camera} की सूचनाएँ स्नूज़ करें",
+        "snooze_camera_button": "स्नूज़ के मिनट",
+        "action_url_title": "कार्रवाई के लिए क्लिक करें",
+        "email_heading": "Home Assistant सूचना"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "id {notification_id} वाली कोई संग्रहीत सूचना नहीं मिली"
         },
-        "invalid_snooze": {
-            "message": "स्नूज़ नहीं हो सका: {error}"
+        "snooze_name_needed": {
+            "message": "स्नूज़ नहीं हो सका: {scope} को स्नूज़ करने के लिए नाम चाहिए"
+        },
+        "snooze_name_unknown": {
+            "message": "स्नूज़ नहीं हो सका: अज्ञात {scope} \"{name}\", इनमें से चुनें: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "स्नूज़ नहीं हो सका: कैमरा उसके entity_id से दें, जैसे camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "स्नूज़ नहीं हो सका: \"{name}\" नाम का कोई परिदृश्य या एंटिटी नहीं है"
+        },
+        "snooze_not_recipient": {
+            "message": "स्नूज़ नहीं हो सका: {person} प्राप्तकर्ता नहीं है"
         }
     },
     "options": {

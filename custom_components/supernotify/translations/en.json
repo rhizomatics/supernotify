@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Snooze notifications from {camera}",
+        "snooze_camera_button": "Minutes to snooze",
+        "action_url_title": "Click for Action",
+        "email_heading": "Home Assistant Notification"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -631,8 +637,20 @@
         "archive_entry_not_found": {
             "message": "No archived notification found with id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Unable to snooze: {error}"
+        "snooze_name_needed": {
+            "message": "Unable to snooze: a name is needed to snooze a {scope}"
+        },
+        "snooze_name_unknown": {
+            "message": "Unable to snooze: unknown {scope} \"{name}\", choose from: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Unable to snooze: a camera must be given as its entity_id, e.g. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Unable to snooze: no scenario or entity is called \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Unable to snooze: {person} is not a recipient"
         }
     },
     "selector": {

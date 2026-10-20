@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Wycisz powiadomienia z {camera}",
+        "snooze_camera_button": "Minuty wyciszenia",
+        "action_url_title": "Kliknij, aby wykonać akcję",
+        "email_heading": "Powiadomienie Home Assistant"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Nie znaleziono zarchiwizowanego powiadomienia o id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Nie można wstrzymać: {error}"
+        "snooze_name_needed": {
+            "message": "Nie można wstrzymać: do wstrzymania {scope} potrzebna jest nazwa"
+        },
+        "snooze_name_unknown": {
+            "message": "Nie można wstrzymać: nieznany {scope} \"{name}\", wybierz spośród: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Nie można wstrzymać: kamerę trzeba podać jako jej entity_id, np. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Nie można wstrzymać: żaden scenariusz ani encja nie nazywa się \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Nie można wstrzymać: {person} nie jest odbiorcą"
         }
     },
     "options": {

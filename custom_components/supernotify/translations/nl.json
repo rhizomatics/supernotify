@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Meldingen van {camera} snoozen",
+        "snooze_camera_button": "Minuten snoozen",
+        "action_url_title": "Klik voor actie",
+        "email_heading": "Home Assistant-melding"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Geen gearchiveerde melding gevonden met id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Sluimeren niet mogelijk: {error}"
+        "snooze_name_needed": {
+            "message": "Sluimeren niet mogelijk: een naam is nodig om {scope} te laten sluimeren"
+        },
+        "snooze_name_unknown": {
+            "message": "Sluimeren niet mogelijk: onbekende {scope} \"{name}\", kies uit: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Sluimeren niet mogelijk: een camera moet worden opgegeven met zijn entity_id, bijv. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Sluimeren niet mogelijk: geen scenario of entiteit heet \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Sluimeren niet mogelijk: {person} is geen ontvanger"
         }
     },
     "options": {

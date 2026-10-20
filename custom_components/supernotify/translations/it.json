@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Posticipa le notifiche da {camera}",
+        "snooze_camera_button": "Minuti di posticipo",
+        "action_url_title": "Clicca per l'azione",
+        "email_heading": "Notifica di Home Assistant"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Nessuna notifica archiviata trovata con id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Impossibile mettere in pausa: {error}"
+        "snooze_name_needed": {
+            "message": "Impossibile mettere in pausa: serve un nome per mettere in pausa {scope}"
+        },
+        "snooze_name_unknown": {
+            "message": "Impossibile mettere in pausa: {scope} sconosciuto \"{name}\", scegli tra: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Impossibile mettere in pausa: la telecamera va indicata con il suo entity_id, ad es. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Impossibile mettere in pausa: nessuno scenario o entità si chiama \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Impossibile mettere in pausa: {person} non è un recipient"
         }
     },
     "options": {

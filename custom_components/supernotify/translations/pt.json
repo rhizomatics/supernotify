@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Adiar notificações de {camera}",
+        "snooze_camera_button": "Minutos a adiar",
+        "action_url_title": "Clique para a ação",
+        "email_heading": "Notificação do Home Assistant"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Nenhuma notificação arquivada encontrada com o id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Não é possível adiar: {error}"
+        "snooze_name_needed": {
+            "message": "Não é possível adiar: é necessário um nome para adiar {scope}"
+        },
+        "snooze_name_unknown": {
+            "message": "Não é possível adiar: {scope} desconhecido \"{name}\", escolha entre: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Não é possível adiar: a câmara deve ser indicada pelo seu entity_id, por ex. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Não é possível adiar: nenhum cenário ou entidade se chama \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Não é possível adiar: {person} não é um destinatário"
         }
     },
     "options": {

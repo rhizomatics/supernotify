@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Posponer notificaciones de {camera}",
+        "snooze_camera_button": "Minutos a posponer",
+        "action_url_title": "Haz clic para la acción",
+        "email_heading": "Notificación de Home Assistant"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "No se encontró ninguna notificación archivada con el id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "No se puede posponer: {error}"
+        "snooze_name_needed": {
+            "message": "No se puede posponer: se necesita un nombre para posponer {scope}"
+        },
+        "snooze_name_unknown": {
+            "message": "No se puede posponer: {scope} desconocido: \"{name}\", elige entre: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "No se puede posponer: la cámara debe indicarse por su entity_id, p. ej. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "No se puede posponer: ningún escenario ni entidad se llama \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "No se puede posponer: {person} no es un destinatario"
         }
     },
     "options": {

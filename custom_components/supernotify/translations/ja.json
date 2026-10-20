@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "{camera} の通知をスヌーズ",
+        "snooze_camera_button": "スヌーズする分数",
+        "action_url_title": "クリックしてアクション",
+        "email_heading": "Home Assistant 通知"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "ID {notification_id} のアーカイブされた通知が見つかりません"
         },
-        "invalid_snooze": {
-            "message": "スヌーズできません: {error}"
+        "snooze_name_needed": {
+            "message": "スヌーズできません: {scope} をスヌーズするには名前が必要です"
+        },
+        "snooze_name_unknown": {
+            "message": "スヌーズできません: 不明な {scope}「{name}」です。次から選んでください: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "スヌーズできません: カメラは entity_id で指定してください（例: camera.front_door）"
+        },
+        "snooze_tag_unknown": {
+            "message": "スヌーズできません: 「{name}」という名前のシナリオやエンティティはありません"
+        },
+        "snooze_not_recipient": {
+            "message": "スヌーズできません: {person} は受信者ではありません"
         }
     },
     "options": {

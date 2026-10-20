@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Benachrichtigungen von {camera} pausieren",
+        "snooze_camera_button": "Minuten pausieren",
+        "action_url_title": "Für Aktion klicken",
+        "email_heading": "Home Assistant Benachrichtigung"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Keine archivierte Benachrichtigung mit der ID {notification_id} gefunden"
         },
-        "invalid_snooze": {
-            "message": "Pausieren nicht möglich: {error}"
+        "snooze_name_needed": {
+            "message": "Pausieren nicht möglich: zum Pausieren von {scope} wird ein Name benötigt"
+        },
+        "snooze_name_unknown": {
+            "message": "Pausieren nicht möglich: {scope} \"{name}\" ist unbekannt, zur Auswahl stehen: {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Pausieren nicht möglich: eine Kamera muss als entity_id angegeben werden, z. B. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Pausieren nicht möglich: kein Szenario und keine Entität heißt \"{name}\""
+        },
+        "snooze_not_recipient": {
+            "message": "Pausieren nicht möglich: {person} ist kein Empfänger"
         }
     },
     "options": {

@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "暂停来自 {camera} 的通知",
+        "snooze_camera_button": "暂停分钟数",
+        "action_url_title": "点击执行操作",
+        "email_heading": "Home Assistant 通知"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "未找到 ID 为 {notification_id} 的已归档通知"
         },
-        "invalid_snooze": {
-            "message": "无法暂停：{error}"
+        "snooze_name_needed": {
+            "message": "无法暂停：暂停 {scope} 需要提供名称"
+        },
+        "snooze_name_unknown": {
+            "message": "无法暂停：未知的 {scope}“{name}”，请从以下选择：{choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "无法暂停：摄像头必须用其 entity_id 指定，例如 camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "无法暂停：没有名为“{name}”的场景或实体"
+        },
+        "snooze_not_recipient": {
+            "message": "无法暂停：{person} 不是接收者"
         }
     },
     "options": {

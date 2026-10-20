@@ -1,5 +1,11 @@
 {
     "title": "Supernotify",
+    "common": {
+        "snooze_camera_title": "Suspendre les notifications de {camera}",
+        "snooze_camera_button": "Minutes de suspension",
+        "action_url_title": "Cliquer pour l'action",
+        "email_heading": "Notification Home Assistant"
+    },
     "entity": {
         "binary_sensor": {
             "scenario": {
@@ -516,8 +522,20 @@
         "archive_entry_not_found": {
             "message": "Aucune notification archivée trouvée avec l'id {notification_id}"
         },
-        "invalid_snooze": {
-            "message": "Mise en pause impossible : {error}"
+        "snooze_name_needed": {
+            "message": "Mise en pause impossible : un nom est nécessaire pour mettre en pause {scope}"
+        },
+        "snooze_name_unknown": {
+            "message": "Mise en pause impossible : {scope} inconnu : « {name} », choisissez parmi : {choices}"
+        },
+        "snooze_camera_not_entity": {
+            "message": "Mise en pause impossible : une caméra doit être indiquée par son entity_id, par ex. camera.front_door"
+        },
+        "snooze_tag_unknown": {
+            "message": "Mise en pause impossible : aucun scénario ni entité ne s’appelle « {name} »"
+        },
+        "snooze_not_recipient": {
+            "message": "Mise en pause impossible : {person} n’est pas un destinataire"
         }
     },
     "options": {
