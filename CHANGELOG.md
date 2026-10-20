@@ -5,9 +5,12 @@
 # v2.16.0
 
 ## 🚨 Breaking changes
-- *Email*: direct emails are now from the `sender` address alone unless a `sender_name` is set, as for the Home Assistant SMTP integration, where previously they were from "Home Assistant" by default. Add `sender_name: Home Assistant` to the transport's options to keep that
+- *Email*: direct emails without a `sender_name` are now from the home's name, as set in Home Assistant's settings, where previously they were from "Home Assistant". Add `sender_name: Home Assistant` to the transport's options to keep that
 
 ## ✨ Enhancements
+- *Email*
+  - With `mode: ha_smtp`, addresses set up as recipients in the Home Assistant SMTP integration are sent to with its `smtp.send_message` action, with the notification's priority, html and images. Other addresses still go by its notify action, where there is one
+  - `data_keys_select` prunes what's passed on to the integration, as it does for Mobile Push and Generic
 - More of what Supernotify shows is now in the Home Assistant language
   - *Mobile Push*: the camera snooze button, which now also gives the camera's name rather than its entity id, and the *Click for Action* title given to a link action without one
   - *Email*: the default subject, heading and preview text, "Home Assistant Notification", and the description of a snapshot image for templates. A `default_title` configured for the transport still wins
