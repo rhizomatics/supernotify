@@ -17,6 +17,7 @@
 | Scenarios                   |               |             |
 | Multi-lingual               |               |             |
 | Transport Base and Delivery |               |             |
+| Architecture Diagrams       |               |             |
 
 ## Transports
 
