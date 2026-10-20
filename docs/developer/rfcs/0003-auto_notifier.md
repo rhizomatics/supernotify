@@ -321,7 +321,7 @@ The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Fri
 
 The Frigate `package` would pick up that there's a known MQTT topic or Frigate proxy, and set up an MQTT subscription for mobile push, email and voice announce by default. It would offer everything the blueprint has, address known bugs and workarounds like faking a `notify_device` and avoiding broken images.
 
-See [Frigate SuperNotifier](./0006-frigate_supernotifier.md) for the design.
+See [Frigate SuperNotifier](./0006-frigate_auto_notifier.md) for the design.
 
 
 ```yaml title="Current Supernotify usage of Frigate Blueprint"
