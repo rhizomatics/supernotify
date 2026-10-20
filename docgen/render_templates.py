@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 import mkdocs_gen_files
 from anyio import Path as AsyncPath
+from homeassistant import loader
 from homeassistant.const import CONF_ACTION
 from homeassistant.core import HomeAssistant
 
@@ -29,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def create_examples() -> None:
     hass = HomeAssistant(config_dir=".")
+    # translations lookup needs the integration loader, which a bare HomeAssistant lacks
+    loader.async_setup(hass)
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={"examples": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
@@ -39,42 +42,35 @@ async def create_examples() -> None:
     nav = mkdocs_gen_files.Nav()
 
     _LOGGER.debug("Rendering templates for %s", PRIORITY_VALUES)
-    try:
-        for priority in PRIORITY_VALUES:
-            html = await uut.render_template(
-                "default.html.j2",
-                Envelope(
-                    Delivery("test_email", ctx.delivery_config("examples"), uut),
-                    Notification(ctx, action_data={"priority": priority}),
-                ),
-                action_data={"message": "Example notification message", "title": "Example notification title"},
-                debug_trace=None,
-                image_path=None,
-                snapshot_url="https://upload.wikimedia.org/wikipedia/commons/a/a5/Information_example_page2_300px.jpg",
-                extra_data={},
-                strict_template=False,
-            )
-            dest_page: str = f"example-default-{priority}.md"
-            if html is None:
-                _LOGGER.warning("No html for template")
-                with mkdocs_gen_files.open(f"{output_root}/{dest_page}", "w") as t:
-                    t.write("# Example Template Failure\n")
-                    t.write("No html generated from examples/templates/default.html.j2")
+    for priority in PRIORITY_VALUES:
+        html = await uut.render_template(
+            "default.html.j2",
+            Envelope(
+                Delivery("test_email", ctx.delivery_config("examples"), uut),
+                Notification(ctx, action_data={"priority": priority}),
+            ),
+            action_data={"message": "Example notification message", "title": "Example notification title"},
+            debug_trace=None,
+            image_path=None,
+            snapshot_url="https://upload.wikimedia.org/wikipedia/commons/a/a5/Information_example_page2_300px.jpg",
+            extra_data={},
+            strict_template=False,
+        )
+        dest_page: str = f"example-default-{priority}.md"
+        if html is None:
+            # fail the docs build rather than publish a placeholder page
+            raise RuntimeError(f"No html generated for {priority} example from default.html.j2")
 
-            else:
-                _LOGGER.info("Writing %s %s to %s", priority, "default", dest_page)
-                with mkdocs_gen_files.open(f"{output_root}/{dest_page}", "w") as t:
-                    t.write(html)
-                    t.write("\n")
+        _LOGGER.info("Writing %s %s to %s", priority, "default", dest_page)
+        with mkdocs_gen_files.open(f"{output_root}/{dest_page}", "w") as t:
+            t.write(html)
+            t.write("\n")
 
-            nav["configuration", "example", "html_email_template", priority] = (
-                f"../developer/reference/html_email_renders/{dest_page}"
-            )
+        nav["configuration", "example", "html_email_template", priority] = (
+            f"../developer/reference/html_email_renders/{dest_page}"
+        )
 
-        _LOGGER.debug("Finished template render")
-    except Exception as e:
-        print(e)
-        _LOGGER.exception("Failed to render templates")
+    _LOGGER.debug("Finished template render")
 
 
 logging.basicConfig()
