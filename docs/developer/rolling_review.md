@@ -15,7 +15,7 @@
 | LLM and Conversation        |               |             |
 | Person and User             |               |             |
 | Scenarios                   |               |             |
-| Multi-lingual               |               |             |
+| Multi-lingual               | 20th Oct 2026 | `v2.16.0`   |
 | Transport Base and Delivery |               |             |
 | Architecture Diagrams       |               |             |
 
