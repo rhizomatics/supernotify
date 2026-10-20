@@ -206,6 +206,13 @@ PRIORITY_MEDIUM = "medium"
 PRIORITY_LOW = "low"
 PRIORITY_MINIMUM = "minimum"
 
+# other names for priorities, such as those of Home Assistant's SMTP integration
+PRIORITY_SYNONYMS: dict[str, str] = {
+    "highest": PRIORITY_CRITICAL,
+    "normal": PRIORITY_MEDIUM,
+    "lowest": PRIORITY_MINIMUM,
+}
+
 PRIORITY_VALUES: dict[str, int] = {
     PRIORITY_MINIMUM: 1,
     PRIORITY_LOW: 2,

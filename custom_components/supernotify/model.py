@@ -23,7 +23,7 @@ from homeassistant.core import (
     Context as HAContext,
 )
 
-from .common import ensure_list
+from .common import canonical_priority, ensure_list
 from .const import (
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
@@ -326,7 +326,7 @@ class DeliveryConfig:
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
             self.inclusion = conf.get(CONF_INCLUSION, [INCLUSION_DEFAULT])
-            self.priority = conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))
+            self.priority = [canonical_priority(p) for p in conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))]
             self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
             self.alias = conf.get(CONF_ALIAS)
             self.template = conf.get(CONF_TEMPLATE)

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .common import spoken_name
+from .common import canonical_priority, spoken_name
 from .const import (
     ATTR_ACTION,
     ATTR_MOBILE_APP_ID,
@@ -56,6 +56,8 @@ def snooze_name_error(
     }.get(scope)
     if not name:
         return "snooze_name_needed", {"scope": scope.lower()}
+    if scope == QualifiedTargetType.PRIORITY:
+        name = canonical_priority(name)
     if valid is not None and name not in valid:
         return "snooze_name_unknown", {"scope": scope.lower(), "name": name, "choices": ", ".join(valid)}
     if scope == QualifiedTargetType.CAMERA and not name.startswith("camera."):
@@ -291,6 +293,8 @@ class Snoozer:
         if target_type == QualifiedTargetType.TAG and target:
             # so the same tag however it was said or typed is one snooze, and can be resumed
             target = spoken_name(target)
+        if target_type == QualifiedTargetType.PRIORITY:
+            target = canonical_priority(target)
         if cmd == CommandType.SNOOZE:
             snooze = Snooze(target_type, recipient_type, target, recipient, snooze_for, reason=reason)
             self.snoozes[snooze.short_key()] = snooze

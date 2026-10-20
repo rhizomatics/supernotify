@@ -362,3 +362,12 @@ async def test_snoozer_purge_drops_snooze_on_a_mobile_app_that_has_gone(
     uut.purge_snoozes()
 
     assert [s.target for s in uut.snoozes.values()] == ["mobile_app_still_here"]
+
+
+def test_priority_snooze_by_synonym_is_the_same_snooze() -> None:
+    uut = Snoozer()
+    uut.register_snooze(CommandType.SNOOZE, QualifiedTargetType.PRIORITY, "lowest", RecipientType.EVERYONE, None, None)
+    assert [s.target for s in uut.snoozes.values()] == ["minimum"]
+
+    uut.register_snooze(CommandType.NORMAL, QualifiedTargetType.PRIORITY, "minimum", RecipientType.EVERYONE, None, None)
+    assert uut.snoozes == {}

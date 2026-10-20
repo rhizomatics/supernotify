@@ -173,3 +173,11 @@ async def test_tag_can_be_resumed_after_what_it_named_has_gone(hass: HomeAssista
     await _snooze(hass, {"scope": "tag", "name": "gone_camera"}, "unsnooze")
 
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_priority_by_synonym(hass: HomeAssistant) -> None:
+    engine = await _setup(hass, _config())
+
+    await hass.services.async_call(DOMAIN, "silence", {"scope": "priority", "name": "lowest"}, blocking=True)
+
+    assert [s.target for s in engine.context.snoozer.snoozes.values()] == ["minimum"]

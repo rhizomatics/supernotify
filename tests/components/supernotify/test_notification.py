@@ -1274,3 +1274,13 @@ async def test_unknown_delivery_and_scenario_names_warned_not_fatal(
     assert "Ignoring unknown delivery fax, configured names are:" in caplog.text
     assert "Ignoring unknown apply_scenarios nite, configured names are: night" in caplog.text
     assert "unknown_names" not in (await engine.async_send_message("again", data={"delivery": ["chat"]})).contents()
+
+
+@pytest.mark.parametrize(("given", "priority"), [("highest", "critical"), ("normal", "medium"), ("lowest", "minimum")])
+async def test_priority_synonyms(given: str, priority: str) -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: given})
+    await uut.initialize()
+    assert uut.priority == priority

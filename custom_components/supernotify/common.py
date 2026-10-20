@@ -22,6 +22,7 @@ from .const import (
     CONF_DUPE_POLICY,
     CONF_SIZE,
     CONF_TTL,
+    PRIORITY_SYNONYMS,
     PRIORITY_VALUES,
 )
 
@@ -54,6 +55,11 @@ def nullable_ensure_list(v: Any) -> list[Any] | None:  # ruff: ignore[any-type]
     if v is None:
         return None
     return ensure_list(v)
+
+
+def canonical_priority(priority: Any) -> Any:  # ruff: ignore[any-type]
+    """Supernotify's own name for a priority given by a synonym, such as `highest` for `critical`"""
+    return PRIORITY_SYNONYMS.get(priority, priority) if isinstance(priority, str) else priority
 
 
 def spoken_name(name: str) -> str:

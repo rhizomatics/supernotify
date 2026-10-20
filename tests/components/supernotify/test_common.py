@@ -268,3 +268,14 @@ class TestBoolify:
 
     def test_none_false(self):
         assert not boolify(None, default=False)
+
+
+def test_canonical_priority():
+    from custom_components.supernotify.common import canonical_priority
+
+    assert canonical_priority("highest") == "critical"
+    assert canonical_priority("normal") == "medium"
+    assert canonical_priority("lowest") == "minimum"
+    assert canonical_priority("high") == "high"
+    assert canonical_priority("most_urgent") == "most_urgent"  # a custom priority is left as it is
+    assert canonical_priority(4) == 4

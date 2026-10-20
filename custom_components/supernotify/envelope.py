@@ -17,7 +17,7 @@ from jinja2 import TemplateError
 from custom_components.supernotify.people import Recipient
 from custom_components.supernotify.target import Target
 
-from .common import DupeCheckable
+from .common import DupeCheckable, canonical_priority
 from .const import (
     ACTION_LEVEL_NOTIFICATION,
     ATTR_ACTION,
@@ -123,7 +123,7 @@ class Envelope(DupeCheckable):
             self.media = notification.media
             self.action_groups = notification.action_groups
             self.actions = notification.actions
-            self.priority = self.data.pop(ATTR_PRIORITY, notification.priority)
+            self.priority = canonical_priority(self.data.pop(ATTR_PRIORITY, notification.priority))
             self.message_html = self.data.pop(ATTR_MESSAGE_HTML, notification.message_html)
             self.spoken_message = self.data.pop(ATTR_SPOKEN_MESSAGE, notification.spoken_message)
             self.force_resend = self.data.pop(ATTR_FORCE_RESEND, notification.force_resend)

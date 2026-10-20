@@ -17,7 +17,7 @@ from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
 
 from .archive import ArchivableObject
-from .common import ensure_list, nullable_ensure_list, sanitize, spoken_name
+from .common import canonical_priority, ensure_list, nullable_ensure_list, sanitize, spoken_name
 from .compat import humanize, vol
 from .const import (
     ATTR_ACTION_GROUPS,
@@ -197,7 +197,7 @@ class Notification(ArchivableObject):
         action_data = {k: v for k, v in action_data.items() if k not in self.extra_data}
         self.extra_data.update(action_data.get(ATTR_DATA, {}))  # nested `data` could be supernotify or target service
 
-        self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
+        self.priority: str = canonical_priority(action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM))
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
         self.spoken_message: str | None = action_data.get(ATTR_SPOKEN_MESSAGE)
         self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
@@ -518,7 +518,7 @@ class Notification(ArchivableObject):
     def validate_action_data(self, action_data: dict[str, Any]) -> None:
         if action_data.get(ATTR_PRIORITY):
             if isinstance(action_data.get(ATTR_PRIORITY), (str, int, float)):
-                if action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
+                if canonical_priority(action_data.get(ATTR_PRIORITY)) not in PRIORITY_VALUES:
                     _LOGGER.info("SUPERNOTIFY Custom priority %s", action_data.get(ATTR_PRIORITY))
             else:
                 _LOGGER.info("SUPERNOTIFY Invalid priority %s", action_data.get(ATTR_PRIORITY))

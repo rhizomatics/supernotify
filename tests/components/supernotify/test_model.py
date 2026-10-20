@@ -133,3 +133,9 @@ def test_debug_trace_delivery_provenance_recorded_without_debug() -> None:
     uut = DebugTrace("message", "title", {}, {}, debug=False)
     uut.record_delivery_provenance("chime", "enabled_by", "default")
     assert uut.delivery_provenance == {"chime": {"enabled_by": ["default"]}}
+
+
+def test_delivery_priority_filter_takes_synonyms() -> None:
+    from custom_components.supernotify.model import DeliveryConfig
+
+    assert DeliveryConfig({"priority": ["highest", "high"]}).priority == ["critical", "high"]
