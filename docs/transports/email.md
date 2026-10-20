@@ -79,7 +79,7 @@ Supernotify also adds an `alert` variable for context of the current notificatio
 | preheader         | Invisible `div` contents at top of html used to show info below heading                    |
 | priority          | Notification priority                                                                      |
 | envelope          | Delivery Envelope (complex nested object)                                                  |
-| subheading        | Defaults to "Home Assistant Notification"                                                  |
+| subheading        | "Home Assistant Notification", in the Home Assistant language                              |
 | server            | Access to `name`,`language`,`internal_url` and `external_url` of this HomeAssistant server |
 | preformatted_html | HTML supplied to the notify action, for example by an Automation                           |
 | action_url        | Action URL for mobile action                                                               |

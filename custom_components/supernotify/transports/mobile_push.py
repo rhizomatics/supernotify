@@ -3,7 +3,7 @@
 Sends push notifications to HA Companion App on iOS and Android devices.
 Supports per-device delivery with automatic snooze on failure.
 
-Priority mapping (auto, overridable via push_critical_level_ios):
+Priority mapping (auto, overridable via mobile_push_critical_level):
     critical  → iOS: interruption_level=critical
                 Android: ttl=0, priority=high, channel=alarm_stream (sounds through Do Not Disturb
                 and silent mode); a `ttl` or `channel` already in the data is kept
@@ -16,7 +16,7 @@ New data keys (all optional):
     mobile_push_critical_level      str   iOS interruption_level override
                                       ("passive","active","time-sensitive","critical")
                                       If omitted, auto-mapped from SuperNotify priority.
-    mobile_push_critical_ttl        int   Android FCM TTL in ms (0=no caching/instant).
+    mobile_push_critical_ttl        int   Android FCM TTL (0=no caching/instant).
                                       Auto-set to 0 for critical priority if not set.
     mobile_push_critical_priority   str   Android FCM priority override ("high" or "normal").
                                       Auto-set to "high" for critical priority if not set.
@@ -25,17 +25,18 @@ New data keys (all optional):
                                       Falls back to the camera entity id if there's a camera image,
                                       otherwise left unset (notification appears individually).
     mobile_push_notification_tag    str   Notification tag for replacement (iOS) / grouping (Android)
-    mobile_push_clear_notification  bool  Send clear_notification to dismiss previous same-tag notification.
-                                      Requires push_notification_tag to be set.
+    mobile_push_clear_notification  bool  Send clear_notification to dismiss previous same-tag notification,
+                                      instead of the notification itself.
+                                      Requires mobile_push_notification_tag to be set.
     mobile_push_tts_text            str   Android: text read aloud by the phone (Android 8+), sent as its own
                                       `message: TTS` call after the notification, on the alarm stream at
                                       full volume for critical. If omitted, push TTS is not activated.
     mobile_push_tts_delay           int   Seconds between the notification and its TTS, so the notification's
                                       own sound isn't cut off (default 5, 0 for straight away).
     mobile_push_tts_locale          str   BCP-47 language for TTS (e.g. "it-IT", "en-US").
-                                      Only used when push_tts_text is set.
+                                      Only used when mobile_push_tts_text is set.
     mobile_push_tts_engine          str   TTS engine package (e.g. "com.google.android.tts").
-                                      Only used when push_tts_text is set.
+                                      Only used when mobile_push_tts_text is set.
     mobile_push_command_screen_on   bool  Android: turn on device screen on delivery (Android 8+),
                                       or "keep_screen_on"
     mobile_push_command_dnd         str   Android: change Do Not Disturb ("alarms_only","priority_only",
@@ -73,6 +74,7 @@ from custom_components.supernotify.const import (
     ATTR_IMAGE,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
     ATTR_VIDEO,
@@ -331,17 +333,20 @@ class MobilePushTransport(Transport):
         )
 
         # 3. Start with passthrough data, then layer SuperNotify fields
+        # `push` is iOS only, and starts from what's given, so its own `sound` etc are kept
+        given_push: dict[str, Any] = raw_data.pop("push", None) or {}
         data: dict[str, Any] = dict(raw_data)
-        ios_data: dict[str, Any] = {}
-
-        ios_data.setdefault("push", {})
+        ios_data: dict[str, Any] = {"push": dict(given_push)}
         ios_data["push"]["interruption-level"] = ios_level
 
         if ios_level == "critical":
-            ios_data["push"].setdefault("sound", {})
-            ios_data["push"]["sound"].setdefault("name", ATTR_DEFAULT)
-            ios_data["push"]["sound"]["critical"] = 1
-            ios_data["push"]["sound"].setdefault("volume", 1.0)
+            # critical needs the dict form of `sound`, which can otherwise be given as just a name
+            sound: str | dict[str, Any] | None = ios_data["push"].get("sound")
+            critical_sound: dict[str, Any] = {"name": sound} if isinstance(sound, str) else dict(sound or {})
+            critical_sound.setdefault("name", ATTR_DEFAULT)
+            critical_sound["critical"] = 1
+            critical_sound.setdefault("volume", 1.0)
+            ios_data["push"]["sound"] = critical_sound
             # critical notifications cannot be grouped on iOS
         else:
             media = envelope.media or {}
@@ -367,7 +372,7 @@ class MobilePushTransport(Transport):
             data["tag"] = notification_tag
         elif push_data["clear_notification"]:
             _LOGGER.warning(
-                "SUPERNOTIFY mobile_push: push_clear_notification=True requires push_notification_tag to be set — ignoring"
+                "SUPERNOTIFY mobile_push: mobile_push_clear_notification needs mobile_push_notification_tag to be set — ignoring"
             )
 
         # 7. Media: camera entity (grab processed image) + fallback URLs
@@ -377,12 +382,12 @@ class MobilePushTransport(Transport):
         clip_url: str | None = media.get(ATTR_MEDIA_CLIP_URL)
         snapshot_url: str | None = media.get(ATTR_MEDIA_SNAPSHOT_URL)
 
-        if camera_entity_id:
+        if camera_entity_id or media.get(ATTR_MEDIA_SNAPSHOT_PATH):
             image_path = await envelope.grab_image()
             if image_path:
                 image_url = await self.context.media_storage.share_path(image_path)
                 data[ATTR_IMAGE] = image_url or str(image_path)
-            else:
+            elif camera_entity_id:
                 # fall back to letting device take the image, but only from a camera that's up,
                 # since one that's switched off or unavailable would only show a broken image.
                 # camera_entity_id itself already failed the grab above - exclude it here, since
@@ -417,15 +422,22 @@ class MobilePushTransport(Transport):
             button = envelope.render_action(action)
             app_url: str | None = self.hass_api.abs_url(button.get(ATTR_ACTION_URL))
             if app_url:
-                app_url_title = button.get(ATTR_ACTION_URL_TITLE) or await self.action_title(app_url) or "Click for Action"
+                app_url_title = (
+                    button.get(ATTR_ACTION_URL_TITLE)
+                    or await self.action_title(app_url)
+                    or await self.common_string("action_url_title")
+                )
                 button[ATTR_ACTION_URL_TITLE] = app_url_title
             data["actions"].append(button)
         if camera_entity_id:
+            camera_state = self.hass_api.get_state(camera_entity_id)
             data["actions"].append({
                 "action": f"SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_{camera_entity_id}",
-                "title": f"Snooze camera notifications for {camera_entity_id}",
+                "title": (await self.common_string("snooze_camera_title")).format(
+                    camera=camera_state.name if camera_state else camera_entity_id
+                ),
                 "behavior": "textInput",
-                "textInputButtonTitle": "Minutes to snooze",
+                "textInputButtonTitle": await self.common_string("snooze_camera_button"),
                 "textInputPlaceholder": "60",
             })
         for group, actions in self.context.mobile_actions.items():
@@ -460,7 +472,12 @@ class MobilePushTransport(Transport):
             # (e.g. an Android target with no android/ios fields to merge in), and that must
             # not carry over and clobber the next target's action_data
             target_data = dict(data)
-            is_android: bool = mobile_info is not None and mobile_info.manufacturer != MANUFACTURER_APPLE
+            # the companion app registers its os_name, the manufacturer is only a guess for older registrations
+            is_android: bool = mobile_info is not None and (
+                mobile_info.os_name.lower() == "android"
+                if mobile_info.os_name
+                else mobile_info.manufacturer != MANUFACTURER_APPLE
+            )
             if mobile_info is None:
                 target_data.update(android_data)
                 target_data.update(ios_data)
@@ -469,7 +486,7 @@ class MobilePushTransport(Transport):
                     _LOGGER.debug(
                         "SUPERNOTIFY mobile_push: not sending Android commands/TTS to unknown device %s", mobile_target
                     )
-            elif is_android:  # TODO Make this os_name based
+            elif is_android:
                 target_data.update(android_data)
             else:
                 target_data.update(ios_data)

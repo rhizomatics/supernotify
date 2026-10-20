@@ -103,25 +103,37 @@ async def test_works_without_a_response(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("action", "data", "error"),
+    ("action", "data", "key", "placeholders"),
     [
-        ("snooze", {"scope": "delivery"}, "A name is needed"),
-        ("silence", {"scope": "delivery", "name": "nope"}, "Unknown delivery 'nope'"),
-        ("snooze", {"scope": "camera", "name": "driveway"}, "entity_id"),
-        ("silence", {"scope": "tag", "name": "no such thing"}, "No scenario or entity"),
-        ("unsnooze", {"scope": "transport"}, "A name is needed"),
-        ("snooze", {"person": "person.stranger"}, "not a recipient"),
+        ("snooze", {"scope": "delivery"}, "snooze_name_needed", {"scope": "delivery"}),
+        ("silence", {"scope": "delivery", "name": "nope"}, "snooze_name_unknown", {"scope": "delivery", "name": "nope"}),
+        ("snooze", {"scope": "camera", "name": "driveway"}, "snooze_camera_not_entity", {}),
+        ("silence", {"scope": "tag", "name": "no such thing"}, "snooze_tag_unknown", {"name": "no such thing"}),
+        ("unsnooze", {"scope": "transport"}, "snooze_name_needed", {"scope": "transport"}),
+        ("snooze", {"person": "person.stranger"}, "snooze_not_recipient", {"person": "person.stranger"}),
     ],
 )
-async def test_invalid_snooze_is_refused(hass: HomeAssistant, action: str, data: dict[str, Any], error: str) -> None:
+async def test_invalid_snooze_is_refused(
+    hass: HomeAssistant, action: str, data: dict[str, Any], key: str, placeholders: dict[str, str]
+) -> None:
     engine = await _setup(hass, _config())
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(DOMAIN, action, data, blocking=True)
 
-    assert exc.value.translation_key == "invalid_snooze"
-    assert error in exc.value.translation_placeholders["error"]  # type: ignore
+    assert exc.value.translation_key == key
+    assert placeholders.items() <= (exc.value.translation_placeholders or {}).items()
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_invalid_snooze_message_renders(hass: HomeAssistant) -> None:
+    """The message is rendered in English on the server, the frontend shows it in the user's language from its key"""
+    await _setup(hass, _config())
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(DOMAIN, "silence", {"scope": "delivery", "name": "nope"}, blocking=True)
+
+    assert str(exc.value).startswith('Unable to snooze: unknown delivery "nope", choose from: ')
 
 
 @pytest.mark.parametrize(

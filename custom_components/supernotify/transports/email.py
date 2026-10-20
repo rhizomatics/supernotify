@@ -313,7 +313,6 @@ class EmailTransport(Transport):
             OPTION_MODE: EMAIL_OPTION_MODE_DIRECT,  # default to avoiding the e-mail integration, since it will get locked down to notify entities
             # only used for deliveries with OPTION_MODE set to 'direct'
             OPTION_SENDER_NAME: "Home Assistant",
-            OPTION_DEFAULT_TITLE: "Home Assistant Notification",
         }
         return config
 
@@ -481,7 +480,7 @@ class EmailTransport(Transport):
         else:
             msg = MIMEText(message)
 
-        msg["Subject"] = title or self.default_title or ""
+        msg["Subject"] = title or self.default_title or await self.common_string("email_heading")
         msg["To"] = ", ".join(addresses)
         if self.sender_name or self.sender:
             sender: str = email.utils.formataddr((self.sender_name or "", self.sender or ""))
@@ -578,7 +577,8 @@ class EmailTransport(Transport):
             title: str | None = action_data.get(ATTR_TITLE)
             message: str | None = action_data.get(ATTR_MESSAGE)
             preheader: str = f"{title or ''}{' ' if title else ''}{message}"
-            preheader = preheader or "Home Assistant Notification"
+            heading: str = await self.common_string("email_heading")
+            preheader = preheader or heading
             alert = Alert(
                 message=message,
                 title=title,
@@ -587,7 +587,7 @@ class EmailTransport(Transport):
                 action_url=extra_data.get(ATTR_ACTION_URL),
                 action_url_title=extra_data.get(ATTR_ACTION_URL_TITLE),
                 envelope=envelope,
-                subheading="Home Assistant Notification",
+                subheading=heading,
                 server=AlertServer(
                     name=self.hass_api.hass_name,
                     internal_url=self.hass_api.internal_url,

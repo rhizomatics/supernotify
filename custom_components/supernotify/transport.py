@@ -28,6 +28,7 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.target import Target, TargetEntityCategory
 
+from . import DOMAIN
 from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
@@ -275,6 +276,11 @@ class Transport:
             debug_trace (DebugTrace): debug info collector
 
         """
+
+    async def common_string(self, key: str) -> str:
+        """Text for the recipient from the `common` translations, in the Home Assistant language"""
+        strings: dict[str, str] = await self.hass_api.translations("common")
+        return strings[f"component.{DOMAIN}.common.{key}"]
 
     def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> dict[str, Any]:  # ruff: ignore[any-type]
         if data is not None:

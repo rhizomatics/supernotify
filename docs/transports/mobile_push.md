@@ -18,10 +18,8 @@ entry exists) and no `mobile_push` delivery is configured, a `mobile_push` deliv
 generated automatically and fires on every notification, with targets resolved per-recipient
 from the HA Companion App at delivery time.
 
-Send a push message out, with option for camera integration, mobile actions, and
-translate general priority to Apple specific push priority.
-
-Some functionality may also work with Android push, though has not been tested.
+Send a push message to the Companion App on iPhone, iPad, Mac and Android, with camera images,
+mobile actions, and Supernotify's priority translated into what each platform uses for it.
 
 Although Supernotify will automatically set most useful mobile push options,
 its also possible to directly set them, as in this example:
@@ -49,8 +47,39 @@ its also possible to directly set them, as in this example:
                 volume: 1.0
 ```
 
-!!! info
-    This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
+The `push` block is for Apple devices only, and Supernotify adds to it rather than replacing it - the
+`sound` above is kept, alongside the `interruption-level` that Supernotify sets from the priority.
+
+Each phone gets only its own platform's data: `push`, `subtitle` and `url` go to Apple devices, and `ttl`,
+`priority`, `channel` and `clickAction` go to Android. The platform comes from the `os_name` the Companion App
+registers, or from the manufacturer if no `os_name` is registered. A device Home Assistant doesn't know gets both.
+
+## Data Keys
+
+Set these in `extra_data:`, or in a delivery's `data:`. Supernotify removes them and turns them into what
+the Companion App expects.
+
+| Key                               | Platform | Usage                                                                                           |
+| --------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `mobile_push_critical_level`      | Apple    | `interruption-level` to use instead of the one from the priority: `passive`, `active`, `time-sensitive` or `critical` |
+| `mobile_push_subtitle`            | Apple    | Line shown between the title and the message                                                    |
+| `mobile_push_critical_ttl`        | Android  | FCM `ttl`, how long it may wait to be delivered. `0` for a `critical` notification if not set    |
+| `mobile_push_critical_priority`   | Android  | FCM `priority`, `high` or `normal`. `high` for a `critical` notification if not set             |
+| `mobile_push_channel_override`    | Android  | Notification `channel`, which sets its sound and vibration                                       |
+| `mobile_push_alarm_stream`        | Android  | Use the `alarm_stream` channel, which sounds through Do Not Disturb and silent mode              |
+| `mobile_push_alarm_stream_max`    | Android  | As `mobile_push_alarm_stream`, and TTS at full alarm volume                                      |
+| `mobile_push_tts_text`            | Android  | Text the phone speaks, see [below](#android-commands-and-spoken-text)                            |
+| `mobile_push_tts_delay`           | Android  | Seconds to wait after the notification before speaking, default `5`                              |
+| `mobile_push_tts_locale`          | Android  | Language for the spoken text, for example `en-GB`                                                |
+| `mobile_push_tts_engine`          | Android  | TTS engine package, for example `com.google.android.tts`                                         |
+| `mobile_push_command_dnd`         | Android  | Change Do Not Disturb before the notification                                                    |
+| `mobile_push_command_ringer_mode` | Android  | Change the ringer mode before the notification                                                   |
+| `mobile_push_command_screen_on`   | Android  | Turn the screen on before the notification                                                       |
+| `mobile_push_group`               | Both     | Stack notifications together, see [Notification Grouping](#notification-grouping)                |
+| `mobile_push_notification_tag`    | Both     | `tag`, so a later notification with the same tag replaces this one                               |
+| `mobile_push_clear_notification`  | Both     | Clear the notification with this `mobile_push_notification_tag` from the phone. This is sent *instead of* the notification, so its message isn't shown |
+
+Any other key in `data` is passed to the Companion App as it is.
 
 ## Critical on Android
 
@@ -122,9 +151,12 @@ A [notification level action](../usage/mobile_actions.md#notification-level-acti
 `url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion
 App, a full URL in the browser.
 
-`mobile_push_live_view_entity` sets the camera iOS streams live when the notification is expanded,
-independently of where the image comes from - for example a Frigate snapshot as the image and the
-camera itself as the live view. Android has no live view, so it's left out there.
+With a `camera_entity_id`, Supernotify gets the image itself - from the `snapshot_url` if there is one,
+otherwise from the camera - and attaches it, so the phone doesn't need to reach the camera. Only when
+no image can be got is the phone given the camera's `entity_id` to fetch from instead (or an
+[alternative camera](../configuration/multimedia.md#cameras) that's available), which an iPhone shows as the live
+stream when the notification is expanded. A notification with only a `snapshot_url` passes that URL
+to the phone as its image.
 
 ```yaml
   - action: supernotify.notify
@@ -141,7 +173,7 @@ camera itself as the live view. Android has no live view, so it's left out there
 
 ## Default Delivery
 
-A default Delivery called `mobile_push` will be automatically generated for Mobile Push transport if no explicit ones created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then use configuration as below:
+To stop the default delivery described [above](#discovery) being generated, switch the transport off:
 
 ```yaml
 transports:
@@ -151,9 +183,12 @@ transports:
 
 ### Auto generating targets
 
-By default, where no explicit target is given, mobile push will send to all known devices of all known recipients ( usually the list of [Person](https://www.home-assistant.io/integrations/person/) integration entries in Home Assistant, and mobile apps found in Home Assistant that have their `user_id` and Notify Entities available), and filter those recipients by occupancy status if wanted in the Delivery configuration.
+By default, where no explicit target is given, mobile push will send to all known devices of all known recipients ( usually the list of [Person](https://www.home-assistant.io/integrations/person/) integration entries in Home Assistant, and mobile apps found in Home Assistant that have their `user_id` and a notify action available), and filter those recipients by occupancy status if wanted in the Delivery configuration.
 
-Mobile Push can also do its own device discovery and ignore recipients. If you want to switch off that behaviour, and drive it only by the defined recipients, then switch on device discovery.
+Mobile Push can also find devices itself, whoever they belong to. With device discovery switched on, the
+`mobile_app` devices found at start-up become the delivery's own target. How that combines with the
+recipients' devices follows the delivery's [`target_usage`](../configuration/deliveries.md#controlling-targets) -
+`fixed` sends only to the discovered devices.
 
 ```yaml title="Configuration snippet"
 transports:
@@ -202,7 +237,7 @@ delivery:
       - mobile_app_my_phone
 ```
 
-`notify.mobile_app_my_phone` is the Notify Entity action-call form (an `entity_id` target, used by transports like `notify_entity` and `tts`), not a `mobile_app_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
+`notify.mobile_app_my_phone` is the name of the Companion App's notify action, not a `mobile_app_id` - as a target it's taken as an `entity_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
 and [Targets](../usage/targets.md#target-categories)).
 
 ## References

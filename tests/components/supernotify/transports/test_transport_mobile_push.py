@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
@@ -82,7 +83,7 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
                     {"action": "URI", "title": "My Camera App", "url": "http://my.home/app1"},
                     {
                         "action": "SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_camera.porch",
-                        "title": "Snooze camera notifications for camera.porch",
+                        "title": "Snooze notifications from camera.porch",
                         "behavior": "textInput",
                         "textInputButtonTitle": "Minutes to snooze",
                         "textInputPlaceholder": "60",
@@ -644,6 +645,8 @@ async def test_deliver_camera_image_grabbed_shares_url() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["image"] == "http://my.home/media/snap.jpg"
+    # an image to show, so the camera isn't also handed to the device
+    assert "entity_id" not in data
 
 
 async def _deliver_with_failed_grab(available_camera: str | None) -> dict[str, Any]:
@@ -781,9 +784,13 @@ async def test_android_critical_sounds_through_do_not_disturb(
     assert not any(k.startswith("mobile_push_") for k in sent)
 
 
-async def _deliver_to(context: Context, manufacturer: str, priority: str, data: dict[str, Any]) -> Envelope:
+async def _deliver_to(
+    context: Context, manufacturer: str | None, priority: str, data: dict[str, Any], os_name: str | None = None
+) -> Envelope:
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails(  # type: ignore[attr-defined]
+        "id001", manufacturer=manufacturer, model="Phone", os_name=os_name
+    )
     context.configure_for_tests([uut])
     await context.initialize()
     e = Envelope(
@@ -965,3 +972,163 @@ async def _delivered_data(manufacturer: str, data: dict[str, Any], media: dict[s
     assert e.calls[0].action_data is not None
     # an empty data block is pruned from the call
     return e.calls[0].action_data.get("data", {})
+
+
+async def test_given_push_keeps_its_own_sound(unmocked_config: Context) -> None:
+    """Regression: the push dict given in data was replaced wholesale by the interruption-level one"""
+    e = await _deliver_to(unmocked_config, "Apple", PRIORITY_HIGH, {"push": {"sound": {"name": "chime.wav", "volume": 0.5}}})
+
+    assert e.calls[0].action_data["data"]["push"] == {  # type: ignore[index]
+        "sound": {"name": "chime.wav", "volume": 0.5},
+        "interruption-level": "time-sensitive",
+    }
+
+
+@pytest.mark.parametrize(
+    ("sound", "expected"),
+    [
+        (None, {"name": "default", "critical": 1, "volume": 1.0}),
+        ("alarm.wav", {"name": "alarm.wav", "critical": 1, "volume": 1.0}),
+        ({"name": "alarm.wav", "volume": 0.5}, {"name": "alarm.wav", "critical": 1, "volume": 0.5}),
+    ],
+)
+async def test_critical_keeps_given_sound(
+    unmocked_config: Context, sound: str | dict[str, Any] | None, expected: dict[str, Any]
+) -> None:
+    e = await _deliver_to(unmocked_config, "Apple", PRIORITY_CRITICAL, {"push": {"sound": sound}} if sound else {})
+
+    push = e.calls[0].action_data["data"]["push"]  # type: ignore[index]
+    assert push["sound"] == expected
+    assert push["interruption-level"] == "critical"
+
+
+async def test_each_platform_gets_only_its_own_fields(unmocked_config: Context) -> None:
+    data = {"mobile_push_subtitle": "Porch", "push": {"sound": "chime.wav"}}
+    actions = [{"level": "notification", "uri": "/lovelace/cameras"}]
+
+    def envelope(uut: MobilePushTransport) -> Envelope:
+        return Envelope(
+            Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
+            Notification(unmocked_config, message="smoke", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL, "actions": actions}),
+            target=Target({"mobile_app_id": ["mobile_app_phone"]}),
+            data=dict(data),
+        )
+
+    uut = MobilePushTransport(unmocked_config)
+    unmocked_config.configure_for_tests([uut])
+    await unmocked_config.initialize()
+    sent: dict[str, dict[str, Any]] = {}
+    for os_name in ("iOS", "Android"):
+        unmocked_config.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", os_name=os_name)  # type: ignore[attr-defined]
+        e = envelope(uut)
+        await uut.deliver(e)
+        sent[os_name] = e.calls[0].action_data["data"]  # type: ignore[index]
+
+    assert set(sent["iOS"]) == {"push", "subtitle", "url"}
+    assert set(sent["Android"]) == {"ttl", "priority", "channel", "clickAction"}
+
+
+@pytest.mark.parametrize(
+    ("manufacturer", "os_name", "android"),
+    [
+        ("Apple", None, False),
+        ("Samsung", None, True),
+        # the registered os_name wins over guessing from the manufacturer
+        ("xUnit", "iOS", False),
+        (None, "Android", True),
+        ("Apple", "macOS", False),
+    ],
+)
+async def test_platform_from_os_name_before_manufacturer(
+    unmocked_config: Context, manufacturer: str | None, os_name: str | None, android: bool
+) -> None:
+    e = await _deliver_to(unmocked_config, manufacturer, PRIORITY_CRITICAL, {}, os_name=os_name)
+
+    data = e.calls[0].action_data["data"]  # type: ignore[index]
+    assert ("channel" in data) is android
+    assert ("push" in data) is not android
+
+
+async def test_deliver_snapshot_image_path_without_camera() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": {"snapshot_image_path": "/tmp/snap.jpg"}}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    with patch.object(ctx.media_storage, "share_path", new_callable=AsyncMock, return_value="http://my.home/media/snap.jpg"):
+        assert await uut.deliver(e) is True
+
+    data = e.calls[0].action_data["data"]  # type: ignore[index]
+    assert data["image"] == "http://my.home/media/snap.jpg"
+    assert "actions" not in data  # no camera, so no camera snooze button
+
+
+async def test_all_devices_excluded_by_model_filter_is_not_a_success(unmocked_config: Context) -> None:
+    uut = MobilePushTransport(unmocked_config)
+    unmocked_config.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", model="iPad")  # type: ignore[attr-defined]
+    unmocked_config.configure_for_tests([uut])
+    await unmocked_config.initialize()
+    e = Envelope(
+        Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH, "options": {"device_model_select": "iPhone.*"}}, uut),
+        Notification(unmocked_config, message="smoke"),
+        target=Target({"mobile_app_id": ["mobile_app_tablet"]}),
+    )
+
+    assert await uut.deliver(e) is False
+    assert e.calls == []
+
+
+async def test_camera_snooze_button_is_translated_and_names_the_camera() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": {"camera_entity_id": "camera.porch"}}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    italian = {
+        "component.supernotify.common.snooze_camera_title": "Posticipa le notifiche da {camera}",
+        "component.supernotify.common.snooze_camera_button": "Minuti di posticipo",
+    }
+    with (
+        patch.object(e, "grab_image", new_callable=AsyncMock, return_value=None),
+        patch.object(ctx.hass_api, "translations", new_callable=AsyncMock, return_value=italian),
+        patch.object(ctx.hass_api, "get_state", return_value=State("camera.porch", "idle", {"friendly_name": "Portico"})),
+    ):
+        await uut.deliver(e)
+
+    snooze = e.calls[0].action_data["data"]["actions"][-1]  # type: ignore[index]
+    assert snooze["action"] == "SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_camera.porch"
+    assert snooze["title"] == "Posticipa le notifiche da Portico"
+    assert snooze["textInputButtonTitle"] == "Minuti di posticipo"
+
+
+async def test_action_url_title_falls_back_to_translated_text() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(
+            ctx,
+            message="hello there",
+            action_data={"actions": [{"action": "URI", "title": "My Page", "action_url": "http://my.home/page"}]},
+        ),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    italian = {
+        "component.supernotify.common.action_url_title": "Clicca per l'azione",
+        "component.supernotify.common.snooze_camera_title": "Posticipa le notifiche da {camera}",
+        "component.supernotify.common.snooze_camera_button": "Minuti di posticipo",
+    }
+    with (
+        patch.object(uut, "action_title", new_callable=AsyncMock, return_value=None),
+        patch.object(ctx.hass_api, "translations", new_callable=AsyncMock, return_value=italian),
+    ):
+        await uut.deliver(e)
+
+    assert e.calls[0].action_data["data"]["actions"][0]["action_url_title"] == "Clicca per l'azione"  # type: ignore[index]

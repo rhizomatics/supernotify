@@ -50,7 +50,7 @@ from custom_components.supernotify.transports.email import (
     OPTION_SENDER_NAME,
     EmailTransport,
 )
-from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
+from tests.components.supernotify.hass_setup_lib import TestingContext, english_translations, set_state
 from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 from tests.components.supernotify.transports.transport_actions import setup_smtp, smtp_config_flow
 
@@ -71,9 +71,9 @@ SMTP_TRANSPORT_CONFIG = {
 
 
 def _direct_smtp_uut(transport_config: dict | None = None) -> EmailTransport:
-    return EmailTransport(
-        Mock(custom_template_path=None), transport_config if transport_config is not None else SMTP_TRANSPORT_CONFIG
-    )
+    context = Mock(custom_template_path=None)
+    context.hass_api.translations = english_translations
+    return EmailTransport(context, transport_config if transport_config is not None else SMTP_TRANSPORT_CONFIG)
 
 
 async def test_deliver() -> None:

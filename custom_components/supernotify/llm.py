@@ -296,7 +296,7 @@ class SnoozeTool(SupernotifyTool):
         scope: TargetType = SNOOZE_SCOPES[args["scope"]]
         name: str | None = args.get("name")
         if isinstance(scope, QualifiedTargetType):
-            if error := self._check_name(scope, name, cmd):
+            if error := await self._check_name(scope, name, cmd):
                 return {"success": False, "error": error}
         else:
             name = None
@@ -320,8 +320,12 @@ class SnoozeTool(SupernotifyTool):
         snoozes: dict[str, Any] = {"snoozes": self.engine.enquire_snoozes()}
         return {"success": True, "result": snoozes}
 
-    def _check_name(self, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
-        return snooze_name_error(self.engine, scope, name, cmd)
+    async def _check_name(self, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
+        """The same message, in the Home Assistant language, that supernotify.snooze refuses the name with"""
+        if problem := snooze_name_error(self.engine, scope, name, cmd):
+            strings: dict[str, str] = await self.engine.context.hass_api.translations("exceptions")
+            return strings[f"component.{DOMAIN}.exceptions.{problem[0]}.message"].format(**problem[1])
+        return None
 
     def _requesting_person(self, llm_context: LLMContext) -> str | None:
         user_id: str | None = llm_context.context.user_id if llm_context.context else None

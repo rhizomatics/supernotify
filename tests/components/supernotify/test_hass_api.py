@@ -985,3 +985,10 @@ def test_build_mobile_app_cache_drops_a_device_that_has_gone(hass: HomeAssistant
 
     assert hass_api.mobile_app_by_id("mobile_app_old_phone") is None
     assert hass_api.mobile_app_by_device_id(device.id) is None
+
+
+async def test_translations_in_configured_language(hass: HomeAssistant) -> None:
+    hass.config.language = "it"
+    strings = await HomeAssistantAPI(hass).translations("common")
+
+    assert strings["component.supernotify.common.snooze_camera_title"] == "Posticipa le notifiche da {camera}"

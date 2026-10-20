@@ -20,6 +20,17 @@
 - *Notify Entity*
   - The docs example for switching off the default delivery used `disabled: false`, which isn't a valid option and stopped the configuration loading. It is now `enabled: false`, as it is for the same examples for Email and Mobile Push, and every transport example in the docs is now checked against the schema
   - Docs corrected: device targets aren't supported, there's no `data`, and the default delivery is only used for notify entities no other transport takes
+- *Mobile Push*
+  - A `push` block given in `data`, such as a `sound` for the notification, was replaced by Supernotify's own, leaving only the `interruption-level`. It is now added to, and a `critical` notification keeps the given sound and volume, with a sound given as just a name also accepted
+  - Whether a phone is Android or Apple now comes from the `os_name` the Companion App registers, rather than guessing from the manufacturer, which is still used if there's no `os_name`
+  - A `snapshot_image_path` in `media` without a `camera_entity_id` is now attached as the image, as it already was for other transports
+  - The camera snooze button, and the *Click for Action* title given to a link action without one, are now in the Home Assistant language, and the snooze button uses the camera's name rather than its entity id
+  - The warning for `mobile_push_clear_notification` without a tag now gives the keys' real names
+  - Docs corrected: there's no separate live view setting - the phone is given the camera to stream only when no image can be got - Android is supported, with every `mobile_push_*` key now listed, and device discovery and the default delivery are described properly
+
+- *Email*
+  - The default subject, heading and preview text, "Home Assistant Notification", are now in the Home Assistant language. A `default_title` configured for the transport still wins
+- Errors from `supernotify.snooze`, `silence` and `unsnooze`, such as an unknown delivery name, are now shown in the user's language, as is the same reason the AI snooze tool is given
 
 ## ✨ Enhancements
 - `original_trace` in the archived notification gives the automation or script run that was in progress when the notification was made, as its trace `key` and `run_id`, next to `original_context`.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import pathlib
 import tempfile
 import uuid
 from dataclasses import dataclass
@@ -74,6 +75,14 @@ if TYPE_CHECKING:
     from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
+
+ENGLISH_TRANSLATIONS = pathlib.Path(__file__).parents[3] / "custom_components" / "supernotify" / "translations" / "en.json"
+
+
+async def english_translations(category: str) -> dict[str, str]:
+    """Stand-in for HomeAssistantAPI.translations() on a mocked Home Assistant, which has no translation loader"""
+    strings: dict[str, str] = json.loads(ENGLISH_TRANSLATIONS.read_text()).get(category, {})
+    return {f"component.supernotify.{category}.{k}": v for k, v in strings.items() if isinstance(v, str)}
 
 
 @dataclass
@@ -402,6 +411,8 @@ class TestingContext(Context):
                         )
 
         hass_api = HomeAssistantAPI(self.hass)
+        if isinstance(self.hass, Mock):
+            hass_api.translations = english_translations  # type: ignore[method-assign]  # ty: ignore[invalid-assignment]
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
         scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {}, {}, people_registry)
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)

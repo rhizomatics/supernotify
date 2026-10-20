@@ -363,9 +363,9 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         scope = SNOOZE_SCOPES[call.data["scope"]]
         name: str | None = call.data.get("name")
         if isinstance(scope, QualifiedTargetType):
-            if error := snooze_name_error(engine, scope, name, cmd):
+            if problem := snooze_name_error(engine, scope, name, cmd):
                 raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="invalid_snooze", translation_placeholders={"error": error}
+                    translation_domain=DOMAIN, translation_key=problem[0], translation_placeholders=problem[1]
                 )
         else:
             name = None
@@ -373,8 +373,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         if person and person not in engine.context.people_registry.people:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_snooze",
-                translation_placeholders={"error": f"{person} is not a recipient"},
+                translation_key="snooze_not_recipient",
+                translation_placeholders={"person": person},
             )
         minutes: int | None = call.data.get("minutes")
         snoozer = engine.context.snoozer

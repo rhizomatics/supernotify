@@ -43,8 +43,11 @@ SNOOZE_SCOPES: dict[str, TargetType] = {
 }
 
 
-def snooze_name_error(engine: SupernotifyEngine, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
-    """Why a snooze of this scope can't take this name, or None - shared by the AI tool and supernotify.snooze"""
+def snooze_name_error(
+    engine: SupernotifyEngine, scope: QualifiedTargetType, name: str | None, cmd: CommandType
+) -> tuple[str, dict[str, str]] | None:
+    """Why a snooze of this scope can't take this name, as an `exceptions` translation key and its
+    placeholders, or None - shared by the AI tool and supernotify.snooze"""
     registry = engine.context.delivery_registry
     valid: list[str] | None = {
         QualifiedTargetType.DELIVERY: list(registry.deliveries),
@@ -52,14 +55,14 @@ def snooze_name_error(engine: SupernotifyEngine, scope: QualifiedTargetType, nam
         QualifiedTargetType.PRIORITY: list(PRIORITY_VALUES),
     }.get(scope)
     if not name:
-        return f"A name is needed to snooze a {scope.lower()}"
+        return "snooze_name_needed", {"scope": scope.lower()}
     if valid is not None and name not in valid:
-        return f"Unknown {scope.lower()} '{name}', choose from: {', '.join(valid)}"
+        return "snooze_name_unknown", {"scope": scope.lower(), "name": name, "choices": ", ".join(valid)}
     if scope == QualifiedTargetType.CAMERA and not name.startswith("camera."):
-        return "A camera must be given as its entity_id, e.g. camera.front_door"
+        return "snooze_camera_not_entity", {}
     # a tag snooze can still be undone when what it named has gone
     if scope == QualifiedTargetType.TAG and cmd != CommandType.NORMAL and not engine.tag_matches(name):
-        return f"No scenario or entity is called '{name}'"
+        return "snooze_tag_unknown", {"name": name}
     return None
 
 

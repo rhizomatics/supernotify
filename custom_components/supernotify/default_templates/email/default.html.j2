@@ -210,7 +210,7 @@
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                 <div style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:24px;font-weight:400;line-height:30px;text-align:left;">
                                   <p class="priority" style="margin: 0; margin-bottom: 5px; font-size: 16px; font-weight: 900; background-color: {{ bg_color }}; color: #ffffff; display: inline-block; padding: 4px 12px; border-radius: 4px;">{{ alert.priority | capitalize }}</p>
-                                  <h2 style="margin: 0; font-size: 20px; font-weight: 600; line-height: 24px; color: {{ bg_color }};">{{ alert.title or "Home Assistant Notification" }}</h2>
+                                  <h2 style="margin: 0; font-size: 20px; font-weight: 600; line-height: 24px; color: {{ bg_color }};">{{ alert.title or alert.subheading }}</h2>
                                 </div>
                               </td>
                             </tr>

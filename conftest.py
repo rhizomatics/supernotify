@@ -55,7 +55,7 @@ from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import MockCameraEntity, MockImageEntity
-from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
+from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant, english_translations
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -253,6 +253,7 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked.create_job = AsyncMock()
     mocked.entity_ids_for_domain.return_value = []
     mocked.entity_ids_for_platform.return_value = []
+    mocked.translations.side_effect = english_translations
     return mocked
 
 

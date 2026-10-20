@@ -276,11 +276,11 @@ async def test_unsnooze_and_clear_all(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("args", "error"),
     [
-        ({"scope": "delivery"}, "A name is needed"),
-        ({"scope": "delivery", "name": "fax"}, "Unknown delivery 'fax'"),
-        ({"scope": "priority", "name": "whenever"}, "Unknown priority 'whenever'"),
+        ({"scope": "delivery"}, "a name is needed"),
+        ({"scope": "delivery", "name": "fax"}, 'unknown delivery "fax"'),
+        ({"scope": "priority", "name": "whenever"}, 'unknown priority "whenever"'),
         ({"scope": "camera", "name": "front door"}, "entity_id"),
-        ({"scope": "tag", "name": "spider"}, "No scenario or entity is called 'spider'"),
+        ({"scope": "tag", "name": "spider"}, 'no scenario or entity is called "spider"'),
     ],
 )
 async def test_snooze_rejects_unknown_names(hass: HomeAssistant, args: dict[str, Any], error: str) -> None:

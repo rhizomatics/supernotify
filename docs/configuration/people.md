@@ -279,14 +279,14 @@ does not currently care about manufacturers and models other than for matching r
       phone_number: "+430504103451"
       delivery:
         mobile_push:
-        target:
+          target:
             - mobile_app.new_iphone
-        data:
+          data:
             push:
-            sound:
+              sound:
                 name: default
         alexa_announce:
-        target:
+          target:
             - media_player.echo_study
     - person: person.bidey_in
       phone_number: "+4287600013834"
