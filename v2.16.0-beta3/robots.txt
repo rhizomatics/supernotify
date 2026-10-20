@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://supernotify.rhizomatics.org.uk/sitemap.xml
