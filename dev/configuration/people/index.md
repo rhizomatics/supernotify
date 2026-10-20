@@ -146,6 +146,10 @@ Note
 
 Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
 
+Current limitations
+
+In the `target` of a delivery, scenario or another recipient, a recipient's notify entity is replaced by the recipient. Calling it, or a Notify Group containing it, while Supernotify is delivering a notification, such as from a script that a delivery runs, is ignored with a warning, so it can't make a loop. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) for the details.
+
 Notify Entities get updated on every notification by Supernotify for that person, regardless of whether the Notify Entity itself was used for it. This also adds context of the original automation, so you can track what happened for a person.
 
 ## Enabling, Disabling and Overriding Targets per Delivery
@@ -262,14 +266,14 @@ Complicated Example
       phone_number: "+430504103451"
       delivery:
         mobile_push:
-        target:
+          target:
             - mobile_app.new_iphone
-        data:
+          data:
             push:
-            sound:
+              sound:
                 name: default
         alexa_announce:
-        target:
+          target:
             - media_player.echo_study
     - person: person.bidey_in
       phone_number: "+4287600013834"
