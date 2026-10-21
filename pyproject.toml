@@ -114,6 +114,9 @@ environments = [
 exclude-newer = "5 days"
 exclude-newer-package = { certifi=false, homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant-custom-component=false,aiohttp=false,uv=false }
 add-bounds = "major"
+# Home Assistant pins uv exactly, and under `uv run` the venv's uv comes first on PATH,
+# shadowing the mise-managed one. Floor at the latest uv security fix (GHSA-hq85-5cpj-mr62).
+override-dependencies = ["uv>=0.13.4"]
 
 [tool.ruff]
 line-length = 128
