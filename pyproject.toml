@@ -112,7 +112,7 @@ environments = [
 ]
 
 exclude-newer = "5 days"
-exclude-newer-package = { homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant-custom-component=false,aiohttp=false,uv=false }
+exclude-newer-package = { certifi=false, homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant-custom-component=false,aiohttp=false,uv=false }
 add-bounds = "major"
 
 [tool.ruff]
