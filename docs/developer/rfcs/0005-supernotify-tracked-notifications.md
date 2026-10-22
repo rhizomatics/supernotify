@@ -7,65 +7,71 @@ Revised 2026-10-12 after Appliance Auto Notify v0.7.0, [#254](https://github.com
 
 ## Summary
 
-Supernotify should own the lifecycle of a live notification: one that is started, updated in place and ended. The main case is a Live Activity on iOS or a Live Update on Android. Persistent notifications are a secondary case, since they can also be replaced and dismissed.
+Supernotify should own the lifecycle of a live notification: one that is started, updated in place and ended. The main case is a Live Activity on iOS or a Live Update on Android. Persistent notifications are a secondary case, since they can also be replaced and dismissed, however in their case the state is managed by the Persistent Notification integration, whereas for Live notifications the state is owned by Supernotify, using Home Assistant mechanisms.
 
 Today the caller has to build that lifecycle itself out of mobile push details, and Appliance Auto Notify got it wrong in a way that failed silently.
 
-The proposal adds one `live:` mapping to `supernotify.notify`, a `source` field, and a `mobile_live` transport beside `mobile_push`. With them:
+The proposal adds one `live:` mapping to `supernotify.notify`, a `mobile_live` transport beside `mobile_push`. With them:
 
 - an ordinary notification becomes live by adding `live:` with an id,
 - a later call can be as small as the id and a number,
-- an `end` command sends the final content, and the live item is then closed under a rule: at once, after a set time, or when someone clears it.
+- an `end` command sends the final content,
+   - and the live item is then closed under a rule: at once, after a set time, or when someone clears it.
+   - Live notifications always get cleaned up, even if the calling component is restarted or dies, or Supernotify restarts, or the mobuile phone goes out of range and back
+ - Repeated %age updates can be skipped for archiving unless explicitly switched on
 
 Supernotify keeps everything needed to update or close the live notification, so the caller does not repeat it. Supernotify also decides which deliveries can show one, which devices received the start, and in what order calls are handled.
 
-Supernotify does not decide what is happening in the real world. For a gate left open or a doorbell, the automation says when the event starts and ends, as it does for an appliance cycle.
+Supernotify does not decide what is happening in the real world. For a gate left open or a doorbell, the automation or Autonotify component says when the event starts and ends, as it does for an appliance cycle.
 
-After the change, Appliance Auto Notify passes message, title, its source, the `live:` mapping, and targets or deliveries only if the user chose some. It makes no enquiries, names no transport and sends no Companion App keys.
+After the change, Appliance Auto Notify passes message, title, the `live:` mapping, and targets or deliveries only if the user chose some. It makes no enquiries, names no transport and sends no Companion App keys.
 
 ## Terms
 
 This RFC introduces, extends or refines the terms below. Once the names are agreed, documentation, configuration keys, code and log messages use them with these meanings and no others.
 
-| Term | Status | Meaning |
-|---|---|---|
-| Live notification | New | One ongoing thing reported over several `notify` calls: a cycle, an open gate, a delivery at the door. |
-| Live item | New | What one device shows for a live notification: a Live Activity on iOS, a Live Update or progress notification on Android, a card in the persistent list. |
-| Live part | New | The part of a `notify` call that opens, updates or closes live items. Described by `live:`. |
-| Standard part | New | The part of a `notify` call that is an ordinary notification: spoken, chimed, e-mailed or pushed. |
-| Live delivery | New | A delivery whose transport can show a live item. |
-| `mobile_live` | New | The transport for live items on phones. `mobile_push` keeps to standard notifications. |
-| Source | Extended | Who sent a notification. A field on any notification, and required for a live one. First sketched in RFC 0003a. |
-| Id | New | The caller's name for a live notification, unique only within its source. |
-| Tag | Refined | The identifier Supernotify gives transports, built from source and id. Was the caller's `mobile_push_notification_tag`. |
-| Record | New | What Supernotify stores for a tag, so later calls need not repeat it. |
-| Start, update, end, clear | New | The four commands. |
-| End | New | The caller saying the ongoing thing is over. The live item gets its final content. It does not by itself remove the item. |
-| Finished | New | The state of a live item after an end and before it is closed. |
-| Close | New | Supernotify removing a live item, whatever caused it. |
-| Close rule | New | When a finished live item is closed: at once, after a time, or when cleared. |
-| Clear | Refined | A request to close now, from the caller's `clear` command or a person's *Clear* button. Was `mobile_push_clear_notification`. |
-| Expiry | New | The limit after which Supernotify closes a live item that nothing else has. |
-| Announce | New | Whether a call alerts: sends the standard part, and lets the live item make a sound. |
-| Quiet update | New | An update that is not announced. The default. |
-| Action group | Extended | Now either standard or live. A live action group is only ever shown on live items. |
-| Scenario | Refined | Now either standard or live, see [Scenarios](#scenarios). |
+| Term                      | Status   | Meaning                                                                                                                                                  |
+|---------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Live notification         | New      | One ongoing thing reported over several `notify` calls: a cycle, an open gate, a delivery at the door.                                                   |
+| Live item                 | New      | What one device shows for a live notification: a Live Activity on iOS, a Live Update or progress notification on Android, a card in the persistent list. |
+| Live part                 | New      | The part of a `notify` call that opens, updates or closes live items. Described by `live:`.                                                              |
+| Standard part             | New      | The part of a `notify` call that is an ordinary notification: spoken, chimed, e-mailed or pushed.                                                        |
+| Live delivery             | New      | A delivery whose transport can show a live item.                                                                                                         |
+| `mobile_live`             | New      | The transport for live items on phones. `mobile_push` keeps to standard notifications.                                                                   |                                       |
+| Id                        | New      | The caller's name for a live notification, unique only within its source.                                                                                |
+| Tag                       | Refined  | The identifier Supernotify gives transports, built from source and id. Was the caller's `mobile_push_notification_tag`.                                  |
+| Record                    | New      | What Supernotify stores for a tag, so later calls need not repeat it.                                                                                    |
+| Start, update, end, clear | New      | The four commands.                                                                                                                                       |
+| End                       | New      | The caller saying the ongoing thing is over. The live item gets its final content. It does not by itself remove the item.                                |
+| Finished                  | New      | The state of a live item after an end and before it is closed.                                                                                           |
+| Close                     | New      | Supernotify removing a live item, whatever caused it.                                                                                                    |
+| Close rule                | New      | When a finished live item is closed: at once, after a time, or when cleared.                                                                             |
+| Clear                     | Refined  | A request to close now, from the caller's `clear` command or a person's *Clear* button. Was `mobile_push_clear_notification`.                            |
+| Expiry                    | New      | The limit after which Supernotify closes a live item that nothing else has.                                                                              |
+| Announce                  | New      | Whether a call alerts: sends the standard part, and lets the live item make a sound.                                                                     |
+| Quiet update              | New      | An update that is not announced. The default.                                                                                                            |
+| Action group              | Extended | Now either standard or live. A live action group is only ever shown on live items.                                                                       |
+| Scenario                  | Refined  | Now either standard or live, see [Scenarios](#scenarios).                                                                                                |
+| Programme | New  | A type of cycle, or phase within an appliance cycle, like pre-heat or rinse |
+| Cycle | New |  An external event such as usage of an appliance. Event is overloaded term.|
+
+
 
 ## What the caller has to know today
 
 As of v0.7.0, Appliance Auto Notify carries nine pieces of Supernotify or Companion App knowledge to show one Live Activity per appliance cycle. Each is a place it can drift from Supernotify, and one of them already has.
 
-| What the caller does | Why it has to | Where |
-|---|---|---|
-| Finds the names of every mobile push delivery, from the delivery switch entities and two enquiry actions | Quiet updates and the clear must go to phones only, and `notify` cannot select deliveries by transport | `supernotify_api.py` |
-| Sets `delivery_selection: fixed` on quiet updates and the clear | Otherwise scenarios add Alexa and chimes to a silent update | `watcher.py` |
-| Sets `force_resend: true` on updates, and on a start soon after the last one | The duplicate check hashes the message without digits, so "20% complete" repeats "10% complete" | `watcher.py` |
-| Sends `mobile_push_notification_tag`, `live_update`, `progress`, `progress_max`, `chronometer`, `when`, `notification_icon`, `silent`, `alert_once` | These are Companion App keys, passed through `extra_data` | `watcher.py` |
-| Sends `channel`, `importance` and `sticky` | On Android a Live Update is otherwise silent at the start, and removed by a tap | `watcher.py` |
-| Sends `critical_text` only when there is no finish time | On Android it replaces the countdown in the status bar chip | `watcher.py` |
-| Sends `url` and `clickAction` on the start and every update | iOS reads one and Android the other, and iOS needs it on every update | `watcher.py` |
-| Sends a separate clear with `mobile_push_clear_notification`, then the end notification as a second call | Closing a Live Activity is not itself a notification, and the clear's message is discarded | `watcher.py` |
-| Holds a lock, and tracks whether a cycle is running | Home Assistant drops the activity token on end, so a late `live_update` starts a new activity, and Supernotify has no record that a tag is open | `watcher.py` |
+| What the caller does                                                                                                                                | Why it has to                                                                                                                                   | Where                |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
+| Finds the names of every mobile push delivery, from the delivery switch entities and two enquiry actions                                            | Quiet updates and the clear must go to phones only, and `notify` cannot select deliveries by transport                                          | `supernotify_api.py` |
+| Sets `delivery_selection: fixed` on quiet updates and the clear                                                                                     | Otherwise scenarios add Alexa and chimes to a silent update                                                                                     | `watcher.py`         |
+| Sets `force_resend: true` on updates, and on a start soon after the last one                                                                        | The duplicate check hashes the message without digits, so "20% complete" repeats "10% complete"                                                 | `watcher.py`         |
+| Sends `mobile_push_notification_tag`, `live_update`, `progress`, `progress_max`, `chronometer`, `when`, `notification_icon`, `silent`, `alert_once` | These are Companion App keys, passed through `extra_data`                                                                                       | `watcher.py`         |
+| Sends `channel`, `importance` and `sticky`                                                                                                          | On Android a Live Update is otherwise silent at the start, and removed by a tap                                                                 | `watcher.py`         |
+| Sends `critical_text` only when there is no finish time                                                                                             | On Android it replaces the countdown in the status bar chip                                                                                     | `watcher.py`         |
+| Sends `url` and `clickAction` on the start and every update                                                                                         | iOS reads one and Android the other, and iOS needs it on every update                                                                           | `watcher.py`         |
+| Sends a separate clear with `mobile_push_clear_notification`, then the end notification as a second call                                            | Closing a Live Activity is not itself a notification, and the clear's message is discarded                                                      | `watcher.py`         |
+| Holds a lock, and tracks whether a cycle is running                                                                                                 | Home Assistant drops the activity token on end, so a late `live_update` starts a new activity, and Supernotify has no record that a tag is open | `watcher.py`         |
 
 The extra data also reaches deliveries it was not meant for. The archived Alexa envelope for "Oven started" carried the mobile push tag and `live_update`. That was harmless here, but it shows the keys are not scoped to a transport.
 
@@ -88,39 +94,23 @@ Two more failures were found by reading the code, not seen live. Both are still 
 - **Reopened activity.** A progress update sent after the clear is treated by Home Assistant as a new start, because the token for that tag has gone.
 - **Start and end reach different devices.** The start is selected by scenario and occupancy at that moment. The clear goes to every mobile push delivery later, under whatever applies then. A phone that got the start can miss the clear, and a phone that never got the start is sent one.
 
-## Enriched Source
 
-Several limitations with current Home Assistant
+##  HA Compatibility
+An action call such as below can be easily moved over to Supernotify.
 
-- The calling object - typically an automation or script - *is* available, but it is unwieldy to find, requiring either a scan of all states, or direct SQL queries
-  - The calling object itself may have metadata - categories, labels - that are of value in conditions, or tracking
-- For notification use cases, often the real context is the entity, device etc that led to the automation
-  - Examples
-    - A camera entity ID, or a Frigate event ID
-    - A HomeConnect-enabled dishwasher, or a power monitor connected to a washing machine
-  - The static metadata for this object may be needed, along with state, state attributes, state transition, event, and the new HA triggers
-- Supernotify needs a clean way of discovering or accepting this info from AutoNotify components, or any other upstream that chooses to use them
-- Some of this may eventually be part of HA, so doing it once within the code useful, to minimize migration path within code and for automations
-- Condition code may need some shortcuts, like 'furthest back known context' that picks either parent or current context depending on availability
-- May be multiple objects for same thing, e.g. onvif camera plus hikvision camera plus mpeg camera plus frigate camera plus SN camera config object
-- AutoArm currently does this by passing an `apply_scenarios` however this is very limited for cases where multiple vars involved
-  - Subject -> verb -> Object -> Medium -- sunrise disarmed alarm panel state reported by autoarm
+```yaml
+action:
+  - action: notify.mobile_app_<your_device_id_here>
+    data:
+      title: "Washing Machine"
+      message: "Cycle started"
+      data:
+        tag: washer_cycle
+        live_update: true
+```
 
-Step back to *why* this is needed, or if it is really needed at all:
+##
 
-- Condition variables for scenarios, or conditional deliveries
-- Debugging, live or reading an archive notification to see why something happened
-  - Archive notification is a more relaxed environment to do slow calls to pull in context
-  - A method that turns existing HA context into useful user and automation refs is obvious
-
-
-### Implementation Guidelines
-
-- Method already available, with caveats, in `hass_api` to retrieve the upstream automation from context
-  - This shouldn't run on every notification, should be on demand
-  - Also on demand, pull in parent version of it
-  - Object ref available as well as entity_id string, so all attributes can be accessed without duplicating within SN
--
 
 
 
@@ -135,30 +125,37 @@ A live notification is reported over several `notify` calls that share an id. Ea
 
 All existing `notify` fields keep their meaning and describe the standard part. The `live:` mapping describes the live part, and inherits `title` and `message` from the call unless it gives its own. There is no single `live_message` field, as there is a `spoken_message`, because the live part has more to say than one string.
 
+If the upstream, e.g. AutoNotify, wants to have a non-live and notification together, it
+
+```yaml
+action: supernotify.notify
+data:
+  live:
+     id: dw-1001
+     command: start
+     icon: dishwasher-outline
+     finish_at: 2026-07-04T16:09:00.9949Z
+
+```
+
 ### Fields
 
-One new field at the top level of `notify`:
+ inside `live:`
 
-| Field | Type | Meaning |
-|---|---|---|
-| `source` | string | Who is calling. Optional on an ordinary notification, required on a live one. Filled in automatically for an automation or script. See [Identity and tag](#identity-and-tag). |
-
-And inside `live:`
-
-| Field | Type | Meaning |
-|---|---|---|
-| `id` | string | Ties the calls together. Chosen by the caller, and only needs to be unique within its source. |
-| `command` | `start`, `update`, `end` or `clear` | Optional. Without it, a call opens the live notification if none is open for the id, and updates it otherwise. `end` and `clear` are always explicit. |
-| `announce` | boolean | Whether this call alerts. Defaults to true for `start` and `end`, false for `update`. Never applies to `clear`. |
-| `close` | `now`, `cleared` or a duration | On `end`, the close rule. See [Ending and closing](#ending-and-closing). |
-| `title`, `message` | string | Text for the live part, where it should differ from the standard part. |
-| `progress` | 0 to 100 | How far through, when the caller knows. A live item without it shows no bar. |
-| `finish_at` | datetime | When it is expected to end, for a countdown. |
-| `icon` | icon name | Shown where a transport has room for one. |
-| `url` | path or URL | Where a tap goes. |
-| `channel` | string | Android notification channel. Its sound and importance are fixed when the phone first sees it, so the name should not change. |
-| `actions`, `action_groups` | as on `notify` | Buttons for the live part only. See [Actions](#actions). |
-| `data` | mapping | Any other Companion App key, passed to `mobile_live` only, for whatever this list does not cover. |
+| Field                      | Type                                | Meaning                                                                                                                                               |
+|----------------------------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `id`                       | string                              | Ties the calls together. Chosen by the caller, and only needs to be unique within its source. Or SN assigns one and hands it back in response                                                          |
+| `command`                  | `start`, `update`, `end` or `clear` | Optional. Without it, a call opens the live notification if none is open for the id, and updates it otherwise. `end` and `clear` are always explicit. Phase change to be clarified |
+| `announce`                 | boolean                             | Whether this call alerts. Defaults to true for `start` and `end`, false for `update`. Never applies to `clear`.                                       |
+| `close`                    | `now`, `cleared` or a duration      | On `end`, the close rule. See [Ending and closing](#ending-and-closing).                                                                              |
+| `title`, `message`         | string                              | Text for the live part, where it should differ from the standard part.                                                  Defaults to the main notification `data`fields                              |
+| `progress`                 | 0 to 100                            | How far through, when the caller knows. A live item without it shows no bar.                                                                          |
+| `finish_at`                | datetime                            | When it is expected to end, for a countdown.                                                                                                          |
+| `icon`                     | icon name                           | Shown where a transport has room for one.                                                                                                             |
+| `url`                      | path or URL                         | Where a tap goes.                                                                                                                                     |
+| `channel`                  | string                              | Android notification channel. Its sound and importance are fixed when the phone first sees it, so the name should not change.                         |
+| `actions`, `action_groups` | as on `notify`                      | Buttons for the live part only. See [Actions](#actions).                                                                                              |
+| `data`                     | mapping                             | Any other Companion App key, passed to `mobile_live` only, for whatever this list does not cover.                                                     |
 
 All names are placeholders.
 
@@ -166,27 +163,27 @@ Any field left out of an update keeps the value Supernotify last recorded. Field
 
 ### What each command does
 
-| Command | Live part | Standard part |
-|---|---|---|
-| `start` | Opened on every selected live delivery. Supernotify records which deliveries and targets accepted it. | Sent by normal selection, unless `announce: false`. |
-| `update` | Updated in place on the recorded targets, quietly. Never falls back to another delivery, and is exempt from the duplicate check. | Not sent, unless `announce: true`. |
-| `end` | The final content is sent to the recorded targets, with no bar or countdown. The item is then closed under the close rule. | Sent by normal selection, unless `announce: false`. |
-| `clear` | Closed now on the recorded targets. | Never sent. |
+| Command  | Live part                                                                                                                        | Standard part                                       |
+|----------|----------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
+| `start`  | Opened on every selected live delivery. Supernotify records which deliveries and targets accepted it.                            | Sent by normal selection, unless `announce: false`. |
+| `update` | Updated in place on the recorded targets, quietly. Never falls back to another delivery, and is exempt from the duplicate check. | Not sent, unless `announce: true`.                  |
+| `end`    | The final content is sent to the recorded targets, with no bar or countdown. The item is then closed under the close rule.       | Sent by normal selection, unless `announce: false`. |
+| `clear`  | Closed now on the recorded targets.                                                                                              | Never sent.                                         |
 
 A phone should not alert twice for one call. So a device that takes the live part of a call is not also sent the standard part of that call by `mobile_push`, and `announce` decides whether its live item makes a sound. Every other delivery, and every phone that cannot show a live item, gets the standard part as usual.
 
 This covers the cases Appliance Auto Notify has today:
 
-| Case | Call |
-|---|---|
-| Cycle starts | `start` |
-| Cycle starts with *Notify start* off | `start` with `announce: false` |
-| Progress, program or oven temperature changes | `update` |
-| Each 10% with *Notify progress* on | `update` with `announce: true` |
-| Oven up to heat | An ordinary `notify` with no `live:`, then an `update` |
-| Cycle finishes | `end` |
-| Cycle finishes, and the result should stay until the appliance is emptied | `end` with `close: cleared`, then `clear` |
-| Cycle aborted, or *Notify end* off | `clear` |
+| Case                                                                      | Call                                                   |
+|---------------------------------------------------------------------------|--------------------------------------------------------|
+| Cycle starts                                                              | `start`                                                |
+| Cycle starts with *Notify start* off                                      | `start` with `announce: false`                         |
+| Progress, program or oven temperature changes                             | `update`                                               |
+| Each 10% with *Notify progress* on                                        | `update` with `announce: true`                         |
+| Oven up to heat                                                           | An ordinary `notify` with no `live:`, then an `update` |
+| Cycle finishes                                                            | `end`                                                  |
+| Cycle finishes, and the result should stay until the appliance is emptied | `end` with `close: cleared`, then `clear`              |
+| Cycle aborted, or *Notify end* off                                        | `clear`                                                |
 
 ### Ending and closing
 
@@ -198,11 +195,11 @@ This follows Apple's guidance for Live Activities:
 
 An `end` always sends final content: the end message, with the bar and countdown removed. On a phone that final content is the end notification, and it alerts unless `announce: false`. The item is then finished, and is closed by its close rule:
 
-| `close` | The finished item is closed |
-|---|---|
-| `now` | At once. The result is not left on screen, so phones get the standard part through `mobile_push` instead, as they do today. |
-| a duration, such as `00:15:00` | After that time. |
-| `cleared` | When a `clear` command arrives, or someone presses the standard live *Clear* button on any device. This is the "finished" being acknowledged. |
+| `close`                        | The finished item is closed                                                                                                                   |
+|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `now`                          | At once. The result is not left on screen, so phones get the standard part through `mobile_push` instead, as they do today.                   |
+| a duration, such as `00:15:00` | After that time.                                                                                                                              |
+| `cleared`                      | When a `clear` command arrives, or someone presses the standard live *Clear* button on any device. This is the "finished" being acknowledged. |
 
 Whatever the rule, a `clear`, the *Clear* button, the user swiping the item away, and expiry all still close it. The default rule is set on the live delivery, so a caller only names one when its case differs.
 
@@ -253,19 +250,19 @@ Live items on phones get a transport of their own, beside `mobile_push`, with a 
 
 The mapping to Companion App keys is settled from the platform notes. Supernotify applies it so the caller sends none of these.
 
-| `live:` | Companion App keys | Notes |
-|---|---|---|
-| any | `tag`, `live_update: true` | |
-| any | `sticky: true`, `importance: high` | Android only. Without them the start is silent and a tap removes the Live Update. |
-| `channel` | `channel` | Android only. Defaults to the delivery's one channel for all live items. |
-| `progress` | `progress`, `progress_max: 100` | |
-| `finish_at` | `chronometer: true`, `when` | |
-| `progress` without `finish_at` | `critical_text` as the percentage | The chip shows this in place of the countdown, so it is only sent when there is no countdown. Kept under about 7 characters. |
-| `icon` | `notification_icon` | |
-| `url` | `url` and `clickAction` | Sent on every update, from the record. |
-| a call that is not announced | `silent: true`, `alert_once: true` | One for each platform. |
-| `end` | A last update with the end message and no `progress`, `chronometer` or `critical_text` | Whether it should stay a `live_update` is for the testing plan. |
-| close | `message: clear_notification` with the `tag` | From `clear`, the close rule or expiry. |
+| `live:`                        | Companion App keys                                                                     | Notes                                                                                                                        |
+|--------------------------------|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| any                            | `tag`, `live_update: true`                                                             |                                                                                                                              |
+| any                            | `sticky: true`, `importance: high`                                                     | Android only. Without them the start is silent and a tap removes the Live Update.                                            |
+| `channel`                      | `channel`                                                                              | Android only. Defaults to the delivery's one channel for all live items.                                                     |
+| `progress`                     | `progress`, `progress_max: 100`                                                        |                                                                                                                              |
+| `finish_at`                    | `chronometer: true`, `when`                                                            |                                                                                                                              |
+| `progress` without `finish_at` | `critical_text` as the percentage                                                      | The chip shows this in place of the countdown, so it is only sent when there is no countdown. Kept under about 7 characters. |
+| `icon`                         | `notification_icon`                                                                    |                                                                                                                              |
+| `url`                          | `url` and `clickAction`                                                                | Sent on every update, from the record.                                                                                       |
+| a call that is not announced   | `silent: true`, `alert_once: true`                                                     | One for each platform.                                                                                                       |
+| `end`                          | A last update with the end message and no `progress`, `chronometer` or `critical_text` | Whether it should stay a `live_update` is for the testing plan.                                                              |
+| close                          | `message: clear_notification` with the `tag`                                           | From `clear`, the close rule or expiry.                                                                                      |
 
 Phones that cannot show a Live Activity are not a problem on Android. Versions 7 to 15 show an ordinary notification with the bar and timer, replaced in place. iOS below 17.2 is not yet checked, see the [testing plan](#manual-testing-plan).
 
@@ -360,11 +357,11 @@ What can then be deleted from Appliance Auto Notify: `deliveries_by_transport` a
 
 The same commands cover the cases in #254. The automation supplies the event, and there is no progress bar.
 
-| Event | Start | End |
-|---|---|---|
-| Gate left open | Gate opens | Gate closes: `clear` |
-| Water leak | Sensor wet, with an announced `update` while it stays wet | Sensor dry: `end` with `close: cleared`, cleared by whoever checks it |
-| Doorbell | Ring | Door opened, or the standard live *Clear* button on any phone |
+| Event          | Start                                                     | End                                                                   |
+|----------------|-----------------------------------------------------------|-----------------------------------------------------------------------|
+| Gate left open | Gate opens                                                | Gate closes: `clear`                                                  |
+| Water leak     | Sensor wet, with an announced `update` while it stays wet | Sensor dry: `end` with `close: cleared`, cleared by whoever checks it |
+| Doorbell       | Ring                                                      | Door opened, or the standard live *Clear* button on any phone         |
 
 ## Smaller fixes worth making regardless
 
@@ -407,6 +404,8 @@ Answered by the Appliance Auto Notify work up to v0.7.0 and its platform notes, 
 - [ ] **Expiry override.** Should a caller be able to set a shorter or longer limit than 8 hours? A finished item waiting to be cleared may want longer, and iOS removes an activity from the Lock Screen at 12 hours whatever is asked.
 - [ ] **Buttons on iOS.** Whether a Live Activity can show action buttons at all is not known. If not, the standard live action group only helps Android and persistent notifications.
 - [ ] **Many at once.** With power monitors discovered automatically, several live notifications may run together, most with no progress or finish time. Android shows one status bar chip, for the newest. Is a way to rank them needed?
+- [ ] Separate handling, for watches, carplay, macbooks, including selectively enabling
+- [ ] Occupancy, e.g. where phones don't have remote HA and not present, so can't get live activity handshake
 
 ## Manual testing plan
 
@@ -467,6 +466,52 @@ Persistent notifications:
 - [ ] Send two persistent notifications with the same `notification_id`. Confirm the second replaces the first.
 - [ ] Dismiss by that id, then dismiss again. Confirm the second dismiss is harmless.
 
+## Appendices
+### Enriched Source
+
+Several limitations with current Home Assistant
+
+- The calling object - typically an automation or script - *is* available, but it is unwieldy to find, requiring either a scan of all states, or direct SQL queries
+  - The calling object itself may have metadata - categories, labels - that are of value in conditions, or tracking
+  - Note the `run_id` and automation source now tracked in Supernotify, sourced from trace helper
+- For notification use cases, often the real context is the entity, device etc that led to the automation
+  - Examples
+    - A camera entity ID, or a Frigate event ID
+    - A HomeConnect-enabled dishwasher, or a power monitor connected to a washing machine
+  - The static metadata for this object may be needed, along with state, state attributes, state transition, event, and the new HA triggers
+- Supernotify may need a clean way of discovering or accepting this info from AutoNotify components, or any other upstream that chooses to use them
+- Some of this may eventually be part of HA, so doing it once within the code useful, to minimize migration path within code and for automations
+- Condition code may need some shortcuts, like 'furthest back known context' that picks either parent or current context depending on availability
+- May be multiple objects for same thing, e.g. onvif camera plus hikvision camera plus mpeg camera plus frigate camera plus SN camera config object
+- AutoArm currently does this by passing an `apply_scenarios` however this is very limited for cases where multiple vars involved
+  - Subject -> verb -> Object -> Medium -- sunrise disarmed alarm panel state reported by autoarm
+
+
+Step back to *why* this is needed, or if it is really needed at all:
+
+- Condition variables for scenarios, or conditional deliveries
+  - Use cases needed
+- Debugging, live or reading an archive notification to see why something happened
+  - Archive notification is a more relaxed environment to do slow calls to pull in context
+  - A method that turns existing HA context into useful user and automation refs is obvious, and orthogonal to this delivery
+  - The full context doesn't have to be in Supernotify, HA already has a trace mechanism for working out what led to a state change or action call, and so long the info available upstream, its not needed in Supernotify only for debug
+- Entities and attributes only required in Home Assistant for fine tuning notification delivery, all the interpretation of what is actually happening in the real world belongs in an Autonotify component or other upstream client
+
+
+### Summary of Enriched Source
+
+- Debugging
+  - Improve the autonotify->supernotify traceability
+    - trace is not available in archive JSON when Autonotify calls Supernotify at present
+  - Improve the human readability of existing context - to an actual user ID and/or event, state change etc
+  - Linkage where possible to a logbook view like Activity
+- Conditionals
+  - Speculative at present, no current use cases
+- Other Purposes
+  - Speculative at present, no current use cases
+  - Treat existing context linkage method in `hass_api`with caution
+
+`source` is not an immediate need.
 ## References
 
 - [Auto Notify](./0003-auto_notifier.md) - The Auto Notify design doc
