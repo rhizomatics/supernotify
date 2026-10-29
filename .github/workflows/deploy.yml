@@ -79,7 +79,7 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        sudo apt-get install -y pngquant libturbojpeg
+        sudo apt-get install -y pngquant libturbojpeg0
         uv sync
     - name: Ruff
       uses:  astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89

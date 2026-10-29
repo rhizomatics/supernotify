@@ -82,7 +82,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install -y libturbojpeg
+          sudo apt-get install -y libturbojpeg0
           uv sync --dev --python ${{ matrix.python-version }}
 
       # --no-config: otherwise the override-dependencies in pyproject.toml silently keep the locked
