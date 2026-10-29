@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_mqtt_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-21 09:51 +0000
+            created at 2026-10-29 18:26 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -135,9 +135,9 @@
     <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t"><span class="key">from</span> <span class="nam">__future__</span> <span class="key">import</span> <span class="nam">annotations</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="key">import</span> <span class="nam">asyncio</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="key">import</span> <span class="nam">time</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">import</span> <span class="nam">time</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="key">from</span> <span class="nam">asyncio</span> <span class="key">import</span> <span class="nam">sleep</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">from</span> <span class="nam">collections</span><span class="op">.</span><span class="nam">abc</span> <span class="key">import</span> <span class="nam">Collection</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">timedelta</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">ClassVar</span>&nbsp;</span><span class="r"></span></p>
@@ -636,7 +636,7 @@
     <p class="run"><span class="n"><a id="t554" href="#t554">554</a></span><span class="t">        <span class="key">if</span> <span class="nam">tts_pending</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t555" href="#t555">555</a></span><span class="t">            <span class="com"># one wait for all the devices, after every notification has gone</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t556" href="#t556">556</a></span><span class="t">            <span class="key">if</span> <span class="nam">push_data</span><span class="op">[</span><span class="str">&quot;tts_delay&quot;</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t557" href="#t557">557</a></span><span class="t">                <span class="key">await</span> <span class="nam">asyncio</span><span class="op">.</span><span class="nam">sleep</span><span class="op">(</span><span class="nam">push_data</span><span class="op">[</span><span class="str">&quot;tts_delay&quot;</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t557" href="#t557">557</a></span><span class="t">                <span class="key">await</span> <span class="nam">sleep</span><span class="op">(</span><span class="nam">push_data</span><span class="op">[</span><span class="str">&quot;tts_delay&quot;</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t558" href="#t558">558</a></span><span class="t">            <span class="key">for</span> <span class="nam">full_target</span><span class="op">,</span> <span class="nam">extra</span> <span class="key">in</span> <span class="nam">tts_pending</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t559" href="#t559">559</a></span><span class="t">                <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">call_action</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t560" href="#t560">560</a></span><span class="t">                    <span class="nam">envelope</span><span class="op">,</span> <span class="nam">qualified_action</span><span class="op">=</span><span class="nam">full_target</span><span class="op">,</span> <span class="nam">action_data</span><span class="op">=</span><span class="nam">extra</span><span class="op">,</span> <span class="nam">implied_target</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">single_target</span><span class="op">=</span><span class="key">True</span>&nbsp;</span><span class="r"></span></p>
@@ -651,7 +651,7 @@
             <a class="nav" href="z_bf2512bcd384b419_mqtt_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-21 09:51 +0000
+            created at 2026-10-29 18:26 +0000
         </p>
     </div>
 </footer>

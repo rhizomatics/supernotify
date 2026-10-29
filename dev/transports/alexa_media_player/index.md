@@ -36,22 +36,24 @@ By default, every announcement assumes background music might be playing on the 
 1. **Pause** music if playing (or `media_stop` if `pause_music: false`, to suppress the confirmation beep).
 1. **Set volume** to the requested `volume`, if any.
 1. **Announce** the message.
-1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`).
-1. **Resume** music playback, if it was paused.
+1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`), only if there's a volume to restore or music to resume, or `wait_for_tts` is set.
 1. **Restore** volume to its prior level.
+1. **Resume** music playback, if it was paused, after a 2 second delay.
 
 All of `data` keys below are optional:
 
-| Key               | Type       | Default | Effect                                                                                                                                                                     |
-| ----------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `volume`          | float 0-1  | none    | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
-| `restore_volume`  | bool       | `true`  | Restore the pre-announcement volume afterwards.                                                                                                                            |
-| `pause_music`     | bool       | `true`  | Pause (rather than stop) music if playing.                                                                                                                                 |
-| `volume_fallback` | float 0-1  | `0.5`   | Used when a device's current volume can't be read.                                                                                                                         |
-| `wait_for_tts`    | bool       | `false` | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
-| `audio_url`       | str        | -       | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
-| `audio_duration`  | float s    | `0`     | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
-| `tts_char_speed`  | float s/ch | `0.06`  | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
+| Key               | Type       | Default    | Effect                                                                                                                                                                     |
+| ----------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`            | str        | `announce` | Passed to `notify.alexa_media`: `announce` plays a chime then speaks, `tts` only speaks, `push` sends a notification to the Alexa app.                                     |
+| `method`          | str        | -          | Passed to `notify.alexa_media`, for an announcement on an Echo Show: `all`, `speak` or `show`.                                                                             |
+| `volume`          | float 0-1  | none       | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
+| `restore_volume`  | bool       | `true`     | Restore the pre-announcement volume afterwards.                                                                                                                            |
+| `pause_music`     | bool       | `true`     | Pause (rather than stop) music if playing.                                                                                                                                 |
+| `volume_fallback` | float 0-1  | `0.5`      | Used when a device's current volume can't be read.                                                                                                                         |
+| `wait_for_tts`    | bool       | `false`    | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
+| `audio_url`       | str        | -          | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
+| `audio_duration`  | float s    | `0`        | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
+| `tts_char_speed`  | float s/ch | `0.06`     | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
 
 ### Reducing cloud API calls and Notification delay
 
@@ -66,6 +68,8 @@ deliveries:
     options:
       media_auto_pause: false
 ```
+
+With `media_auto_pause: false`, a `volume` in the notification is ignored, since setting it is part of the same sequence.
 
 If this only applies to some Alexa devices, then make two `Delivery` definitions, one for the music players without the `media_auto_pause` override and one with.
 

@@ -128,7 +128,9 @@ An alternative `supernotify.notify` action is now available that is much easier 
 
 ### HACS
 
-- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
+- [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk) - Live activities on your phone for dishwashers, robot vacuums, power monitors etc with no config, no YAML, no blueprints, no automations.
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more. Integrates with Frigate profiles.
+- [Camera AutoNotify](https://camera-autonotify.rhizomatics.org.uk) - Instant notifications for Frigate (and other camera systems coming) with no config, no blueprints, no YAML, no automations.
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - OpenTelemetry (OTLP) and Syslog event capture for Home Assistant
 
 ### Python / Docker
@@ -4149,7 +4151,16 @@ Use `spoken_message` in the notification call to provide a different message for
 
 ## Discovery
 
-**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+**Default delivery** If the Alexa Devices integration is configured, has at least one `notify` entity, and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically. It has no fixed targets: it's selected whenever a notification targets one of the integration's own `notify` entities, directly or through an area or floor, or a Home Assistant `group`, which is passed on as it is.
+
+**All-device deliveries** Two more deliveries are generated, only used when selected explicitly, for example by `delivery: alexa_devices_announce_all` or a scenario:
+
+| Delivery                     | Targets                                             |
+| ---------------------------- | --------------------------------------------------- |
+| `alexa_devices_speak_all`    | Every `notify.*_speak` entity of the integration    |
+| `alexa_devices_announce_all` | Every `notify.*_announce` entity of the integration |
+
+Each is only generated if there's at least one matching entity. Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
 
 ## References
 
@@ -4200,22 +4211,24 @@ By default, every announcement assumes background music might be playing on the 
 1. **Pause** music if playing (or `media_stop` if `pause_music: false`, to suppress the confirmation beep).
 1. **Set volume** to the requested `volume`, if any.
 1. **Announce** the message.
-1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`).
-1. **Resume** music playback, if it was paused.
+1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`), only if there's a volume to restore or music to resume, or `wait_for_tts` is set.
 1. **Restore** volume to its prior level.
+1. **Resume** music playback, if it was paused, after a 2 second delay.
 
 All of `data` keys below are optional:
 
-| Key               | Type       | Default | Effect                                                                                                                                                                     |
-| ----------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `volume`          | float 0-1  | none    | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
-| `restore_volume`  | bool       | `true`  | Restore the pre-announcement volume afterwards.                                                                                                                            |
-| `pause_music`     | bool       | `true`  | Pause (rather than stop) music if playing.                                                                                                                                 |
-| `volume_fallback` | float 0-1  | `0.5`   | Used when a device's current volume can't be read.                                                                                                                         |
-| `wait_for_tts`    | bool       | `false` | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
-| `audio_url`       | str        | -       | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
-| `audio_duration`  | float s    | `0`     | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
-| `tts_char_speed`  | float s/ch | `0.06`  | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
+| Key               | Type       | Default    | Effect                                                                                                                                                                     |
+| ----------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`            | str        | `announce` | Passed to `notify.alexa_media`: `announce` plays a chime then speaks, `tts` only speaks, `push` sends a notification to the Alexa app.                                     |
+| `method`          | str        | -          | Passed to `notify.alexa_media`, for an announcement on an Echo Show: `all`, `speak` or `show`.                                                                             |
+| `volume`          | float 0-1  | none       | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
+| `restore_volume`  | bool       | `true`     | Restore the pre-announcement volume afterwards.                                                                                                                            |
+| `pause_music`     | bool       | `true`     | Pause (rather than stop) music if playing.                                                                                                                                 |
+| `volume_fallback` | float 0-1  | `0.5`      | Used when a device's current volume can't be read.                                                                                                                         |
+| `wait_for_tts`    | bool       | `false`    | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
+| `audio_url`       | str        | -          | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
+| `audio_duration`  | float s    | `0`        | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
+| `tts_char_speed`  | float s/ch | `0.06`     | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
 
 ### Reducing cloud API calls and Notification delay
 
@@ -4230,6 +4243,8 @@ deliveries:
     options:
       media_auto_pause: false
 ```
+
+With `media_auto_pause: false`, a `volume` in the notification is ignored, since setting it is part of the same sequence.
 
 If this only applies to some Alexa devices, then make two `Delivery` definitions, one for the music players without the `media_auto_pause` override and one with.
 
@@ -5580,7 +5595,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 
 Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
-Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
+Give the image as the notification's `media` `snapshot_url`, or a `camera_entity_id` for Supernotify to grab an image from the camera (see [Multimedia](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)). Message and title fields will be ignored. Override the `image` content type by setting `media_content_type` in the delivery `data`.
 
 ## Example
 
@@ -5590,23 +5605,27 @@ Example Notification
 - action: supernotify.notify
   data:
     message: ""
+    media:
+      snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
     delivery:
       media:
         target:
             - media_player.kitchen_alexa
-        data:
-            snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
 ```
 
 The resulting action call from the adaptor looks like:
 
 ```yaml
-service: media_player.play_media
-data:
-  media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
-  media_content_type: image
+action: media_player.play_media
+target:
   entity_id: media_player.kitchen_alexa
+data:
+  media:
+    media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
+    media_content_type: image
 ```
+
+A `snapshot_url` in the delivery `data` is still accepted, for older configurations, and takes priority over the notification's `media`.
 
 ## Playing audio or other content
 
@@ -6466,11 +6485,11 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
 | `tts`        | [`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | [TTS Integration](https://www.home-assistant.io/integrations/tts/) | -        |
 
-Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses `tts.home_assistant_cloud` from Nabu Casa if present, or else the first `tts` entity found, though any supported tts can be chosen. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
 ## Example
 
-Since `tts` never auto-selects (see [Discovery](#discovery) above), name the `tts` delivery explicitly and give it one or more `media_player` targets:
+Since `tts` never auto-selects (see [Discovery](#discovery) below), name the `tts` delivery explicitly and give it one or more `media_player` targets:
 
 Example Notification
 
@@ -6502,20 +6521,22 @@ A scenario can select `tts` the same way, instead of naming it on every call - s
 
 ## Text-to-Speech Integration
 
-This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, such as `cache`, `language` and `options`.
+This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, `cache`, `language` and `options`.
 
-The action can be overridden if desired to the older `tts.say`
+The action can be overridden to an older platform-specific action, like `tts.cloud_say`. These target the `media_player` entities directly, with no `tts` entity.
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
 ### Choosing the TTS Provider
+
+Without a `tts_entity_id` option, `tts.home_assistant_cloud` is used if it exists, otherwise the first `tts` entity found. If there are no `tts` entities at all, the delivery is skipped, with a warning in the log.
 
 ```yaml
 delivery:
   speak_it_out:
     transport: tts
     options:
-      - tts_entity_id: tts.google_ai_tts
+      tts_entity_id: tts.google_ai_tts
 ```
 
 ### Changing the Action
@@ -6524,9 +6545,18 @@ delivery:
 delivery:
   speak_it_out:
     transport: tts
-    action: tts.speak_cloud
-    options:
-      - tts_entity_id: tts.google_ai_tts
+    action: tts.cloud_say
+```
+
+The resulting action call looks like:
+
+```yaml
+action: tts.cloud_say
+target:
+  entity_id:
+    - media_player.kitchen_speaker
+data:
+  message: "Someone is at the front door"
 ```
 
 ### Under the Hood
@@ -6541,13 +6571,15 @@ Android TTS
 
 ```yaml
 action: notify.mobile_app_my_pixel
+data:
+  message: "TTS"
   data:
-    message: "TTS"
-    data:
-      tts_text: "This is the notification message"
+    tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
+Set `media_stream` in the notification or delivery `data`, for example `alarm_stream` or `alarm_stream_max`, to choose which Android audio stream is used. It's passed inside the inner `data`, alongside `tts_text`.
+
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. By default, the `tts` adaptor filters out Apple devices, which don't support TTS notifications, using the `device_manufacturer_select` option, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
 
 Configuration Snippet
 
@@ -8494,26 +8526,26 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 
 ## Default Options
 
-| Transport                                                                                                  | data_keys_select | device_discovery | device_domain     | device_manufacturer_select | device_model_select            | handle_as_domain | jpeg_opts                                   | media_auto_pause | message_usage | mode   | png_opts             | preheader_blank | preheader_length | raw   | simplify_text | strict_template | strip_urls | target_select                                                            | tts_entity_id            |
-| ---------------------------------------------------------------------------------------------------------- | ---------------- | ---------------- | ----------------- | -------------------------- | ------------------------------ | ---------------- | ------------------------------------------- | ---------------- | ------------- | ------ | -------------------- | --------------- | ---------------- | ----- | ------------- | --------------- | ---------- | ------------------------------------------------------------------------ | ------------------------ |
-| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['group.[a-z0-9\_]+', '^notify.[A-Za-z0-9\_]+$'\]                       | N/A                      |
-| [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | True             | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | N/A              | True             | ['alexa_devices'] | N/A                        | {'exclude': ['Speaker Group']} | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['(switch                                                               | script                   |
-| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | -                | N/A              | N/A               | N/A                        | N/A                            | N/A              | {'progressive': 'true', 'optimize': 'true'} | N/A              | STANDARD      | direct | {'optimize': 'true'} | ͏‌                | 100              | N/A   | False         | False           | False      | N/A                                                                      | N/A                      |
-| [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                | N/A              | N/A               | N/A                        | N/A                            | -                | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | False | False         | N/A             | False      | N/A                                                                      | N/A                      |
-| [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^notify.[A-Za-z0-9\_]+$'\]                                            | N/A                      |
-| [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | -                | False            | ['mobile_app']    | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | N/A                                                                      | N/A                      |
-| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | \['^notify.[A-Za-z0-9\_]+$'\]                                            | N/A                      |
-| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      | N/A                      |
-| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] | tts.home_assistant_cloud |
+| Transport                                                                                                  | data_keys_select | device_discovery | device_domain     | device_manufacturer_select | device_model_select            | handle_as_domain | jpeg_opts                                   | media_auto_pause | message_usage | mode   | png_opts             | preheader_blank | preheader_length | raw   | simplify_text | strict_template | strip_urls | target_select                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ---------------- | ---------------- | ----------------- | -------------------------- | ------------------------------ | ---------------- | ------------------------------------------- | ---------------- | ------------- | ------ | -------------------- | --------------- | ---------------- | ----- | ------------- | --------------- | ---------- | ------------------------------------------------------------------------ |
+| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['group.[a-z0-9\_]+', '^notify.[A-Za-z0-9\_]+$'\]                       |
+| [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | True             | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | N/A              | True             | ['alexa_devices'] | N/A                        | {'exclude': ['Speaker Group']} | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['(switch                                                               |
+| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | -                | N/A              | N/A               | N/A                        | N/A                            | N/A              | {'progressive': 'true', 'optimize': 'true'} | N/A              | STANDARD      | direct | {'optimize': 'true'} | ͏‌                | 100              | N/A   | False         | False           | False      | N/A                                                                      |
+| [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                | N/A              | N/A               | N/A                        | N/A                            | -                | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | False | False         | N/A             | False      | N/A                                                                      |
+| [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^notify.[A-Za-z0-9\_]+$'\]                                            |
+| [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | -                | False            | ['mobile_app']    | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | N/A                                                                      |
+| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | \['^notify.[A-Za-z0-9\_]+$'\]                                            |
+| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      |
+| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] |

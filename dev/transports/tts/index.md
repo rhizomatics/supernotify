@@ -6,11 +6,11 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
 | `tts`        | [`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | [TTS Integration](https://www.home-assistant.io/integrations/tts/) | -        |
 
-Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses `tts.home_assistant_cloud` from Nabu Casa if present, or else the first `tts` entity found, though any supported tts can be chosen. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
 ## Example
 
-Since `tts` never auto-selects (see [Discovery](#discovery) above), name the `tts` delivery explicitly and give it one or more `media_player` targets:
+Since `tts` never auto-selects (see [Discovery](#discovery) below), name the `tts` delivery explicitly and give it one or more `media_player` targets:
 
 Example Notification
 
@@ -42,20 +42,22 @@ A scenario can select `tts` the same way, instead of naming it on every call - s
 
 ## Text-to-Speech Integration
 
-This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, such as `cache`, `language` and `options`.
+This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, `cache`, `language` and `options`.
 
-The action can be overridden if desired to the older `tts.say`
+The action can be overridden to an older platform-specific action, like `tts.cloud_say`. These target the `media_player` entities directly, with no `tts` entity.
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
 ### Choosing the TTS Provider
+
+Without a `tts_entity_id` option, `tts.home_assistant_cloud` is used if it exists, otherwise the first `tts` entity found. If there are no `tts` entities at all, the delivery is skipped, with a warning in the log.
 
 ```yaml
 delivery:
   speak_it_out:
     transport: tts
     options:
-      - tts_entity_id: tts.google_ai_tts
+      tts_entity_id: tts.google_ai_tts
 ```
 
 ### Changing the Action
@@ -64,9 +66,18 @@ delivery:
 delivery:
   speak_it_out:
     transport: tts
-    action: tts.speak_cloud
-    options:
-      - tts_entity_id: tts.google_ai_tts
+    action: tts.cloud_say
+```
+
+The resulting action call looks like:
+
+```yaml
+action: tts.cloud_say
+target:
+  entity_id:
+    - media_player.kitchen_speaker
+data:
+  message: "Someone is at the front door"
 ```
 
 ### Under the Hood
@@ -81,13 +92,15 @@ Android TTS
 
 ```yaml
 action: notify.mobile_app_my_pixel
+data:
+  message: "TTS"
   data:
-    message: "TTS"
-    data:
-      tts_text: "This is the notification message"
+    tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
+Set `media_stream` in the notification or delivery `data`, for example `alarm_stream` or `alarm_stream_max`, to choose which Android audio stream is used. It's passed inside the inner `data`, alongside `tts_text`.
+
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. By default, the `tts` adaptor filters out Apple devices, which don't support TTS notifications, using the `device_manufacturer_select` option, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
 
 Configuration Snippet
 

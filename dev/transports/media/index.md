@@ -8,7 +8,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 
 Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
-Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
+Give the image as the notification's `media` `snapshot_url`, or a `camera_entity_id` for Supernotify to grab an image from the camera (see [Multimedia](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)). Message and title fields will be ignored. Override the `image` content type by setting `media_content_type` in the delivery `data`.
 
 ## Example
 
@@ -18,23 +18,27 @@ Example Notification
 - action: supernotify.notify
   data:
     message: ""
+    media:
+      snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
     delivery:
       media:
         target:
             - media_player.kitchen_alexa
-        data:
-            snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
 ```
 
 The resulting action call from the adaptor looks like:
 
 ```yaml
-service: media_player.play_media
-data:
-  media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
-  media_content_type: image
+action: media_player.play_media
+target:
   entity_id: media_player.kitchen_alexa
+data:
+  media:
+    media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
+    media_content_type: image
 ```
+
+A `snapshot_url` in the delivery `data` is still accepted, for older configurations, and takes priority over the notification's `media`.
 
 ## Playing audio or other content
 
