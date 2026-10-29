@@ -21,7 +21,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import TransportFeature
+from custom_components.supernotify.model import SuppressionReason, Target, TransportFeature
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.telegram import (
     TelegramTransport,
@@ -134,7 +134,7 @@ async def test_implicit_standard_delivery_fires_with_dict_chat_id_target() -> No
 
     assert n.delivered == 1
     service_data = ctx.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
-    assert service_data["target"] == [215678938]
+    assert service_data["chat_id"] == [215678938]
 
 
 @pytest.mark.parametrize(
@@ -158,7 +158,7 @@ async def test_implicit_standard_delivery_fires_with_flat_list_prefixed_target(c
 
     assert n.delivered == 1
     service_data = ctx.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
-    assert service_data["target"] == [expected]
+    assert service_data["chat_id"] == [expected]
 
 
 # ---------------------------------------------------------------------------
@@ -304,7 +304,7 @@ async def test_deliver_with_chat_id_override() -> None:
 
     assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [987654321]
+    assert service_data["chat_id"] == [987654321]
 
 
 async def test_deliver_with_reply_to_message_id() -> None:
@@ -464,6 +464,8 @@ async def test_deliver_missing_chat_id() -> None:
     result = await uut.deliver(e)
 
     assert result is False
+    assert e.skip_reason == SuppressionReason.NO_TARGET
+    assert uut.error_count == 0
     mock_api.call_service.assert_not_called()
 
 
@@ -540,24 +542,31 @@ async def test_deliver_telegram_keys_not_passed_to_service() -> None:
     assert "telegram_parse_mode" not in service_data
     assert "telegram_disable_notification" not in service_data
     assert "telegram_chat_id" not in service_data
-    assert "generic_key" in service_data
-    assert service_data["generic_key"] == "generic_value"
+    # not a telegram_bot key, so dropped - the schema would reject the call
+    assert "generic_key" not in service_data
 
 
-async def test_deliver_generic_keys_preserved() -> None:
+async def test_deliver_only_telegram_bot_keys_passed_on() -> None:
+    """A notification's data reaches every delivery, so keys meant for others, which the
+    telegram_bot schema rejects, are left out"""
     ctx = _ctx()
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_TELEGRAM)
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    e = _envelope(ctx, message="Generic data", data={"custom_field": "custom_value", "another_field": 123})
+    e = _envelope(
+        ctx,
+        message="Generic data",
+        data={"clickAction": "/lovelace", "message_thread_id": 7, "disable_web_page_preview": True},
+    )
     result = await uut.deliver(e)
 
     assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["custom_field"] == "custom_value"
-    assert service_data["another_field"] == 123
+    assert "clickAction" not in service_data
+    assert service_data["message_thread_id"] == 7
+    assert service_data["disable_web_page_preview"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -710,7 +719,7 @@ async def test_deliver_action_data_structure() -> None:
     assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
     assert "message" in service_data
-    assert "target" in service_data
+    assert "chat_id" in service_data
 
 
 # ---------------------------------------------------------------------------
@@ -879,75 +888,66 @@ async def test_deliver_target_from_delivery_target_phone_category() -> None:
 
     assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [123456789]
+    assert service_data["chat_id"] == [123456789]
 
 
-async def test_deliver_target_from_delivery_target_fallback_category() -> None:
-    """When neither phone nor chat_id categories are populated, fall back to any list value."""
+async def test_deliver_target_from_delivery_target_other_category_ignored() -> None:
+    """Only a chat id, or the old `phone` convention, is taken from the delivery's own target"""
     ctx = _ctx()
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_TELEGRAM)
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    delivery = Delivery("telegram_test", {CONF_TARGET: {"custom_category": ["555555555"]}}, uut)
+    delivery = Delivery("telegram_test", {CONF_TARGET: {"email": ["me@home.net"]}}, uut)
     e = Envelope(delivery, Notification(ctx, message="Fallback target"), data=None)
     result = await uut.deliver(e)
 
-    assert result is True
-    service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [555555555]
+    assert result is False
+    mock_api.call_service.assert_not_called()
 
 
-async def test_deliver_target_legacy_dict_shape() -> None:
-    """Pre-Target-object legacy shape: delivery.target as a bare dict of lists."""
+async def test_deliver_every_chat_id_sent_to() -> None:
     ctx = _ctx()
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_TELEGRAM)
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    e = _envelope(ctx, message="Legacy dict target", chat_id=None)
-    e.delivery.target = {ATTR_PHONE: ["111222333"]}  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-    result = await uut.deliver(e)
+    e = _envelope(ctx, message="Two chats", data={"telegram_chat_id": ["111", "-222", "not-a-number"]})
+    assert await uut.deliver(e) is True
 
-    assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [111222333]
+    assert service_data["chat_id"] == [111, -222]
+    assert "target" not in service_data
 
 
-async def test_deliver_target_legacy_dict_shape_scalar_value() -> None:
-    """Pre-Target-object legacy shape: delivery.target as a bare dict of scalars."""
+async def test_deliver_to_telegram_notify_entity() -> None:
     ctx = _ctx()
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_TELEGRAM)
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    e = _envelope(ctx, message="Legacy scalar dict target", chat_id=None)
-    e.delivery.target = {ATTR_PHONE: "777888999"}  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-    result = await uut.deliver(e)
+    e = Envelope(
+        Delivery("telegram_test", ctx.delivery_config("telegram_test"), uut),
+        Notification(ctx, message="To the family chat"),
+        target=Target(["notify.family_chat"]),
+    )
+    assert await uut.deliver(e) is True
 
-    assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [777888999]
+    assert service_data["entity_id"] == ["notify.family_chat"]
+    assert "chat_id" not in service_data
 
 
-async def test_deliver_target_legacy_list_shape() -> None:
-    """Pre-Target-object legacy shape: delivery.target as a bare list."""
+def test_selects_only_telegram_notify_entities() -> None:
     ctx = _ctx()
-    await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_TELEGRAM)
-    mock_api = _mock_hass_api()
-    uut.hass_api = mock_api
+    uut = TelegramTransport(ctx)
+    ctx.hass_api.platform_for_entity = lambda entity_id: {"notify.family_chat": "telegram_bot"}.get(entity_id)  # type: ignore
+    delivery = Delivery("telegram_test", {}, uut)
 
-    e = _envelope(ctx, message="Legacy list target", chat_id=None)
-    e.delivery.target = ["444555666"]  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-    result = await uut.deliver(e)
-
-    assert result is True
-    service_data = mock_api.call_service.call_args.kwargs["service_data"]
-    assert service_data["target"] == [444555666]
+    assert delivery.select_targets(Target(["notify.family_chat", "notify.kitchen_echo"])).entity_ids == ["notify.family_chat"]
 
 
 async def test_deliver_non_numeric_chat_id() -> None:
@@ -961,6 +961,7 @@ async def test_deliver_non_numeric_chat_id() -> None:
     result = await uut.deliver(e)
 
     assert result is False
+    assert e.skip_reason == SuppressionReason.NO_TARGET
     mock_api.call_service.assert_not_called()
 
 
@@ -997,6 +998,36 @@ async def test_deliver_markdown_parse_mode_with_title() -> None:
     assert result is True
     service_data = mock_api.call_service.call_args.kwargs["service_data"]
     assert "*Alert*" in service_data["message"]
+
+
+async def test_deliver_markdownv2_title_escaped() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="body", title="Alert! 3.5 degrees", data={"telegram_parse_mode": "MarkdownV2"})
+    assert await uut.deliver(e) is True
+
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["message"].startswith("*Alert\\! 3\\.5 degrees*")
+
+
+async def test_deliver_truncated_formatted_message_sent_as_plain_text() -> None:
+    """A cut can leave a tag open, which Telegram rejects"""
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="<b>" + "x" * 5000 + "</b>", data={"telegram_parse_mode": "HTML"})
+    assert await uut.deliver(e) is True
+
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert len(service_data["message"]) == 4096
+    assert service_data["parse_mode"] == "plain_text"
 
 
 # ---------------------------------------------------------------------------

@@ -4,24 +4,31 @@ Sends push notifications via Telegram using Home Assistant's telegram_bot integr
 Supports text messages, photos (with optional captions), and inline action buttons.
 Uses telegram_bot service for granular control over formatting, media types, and protection.
 
+Targets are chat ids, as `telegram_chat_id` targets, or the `notify` entity the integration
+creates for each chat, which also identifies the bot when there's more than one.
+
 Supported data keys (all optional):
-    telegram_parse_mode         str         "HTML" | "Markdown" (default: None, plain text)
+    telegram_parse_mode         str         "HTML" | "Markdown" | "MarkdownV2" (default: plain text)
     telegram_disable_notification bool      Override silent mode (overrides priority mapping)
-    telegram_protect_content    bool       Block forward/save (default: False)
-    telegram_chat_id            str|int    Override target chat_id (default: None)
+    telegram_protect_content    bool       Accepted, but has no effect (see below)
+    telegram_chat_id            str|int|list Override target chat ids (default: None)
     telegram_reply_to_message_id int       Reply to message ID (default: None)
     telegram_inline_keyboard    list       Custom action buttons in [[{text, callback_data}]] format
     telegram_attach_image       bool       Attach camera snapshot (default: False)
     telegram_image_as_document  bool       Send image as document without compression (default: False)
 
 Notes on the HA telegram_bot service schema:
+- Chat ids are sent as `chat_id`, not `target`, which HA has deprecated, raising a repair
+  issue for every call using it.
+- The schema rejects unknown keys, and a notification's `data` reaches every delivery, so
+  only the keys in PASSTHROUGH_KEYS are passed on from it.
 - `parse_mode` accepts only lowercase values: 'html', 'markdown',
   'markdownv2', 'plain_text'. We normalise the user-provided value to
   lowercase before forwarding.
 - `protect_content` is a Telegram Bot API parameter but the HA
-  `telegram_bot` integration does not currently expose it as a service-data
-  key (voluptuous rejects it as `extra keys not allowed`). We accept the
-  data key for forward-compatibility but do NOT forward it to the service.
+  `telegram_bot` integration only accepts it for `send_media_group`, not the
+  services used here. We accept the data key for forward-compatibility but
+  do NOT forward it to the service.
 - `inline_keyboard` for HA is a list of rows where each row is a list of
   `[label, callback_or_url]` 2-element lists (NOT dicts with
   `text`/`callback_data` keys). Example: `[[["OK","/ok"],["Cancel","/cancel"]]]`.
@@ -34,8 +41,14 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ACTION_LEVEL_NOTIFICATION, ATTR_TELEGRAM_CHAT_ID, CONF_LEVEL, TRANSPORT_TELEGRAM
-from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
+from custom_components.supernotify.const import (
+    ACTION_LEVEL_NOTIFICATION,
+    ATTR_PHONE,
+    ATTR_TELEGRAM_CHAT_ID,
+    CONF_LEVEL,
+    TRANSPORT_TELEGRAM,
+)
+from custom_components.supernotify.model import DebugTrace, SuppressionReason, TransportConfig, TransportFeature
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
@@ -61,10 +74,38 @@ _PRIORITY_MAP = {
 _MAX_MESSAGE_LENGTH = 4096
 _MAX_CAPTION_LENGTH = 1024
 
+# telegram_bot service keys a notification's own `data` may set, beyond those the transport sets itself
+PASSTHROUGH_KEYS = (
+    "config_entry_id",
+    "disable_web_page_preview",
+    "keyboard",
+    "message_tag",
+    "message_thread_id",
+    "one_time_keyboard",
+    "resize_keyboard",
+)
+# characters with a meaning in each markdown flavour, escaped in a title
+_MARKDOWN_SPECIAL = {"markdown": "_*`[", "markdownv2": "_*[]()~`>#+-=|{}.!\\"}
+
 
 def _escape_html(text: str) -> str:
     """Escape HTML special characters for Telegram HTML parse mode."""
     return html.escape(text) if text else ""
+
+
+def _escape_markdown(text: str, parse_mode: str) -> str:
+    """Escape markdown special characters, which Telegram otherwise fails to parse"""
+    special = _MARKDOWN_SPECIAL[parse_mode]
+    return "".join(f"\\{c}" if c in special else c for c in text)
+
+
+def _fit(text: str, limit: int, parse_mode: str) -> tuple[str, str]:
+    """Cut text to Telegram's limit, as plain text if it was formatted, since a cut can leave
+    a tag or markup open, which Telegram rejects"""
+    if len(text) <= limit:
+        return text, parse_mode
+    _LOGGER.debug("SUPERNOTIFY telegram: message truncated to %d chars", limit)
+    return text[:limit], "plain_text"
 
 
 def _normalise_inline_keyboard(keyboard: list) -> list:
@@ -183,8 +224,10 @@ class TelegramTransport(Transport):
         # a numeric chat ID has no shape distinct enough for automatic matching (see
         # deliver()'s own numeric-ness check below), so it's only ever reachable here via
         # explicit qualification - telegram_chat_id is nonetheless a dedicated category name
-        # no other transport uses, so a value explicitly qualified with it is unambiguous
-        return [ATTR_TELEGRAM_CHAT_ID]
+        # no other transport uses, so a value explicitly qualified with it is unambiguous.
+        # The notify entity for each chat is the integration's own, claimed ahead of the
+        # generic notify_entity transport, like html5's
+        return [ATTR_TELEGRAM_CHAT_ID, TargetEntityCategory(domain="notify", platform=HA_TELEGRAM_BOT_DOMAIN)]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is not None
@@ -220,62 +263,31 @@ class TelegramTransport(Transport):
         attach_image = boolify(raw_data.pop("telegram_attach_image", False), default=False)
         image_as_document = boolify(raw_data.pop("telegram_image_as_document", False), default=False)
 
-        # Resolve target chat_id.
-        # Both `envelope.target` (this envelope's resolved, category-selected `Target` - a
-        # `target: {telegram_chat_id: ...}` reaches here) and `envelope.delivery.target`
-        # (the delivery's own static config - the pre-`unique_target_categories` path, kept
-        # for backward compatibility) are a SuperNotify `Target` object with a `.targets`
-        # attribute (dict[category, list[id]]). Also accept legacy raw shapes: dict, list,
-        # or scalar string/int.
-        raw_target: Any = chat_id_override
-        if not raw_target and envelope.target and envelope.target.targets:
-            raw_target = envelope.target
-        if not raw_target and envelope.delivery:
-            raw_target = envelope.delivery.target
+        # Chat ids from the data override, else the envelope's own `telegram_chat_id` targets, else
+        # the delivery's own configured target, where `phone` was once used for a chat id
+        raw_chat_ids: list[Any] = []
+        if chat_id_override:
+            raw_chat_ids = chat_id_override if isinstance(chat_id_override, list) else [chat_id_override]
+        elif envelope.target and envelope.target.targets.get(ATTR_TELEGRAM_CHAT_ID):
+            raw_chat_ids = envelope.target.targets[ATTR_TELEGRAM_CHAT_ID]
+        elif envelope.delivery and envelope.delivery.target:
+            delivery_targets = envelope.delivery.target.targets
+            raw_chat_ids = delivery_targets.get(ATTR_TELEGRAM_CHAT_ID) or delivery_targets.get(ATTR_PHONE) or []
 
-        # Target object: extract first id from preferred categories
-        if hasattr(raw_target, "targets") and isinstance(raw_target.targets, dict):
-            categorised = raw_target.targets
-            # Prefer the dedicated category, then phone (Telegram's older convention), then
-            # any non-empty list
-            preferred = (ATTR_TELEGRAM_CHAT_ID, "phone", "chat_id")
-            picked = None
-            for cat in preferred:
-                if categorised.get(cat):
-                    picked = categorised[cat][0]
-                    break
-            if not picked:
-                for v in categorised.values():
-                    if isinstance(v, list) and v:
-                        picked = v[0]
-                        break
-            raw_target = picked
+        # telegram_bot expects integers. Group chat IDs are negative; channel usernames
+        # (@channel) would be strings but are not accepted by the telegram_bot schema
+        chat_ids: list[int] = []
+        for raw_chat_id in raw_chat_ids:
+            try:
+                chat_ids.append(int(cast("str | int", raw_chat_id)))
+            except TypeError, ValueError:
+                _LOGGER.warning("SUPERNOTIFY telegram: chat_id %r is not numeric (expected int), skipped", raw_chat_id)
+        entity_ids: list[str] = envelope.target.domain_entity_ids("notify") if envelope.target else []
 
-        # Legacy dict shape (pre-Target object): pick first list value
-        if isinstance(raw_target, dict):
-            for v in raw_target.values():
-                if isinstance(v, list) and v:
-                    raw_target = v[0]
-                    break
-                if v:
-                    raw_target = v
-                    break
-        elif isinstance(raw_target, list) and raw_target:
-            raw_target = raw_target[0]
-
-        if not raw_target:
-            _LOGGER.warning("SUPERNOTIFY telegram: chat_id not configured in delivery data")
-            self.record_error("chat_id not configured", "deliver")
-            return False
-
-        # telegram_bot service expects int (or list of int). Group chat IDs are
-        # negative integers; channel usernames (@channel) would be string but
-        # are not currently supported by this transport.
-        try:
-            chat_id: int = int(cast("str | int", raw_target))
-        except TypeError, ValueError:
-            _LOGGER.warning("SUPERNOTIFY telegram: chat_id %r is not numeric (expected int)", raw_target)
-            self.record_error(f"chat_id {raw_target!r} not numeric", "deliver")
+        if not chat_ids and not entity_ids:
+            _LOGGER.warning("SUPERNOTIFY telegram: no chat_id or telegram notify entity to send to")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Validate and normalise parse_mode. The HA telegram_bot service
@@ -312,14 +324,9 @@ class TelegramTransport(Transport):
                 # plain text) and prepend it bolded.
                 message_text = f"<b>{_escape_html(envelope.title)}</b>\n\n{message_text}"
             elif parse_mode in ("markdown", "markdownv2"):
-                message_text = f"*{envelope.title}*\n\n{message_text}"
+                message_text = f"*{_escape_markdown(envelope.title, parse_mode)}*\n\n{message_text}"
             else:
                 message_text = f"{envelope.title}\n\n{message_text}"
-
-        # Truncate message to Telegram limit
-        if len(message_text) > _MAX_MESSAGE_LENGTH:
-            message_text = message_text[:_MAX_MESSAGE_LENGTH]
-            _LOGGER.debug("SUPERNOTIFY telegram: message truncated to %d chars", _MAX_MESSAGE_LENGTH)
 
         # Convert actions to inline keyboard. The HA telegram_bot service
         # expects rows of [label, callback_or_url] 2-element lists. If the
@@ -331,11 +338,13 @@ class TelegramTransport(Transport):
         elif envelope.actions:
             inline_keyboard = _build_inline_keyboard(envelope.actions)
 
-        # Build base action data. The HA telegram_bot service schema uses
-        # `target` (list of int chat IDs) as the primary recipient field; we
-        # pass a single-element list for one chat. send_message/send_photo/
-        # send_document all accept the same `target` key.
-        action_data: dict[str, Any] = {"target": [chat_id]}
+        # Recipients: chat ids, and notify entities, which also tell HA which bot to use.
+        # send_message/send_photo/send_document all accept the same keys.
+        action_data: dict[str, Any] = {}
+        if chat_ids:
+            action_data["chat_id"] = chat_ids
+        if entity_ids:
+            action_data["entity_id"] = entity_ids
 
         # Determine if we have an image to attach
         image_path = None
@@ -353,29 +362,25 @@ class TelegramTransport(Transport):
             service_action = "telegram_bot.send_document"
             action_data["file"] = str(image_path)
             if message_text:
-                action_data["caption"] = message_text[:_MAX_CAPTION_LENGTH]
-                action_data["parse_mode"] = parse_mode
+                action_data["caption"], action_data["parse_mode"] = _fit(message_text, _MAX_CAPTION_LENGTH, parse_mode)
         elif image_path:
             # Send image as photo with caption (`file` is the schema field
             # name; the telegram_bot service infers content-type).
             service_action = "telegram_bot.send_photo"
             action_data["file"] = str(image_path)
             if message_text:
-                action_data["caption"] = message_text[:_MAX_CAPTION_LENGTH]
-                action_data["parse_mode"] = parse_mode
+                action_data["caption"], action_data["parse_mode"] = _fit(message_text, _MAX_CAPTION_LENGTH, parse_mode)
         else:
             # Send text message
-            action_data["message"] = message_text
-            action_data["parse_mode"] = parse_mode
+            action_data["message"], action_data["parse_mode"] = _fit(message_text, _MAX_MESSAGE_LENGTH, parse_mode)
 
         # Add optional parameters
         if disable_notification:
             action_data["disable_notification"] = True
 
-        # protect_content is intentionally NOT forwarded - the HA
-        # telegram_bot service schema does not accept this key (voluptuous
-        # rejects it as `extra keys not allowed`). Kept as a documented data
-        # key for forward-compatibility once HA exposes it.
+        # protect_content is intentionally NOT forwarded - the HA telegram_bot
+        # service schema only accepts it for send_media_group. Kept as a
+        # documented data key for forward-compatibility once HA exposes it.
 
         if reply_to_message_id:
             action_data["reply_to_message_id"] = reply_to_message_id
@@ -383,15 +388,19 @@ class TelegramTransport(Transport):
         if inline_keyboard:
             action_data["inline_keyboard"] = inline_keyboard
 
-        # Merge remaining generic data keys
-        action_data.update(raw_data)
+        # Only what the telegram_bot schema accepts, since it rejects any other key, and a
+        # notification's own `data` is shared with every delivery
+        dropped: list[str] = sorted(k for k in raw_data if k not in PASSTHROUGH_KEYS)
+        if dropped:
+            _LOGGER.debug("SUPERNOTIFY telegram: dropping data keys telegram_bot doesn't accept: %s", dropped)
+        action_data.update({k: v for k, v in raw_data.items() if k in PASSTHROUGH_KEYS})
 
         # Use the base-class call_action() to invoke the dynamically chosen
         # telegram_bot service (send_message / send_photo / send_document).
         # call_action() handles call-record tracking, error capture, and the
         # envelope.delivered/calls bookkeeping that SuperNotify uses to
         # decide success vs. fallback. `implied_target=True` tells SuperNotify
-        # the target is implied by the in-payload chat_id (so the
+        # the target is implied by the in-payload chat_id/entity_id (so the
         # `TargetRequired.ALWAYS` check does not skip the delivery).
         return await self.call_action(
             envelope,

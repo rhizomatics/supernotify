@@ -115,10 +115,6 @@ Rethink `footer`, which is a key in `data` that only plain emails use. For examp
 - Support `dir`, for right-to-left languages, perhaps set from the Home Assistant language as `lang` now is
 - Support `timestamp`, for example from when a camera event happened rather than when the notification was sent
 
-### Telegram
-
-Add a target category to allow auto inclusion
-
 ### Alert
 
 Review integration with `alert` - align live activities where possible with its behaviour and syntax, add recipe, make sure it works well with `notifiers`.

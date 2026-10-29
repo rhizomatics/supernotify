@@ -5,6 +5,7 @@
 # v2.16.1
 ## ✨ Enhancements
 - *HTML5*: notifications are sent with the Home Assistant language as `lang`, so the browser can pick a suitable font and voice
+- *Telegram*: the `notify` entity the Telegram Bot integration creates for each chat can be a target, selecting the `telegram` delivery ahead of the generic Notify Entity one, so it gets images, buttons and priority. It also says which bot to use, where there's more than one
 
 ## 🐛 Bug fixes
 - *MQTT*
@@ -20,6 +21,15 @@
   - A delivery with no targets was counted as a transport error. It's now skipped
   - A single number for `html5_vibrate` was dropped, rather than sent as a one-step pattern
   - Docs corrected: the default delivery is selected for the integration's own `notify` entities without being named, the fallback title is "Notification" in the Home Assistant language, and Supernotify's own actions aren't sent as browser buttons
+- *Telegram*
+  - Chat ids were sent as `target`, which Home Assistant has deprecated, raising a repair issue for it on every notification, and marked as breaking from 2026.9. They're now sent as `chat_id`
+  - A notification's `data` meant for other deliveries, such as `clickAction` for Mobile Push, was passed to the Telegram Bot action, which rejects anything it doesn't know, so the message failed. Only the Telegram Bot fields listed in the docs are now passed on
+  - Only the first chat id was sent to, so with several, for example from two recipients, the rest were missed
+  - Without a `telegram_chat_id`, any other value in the delivery's own target, such as an email address, was tried as a chat id. Only a `telegram_chat_id`, or the older `phone`, is now used
+  - With no chat id, or one that isn't a number, the delivery was counted as a transport error. It's now skipped
+  - With `MarkdownV2` or `Markdown`, a title with a character such as `!` or `.` stopped Telegram parsing the message. The title is now escaped
+  - A formatted message or caption cut to Telegram's length limit could be left with an unfinished tag, which Telegram rejects. It's now sent as plain text
+  - Docs rewritten: targets, including several chats, when the default delivery is used, all the data keys, that `telegram_protect_content` has no effect, the `allowlist_external_dirs` needed for images, that Telegram can't break through Do Not Disturb, and the example call corrected
 - *TTS*
   - Android TTS with a `media_stream` failed, since it was passed outside the inner `data`, which Home Assistant's notify actions reject
   - An older action like `tts.cloud_say` was given the `tts` entity as its target and the media players as `media_player_entity_id`, which it doesn't accept. It now targets the media players
