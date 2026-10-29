@@ -25,6 +25,9 @@
         "twilio_sms",
         "workday"
     ],
+    "categories": [
+        "messaging_notifications"
+    ],
     "codeowners": [
         "@jeyrb"
     ],
