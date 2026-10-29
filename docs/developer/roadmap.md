@@ -109,6 +109,12 @@ Revisit the HTML template, review if more than 1 needed, and ways to make it mor
 
 Rethink `footer`, which is a key in `data` that only plain emails use. For example an option for a generated footer, with a link to the notification's own archive entry.
 
+### HTML5
+
+- Turn Supernotify's own [ad-hoc actions and action groups](../usage/mobile_actions.md) into browser buttons, as `actions` of `{action, title, icon}`, as Mobile Push does for the Companion App. Only `html5_actions` are sent now, and a notification level action's `uri` as the click URL. Clicks come back as `html5_notification.clicked` events, not `mobile_app_notification_action`, so snooze actions would need their own handling
+- Support `dir`, for right-to-left languages, perhaps set from the Home Assistant language as `lang` now is
+- Support `timestamp`, for example from when a camera event happened rather than when the notification was sent
+
 ### Telegram
 
 Add a target category to allow auto inclusion

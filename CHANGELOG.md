@@ -3,7 +3,23 @@
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
 
 # v2.16.1
+## ✨ Enhancements
+- *HTML5*: notifications are sent with the Home Assistant language as `lang`, so the browser can pick a suitable font and voice
+
 ## 🐛 Bug fixes
+- *MQTT*
+  - A notification's `data` meant for other deliveries, such as `clickAction` for Mobile Push, was passed to `mqtt.publish`, which rejects anything it doesn't know, so the publish failed. Only `payload`, `qos`, `retain`, `evaluate_payload` and `message_expiry_interval` are now passed on
+  - A `payload` that was a string or list was replaced by the message. A string is now published as it is, and a list as JSON
+  - With no topic, the delivery is skipped rather than failed
+  - Docs extended for the `data` passed on, and that the title isn't sent, and the integration link corrected
+- *SMS*
+  - Currency signs, brackets and maths symbols were removed from messages, for example "£20 (due)" sent as "20 due". Only emoji and other pictographic symbols are now removed
+  - With no message, the delivery is skipped rather than failed
+  - Docs extended for the 158 character limit, the passing on of `data`, for example a Twilio picture, and when the default delivery is used, and the recipient's `phone_number` corrected
+- *HTML5*
+  - A delivery with no targets was counted as a transport error. It's now skipped
+  - A single number for `html5_vibrate` was dropped, rather than sent as a one-step pattern
+  - Docs corrected: the default delivery is selected for the integration's own `notify` entities without being named, the fallback title is "Notification" in the Home Assistant language, and Supernotify's own actions aren't sent as browser buttons
 - *TTS*
   - Android TTS with a `media_stream` failed, since it was passed outside the inner `data`, which Home Assistant's notify actions reject
   - An older action like `tts.cloud_say` was given the `tts` entity as its target and the media players as `media_player_entity_id`, which it doesn't accept. It now targets the media players

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.supernotify.const import CONF_DATA, CONF_INCLUSION, CONF_TRANSPORT, INCLUSION_DEFAULT, TRANSPORT_MQTT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
@@ -55,12 +55,6 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
     )
 
 
-def test_recipient_target_returns_none(mock_hass, uninitialized_unmocked_config) -> None:  # type: ignore
-    uut = MQTTTransport(uninitialized_unmocked_config)
-    result = uut.recipient_target({"person": "person.test"})
-    assert result is None
-
-
 async def test_deliver_warns_on_missing_topic() -> None:
     ctx = TestingContext(
         deliveries={
@@ -79,7 +73,9 @@ async def test_deliver_warns_on_missing_topic() -> None:
         n,
         data={"payload": "hello"},
     )
-    await uut.deliver(envelope)
+    assert await uut.deliver(envelope) is False
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    ctx.hass.services.async_call.assert_not_called()  # type:ignore
 
 
 async def test_deliver_topic_as_target() -> None:
@@ -112,6 +108,42 @@ async def test_deliver_topic_as_target() -> None:
         target=None,
         return_response=False,
     )
+
+
+async def test_deliver_payload_kept_and_unsupported_keys_dropped() -> None:
+    """A string payload is published as given, and data for other deliveries, which mqtt.publish
+    would reject, is left out"""
+    ctx = TestingContext(deliveries={"broker": {CONF_TRANSPORT: TRANSPORT_MQTT}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MQTT)
+    n = Notification(ctx, message="ignored")
+    await n.initialize()
+    envelope = Envelope(
+        Delivery("broker", ctx.delivery_config("broker"), uut),
+        n,
+        target=Target("zigbee2mqtt/siren/set"),
+        data={"payload": "ON", "retain": True, "qos": 1, "clickAction": "/lovelace", "media_stream": "alarm_stream"},
+    )
+    assert await uut.deliver(envelope) is True
+    assert ctx.hass.services.async_call.call_args.kwargs["service_data"] == {  # type:ignore
+        "payload": "ON",
+        "retain": True,
+        "qos": 1,
+        "topic": "zigbee2mqtt/siren/set",
+    }
+
+
+async def test_deliver_list_payload_jsonified() -> None:
+    ctx = TestingContext(deliveries={"broker": {CONF_TRANSPORT: TRANSPORT_MQTT}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MQTT)
+    n = Notification(ctx, message="ignored")
+    await n.initialize()
+    envelope = Envelope(
+        Delivery("broker", ctx.delivery_config("broker"), uut), n, target=Target("a/b"), data={"payload": [1, 2]}
+    )
+    await uut.deliver(envelope)
+    assert ctx.hass.services.async_call.call_args.kwargs["service_data"]["payload"] == "[1, 2]"  # type:ignore
 
 
 async def test_deliver_multiple_topics_as_target() -> None:

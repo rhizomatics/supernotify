@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.supernotify.const import (
     RE_NOTIFY_ENTITY_ID,
 )
-from custom_components.supernotify.model import TargetRequired, TransportFeature
+from custom_components.supernotify.model import SuppressionReason, TargetRequired, TransportFeature
 from custom_components.supernotify.transports.html5 import (
     _URGENCY_BY_PRIORITY,
     HTML5Transport,
@@ -187,14 +187,15 @@ def test_target_regex_invalid(target: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_deliver_empty_target_list_fails() -> None:
+async def test_deliver_empty_target_list_skipped() -> None:
     uut = _make_transport()
     envelope = _make_envelope(targets=[])
 
     result = await uut.deliver(envelope)
 
     assert result is False
-    uut.record_error.assert_called_once()
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    uut.record_error.assert_not_called()
     uut.call_action.assert_not_awaited()
 
 
@@ -415,14 +416,35 @@ async def test_deliver_vibrate_passthrough() -> None:
 
 
 @pytest.mark.asyncio
-async def test_deliver_vibrate_non_list_dropped() -> None:
+async def test_deliver_vibrate_single_int_as_list() -> None:
     uut = _make_transport()
     envelope = _make_envelope(data={"html5_vibrate": 200})
 
     result = await uut.deliver(envelope)
 
     assert result is True
+    assert _action_data(uut)["vibrate"] == [200]
+
+
+@pytest.mark.asyncio
+async def test_deliver_vibrate_non_list_dropped() -> None:
+    uut = _make_transport()
+    envelope = _make_envelope(data={"html5_vibrate": "buzz"})
+
+    result = await uut.deliver(envelope)
+
+    assert result is True
     assert "vibrate" not in _action_data(uut)
+
+
+@pytest.mark.asyncio
+async def test_deliver_lang_from_home_assistant_language() -> None:
+    uut = _make_transport()
+    uut.hass_api.language = "it"
+
+    await uut.deliver(_make_envelope())
+
+    assert _action_data(uut)["lang"] == "it"
 
 
 @pytest.mark.asyncio

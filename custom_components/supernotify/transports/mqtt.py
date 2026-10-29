@@ -7,8 +7,14 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
-from custom_components.supernotify.target import Target, TargetEntityCategory
+from custom_components.supernotify.model import (
+    DebugTrace,
+    SuppressionReason,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -18,6 +24,9 @@ if TYPE_CHECKING:
     from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 HA_MQTT_DOMAIN = "mqtt"
+# what mqtt.publish accepts besides `topic` - its schema rejects any other key, and a notification's
+# own `data`, meant for other deliveries, reaches every delivery
+PUBLISH_DATA_KEYS = ("payload", "qos", "retain", "evaluate_payload", "message_expiry_interval")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,9 +75,6 @@ class MQTTTransport(Transport):
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         return {self.name: {}}
 
-    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
-        return None
-
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_mqtt: %s", envelope.delivery_name)
 
@@ -85,11 +91,19 @@ class MQTTTransport(Transport):
 
         if not topics:
             _LOGGER.warning("SUPERNOTIFY notify_mqtt: No topic for publication")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
-        if isinstance(data.get("payload"), dict):
-            data["payload"] = json.dumps(data["payload"])
-        else:
+        dropped: list[str] = sorted(k for k in data if k not in PUBLISH_DATA_KEYS)
+        if dropped:
+            _LOGGER.debug("SUPERNOTIFY notify_mqtt: dropping data keys mqtt.publish doesn't accept: %s", dropped)
+        data = {k: v for k, v in data.items() if k in PUBLISH_DATA_KEYS}
+
+        payload: Any = data.get("payload")
+        if isinstance(payload, (dict, list)):
+            data["payload"] = json.dumps(payload)
+        elif payload is None:
             data["payload"] = envelope.message
 
         success = True

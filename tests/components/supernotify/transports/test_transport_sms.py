@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_SMS
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.sms import SMSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
@@ -68,12 +68,32 @@ async def test_empty_deliver() -> None:
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
-    assert not await uut.deliver(
+    envelope = Envelope(
+        Delivery("smsify", ctx.delivery_config("smsify"), uut),
+        Notification(ctx, message=None),
+        target=Target(["+447979123456"]),
+    )
+    assert not await uut.deliver(envelope)
+    assert envelope.skip_reason == SuppressionReason.INVALID_ACTION_DATA
+
+
+async def test_simplify_keeps_currency_and_brackets() -> None:
+    ctx = TestingContext(
+        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_SMS)
+
+    await uut.deliver(
         Envelope(
             Delivery("smsify", ctx.delivery_config("smsify"), uut),
-            Notification(ctx, message=None),
+            Notification(ctx, message="\U0001f6a8 Bill £20 + $5 (call 0141 555 1234) <now> https://x.org/a", title=None),
             target=Target(["+447979123456"]),
         )
+    )
+    assert ctx.hass.services.async_call.call_args.kwargs["service_data"]["message"] == (  # type:ignore
+        " Bill £20 + $5 (call 0141 555 1234) <now> https://x.org/a"
     )
 
 

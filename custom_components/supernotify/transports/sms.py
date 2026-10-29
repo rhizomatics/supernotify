@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import unicodedata
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
@@ -12,6 +13,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -72,6 +74,16 @@ class SMSTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
+    def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
+        """Remove emoji and other pictographic symbols, but not currency signs, brackets or maths
+        symbols as for a voice assistant, since SMS can carry these and the message needs them"""
+        if not text:
+            return None
+        if strip_urls:
+            text = self._strip_urls(text)
+        text = unicodedata.normalize("NFC", text)
+        return "".join(c for c in text if unicodedata.category(c) not in ("So", "Sk", "Mn"))
+
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_sms: %s", envelope.delivery_name)
 
@@ -84,6 +96,8 @@ class SMSTransport(Transport):
 
         if not envelope.message:
             _LOGGER.warning("SUPERNOTIFY notify_sms: No message to send")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.INVALID_ACTION_DATA
             return False
 
         message: str = envelope.message or ""

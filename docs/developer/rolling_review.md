@@ -34,15 +34,15 @@ Review the transport, including architecture alignment with current Supernotify 
 | `email`              | 20th Oct 2026 | `v2.16.0`   |
 | `generic`            | 20th Oct 2026 | `v2.16.0`   |
 | `tts`                | 29th Oct 2026 | `v2.16.1`   |
-| `sms`                |               |             |
-| `mqtt`               |               |             |
-| `discord`            |               |             |
-| `html5`              |               |             |
+| `sms`                | 29th Oct 2026 | `v2.16.1`   |
+| `mqtt`               | 29th Oct 2026 | `v2.16.1`   |
+| `html5`              | 29th Oct 2026 | `v2.16.1`   |
 | `media`              | 29th Oct 2026 | `v2.16.1`   |
-| `telegram`           |               |             |
+| `telegram`           | 29th Oct 2026 | `v2.16.1`   |
+| `kodi`               |               |             |
+| `discord`            |               |             |
 | `persistent`         |               |             |
 | `pushover`           |               |             |
 | `ntfy`               |               |             |
-| `kodi`               |               |             |
 | `lametric`           |               |             |
 | `matrix`             |               |             |

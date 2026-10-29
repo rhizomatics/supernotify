@@ -528,11 +528,14 @@ class Transport:
         return False
 
     @staticmethod
-    def _simplify_text(text: str, strip_urls: bool = False) -> str:
+    def _strip_urls(text: str) -> str:
+        return " ".join(word for word in text.split() if not (urlparse(word).scheme and urlparse(word).netloc))
+
+    @classmethod
+    def _simplify_text(cls, text: str, strip_urls: bool = False) -> str:
         """Remove symbols, and optionally URLs, that can trip up voice assistants."""
         if strip_urls:
-            words = text.split()
-            text = " ".join(word for word in words if not (urlparse(word).scheme and urlparse(word).netloc))
+            text = cls._strip_urls(text)
         text = unicodedata.normalize("NFC", text)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
         return "".join(c for c in text if c in SIGN_CHARS or unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn", "Sc"))

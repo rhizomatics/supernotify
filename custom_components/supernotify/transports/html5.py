@@ -42,7 +42,8 @@ Supported data keys (all optional):
                                           silent is dropped in favour of
                                           vibrate (warning either way)
     html5_vibrate              list[int]  vibration pattern in milliseconds,
-                                          e.g. [200, 100, 200]. See
+                                          e.g. [200, 100, 200], or a single
+                                          int for one vibration. See
                                           html5_silent for the exclusivity
                                           rule
     html5_ttl                  int/dict   time-to-live: seconds or an HA
@@ -58,10 +59,12 @@ Notes on the HA `html5.send_message` service schema:
   `data` custom field, fed by `html5_url` / `html5_data`, is the explicit
   passthrough for anything else.
 - `title` is REQUIRED by the schema; when the envelope has no title the
-  HA default "Home Assistant" is used.
+  translated `common.default_title` ("Notification") is used.
+- `lang` is the Home Assistant language, so the browser can choose a
+  suitable font and voice.
 - Targets are `notify.*` entities created by browser push registrations
   (html5 config entry with VAPID keys). Non-matching targets are dropped
-  with a debug log; no valid target fails the delivery.
+  with a debug log; with no valid target the delivery is skipped.
 - Expired push subscriptions (410 GONE) are handled by the core, which
   unregisters the browser and raises: call_action then returns False.
 
@@ -86,6 +89,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -185,7 +189,8 @@ class HTML5Transport(Transport):
         targets = envelope.target.resolved_targets() if envelope.target else []
         if not targets:
             _LOGGER.warning("SUPERNOTIFY html5: no valid targets (expected notify.* entities)")
-            self.record_error("no valid html5 notify entity targets", "deliver")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Resolve urgency: explicit valid override, else mapped from priority
@@ -221,6 +226,8 @@ class HTML5Transport(Transport):
             "message": envelope.message or "",
             "urgency": urgency,
         }
+        if isinstance(self.hass_api.language, str) and self.hass_api.language:
+            action_data["lang"] = self.hass_api.language
         if icon:
             action_data["icon"] = str(icon)
         if badge:
@@ -239,6 +246,8 @@ class HTML5Transport(Transport):
         if require_interaction_raw is not None:
             action_data["require_interaction"] = boolify(require_interaction_raw, default=False)
         if vibrate is not None:
+            if isinstance(vibrate, int) and not isinstance(vibrate, bool):
+                vibrate = [vibrate]
             if isinstance(vibrate, list):
                 action_data["vibrate"] = vibrate
             else:
