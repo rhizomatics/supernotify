@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 import datetime as dt
 import hashlib
 import io
 import json
 import logging
+from asyncio import sleep
 from enum import StrEnum, auto
 from http import HTTPStatus
 from io import BytesIO
@@ -367,7 +367,7 @@ async def snap_notification_image(
             if camera_delay:
                 # pause if there's a PTZ movement, or notification explicitly asked for `camera_delay`
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
-                await asyncio.sleep(camera_delay)
+                await sleep(camera_delay)
 
             max_camera_wait: int = camera_config.get(CONF_SNAP_WAIT, SNAP_WAIT_DEFAULT)
             _LOGGER.debug(

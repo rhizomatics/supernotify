@@ -809,7 +809,7 @@ async def test_grab_image_with_camera_no_ptz_skips_delay(hass: HomeAssistant, tm
     await ctx.test_initialize()
     with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
         with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
-            with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            with patch("custom_components.supernotify.media_grab.sleep", new_callable=AsyncMock) as mock_sleep:
                 notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
                 await snap_notification_image(notification, ctx)
     mock_sleep.assert_not_called()
@@ -823,7 +823,7 @@ async def test_grab_image_with_camera_ptz_applies_delay(hass: HomeAssistant, tmp
     with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
         with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
             with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
-                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                with patch("custom_components.supernotify.media_grab.sleep", new_callable=AsyncMock) as mock_sleep:
                     notification = Notification(
                         ctx,
                         "Test",
@@ -845,7 +845,7 @@ async def test_grab_image_with_camera_ptz_scenario_media_uses_ptz_delay_default(
     with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
         with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
             with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
-                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                with patch("custom_components.supernotify.media_grab.sleep", new_callable=AsyncMock) as mock_sleep:
                     notification = Notification(
                         ctx,
                         "Test",

@@ -77,6 +77,7 @@ import html
 import logging
 import re
 import urllib.parse
+from asyncio import sleep
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
@@ -293,7 +294,7 @@ class AlexaMediaPlayerTransport(Transport):
                 )
             )
         if music_devices:
-            await asyncio.sleep(_MUSIC_RESUME_DELAY)
+            await sleep(_MUSIC_RESUME_DELAY)
             await asyncio.gather(
                 *(
                     self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp}, context=context)
@@ -417,7 +418,7 @@ class AlexaMediaPlayerTransport(Transport):
                     tts_char_speed,
                     audio_duration,
                 )
-                await asyncio.sleep(tts_duration)
+                await sleep(tts_duration)
         finally:
             # Restore/resume must run even if the announce call or TTS wait raises or is
             # cancelled (e.g. HA shutting down), otherwise a pre-announce pause/volume change

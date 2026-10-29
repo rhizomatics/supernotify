@@ -838,7 +838,7 @@ async def test_android_commands_go_before_the_notification_as_their_own_calls(un
 async def test_android_tts_is_its_own_call_after_the_notification(
     unmocked_config: Context, priority: str, data: dict[str, Any], media_stream: str | None
 ) -> None:
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+    with patch("custom_components.supernotify.transports.mobile_push.sleep") as sleep:
         e = await _deliver_to(unmocked_config, "Samsung", priority, {"mobile_push_tts_text": "smoke in the kitchen", **data})
     sleep.assert_awaited_once_with(5)  # so the notification's own sound is heard before the TTS
 
@@ -888,13 +888,13 @@ async def test_android_tts_waits_once_for_all_devices_and_can_go_straight_away(u
             data=data,
         )
 
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+    with patch("custom_components.supernotify.transports.mobile_push.sleep") as sleep:
         e = envelope({"mobile_push_tts_text": "smoke"})
         await uut.deliver(e)
     sleep.assert_awaited_once_with(5)
     assert [c.action_data["message"] for c in e.calls] == ["smoke", "smoke", "TTS", "TTS"]  # type: ignore[index]
 
-    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+    with patch("custom_components.supernotify.transports.mobile_push.sleep") as sleep:
         await uut.deliver(envelope({"mobile_push_tts_text": "smoke", "mobile_push_tts_delay": 0}))
     sleep.assert_not_awaited()
 

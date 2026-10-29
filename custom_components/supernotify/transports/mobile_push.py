@@ -53,9 +53,9 @@ New data keys (all optional):
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
+from asyncio import sleep
 from collections.abc import Collection
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -554,7 +554,7 @@ class MobilePushTransport(Transport):
         if tts_pending:
             # one wait for all the devices, after every notification has gone
             if push_data["tts_delay"]:
-                await asyncio.sleep(push_data["tts_delay"])
+                await sleep(push_data["tts_delay"])
             for full_target, extra in tts_pending:
                 await self.call_action(
                     envelope, qualified_action=full_target, action_data=extra, implied_target=True, single_target=True
