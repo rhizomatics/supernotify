@@ -5307,6 +5307,10 @@ ______________________________________________________________________
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
 
+| Transport ID | Source                                                                                                               | Requirements                                                                              | Optional |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------- |
+| `html5`      | [`html5.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/html5.py) | [HTML5 Push Notifications Integration](https://www.home-assistant.io/integrations/html5/) | -        |
+
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant [`html5`](https://www.home-assistant.io/integrations/html5/) integration. The transport calls the modern `html5.send_message` entity service rather than the legacy `notify.html5` platform: the legacy platform reads `ttl` and `priority` from keyword arguments the notify bridge never populates, so urgency would silently always be "normal". With the entity service, urgency is mapped natively from the SuperNotify priority.
@@ -5315,13 +5319,16 @@ Provides a native SuperNotify transport for browser web push through the Home As
 
 - Urgency mapped from priority — critical/high → `high`, medium → `normal`, low/minimum → `low`, overridable with `html5_urgency`.
 - Tags and renotify, so a repeated alert replaces the previous one instead of piling up.
-- Action buttons (`html5_actions`); clicks fire `html5_notification.clicked` events carrying the action value, ready for actionable-notification automations.
+- Action buttons (`html5_actions`); clicks fire `html5_notification.clicked` events carrying the action value, ready for actionable-notification automations. Supernotify's own [ad-hoc actions and action groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md) aren't turned into browser buttons, only a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)'s `uri`, as the click URL.
+- `lang` is set to the Home Assistant language.
 - Camera snapshot as the notification image (`html5_attach_image: true`) using the shared media pipeline — the URL must be reachable by the browser, so an HTTPS `external_url` (or Home Assistant Cloud) is usually required.
 - `silent` and `vibrate` are mutually exclusive in the core schema (`vol.Exclusive`): the transport never sends both, and logs a warning when it has to drop one.
 
 ## Configuration
 
-Targets are the `notify.*` entities created by browser registrations (html5 config entry with VAPID keys). Non-matching targets are dropped; a delivery with no valid target fails.
+Targets are the `notify.*` entities created by browser registrations (html5 config entry with VAPID keys). Non-matching targets are dropped; a delivery with no valid target is skipped.
+
+A delivery with its own fixed targets, like this one, needs `inclusion: explicit` if it should only be used when asked for, since otherwise its targets select it for every notification.
 
 ```yaml
 delivery:
@@ -5347,18 +5354,18 @@ delivery:
 - `html5_require_interaction` — keep on screen until the user interacts
 - `html5_renotify` — alert again when a new notification replaces an existing tag
 - `html5_silent` — suppress sound/vibration (exclusive with `html5_vibrate`)
-- `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`
+- `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`, or a single number
 - `html5_ttl` — time-to-live in seconds or an HA duration mapping
 - `html5_data` — extra keys merged into the custom `data` field (`html5_url` wins on `url`)
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
+**Delivery (default selection).** If the `html5` integration's config entry exists, at least one browser has registered, and no `html5` delivery is defined, an `html5` delivery is generated automatically. It's selected whenever a notification targets one of the integration's own `notify.*` entities, without naming the delivery, ahead of the generic [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport.
 
 ## Notes
 
 - The `html5.send_message` schema is a strict whitelist: unknown top-level keys fail the whole call, so residual generic data keys are not forwarded (debug log); `html5_data` is the explicit passthrough.
-- `title` is required by the schema; without a title the HA default "Home Assistant" is used.
+- `title` is required by the schema; without a title, "Notification" in the Home Assistant language is used.
 - Expired push subscriptions (410 GONE) are handled by the core, which unregisters the browser and raises: the delivery is then reported as failed.
 
 # Kodi Transport Adaptor
@@ -5904,13 +5911,14 @@ delivery:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 
-| Transport ID | Source                                                                                                             | Requirements                                                                       | Optional |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
-| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |
+| Transport ID | Source                                                                                                             | Requirements                                                         | Optional |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------- |
+| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [MQTT Integration](https://www.home-assistant.io/integrations/mqtt/) | -        |
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, this specific MQTT integration can be easier to use.
 
 - Payloads can be defined in YAML rather than escaped JSON, and will be JSONified if needed on delivery
+- Without a `payload` in `data`, the message is published. The title isn't sent
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 - A `topic:xxxx` target can be blended into a big list of targets, and the MQTT transport will be used automatically for it.
 
@@ -5948,7 +5956,7 @@ Example Notification
                     level: low
 ```
 
-A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}}`) still works, predating the `target:` form:
+A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}`) still works, predating the `target:` form:
 
 Example Notification with legacy data.topic
 
@@ -5967,11 +5975,37 @@ Example Notification with legacy data.topic
                     level: low
 ```
 
+## Data
+
+Only what `mqtt.publish` accepts is passed on from `data`, since it rejects anything else, and a notification's own `data` is shared with every delivery:
+
+| Key                       | Effect                                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `payload`                 | What to publish - a mapping or list is turned into JSON, anything else is sent as it is. Defaults to the message |
+| `qos`                     | Quality of service, `0`, `1` or `2`                                                                              |
+| `retain`                  | Keep the message on the broker for new subscribers                                                               |
+| `evaluate_payload`        | Turn a bytes literal string payload into raw bytes                                                               |
+| `message_expiry_interval` | How long the broker keeps the message, for MQTT 5                                                                |
+
+Example Notification switching on a siren, retained
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: ""
+    target: topic:zigbee2mqtt/siren/set
+    delivery:
+      mqtt:
+        data:
+          payload: "ON"
+          retain: true
+```
+
 ## Discovery
 
 **Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
 
-A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 ## Reference
 
@@ -6360,9 +6394,26 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
 
 Send text messages using any SMS integration that follows Home Assistant Notification model - configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`.
 
-Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
+Uses the `phone_number` of a [recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), or a phone number given as a target, and cuts the message to 158 characters to fit in a single SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+
+Emoji and other pictographic symbols are removed, but currency signs, brackets and the like are kept. Set `simplify_text: false` in `options` to keep emoji too, though a message with emoji in it is longer than one SMS can carry, so it's sent as several, if the SMS service allows.
+
+A `data` mapping inside the notification's `data` is passed on to the SMS integration, for example a picture for Twilio:
+
+Example Notification with Twilio picture
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Someone at the door"
+    delivery:
+      sms:
+        data:
+          data:
+            media_url: https://example.com/door.jpg
+```
 
 Tip
 
@@ -6382,7 +6433,7 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and fires on every notification, since the target phone number is positively identified from the recipient's registered `phone` attribute — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
 
 # Telegram Transport Adaptor
 

@@ -8,9 +8,26 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
 
 Send text messages using any SMS integration that follows Home Assistant Notification model - configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`.
 
-Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
+Uses the `phone_number` of a [recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), or a phone number given as a target, and cuts the message to 158 characters to fit in a single SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+
+Emoji and other pictographic symbols are removed, but currency signs, brackets and the like are kept. Set `simplify_text: false` in `options` to keep emoji too, though a message with emoji in it is longer than one SMS can carry, so it's sent as several, if the SMS service allows.
+
+A `data` mapping inside the notification's `data` is passed on to the SMS integration, for example a picture for Twilio:
+
+Example Notification with Twilio picture
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Someone at the door"
+    delivery:
+      sms:
+        data:
+          data:
+            media_url: https://example.com/door.jpg
+```
 
 Tip
 
@@ -30,4 +47,4 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and fires on every notification, since the target phone number is positively identified from the recipient's registered `phone` attribute — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.

@@ -2,13 +2,14 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 
-| Transport ID | Source                                                                                                             | Requirements                                                                       | Optional |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
-| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |
+| Transport ID | Source                                                                                                             | Requirements                                                         | Optional |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------- |
+| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [MQTT Integration](https://www.home-assistant.io/integrations/mqtt/) | -        |
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, this specific MQTT integration can be easier to use.
 
 - Payloads can be defined in YAML rather than escaped JSON, and will be JSONified if needed on delivery
+- Without a `payload` in `data`, the message is published. The title isn't sent
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 - A `topic:xxxx` target can be blended into a big list of targets, and the MQTT transport will be used automatically for it.
 
@@ -46,7 +47,7 @@ Example Notification
                     level: low
 ```
 
-A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}}`) still works, predating the `target:` form:
+A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}`) still works, predating the `target:` form:
 
 Example Notification with legacy data.topic
 
@@ -65,11 +66,37 @@ Example Notification with legacy data.topic
                     level: low
 ```
 
+## Data
+
+Only what `mqtt.publish` accepts is passed on from `data`, since it rejects anything else, and a notification's own `data` is shared with every delivery:
+
+| Key                       | Effect                                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `payload`                 | What to publish - a mapping or list is turned into JSON, anything else is sent as it is. Defaults to the message |
+| `qos`                     | Quality of service, `0`, `1` or `2`                                                                              |
+| `retain`                  | Keep the message on the broker for new subscribers                                                               |
+| `evaluate_payload`        | Turn a bytes literal string payload into raw bytes                                                               |
+| `message_expiry_interval` | How long the broker keeps the message, for MQTT 5                                                                |
+
+Example Notification switching on a siren, retained
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: ""
+    target: topic:zigbee2mqtt/siren/set
+    delivery:
+      mqtt:
+        data:
+          payload: "ON"
+          retain: true
+```
+
 ## Discovery
 
 **Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
 
-A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 ## Reference
 
