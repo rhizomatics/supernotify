@@ -79,7 +79,8 @@ class MediaPlayerTransport(Transport):
         return await self.image_url(envelope)
 
     def absolute_url(self, url: str) -> str:
-        # the external URL, probably preferred by Alexa Show etc
+        # the external URL, probably preferred by Alexa Show etc - urljoin, unlike hass_api.abs_url(),
+        # leaves other schemes like media-source:// alone
         return urllib.parse.urljoin(self.hass_api.external_url, url)
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
@@ -99,7 +100,7 @@ class MediaPlayerTransport(Transport):
             # as-is, apart from relative URLs like /local/sounds/bell.mp3 which are absolutised
             # so remote players (Cast, Sonos etc) can fetch them. Defaults to `music` since
             # that is what most media players expect for an audio file.
-            content_id = urllib.parse.urljoin(self.hass_api.external_url, explicit_content_id)
+            content_id = self.absolute_url(explicit_content_id)
             media_type = data.get("media_content_type", "music")
         else:
             content_id = await self._resolve_snapshot_url(envelope, data)

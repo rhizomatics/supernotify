@@ -105,13 +105,14 @@ async def test_override_to_legacy_action() -> None:
     await n.initialize()
     await n.deliver()
 
+    # legacy `_say` actions take the media players as their target, with no tts entity
     ctx.hass.services.async_call.assert_called_with(  # type: ignore
         "tts",
         "say",
-        service_data={"message": "testing 123", "media_player_entity_id": "media_player.kitchen_speakers"},
+        service_data={"message": "testing 123"},
         blocking=False,
         context=None,
-        target={"entity_id": "tts.home_assistant_cloud"},
+        target={"entity_id": ["media_player.kitchen_speakers"]},
         return_response=False,
     )
 
@@ -240,7 +241,8 @@ async def test_mobile_tts_with_media_stream(hass: HomeAssistant) -> None:
 
     assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
     call: CallRecord = n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type: ignore
-    assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}, "media_stream": "alarm_stream"}
+    # the Companion App reads media_stream from inside `data`, and notify rejects it at the top level
+    assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123", "media_stream": "alarm_stream"}}
 
 
 async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
@@ -269,6 +271,39 @@ async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     assert call.domain == "notify"
     assert call.action == "mobile_app_bobs_phone"
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}
+
+
+async def test_tts_entity_defaults_to_first_found_without_nabu_casa() -> None:
+    ctx = TestingContext(
+        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
+        services={"tts": ["speak"]},
+    )
+    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign]
+        "media_player": ["media_player.kitchen_speakers"],
+        "tts": ["tts.piper", "tts.google_translate_en_com"],
+    }.get(domain, [])
+    await ctx.test_initialize()
+    n = Notification(ctx, "testing 123", target="media_player.kitchen_speakers")
+    await n.initialize()
+    await n.deliver()
+
+    assert ctx.hass.services.async_call.call_args.kwargs["target"] == {"entity_id": "tts.piper"}  # type: ignore
+
+
+async def test_tts_skipped_with_no_tts_entity() -> None:
+    ctx = TestingContext(
+        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
+        services={"tts": ["speak"]},
+    )
+    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign]
+        "media_player": ["media_player.kitchen_speakers"],
+    }.get(domain, [])
+    await ctx.test_initialize()
+    n = Notification(ctx, "testing 123", target="media_player.kitchen_speakers")
+    await n.initialize()
+    await n.deliver()
+
+    ctx.hass.services.async_call.assert_not_called()  # type: ignore
 
 
 @sizes

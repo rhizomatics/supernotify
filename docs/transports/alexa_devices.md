@@ -42,7 +42,16 @@ notification than used for other transports like email or mobile push.
 
 ## Discovery
 
-**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+**Default delivery** If the Alexa Devices integration is configured, has at least one `notify` entity, and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically. It has no fixed targets: it's selected whenever a notification targets one of the integration's own `notify` entities, directly or through an area or floor, or a Home Assistant `group`, which is passed on as it is.
+
+**All-device deliveries** Two more deliveries are generated, only used when selected explicitly, for example by `delivery: alexa_devices_announce_all` or a scenario:
+
+| Delivery | Targets |
+| -------- | ------- |
+| `alexa_devices_speak_all` | Every `notify.*_speak` entity of the integration |
+| `alexa_devices_announce_all` | Every `notify.*_announce` entity of the integration |
+
+Each is only generated if there's at least one matching entity. Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
 
 
 ## References

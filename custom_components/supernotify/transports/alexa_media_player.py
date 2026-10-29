@@ -14,15 +14,17 @@ volume parameter in notify.alexa_media. This adaptor handles it natively:
 3. Set vol   - media_player.volume_set on every target.
 4. Announce  - notify.alexa_media without volume in payload.
 5. Wait      - estimates TTS duration, SSML-aware (energywave/multinotify).
-               Skipped when wait_for_tts=False (default) and no volume/music
-               restore is needed (fire-and-forget mode).
+               Skipped when wait_for_tts=False (default) and there is no volume
+               to restore or music to resume (fire-and-forget mode).
                Duration calibrated per-language via tts_char_speed.
-6. Resume    - media_player.media_play after 2s delay if was playing.
-7. Restore   - media_player.volume_set back to previous level.
+6. Restore   - media_player.volume_set back to previous level.
                No media_stop in post-announce: Alexa is already idle after
                TTS, calling media_stop would produce another unwanted beep.
+7. Resume    - media_player.media_play after 2s delay if was playing.
 
 Data keys (all optional):
+    type            str         announce (default) | tts | push, passed to notify.alexa_media
+    method          str         all | speak | show, passed to notify.alexa_media
     volume          float 0-1   desired announcement volume
     restore_volume  bool        restore previous volume (default True)
     pause_music     bool        pause music if playing (default True)
@@ -75,9 +77,9 @@ import html
 import logging
 import re
 import urllib.parse
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
+from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
@@ -117,10 +119,6 @@ HA_ALEXA_MEDIA_PLAYER_PLATFORM = "alexa_media"
 
 RE_SSML_TAG = re.compile(r"<[^>]+>")
 PAUSE_CHARS = (", ", ". ", "! ", "? ", ": ", "; ")
-
-# ref: https://github.com/alandtse/alexa_media_player/wiki/Configuration%3A-Notification-Component
-SERVICE_DATA_KEYS = [ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET]
-SERVICE_DATA_DATA_KEYS = ["type", "method"]
 
 _PAUSE_WEIGHT = 0.35
 _CHAR_WEIGHT = 0.06
@@ -345,35 +343,20 @@ class AlexaMediaPlayerTransport(Transport):
 
         auto_pause = envelope.delivery.option_bool(OPTION_MEDIA_AUTO_PAUSE, True)
 
-        # Resolve Jinja2 template if volume is still a raw template string
-        # (scenarios store volume as a template; _resolve_data_templates only
-        # runs for archiving, not for delivery).
+        # a template for volume has already been rendered by the envelope
         requested_volume: float | None = None
-        if isinstance(volume_raw, str) and "{{" in volume_raw:
-            try:
-                context_vars = (
-                    cast("dict[str, Any]", envelope.condition_variables.as_dict()) if envelope.condition_variables else {}
-                )
-                rendered = self.hass_api.template(volume_raw).async_render(variables=context_vars)
-                requested_volume = float(rendered)
-                _LOGGER.debug("SUPERNOTIFY alexa_media_player: resolved volume template to %.2f", requested_volume)
-            except Exception as exc:
-                _LOGGER.warning("SUPERNOTIFY alexa_media_player: failed to resolve volume template %r: %s", volume_raw, exc)
-        elif volume_raw is not None:
+        if volume_raw is not None:
             try:
                 requested_volume = float(volume_raw)
             except (TypeError, ValueError) as e:  # py3.13 compat
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring: %s", volume_raw, e)
 
         states: dict[str, dict[str, Any]] = {}
-        needs_restore = False
         volume_set_failed: set[str] = set()
 
         if auto_pause:
             # Pre-announce
-            needs_restore = requested_volume is not None or pause_music
-
-            if needs_restore:
+            if requested_volume is not None or pause_music:
                 states = await self._snapshot_states(media_players, volume_fallback)
 
             if requested_volume is not None and states:
@@ -386,11 +369,17 @@ class AlexaMediaPlayerTransport(Transport):
                         if prev["playing"]
                     )
                 )
+        elif requested_volume is not None:
+            _LOGGER.debug("SUPERNOTIFY alexa_media_player: volume ignored, %s is off", OPTION_MEDIA_AUTO_PAUSE)
 
-        # needs_post_announce is True whenever there is something to undo (volume change or
-        # music was paused); computed here, before the announce, so it's available in the
-        # finally block below regardless of what happens during the announce/TTS wait.
-        needs_post_announce = needs_restore and bool(states)
+        # needs_post_announce is True only when there is something to undo (a volume to restore
+        # or music that was paused), so an announcement with neither doesn't wait for the TTS;
+        # computed here, before the announce, so it's available in the finally block below
+        # regardless of what happens during the announce/TTS wait.
+        restore_volume = restore_volume and requested_volume is not None
+        needs_post_announce = bool(states) and (
+            restore_volume or (pause_music and any(prev["playing"] for prev in states.values()))
+        )
 
         # Announce
         call_type: str = raw_data.pop("type", "announce")
@@ -404,6 +393,8 @@ class AlexaMediaPlayerTransport(Transport):
             ATTR_DATA: {"type": call_type},
             ATTR_TARGET: media_players,
         }
+        if raw_data.get("method"):
+            action_data[ATTR_DATA]["method"] = raw_data.pop("method")
         if requested_volume is not None and auto_pause and volume_set_failed:
             # Fallback path: if pre-announce volume_set fails for one or more
             # players, pass volume through notify.alexa_media too.
@@ -417,7 +408,7 @@ class AlexaMediaPlayerTransport(Transport):
             # music. wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
             # allowing automation sequences to run only after the announcement ends, and does
             # so regardless of auto_pause since it has nothing to do with restoring state.
-            if (needs_post_announce or wait_for_tts) and message:
+            if result and (needs_post_announce or wait_for_tts) and message:
                 tts_duration = _estimate_tts_duration(message, tts_char_speed) + audio_duration
                 _LOGGER.debug(
                     "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch, %.1f s audio)",
@@ -432,8 +423,6 @@ class AlexaMediaPlayerTransport(Transport):
             # cancelled (e.g. HA shutting down), otherwise a pre-announce pause/volume change
             # made above is never undone and the device is stuck paused/at announce volume.
             if needs_post_announce:
-                await self._post_announce(
-                    states, restore_volume and requested_volume is not None, pause_music, context=envelope.ha_context
-                )
+                await self._post_announce(states, restore_volume, pause_music, context=envelope.ha_context)
 
         return result

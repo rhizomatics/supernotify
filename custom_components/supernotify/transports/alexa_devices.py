@@ -38,11 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 
 HA_ALEXA_DEVICES_DOMAIN = "alexa_devices"
 # the entity registry platform for notify entities the integration itself creates -
-# singular, unlike the (plural) config entry/integration domain above
+# the same name as the config entry/integration domain above
 HA_ALEXA_DEVICES_PLATFORM = "alexa_devices"
-# alandtse/alexa_media_player HACS integration's notify platform module - kept in sync
-# with the constant of the same name in alexa_media_player.py
-HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
 
 # extra standard deliveries grouping notify entities by naming convention - see
 # build_standard_deliveries() below

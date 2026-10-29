@@ -18,6 +18,7 @@ from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
     SelectionRule,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -43,6 +44,8 @@ _LOGGER = logging.getLogger(__name__)
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # mypy flags up import from tts
 OPTION_TTS_ENTITY_ID = "tts_entity_id"
+# used when no `tts_entity_id` is configured, if present, else the first tts entity found
+DEFAULT_TTS_ENTITY_ID = "tts.home_assistant_cloud"
 
 
 class TTSTransport(Transport):
@@ -92,7 +95,6 @@ class TTSTransport(Transport):
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID, RE_MOBILE_APP],
-            OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
             OPTION_DEVICE_DISCOVERY: False,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],
             OPTION_DEVICE_MANUFACTURER_SELECT: {SELECT_EXCLUDE: [MANUFACTURER_APPLE]},
@@ -128,7 +130,17 @@ class TTSTransport(Transport):
             action_data[ATTR_CACHE] = envelope.data[ATTR_CACHE]
         if ATTR_OPTIONS in envelope.data:
             action_data[ATTR_OPTIONS] = envelope.data[ATTR_OPTIONS]
-        target_data: dict[str, Any] = {ATTR_ENTITY_ID: envelope.delivery.options.get(OPTION_TTS_ENTITY_ID)}
+        if (envelope.delivery.action or "").partition(".")[2] != "speak":
+            # legacy `<platform>_say` actions, like `tts.cloud_say`, target the media players directly
+            return await self.call_action(envelope, action_data=action_data, target_data={ATTR_ENTITY_ID: targets})
+
+        tts_entity_id: str | None = self.tts_entity_id(envelope)
+        if tts_entity_id is None:
+            _LOGGER.warning("SUPERNOTIFY tts: no tts entity found, set the `%s` option", OPTION_TTS_ENTITY_ID)
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
+            return False
+        target_data: dict[str, Any] = {ATTR_ENTITY_ID: tts_entity_id}
 
         if targets and len(targets) == 1:
             action_data[ATTR_MEDIA_PLAYER_ENTITY_ID] = targets[0]
@@ -138,16 +150,29 @@ class TTSTransport(Transport):
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)
 
+    def tts_entity_id(self, envelope: Envelope) -> str | None:
+        """The configured tts entity, or else Nabu Casa's if there is one, or else the first found"""
+        configured: str | None = envelope.delivery.options.get(OPTION_TTS_ENTITY_ID)
+        if configured:
+            return configured
+        available: list[str] = self.hass_api.entity_ids_for_domain("tts")
+        if DEFAULT_TTS_ENTITY_ID in available:
+            return DEFAULT_TTS_ENTITY_ID
+        return available[0] if available else None
+
     async def call_mobile_apps(self, envelope: Envelope, targets: list[str]) -> bool:
+        # "TTS" is the Companion App's trigger for speaking `tts_text`, not text to translate
         action_data: dict[str, Any] = {ATTR_MESSAGE: "TTS", ATTR_DATA: {"tts_text": envelope.message or ""}}
         if "media_stream" in envelope.data:
-            action_data["media_stream"] = envelope.data["media_stream"]
+            action_data[ATTR_DATA]["media_stream"] = envelope.data["media_stream"]
 
         manufacturer_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MANUFACTURER_SELECT))
         at_least_one: bool = False
         for target in targets:
             mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(target)
-            if not mobile_info or not manufacturer_filter.match(mobile_info.manufacturer):
+            if not mobile_info:
+                _LOGGER.debug("SUPERNOTIFY Skipping unknown tts mobile app target: %s", target)
+            elif not manufacturer_filter.match(mobile_info.manufacturer):
                 _LOGGER.debug("SUPERNOTIFY Skipping tts target excluded by manufacturer filter: %s", mobile_info)
             else:
                 full_target = target if Target.is_notify_entity(target) else f"notify.{target}"

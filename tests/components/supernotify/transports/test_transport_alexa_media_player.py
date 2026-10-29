@@ -482,22 +482,9 @@ class TestDeliver:
         assert "media_pause" in names
         assert "media_play" in names
 
-    async def test_volume_template_resolved(self):
-        """Jinja2 volume template must be resolved to float before volume_set."""
+    async def test_unrendered_volume_template_ignored(self):
+        """A template the envelope couldn't render is left as a string, not a volume"""
         t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.3}})
-        t.hass_api.template.return_value.async_render.return_value = "0.65"
-        envelope = _make_envelope(
-            "Test", data={"volume": "{{ (states('input_number.notifier_morning_volume') | float(40)) / 100 }}"}
-        )
-        with patch("custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock):
-            await t.deliver(envelope)
-        vol_calls = [c for c in t.hass_api.call_service.call_args_list if c.args[1] == "volume_set"]
-        levels = [c.kwargs["service_data"]["volume_level"] for c in vol_calls]
-        assert pytest.approx(0.65) in levels
-
-    async def test_invalid_volume_template_ignored(self):
-        t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.3}})
-        t.hass_api.template.return_value.async_render.side_effect = Exception("template error")
         envelope = _make_envelope("Test", data={"volume": "{{ invalid }}"})
         with patch("custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock):
             result = await t.deliver(envelope)
@@ -522,6 +509,46 @@ class TestDeliver:
         ) as mock_sleep:
             await t.deliver(envelope)
             mock_sleep.assert_not_awaited()
+
+    async def test_no_wait_when_nothing_playing_and_no_volume(self):
+        """pause_music is on by default, but with nothing playing there's nothing to resume"""
+        t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.5}})
+        envelope = _make_envelope("Ciao", data={})
+        with patch(
+            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
+            assert await t.deliver(envelope) is True
+            mock_sleep.assert_not_awaited()
+        assert t.hass_api.call_service.call_count == 0
+
+    async def test_no_wait_when_volume_not_restored(self):
+        t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.5}})
+        envelope = _make_envelope("Ciao", data={"volume": 0.8, "restore_volume": False})
+        with patch(
+            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
+            await t.deliver(envelope)
+            mock_sleep.assert_not_awaited()
+
+    async def test_no_wait_when_announce_fails(self):
+        t = _make_transport({"media_player.ufficio": {"state": "playing", "volume_level": 0.5}})
+        t.call_action = AsyncMock(return_value=False)
+        envelope = _make_envelope("Ciao", data={"volume": 0.8})
+        with patch(
+            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
+            assert await t.deliver(envelope) is False
+            # only the music resume delay, no wait for TTS that never happened
+            assert [c.args[0] for c in mock_sleep.await_args_list] == [_MUSIC_RESUME_DELAY]
+        names = _service_names(t)
+        assert "media_play" in names
+        assert names.count("volume_set") == 2
+
+    async def test_method_passed_to_alexa(self):
+        t = _make_transport({"media_player.ufficio": {"state": "idle"}})
+        envelope = _make_envelope("Ciao", data={"method": "speak", "type": "announce"})
+        await t.deliver(envelope)
+        assert t.call_action.call_args.kwargs["action_data"]["data"] == {"type": "announce", "method": "speak"}
 
     async def test_tts_char_speed_affects_duration(self):
         t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.5}})

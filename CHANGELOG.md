@@ -2,6 +2,20 @@
 
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
 
+# v2.16.1
+## 🐛 Bug fixes
+- *TTS*
+  - Android TTS with a `media_stream` failed, since it was passed outside the inner `data`, which Home Assistant's notify actions reject
+  - An older action like `tts.cloud_say` was given the `tts` entity as its target and the media players as `media_player_entity_id`, which it doesn't accept. It now targets the media players
+  - Without a `tts_entity_id`, `tts.home_assistant_cloud` was always used, so without Nabu Casa nothing was spoken, though recorded as delivered. The first `tts` entity found is now used if there's no Nabu Casa one, and the delivery is skipped with a warning if there are none
+  - Docs corrected: invalid `options` YAML, the non-existent `tts.speak_cloud` and `tts.say` actions, the Android example, and that excluding Apple devices is a default
+- *Alexa Media Player*
+  - Every announcement waited for its estimated speech time, 5 seconds or more, before finishing, even with nothing playing and no volume to restore. It now only waits when there's music to resume, a volume to restore, or `wait_for_tts` is set, and not after a failed announcement
+  - `method` in `data` was dropped, rather than passed to `notify.alexa_media`
+  - Docs extended for `type` and `method`, that `volume` is ignored with `media_auto_pause: false`, and the order of volume restore and music resume corrected
+- *Media*: docs now give the image as the notification's `media` `snapshot_url` or camera, and the resulting action call as made
+- *Alexa Devices*: docs corrected for the default delivery, which has no fixed targets, and the `alexa_devices_speak_all` and `alexa_devices_announce_all` deliveries are now documented
+
 # v2.16.0
 
 ## 🚨 Breaking changes

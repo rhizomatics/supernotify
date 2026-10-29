@@ -39,14 +39,16 @@ By default, every announcement assumes background music might be playing on the 
 2. **Pause** music if playing (or `media_stop` if `pause_music: false`, to suppress the confirmation beep).
 3. **Set volume** to the requested `volume`, if any.
 4. **Announce** the message.
-5. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`).
-6. **Resume** music playback, if it was paused.
-7. **Restore** volume to its prior level.
+5. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`), only if there's a volume to restore or music to resume, or `wait_for_tts` is set.
+6. **Restore** volume to its prior level.
+7. **Resume** music playback, if it was paused, after a 2 second delay.
 
 All of `data` keys below are optional:
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
+| `type` | str | `announce` | Passed to `notify.alexa_media`: `announce` plays a chime then speaks, `tts` only speaks, `push` sends a notification to the Alexa app. |
+| `method` | str | - | Passed to `notify.alexa_media`, for an announcement on an Echo Show: `all`, `speak` or `show`. |
 | `volume` | float 0-1 | none | Desired announcement volume; supports a Jinja2 template. |
 | `restore_volume` | bool | `true` | Restore the pre-announcement volume afterwards. |
 | `pause_music` | bool | `true` | Pause (rather than stop) music if playing. |
@@ -69,6 +71,8 @@ deliveries:
     options:
       media_auto_pause: false
 ```
+
+With `media_auto_pause: false`, a `volume` in the notification is ignored, since setting it is part of the same sequence.
 
 If this only applies to some Alexa devices, then make two `Delivery` definitions, one for the music players without the `media_auto_pause` override and one with.
 

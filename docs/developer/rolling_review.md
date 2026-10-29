@@ -29,16 +29,16 @@ Review the transport, including architecture alignment with current Supernotify 
 | `chime`              | 19th Oct 2026 | `v2.16.0`   |
 | `notify_entity`      | 19th Oct 2026 | `v2.16.0`   |
 | `mobile_push`        | 20th Oct 2026 | `v2.16.0`   |
-| `alexa_devices`      |               |             |
-| `alexa_media_player` |               |             |
+| `alexa_devices`      | 29th Oct 2026 | `v2.16.1`   |
+| `alexa_media_player` | 29th Oct 2026 | `v2.16.1`   |
 | `email`              | 20th Oct 2026 | `v2.16.0`   |
 | `generic`            | 20th Oct 2026 | `v2.16.0`   |
-| `tts`                |               |             |
+| `tts`                | 29th Oct 2026 | `v2.16.1`   |
 | `sms`                |               |             |
 | `mqtt`               |               |             |
 | `discord`            |               |             |
 | `html5`              |               |             |
-| `media`              |               |             |
+| `media`              | 29th Oct 2026 | `v2.16.1`   |
 | `telegram`           |               |             |
 | `persistent`         |               |             |
 | `pushover`           |               |             |

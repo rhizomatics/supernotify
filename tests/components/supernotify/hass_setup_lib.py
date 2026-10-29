@@ -331,6 +331,7 @@ class TestingContext(Context):
             self.hass.states.async_entity_ids = lambda domain=None: {
                 "notify": ["notify.mock_notify_target"],
                 "media_player": ["media_player.mock_speaker"],
+                "tts": ["tts.home_assistant_cloud"],
             }.get(domain, [])
             self.hass.services = Mock(ServiceRegistry)
             # explicit return_value=None: an unconfigured AsyncMock's awaited result is itself
