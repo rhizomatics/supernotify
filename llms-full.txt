@@ -128,7 +128,9 @@ An alternative `supernotify.notify` action is now available that is much easier 
 
 ### HACS
 
-- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
+- [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk) - Live activities on your phone for dishwashers, robot vacuums, power monitors etc with no config, no YAML, no blueprints, no automations.
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more. Integrates with Frigate profiles.
+- [Camera AutoNotify](https://camera-autonotify.rhizomatics.org.uk) - Instant notifications for Frigate (and other camera systems coming) with no config, no blueprints, no YAML, no automations.
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - OpenTelemetry (OTLP) and Syslog event capture for Home Assistant
 
 ### Python / Docker
@@ -287,7 +289,7 @@ Each person Supernotify knows about has a Home Assistant `switch` entity, and so
 
 ## Notify Just Some Devices
 
-Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md) for common questions.
+Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/help/faqs/index.md) for common questions.
 
 ## Tune the Settings
 
@@ -310,7 +312,7 @@ More is possible with some YAML configuration, and all of it is optional:
 
 ## Get Help
 
-Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/quick_start/faqs.md).
+Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/help/faqs/index.md).
 
 # Basic Concepts
 
@@ -462,6 +464,62 @@ From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
 1. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
 1. Templates may be left behind, by default in a `supernotify/templates` directory under your Home Assistant config directory unless configured otherwise. Remove this directory if needed.
+
+# Frequently Asked Questions
+
+Source: https://supernotify.rhizomatics.org.uk/latest/help/faqs/
+
+## Target Selection
+
+**Q**: If I define a `label_id` and an `area_id`, and in that area I have 3 devices, is the `label_id` treated as an `AND`? (so it will send to just devices in `label_id` that have `label_id`), or an `OR`, (so it sends to all devices that are in `area_id`, as well as all devices in the system that have `label_id`?)
+
+**A**: It works as an OR selector - give me all everything that is in area X OR has label Y, so all the `area_id`,`floor_id` and `label` targets all add up to one big list. This is part of the standard Home Assistant [target selectors](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) which happens outside of Supernotify, and works the same for all integrations.
+
+**Q**: How do I send a notification to only 3 of my Alexa speakers and not the rest.
+
+**A**: There are a few ways of doing this
+
+Option 1 - Use the Home Assistant [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) on the `supernotify.notify` action to pick the speakers by their **Area**, **Floor** or **Label**.
+
+Option 2 - Create a separate *Delivery* (YAML only at present) for these speakers, and list them as targets. Then when setting up notifications, pick this delivery from the list.
+
+```yaml
+alexa_inform:
+    alias: Ask all the Alexas apart from bedrooms to speak the notification
+    transport: alexa_devices
+    target:
+    - notify.kitchen_alexa_speak
+    - notify.living_room_flex_speak
+    - notify.studio_speak
+```
+
+# Troubleshooting
+
+Source: https://supernotify.rhizomatics.org.uk/latest/help/troubleshooting/
+
+## Options
+
+- [AI Agents](https://supernotify.rhizomatics.org.uk/latest/help/ai_help/index.md) can give very good help these days, even the free one built into [Google Search](https://supernotify.rhizomatics.org.uk/latest/help/ai_help/#google-and-ai-assisted-help).
+- [Troubleshooting your configuration](https://www.home-assistant.io/docs/configuration/troubleshooting/) has the generic Home Assistant advice
+- Use the [Archive](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md) to browse the existing notification
+- Easiest way to do this is using the [Studio Code Server](https://github.com/hassio-addons/app-vscode) app for Home Assistant
+- Switch on debug mode to get much more detailed archives,
+  - `debug: true` can be added to a notification `data` section, or onto any `delivery` config
+- Supernotify has a [Diagnostics](https://www.home-assistant.io/integrations/diagnostics/) bundle available from the integration page
+- Have a look at the [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/), including any breaking changes, and any of the known [Issues](https://github.com/rhizomatics/supernotify/issues) or [Support Discussions](https://github.com/rhizomatics/supernotify/discussions).
+- Use the [Tools](https://www.home-assistant.io/docs/tools/dev-tools/) to call the action directly, listen to events, or view states
+- Since Supernotify manages Home Assistant contexts, you can see the entire history of a why a notification happened, what the original trigger was, and also downstream things like moving and zooming a camera, all laid out in the state history
+- Supernotify also has lots of additional [actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) to enquire about the internals, and offers lots of diagnostic entities
+- The [Debugging a Transport Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) has an example of working through issues with one of the underlying notification transports
+
+## Advanced Agent Usage
+
+- If you have a desktop or coding agent, then giving it access to Home Assistant config make it much easier to resolve issues and correct config.
+- Easiest way of doing that is with the [Samba Share](https://github.com/home-assistant/addons/tree/master/samba) app for Home Assistant.
+- For example, on a Mac you can have the local `/Volumes/config` reading the main `\config` directory of Home Assistant.
+- Caution is due where passwords and other secrets inside the Home Assistant directory could be exposed.
+- The [Assist](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md) integration also supports [MCP](https://www.home-assistant.io/integrations/mcp/) for queries
+- For more advanced usage, the [Home Assistant REPL](https://supernotify.rhizomatics.org.uk/latest/developer/ha_repl/index.md) developer shell can give easy agent access to the APIs, or deep access direct into the live internals and database with `live` mode. The latter is the sharpest tool available for agents.
 # Using Supernotify
 
 # Usage
@@ -4093,7 +4151,16 @@ Use `spoken_message` in the notification call to provide a different message for
 
 ## Discovery
 
-**Default delivery** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present.
+**Default delivery** If the Alexa Devices integration is configured, has at least one `notify` entity, and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically. It has no fixed targets: it's selected whenever a notification targets one of the integration's own `notify` entities, directly or through an area or floor, or a Home Assistant `group`, which is passed on as it is.
+
+**All-device deliveries** Two more deliveries are generated, only used when selected explicitly, for example by `delivery: alexa_devices_announce_all` or a scenario:
+
+| Delivery                     | Targets                                             |
+| ---------------------------- | --------------------------------------------------- |
+| `alexa_devices_speak_all`    | Every `notify.*_speak` entity of the integration    |
+| `alexa_devices_announce_all` | Every `notify.*_announce` entity of the integration |
+
+Each is only generated if there's at least one matching entity. Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
 
 ## References
 
@@ -4144,22 +4211,24 @@ By default, every announcement assumes background music might be playing on the 
 1. **Pause** music if playing (or `media_stop` if `pause_music: false`, to suppress the confirmation beep).
 1. **Set volume** to the requested `volume`, if any.
 1. **Announce** the message.
-1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`).
-1. **Resume** music playback, if it was paused.
+1. **Wait** for an estimate of the TTS duration (SSML-aware; tune with `tts_char_speed`), only if there's a volume to restore or music to resume, or `wait_for_tts` is set.
 1. **Restore** volume to its prior level.
+1. **Resume** music playback, if it was paused, after a 2 second delay.
 
 All of `data` keys below are optional:
 
-| Key               | Type       | Default | Effect                                                                                                                                                                     |
-| ----------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `volume`          | float 0-1  | none    | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
-| `restore_volume`  | bool       | `true`  | Restore the pre-announcement volume afterwards.                                                                                                                            |
-| `pause_music`     | bool       | `true`  | Pause (rather than stop) music if playing.                                                                                                                                 |
-| `volume_fallback` | float 0-1  | `0.5`   | Used when a device's current volume can't be read.                                                                                                                         |
-| `wait_for_tts`    | bool       | `false` | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
-| `audio_url`       | str        | -       | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
-| `audio_duration`  | float s    | `0`     | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
-| `tts_char_speed`  | float s/ch | `0.06`  | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
+| Key               | Type       | Default    | Effect                                                                                                                                                                     |
+| ----------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`            | str        | `announce` | Passed to `notify.alexa_media`: `announce` plays a chime then speaks, `tts` only speaks, `push` sends a notification to the Alexa app.                                     |
+| `method`          | str        | -          | Passed to `notify.alexa_media`, for an announcement on an Echo Show: `all`, `speak` or `show`.                                                                             |
+| `volume`          | float 0-1  | none       | Desired announcement volume; supports a Jinja2 template.                                                                                                                   |
+| `restore_volume`  | bool       | `true`     | Restore the pre-announcement volume afterwards.                                                                                                                            |
+| `pause_music`     | bool       | `true`     | Pause (rather than stop) music if playing.                                                                                                                                 |
+| `volume_fallback` | float 0-1  | `0.5`      | Used when a device's current volume can't be read.                                                                                                                         |
+| `wait_for_tts`    | bool       | `false`    | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
+| `audio_url`       | str        | -          | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
+| `audio_duration`  | float s    | `0`        | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
+| `tts_char_speed`  | float s/ch | `0.06`     | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
 
 ### Reducing cloud API calls and Notification delay
 
@@ -4174,6 +4243,8 @@ deliveries:
     options:
       media_auto_pause: false
 ```
+
+With `media_auto_pause: false`, a `volume` in the notification is ignored, since setting it is part of the same sequence.
 
 If this only applies to some Alexa devices, then make two `Delivery` definitions, one for the music players without the `media_auto_pause` override and one with.
 
@@ -5099,10 +5170,6 @@ Generic is a catch-all for user-defined actions, so there's nothing for Supernot
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
-## Discovery
-
-**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
-
 ## Motivation
 
 Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires the [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
@@ -5223,6 +5290,10 @@ ______________________________________________________________________
 
 **No static default `action:`**: `default_config` sets no fixed `action`, since the HACS service name is user-controlled. `auto_configure()` fills it in dynamically once discovered (see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a manually configured delivery omits `action:`.
 
+## Discovery
+
+**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
+
 ______________________________________________________________________
 
 ## Related
@@ -5236,6 +5307,10 @@ ______________________________________________________________________
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
 
+| Transport ID | Source                                                                                                               | Requirements                                                                              | Optional |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------- |
+| `html5`      | [`html5.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/html5.py) | [HTML5 Push Notifications Integration](https://www.home-assistant.io/integrations/html5/) | -        |
+
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant [`html5`](https://www.home-assistant.io/integrations/html5/) integration. The transport calls the modern `html5.send_message` entity service rather than the legacy `notify.html5` platform: the legacy platform reads `ttl` and `priority` from keyword arguments the notify bridge never populates, so urgency would silently always be "normal". With the entity service, urgency is mapped natively from the SuperNotify priority.
@@ -5244,13 +5319,16 @@ Provides a native SuperNotify transport for browser web push through the Home As
 
 - Urgency mapped from priority — critical/high → `high`, medium → `normal`, low/minimum → `low`, overridable with `html5_urgency`.
 - Tags and renotify, so a repeated alert replaces the previous one instead of piling up.
-- Action buttons (`html5_actions`); clicks fire `html5_notification.clicked` events carrying the action value, ready for actionable-notification automations.
+- Action buttons (`html5_actions`); clicks fire `html5_notification.clicked` events carrying the action value, ready for actionable-notification automations. Supernotify's own [ad-hoc actions and action groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md) aren't turned into browser buttons, only a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)'s `uri`, as the click URL.
+- `lang` is set to the Home Assistant language.
 - Camera snapshot as the notification image (`html5_attach_image: true`) using the shared media pipeline — the URL must be reachable by the browser, so an HTTPS `external_url` (or Home Assistant Cloud) is usually required.
 - `silent` and `vibrate` are mutually exclusive in the core schema (`vol.Exclusive`): the transport never sends both, and logs a warning when it has to drop one.
 
 ## Configuration
 
-Targets are the `notify.*` entities created by browser registrations (html5 config entry with VAPID keys). Non-matching targets are dropped; a delivery with no valid target fails.
+Targets are the `notify.*` entities created by browser registrations (html5 config entry with VAPID keys). Non-matching targets are dropped; a delivery with no valid target is skipped.
+
+A delivery with its own fixed targets, like this one, needs `inclusion: explicit` if it should only be used when asked for, since otherwise its targets select it for every notification.
 
 ```yaml
 delivery:
@@ -5276,18 +5354,18 @@ delivery:
 - `html5_require_interaction` — keep on screen until the user interacts
 - `html5_renotify` — alert again when a new notification replaces an existing tag
 - `html5_silent` — suppress sound/vibration (exclusive with `html5_vibrate`)
-- `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`
+- `html5_vibrate` — vibration pattern in ms, e.g. `[200, 100, 200]`, or a single number
 - `html5_ttl` — time-to-live in seconds or an HA duration mapping
 - `html5_data` — extra keys merged into the custom `data` field (`html5_url` wins on `url`)
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
+**Delivery (default selection).** If the `html5` integration's config entry exists, at least one browser has registered, and no `html5` delivery is defined, an `html5` delivery is generated automatically. It's selected whenever a notification targets one of the integration's own `notify.*` entities, without naming the delivery, ahead of the generic [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport.
 
 ## Notes
 
 - The `html5.send_message` schema is a strict whitelist: unknown top-level keys fail the whole call, so residual generic data keys are not forwarded (debug log); `html5_data` is the explicit passthrough.
-- `title` is required by the schema; without a title the HA default "Home Assistant" is used.
+- `title` is required by the schema; without a title, "Notification" in the Home Assistant language is used.
 - Expired push subscriptions (410 GONE) are handled by the core, which unregisters the browser and raises: the delivery is then reported as failed.
 
 # Kodi Transport Adaptor
@@ -5524,7 +5602,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 
 Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
-Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
+Give the image as the notification's `media` `snapshot_url`, or a `camera_entity_id` for Supernotify to grab an image from the camera (see [Multimedia](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)). Message and title fields will be ignored. Override the `image` content type by setting `media_content_type` in the delivery `data`.
 
 ## Example
 
@@ -5534,23 +5612,27 @@ Example Notification
 - action: supernotify.notify
   data:
     message: ""
+    media:
+      snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
     delivery:
       media:
         target:
             - media_player.kitchen_alexa
-        data:
-            snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
 ```
 
 The resulting action call from the adaptor looks like:
 
 ```yaml
-service: media_player.play_media
-data:
-  media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
-  media_content_type: image
+action: media_player.play_media
+target:
   entity_id: media_player.kitchen_alexa
+data:
+  media:
+    media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
+    media_content_type: image
 ```
+
+A `snapshot_url` in the delivery `data` is still accepted, for older configurations, and takes priority over the notification's `media`.
 
 ## Playing audio or other content
 
@@ -5829,13 +5911,14 @@ delivery:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 
-| Transport ID | Source                                                                                                             | Requirements                                                                       | Optional |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
-| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |
+| Transport ID | Source                                                                                                             | Requirements                                                         | Optional |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------- |
+| `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [MQTT Integration](https://www.home-assistant.io/integrations/mqtt/) | -        |
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, this specific MQTT integration can be easier to use.
 
 - Payloads can be defined in YAML rather than escaped JSON, and will be JSONified if needed on delivery
+- Without a `payload` in `data`, the message is published. The title isn't sent
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 - A `topic:xxxx` target can be blended into a big list of targets, and the MQTT transport will be used automatically for it.
 
@@ -5873,7 +5956,7 @@ Example Notification
                     level: low
 ```
 
-A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}}`) still works, predating the `target:` form:
+A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}`) still works, predating the `target:` form:
 
 Example Notification with legacy data.topic
 
@@ -5892,11 +5975,37 @@ Example Notification with legacy data.topic
                     level: low
 ```
 
+## Data
+
+Only what `mqtt.publish` accepts is passed on from `data`, since it rejects anything else, and a notification's own `data` is shared with every delivery:
+
+| Key                       | Effect                                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `payload`                 | What to publish - a mapping or list is turned into JSON, anything else is sent as it is. Defaults to the message |
+| `qos`                     | Quality of service, `0`, `1` or `2`                                                                              |
+| `retain`                  | Keep the message on the broker for new subscribers                                                               |
+| `evaluate_payload`        | Turn a bytes literal string payload into raw bytes                                                               |
+| `message_expiry_interval` | How long the broker keeps the message, for MQTT 5                                                                |
+
+Example Notification switching on a siren, retained
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: ""
+    target: topic:zigbee2mqtt/siren/set
+    delivery:
+      mqtt:
+        data:
+          payload: "ON"
+          retain: true
+```
+
 ## Discovery
 
 **Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
 
-A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 ## Reference
 
@@ -6285,9 +6394,26 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
 
 Send text messages using any SMS integration that follows Home Assistant Notification model - configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`.
 
-Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
+Uses the `phone_number` of a [recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), or a phone number given as a target, and cuts the message to 158 characters to fit in a single SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+
+Emoji and other pictographic symbols are removed, but currency signs, brackets and the like are kept. Set `simplify_text: false` in `options` to keep emoji too, though a message with emoji in it is longer than one SMS can carry, so it's sent as several, if the SMS service allows.
+
+A `data` mapping inside the notification's `data` is passed on to the SMS integration, for example a picture for Twilio:
+
+Example Notification with Twilio picture
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Someone at the door"
+    delivery:
+      sms:
+        data:
+          data:
+            media_url: https://example.com/door.jpg
+```
 
 Tip
 
@@ -6307,42 +6433,64 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and fires on every notification, since the target phone number is positively identified from the recipient's registered `phone` attribute — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
 
 # Telegram Transport Adaptor
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/telegram/
 
+| Transport ID | Source                                                                                                                     | Requirements                                                                        | Optional |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------- |
+| `telegram`   | [`telegram.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/telegram.py) | [Telegram Bot Integration](https://www.home-assistant.io/integrations/telegram_bot) | -        |
+
 ## Motivation
 
-Use the latest [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration in Home Assistant for richer telegram notifications, adapting core Supernotify data like title and image, and exposing telegram specific tuning.
+Use the [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration in Home Assistant for richer telegram notifications, adapting core Supernotify data like title, priority, image and actions, and exposing telegram specific tuning.
 
-## Testing
+## Targets
 
-Tested on Home Assistant 2026.3.4 with `telegram_bot` platform: polling
+A chat can be targeted in two ways:
+
+- Its chat id, as a `telegram_chat_id` target, for example `telegram_chat_id:123456789`. Group chat ids are negative numbers
+- The `notify` entity the Telegram Bot integration creates for each allowed chat, for example `notify.family_chat`. This also tells Home Assistant which bot to use, so is needed if there's more than one bot
+
+Either selects the `telegram` delivery automatically, without naming it, and a notification can go to several chats at once. A Telegram `notify` entity is sent to by this transport, rather than the generic [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) one, so it gets the image, buttons and priority handling.
+
+Example Notification
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Motion detected at front door"
+    title: "📷 Front Camera"
+    target:
+      - telegram_chat_id:123456789
+      - notify.family_chat
+```
+
+A chat id can also be fixed in a delivery's configuration, or given as `telegram_chat_id` in `data`, which overrides the target. Either can be a single id or a list.
 
 ## Example configuration
 
-Basic Configuration
+Fixed chat
 
 ```yaml
 delivery:
   telegram_home:
     transport: telegram
-    inclusion: default
-    data:
+    target:
       telegram_chat_id: 123456789
 ```
 
-security channel with camera snapshot
+Security channel with camera snapshot
 
 ```yaml
 delivery:
   telegram_security:
     transport: telegram
-    inclusion: default
+    target:
+      telegram_chat_id: -987654321
     data:
-      telegram_chat_id: 123456789
       telegram_attach_image: true
       telegram_parse_mode: "HTML"
 ```
@@ -6354,8 +6502,9 @@ delivery:
   telegram_alarms:
     transport: telegram
     inclusion: scenario
-    data:
+    target:
       telegram_chat_id: 123456789
+    data:
       telegram_attach_image: true
       telegram_inline_keyboard:
         - - text: "✅ Acknowledge"
@@ -6364,7 +6513,9 @@ delivery:
             callback_data: "snooze_alarm"
 ```
 
-## Example call
+A delivery with its own fixed target, like these, is used for every notification unless it has an `inclusion` of `explicit` or `scenario`.
+
+## Example call with a camera
 
 action: supernotify.notify
 
@@ -6372,15 +6523,41 @@ action: supernotify.notify
 data:
   message: "Motion detected at front door"
   title: "📷 Front Camera"
-  data:
-    media:
-      camera_entity_id: camera.ezviz_ingresso
+  delivery: telegram_security
+  media:
+    camera_entity_id: camera.front_door
 ```
 
 ### Expected behavior
 
-- Telegram receives photo with bold title as caption
-- Low-priority notifications arrive silently \<\* Critical notifications bypass Do Not Disturb
+- Telegram receives the camera snapshot as a photo, with the bold title and message as its caption, since `telegram_security` has `telegram_attach_image: true`
+- Low and minimum priority notifications arrive silently, using `disable_notification`. Telegram has no way of breaking through Do Not Disturb, so critical and high priority notifications arrive as normal ones
+
+## Data keys
+
+| Key                             | Effect                                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `telegram_parse_mode`           | `HTML`, `Markdown` or `MarkdownV2`. Plain text if not set                                |
+| `telegram_disable_notification` | Send silently, or not, whatever the priority                                             |
+| `telegram_chat_id`              | Chat id, or list of them, to send to instead of the targets                              |
+| `telegram_reply_to_message_id`  | Send as a reply to an earlier message                                                    |
+| `telegram_inline_keyboard`      | Buttons, as rows of `{text, callback_data}`, or Home Assistant's own `[label, callback]` |
+| `telegram_attach_image`         | Send the notification's image, from its `snapshot_url` or camera, as a photo             |
+| `telegram_image_as_document`    | Send the image as a document, without Telegram's compression                             |
+| `telegram_protect_content`      | Accepted, but has no effect, since Home Assistant doesn't allow it for these actions     |
+
+These Telegram Bot action fields are also passed on from `data`: `config_entry_id`, `disable_web_page_preview`, `keyboard`, `message_tag`, `message_thread_id`, `one_time_keyboard` and `resize_keyboard`. Anything else in `data` is left out, since the Telegram Bot actions reject fields they don't know, and a notification's `data` is shared with all its deliveries.
+
+Without `telegram_inline_keyboard`, Supernotify's own [actions](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md) become buttons, up to 5, other than notification level actions.
+
+## Formatting
+
+- The title is shown in bold above the message. With `HTML`, the title is escaped, but not the message, so it can contain tags. With `Markdown` or `MarkdownV2`, the title's special characters are escaped, so a title like `Alert!` doesn't stop Telegram parsing the message
+- A message longer than Telegram's 4096 characters, or a caption longer than 1024, is cut short, and sent as plain text, since the cut could leave a tag or markup unfinished
+
+## Images
+
+The image is sent as a file from the Supernotify media folder, which Home Assistant only allows if it's in `allowlist_external_dirs` - see [Multimedia Basic Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#basic-configuration). Without one, or if no image can be got, the message is sent as text.
 
 ## How to get the chat_id
 
@@ -6388,19 +6565,17 @@ data:
 1. Visit: https://api.telegram.org/bot\<YOUR_TOKEN>/getUpdates
 1. Find "chat" → "id" in the response
 
-Or use the `telegram_bot.send_message` service from HA Developer Tools to test with your chat_id before committing it to your delivery configuration
+The chat also has to be one of the bot's allowed chats in the Telegram Bot integration, which is where its `notify` entity comes from. Use the `telegram_bot.send_message` action in Home Assistant Developer Tools to test a chat id before using it in Supernotify.
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [telegram]}` or a scenario), not by default. You'll still need to supply `telegram_chat_id` yourself, per the examples below.
+**Delivery (default selection).** If the `telegram_bot` integration is configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically. It's used for any notification with a `telegram_chat_id` target, or one of the integration's own `notify` entities, and otherwise skipped.
 
 ## Notes
 
-- `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target` or from the `telegram_chat_id` data key.
-- Direct `hass_api.call_service()` is used instead of `call_action()` because the service name switches dynamically between `send_message`, `send_photo`, and `send_document` depending on whether a snapshot is attached.
-- `grab_image()` (not `snap_notification_image()`) handles reprocessing: resize, JPEG/PNG optimisation, metadata removal, and per-filename caching for multiple deliveries with the same settings.
-- `TransportFeature.SNAPSHOT_IMAGE` is declared so the SuperNotify scheduler waits for PTZ cameras to complete their rotation before dispatching (v1.14.0+).
-- HTML special characters in title and message are escaped via `html.escape()` when `parse_mode=HTML`, preventing accidental tag injection.
+- Chat ids are sent to Home Assistant as `chat_id`, rather than the deprecated `target`, which raises a repair issue
+- The action switches between `telegram_bot.send_message`, `send_photo` and `send_document`, depending on whether an image is attached, and how
+- `TransportFeature.SNAPSHOT_IMAGE` is declared so the Supernotify scheduler waits for PTZ cameras to complete their rotation before dispatching
 
 # TTS Transport Adaptor
 
@@ -6410,11 +6585,11 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
 | `tts`        | [`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | [TTS Integration](https://www.home-assistant.io/integrations/tts/) | -        |
 
-Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses `tts.home_assistant_cloud` from Nabu Casa if present, or else the first `tts` entity found, though any supported tts can be chosen. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
 ## Example
 
-Since `tts` never auto-selects (see [Discovery](#discovery) above), name the `tts` delivery explicitly and give it one or more `media_player` targets:
+Since `tts` never auto-selects (see [Discovery](#discovery) below), name the `tts` delivery explicitly and give it one or more `media_player` targets:
 
 Example Notification
 
@@ -6446,20 +6621,22 @@ A scenario can select `tts` the same way, instead of naming it on every call - s
 
 ## Text-to-Speech Integration
 
-This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, such as `cache`, `language` and `options`.
+This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, `cache`, `language` and `options`.
 
-The action can be overridden if desired to the older `tts.say`
+The action can be overridden to an older platform-specific action, like `tts.cloud_say`. These target the `media_player` entities directly, with no `tts` entity.
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
 ### Choosing the TTS Provider
+
+Without a `tts_entity_id` option, `tts.home_assistant_cloud` is used if it exists, otherwise the first `tts` entity found. If there are no `tts` entities at all, the delivery is skipped, with a warning in the log.
 
 ```yaml
 delivery:
   speak_it_out:
     transport: tts
     options:
-      - tts_entity_id: tts.google_ai_tts
+      tts_entity_id: tts.google_ai_tts
 ```
 
 ### Changing the Action
@@ -6468,9 +6645,18 @@ delivery:
 delivery:
   speak_it_out:
     transport: tts
-    action: tts.speak_cloud
-    options:
-      - tts_entity_id: tts.google_ai_tts
+    action: tts.cloud_say
+```
+
+The resulting action call looks like:
+
+```yaml
+action: tts.cloud_say
+target:
+  entity_id:
+    - media_player.kitchen_speaker
+data:
+  message: "Someone is at the front door"
 ```
 
 ### Under the Hood
@@ -6485,13 +6671,15 @@ Android TTS
 
 ```yaml
 action: notify.mobile_app_my_pixel
+data:
+  message: "TTS"
   data:
-    message: "TTS"
-    data:
-      tts_text: "This is the notification message"
+    tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
+Set `media_stream` in the notification or delivery `data`, for example `alarm_stream` or `alarm_stream_max`, to choose which Android audio stream is used. It's passed inside the inner `data`, alongside `tts_text`.
+
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. By default, the `tts` adaptor filters out Apple devices, which don't support TTS notifications, using the `device_manufacturer_select` option, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
 
 Configuration Snippet
 
@@ -8433,31 +8621,31 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | -                                                                           | -                         | -                                                                                 |
 | [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | -                                                                           | -                         | -                                                                                 |
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | phone                                                                       | -                         | -                                                                                 |
-| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | telegram_chat_id                                                            | -                         | -                                                                                 |
+| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | telegram_chat_id, entity_id (domain=notify, platform=telegram_bot)          | -                         | -                                                                                 |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | -                                                                           | -                         | entity_id (domain=media_player), mobile_app_id                                    |
 
 ## Default Options
 
-| Transport                                                                                                  | data_keys_select | device_discovery | device_domain     | device_manufacturer_select | device_model_select            | handle_as_domain | jpeg_opts                                   | media_auto_pause | message_usage | mode   | png_opts             | preheader_blank | preheader_length | raw   | simplify_text | strict_template | strip_urls | target_select                                                            | tts_entity_id            |
-| ---------------------------------------------------------------------------------------------------------- | ---------------- | ---------------- | ----------------- | -------------------------- | ------------------------------ | ---------------- | ------------------------------------------- | ---------------- | ------------- | ------ | -------------------- | --------------- | ---------------- | ----- | ------------- | --------------- | ---------- | ------------------------------------------------------------------------ | ------------------------ |
-| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['group.[a-z0-9\_]+', '^notify.[A-Za-z0-9\_]+$'\]                       | N/A                      |
-| [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | True             | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | N/A              | True             | ['alexa_devices'] | N/A                        | {'exclude': ['Speaker Group']} | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['(switch                                                               | script                   |
-| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | -                | N/A              | N/A               | N/A                        | N/A                            | N/A              | {'progressive': 'true', 'optimize': 'true'} | N/A              | STANDARD      | direct | {'optimize': 'true'} | ͏‌                | 100              | N/A   | False         | False           | False      | N/A                                                                      | N/A                      |
-| [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                | N/A              | N/A               | N/A                        | N/A                            | -                | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | False | False         | N/A             | False      | N/A                                                                      | N/A                      |
-| [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^notify.[A-Za-z0-9\_]+$'\]                                            | N/A                      |
-| [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      | N/A                      |
-| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | -                | False            | ['mobile_app']    | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | N/A                                                                      | N/A                      |
-| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | \['^notify.[A-Za-z0-9\_]+$'\]                                            | N/A                      |
-| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      | N/A                      |
-| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      | N/A                      |
-| [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] | tts.home_assistant_cloud |
+| Transport                                                                                                  | data_keys_select | device_discovery | device_domain     | device_manufacturer_select | device_model_select            | handle_as_domain | jpeg_opts                                   | media_auto_pause | message_usage | mode   | png_opts             | preheader_blank | preheader_length | raw   | simplify_text | strict_template | strip_urls | target_select                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ---------------- | ---------------- | ----------------- | -------------------------- | ------------------------------ | ---------------- | ------------------------------------------- | ---------------- | ------------- | ------ | -------------------- | --------------- | ---------------- | ----- | ------------- | --------------- | ---------- | ------------------------------------------------------------------------ |
+| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['group.[a-z0-9\_]+', '^notify.[A-Za-z0-9\_]+$'\]                       |
+| [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | True             | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | N/A              | True             | ['alexa_devices'] | N/A                        | {'exclude': ['Speaker Group']} | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['(switch                                                               |
+| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | -                | N/A              | N/A               | N/A                        | N/A                            | N/A              | {'progressive': 'true', 'optimize': 'true'} | N/A              | STANDARD      | direct | {'optimize': 'true'} | ͏‌                | 100              | N/A   | False         | False           | False      | N/A                                                                      |
+| [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                | N/A              | N/A               | N/A                        | N/A                            | -                | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | False | False         | N/A             | False      | N/A                                                                      |
+| [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^notify.[A-Za-z0-9\_]+$'\]                                            |
+| [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | \['^media_player.[A-Za-z0-9\_]+$'\]                                      |
+| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | -                | False            | ['mobile_app']    | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | N/A                                                                      |
+| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | False         | N/A             | False      | \['^notify.[A-Za-z0-9\_]+$'\]                                            |
+| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      |
+| [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
+| [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] |
