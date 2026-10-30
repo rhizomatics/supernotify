@@ -207,7 +207,7 @@ async def test_lametric_selected_for_its_own_notify_entity(hass: HomeAssistant) 
             target: notify.lametric_kitchen
         """)
         (shown,) = calls(house, "lametric", "message")
-        assert shown.data["device_id"] == dr.async_get(hass).async_get_device(identifiers={("lametric", "sn1")}).id  # type: ignore[union-attr]
+        assert shown.data["device_id"] == er.async_get(hass).async_get("notify.lametric_kitchen").device_id  # type: ignore[union-attr]
         assert not calls(house, "notify", "send_message")
     finally:
         house.cleanup()
