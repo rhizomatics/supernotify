@@ -23,18 +23,18 @@
 **Unified Notifications for Home Assistant**
 
 !!! tip inline end "Recipes"
-    Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), try making
-    [Alexa whisper low priority notifications](./recipes/alexa_whisper.md), set off [sirens for critical alerts](./recipes/all_sirens_go.md), make the [Frigate blueprint send e-mail with attached images](./recipes/frigate_emails.md), [move and zoom a camera](./recipes/move_a_camera_for_snapshot.md) to take a snapshot or even have [spooky notifications on Halloween](./recipes/seasonal_greetings.md).
+    Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/), try making
+    [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
 The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-**No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](./recipes/frigate_emails.md), add a [Dashboard](./configuration/dashboard.md) and cut out duplicate notifications.
+**No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](./configuration/dashboard.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
-![Stats using the companion app Supernoftify Cards](./assets/images/supernotify_stats_card.png){width=300, align=right}
+![Stats using the companion app Supernoftify Cards](https://supernotify.rhizomatics.org.uk/latest/assets/images/supernotify_stats_card.png){width=300, align=right}
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -102,14 +102,14 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     * Optionally archive notifications to file system and/or MQTT topic
     * Full support for Home Assistant [Context](https://data.home-assistant.io/docs/context/) so notification actions can be traced back to source automations
     * Includes full debug information, including occupancy assumptions, delivery and target selections
-    * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](usage/actions.md)
+    * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/)
     * Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
 ## YAML Only for Advanced Use
 
 Presently Supernotify supports standard Home Assistant UI based config for the basic setup, and [YAML configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) for advanced features. YAML will be preserved for ease of working with larger rule bases.
 
-A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](recipes/index.md) in the documentation, and this mobile push example:
+A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/) in the documentation, and this mobile push example:
 
 ```yaml title="With zero YAML all UI config"
   - action: supernotify.notify
