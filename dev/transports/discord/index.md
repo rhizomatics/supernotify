@@ -19,7 +19,7 @@ Provides a native SuperNotify transport for [Discord](https://discord.com/) thro
 
 The `discord` integration is set up in Home Assistant with a bot token. The bot must be invited to the server with the *Send Messages* permission. The action name depends on the config entry (`notify.discord`, `notify.discord_2`, …), so any `notify.*` action is accepted.
 
-Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target fails.
+Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target is skipped.
 
 ```yaml
 delivery:

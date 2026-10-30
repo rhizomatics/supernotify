@@ -15,7 +15,7 @@ Shows on-screen overlay notifications on Kodi media centers through the Home Ass
 
 ## Configuration
 
-Targets are the Kodi `media_player` entities; other targets are dropped and a delivery with no valid target fails.
+Targets are the Kodi `media_player` entities; other targets are dropped and a delivery with no valid target is skipped.
 
 ```yaml
 delivery:
@@ -38,7 +38,7 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 
 ## Discovery
 
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically. It isn't used unless asked for, since a `media_player` target could equally be meant for `tts`, `media` or Alexa: name it in `delivery`, a scenario or a recipient, with the Kodi `media_player` entities as targets.
 
 ## Notes
 

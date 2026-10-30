@@ -2,138 +2,109 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/
 
+| Transport ID | Source                                                                                                             | Requirements                                                         | Optional |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------- |
+| `ntfy`       | [`ntfy.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/ntfy.py) | [ntfy Integration](https://www.home-assistant.io/integrations/ntfy/) | -        |
+
 ## Motivation
 
-ntfy became an official Home Assistant integration in version 2025.5. It provides a privacy-first, self-hostable push notification service with a rich action API, priority levels, action buttons, scheduled delivery, image attachments, and message update/cancellation via `sequence_id`.
+[ntfy](https://ntfy.sh) is a privacy-first, self-hostable push notification service, with an official Home Assistant integration since 2025.5. The integration creates a `notify` entity for each topic, and an `ntfy.publish` action with priority levels, action buttons, scheduled delivery, image attachments and message updates.
 
-The existing `generic` transport can call `ntfy.publish`, but it cannot:
+The ntfy transport adds:
 
-- map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
-- validate action button payloads before sending
-- attach camera snapshots via HA's `camera.snapshot` service
-- apply `boolify()` for YAML boolean strings
+- SuperNotify's 5 priority levels mapped to ntfy's 1–5
+- Camera snapshots attached to the notification
+- Action buttons checked before sending, so one bad button doesn't stop the message
+- The tap-through URL defaulting to a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
+
+## Targets
+
+Target the `notify` entity of an ntfy topic, for example `notify.ntfy_alerts`, directly or through a recipient. The `ntfy` delivery is selected for these entities ahead of the generic [Notify Entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) one, without needing to be named.
+
+Alternatively, fix the topic on a delivery with `ntfy_device_id`, the topic's device id, used when no ntfy entity is targeted. Find it in *Settings → Devices & services → ntfy*, or with the template `{{ device_id('notify.ntfy_alerts') }}`.
+
+A delivery with neither is skipped.
 
 ## Data keys
 
-All keys are optional unless noted. Keys with prefix `ntfy_` are extracted by the transport and never forwarded to `ntfy.publish`.
+All are optional, and only the fields `ntfy.publish` accepts are passed on: its schema rejects anything else, so `data` meant for other deliveries, like Mobile Push's `clickAction`, is dropped.
 
-| Key                 | Type         | Default         | Description                                                                                                                                                                                    |
-| ------------------- | ------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA                                                                                                                                   |
-| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                                                                                                                                                            |
-| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`                                                                                                                                              |
-| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped, defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) |
-| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)                                                                                                                                     |
-| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                                                                                                                                                    |
-| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                                                                                                                                                              |
-| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                                                                                                                                                      |
-| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`                                                                                                                                              |
-| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                                                                                                                                                  |
-| `ntfy_email`        | `str`        | —               | Email forwarding address                                                                                                                                                                       |
-| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)                                                                                                                                        |
+| Key                 | Type         | Default                   | Description                                                                                                          |
+| ------------------- | ------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `ntfy_device_id`    | `str`        | —                         | Device id of an ntfy topic, used when no ntfy `notify` entity is targeted                                            |
+| `ntfy_priority`     | `int` 1–5    | from priority             | Override the priority (5=urgent, 1=min); anything else is ignored                                                    |
+| `ntfy_tags`         | `list[str]`  | —                         | Tags, shown as emoji where they match an [ntfy shortcode](https://docs.ntfy.sh/emojis/), e.g. `["warning", "house"]` |
+| `ntfy_click`        | `str` (URL)  | notification action `uri` | URL opened when the notification is tapped                                                                           |
+| `ntfy_attach_image` | `bool`       | `false`                   | Attach the camera snapshot, from `media.camera_entity_id`                                                            |
+| `ntfy_filename`     | `str`        | `snapshot.jpg`            | Filename for the attachment                                                                                          |
+| `ntfy_icon`         | `str` (URL)  | —                         | JPEG or PNG icon URL                                                                                                 |
+| `ntfy_markdown`     | `bool`       | `false`                   | Render the message as Markdown                                                                                       |
+| `ntfy_delay`        | `str`        | —                         | Delay delivery: `"10m"`, `"1h30m"`, `"45s"` or `"HH:MM"`, between 10 seconds and 3 days                              |
+| `ntfy_sequence_id`  | `str`        | —                         | Id that a later notification with the same id updates                                                                |
+| `ntfy_email`        | `str`        | —                         | Also forward to this e-mail address                                                                                  |
+| `ntfy_actions`      | `list[dict]` | —                         | Up to 3 action buttons, see below                                                                                    |
 
-______________________________________________________________________
+A `snapshot_url` in `media` is attached whether or not `ntfy_attach_image` is set. Either way, the image is sent as a URL, so ntfy must be able to reach Home Assistant's media folder.
 
-## Testing
-
-Tested on Home Assistant 2026.3.4 with the ntfy official integration connected to a self-hosted ntfy instance (ntfy v2.x).
-
-**Functional tests performed:**
-
-- [x] Base delivery: message and title appear correctly in ntfy app
-- [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
-- [x] Priority mapping: `minimum` delivers silently with no vibration
-- [x] `ntfy_tags`: emoji tags visible in notification
-- [x] `ntfy_click`: tap opens correct URL
-- [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
-- [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
-- [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
-- [x] `ntfy_sequence_id` — second call with same ID updates the notification
-- [x] `ntfy_device_id` missing → `return False` with warning in log
-- [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
-- [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
-- [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
-
-**Example configuration:**
+### Action buttons
 
 ```yaml
-# example delivery config — minimal
-ntfy_home:
-  transport: ntfy
-  inclusion: default
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_click: "http://homeassistant.local:8123"
-
-# example delivery config — security channel with camera snapshot
-ntfy_security:
-  transport: ntfy
-  inclusion: default
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_attach_image: true
-    ntfy_click: "http://homeassistant.local:8123/lovelace/sicurezza"
-    ntfy_tags:
-      - house
-      - rotating_light
-
-# example delivery config — alarm channel with action buttons
-ntfy_alarms:
-  transport: ntfy
-  inclusion: scenario
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_tags: [rotating_light, sos]
-    ntfy_attach_image: true
-    ntfy_actions:
-      - action: view
-        label: "Open dashboard"
-        url: "http://homeassistant.local:8123/lovelace/allarmi"
-        clear: true
-      - action: http
-        label: "✅ Acknowledge"
-        url: "http://homeassistant.local:8123/api/webhook/ack_alarm"
-        method: POST
-        clear: true
+ntfy_actions:
+  - action: view
+    label: Open dashboard
+    url: https://ha.example.com/lovelace/security
+    clear: true
+  - action: http
+    label: Acknowledge
+    url: https://ha.example.com/api/webhook/ack_alarm
+    method: POST
+  - action: broadcast
+    label: Intent
+    intent: io.heckel.ntfy.USER_ACTION
+  - action: copy
+    label: Copy code
+    value: "1234"
 ```
 
-**Example call:**
+A button without an `action` or `label` is dropped with a warning, and only the first 3 are sent.
+
+## Example
+
+Supernotify Configuration
+
+```yaml
+delivery:
+  ntfy_security:
+    transport: ntfy
+    inclusion: default
+    data:
+      ntfy_device_id: "abc123def456"
+      ntfy_attach_image: true
+      ntfy_tags: [house, rotating_light]
+```
+
+Notification
 
 ```yaml
 action: supernotify.notify
 data:
   message: "Motion detected at entrance"
-  title: "📷 Front Camera"
+  title: "Front Camera"
   media:
-    camera_entity_id: camera.ezviz_ingresso
+    camera_entity_id: camera.front_door
 ```
 
-**Expected behavior:**
+Or, with no delivery configured, send to the topic's entity:
 
-- ntfy app receives push with title, message, attached snapshot, and action buttons
-- Tapping "Open dashboard" navigates to the HA security Lovelace view
-- Tapping "Acknowledge" sends POST to the HA webhook
-- Priority `critical` bypasses Do Not Disturb on mobile
-
-______________________________________________________________________
-
-## How to get the device_id
-
-```text
-Developer Tools → Template →
-{{ device_id('notify.nome_topic') }}
+```yaml
+action: supernotify.notify
+data:
+  message: "Washing done"
+  target: notify.ntfy_alerts
+  extra_data:
+    ntfy_tags: [tshirt]
 ```
-
-Or: Settings → Devices & Services → ntfy → click the topic device.
-
-______________________________________________________________________
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `ntfy` integration is already configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since `ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [ntfy]}` or a scenario), not by default. You'll still need to supply `ntfy_device_id` yourself.
-
-## Notes
-
-- `TargetRequired.NEVER`: the topic target is conveyed via `ntfy_device_id` in `data`, not via HA's standard `target` field. This avoids the transport being suppressed when no person target is present in the notification call.
-- Camera snapshot uses `camera.snapshot` to `/config/www/` (accessible at `/local/`), then attaches via `hass_api.abs_url()`. This works for both cloud and local ntfy.
-- `_parse_delay()` accepts both `"10m"` / `"1h30m"` shorthand and `"HH:MM"` / `"HH:MM:SS"`. Unrecognized formats are passed through with a warning.
+**Delivery (default selection).** If the `ntfy` integration is configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically. It's used when a target is one of the integration's `notify` entities, and otherwise not, since it has no topic to send to.

@@ -2,135 +2,88 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
+| Transport ID | Source                                                                                                                 | Requirements                                                                                | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------- |
+| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration | -        |
+
 ## Motivation
 
-Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires the [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+[Gotify](https://gotify.net) is a self-hosted push notification server. The Gotify transport adds, beyond a plain `notify` call:
 
-## Notes
+- SuperNotify's priority mapped to Gotify's 0–10
+- A tap-through URL, defaulting to a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
+- An expanded image (`bigImageUrl`), from a URL or a camera snapshot
+- Markdown rendering
+- An Android intent opened when the message arrives
 
-- **`action:` is required** — unlike most transports, there is no default action. The HACS integration lets users name the service freely (`notify.gotify`, `notify.my_server`, etc.), so `validate_action()` accepts any `notify.*` service and warns if the action is missing or uses the wrong domain.
-- **Camera snapshot** — `gotify_attach_image: true` triggers a `camera.snapshot` call and builds a publicly-reachable URL. `gotify_image_url` (explicit URL) takes precedence and skips the snapshot entirely.
-- **No raw_data passthrough** — the HACS payload schema is fixed (`{message, title, data: {priority, extras}}`). Unknown keys would cause silent failures or future breakage; they are intentionally dropped (documented with an inline comment).
-- **Separate snapshot path** — uses `supernotify_gotify_snapshot.jpg` (not the ntfy snapshot path) to prevent race conditions when both transports fire concurrently.
+## Priority Mapping
 
-______________________________________________________________________
+| SuperNotify | Gotify |
+| ----------- | ------ |
+| `critical`  | 10     |
+| `high`      | 7      |
+| `medium`    | 5      |
+| `low`       | 2      |
+| `minimum`   | 0      |
 
-## Testing
+## Data Keys
 
-Tested on Home Assistant 2026.3.4 with:
+- `gotify_priority` — `0` to `10`, overriding the mapping; a number outside that is brought into range
+- `gotify_click` — URL opened when the notification is tapped
+- `gotify_image_url` — URL of an image shown expanded, used ahead of a snapshot
+- `gotify_attach_image` — use the camera snapshot as the expanded image (default `false`)
+- `gotify_markdown` — render the message as Markdown (default `false`)
+- `gotify_intent_url` — Android intent URL opened when the message arrives, needing the Gotify app's *Intent Action Permission*
 
-- Gotify server v2.4.0 (self-hosted, local network)
-- HACS integration `1RandomDev/homeassistant-gotify` v1.0.2
-- SuperNotify v1.12.2
+The image is sent as a URL, so the Gotify app must be able to reach Home Assistant's media folder, through the external URL when away from home. Other `data` isn't passed on, since the integration only reads the priority and extras.
 
-**Test cases verified on real HA:**
+## Configuration
 
-```yaml
-# 1. Basic message — priority auto-mapping
-action: supernotify.notify
-data:
-  message: "Test base Gotify"
-  title: "SuperNotify Test"
-  delivery: [gotify_base]
-# Result: notification received, priority=5 (int) in Gotify ✅
-
-# 2. Critical alert — priority mapping
-action: supernotify.notify
-data:
-  message: "Allarme ingresso attivo"
-  title: "🚨 Allarme"
-  delivery: [gotify_base]
-  priority: critical
-# Result: priority=10, notification shown with max urgency ✅
-
-# 3. With bigImageUrl from camera snapshot
-action: supernotify.notify
-data:
-  message: "Movimento rilevato"
-  delivery: [gotify_con_camera]
-  extra_data:
-    gotify_attach_image: true
-  media:
-    camera_entity_id: camera.ingresso
-# Result: snapshot taken, bigImageUrl present, image visible on tap ✅
-
-# 4. With click URL and Markdown
-action: supernotify.notify
-data:
-  message: "**Porta aperta** — controlla la dashboard"
-  delivery: [gotify_base]
-  extra_data:
-    gotify_click: "https://ha.local:8123/lovelace/sicurezza"
-    gotify_markdown: true
-# Result: bold text rendered, tap opens HA dashboard ✅
-
-# 5. Missing action: — validate_action warning
-# Delivery configured without action: notify.*
-# Result: warning logged, delivery suppressed, no crash ✅
-```
-
-**Unit tests:** `tests/components/supernotify/test_transport_gotify.py`
-
-- 35 test cases covering: `_build_extras()` (all combinations), `validate_action()`, `deliver()` happy path, all 5 priority levels, `gotify_priority` override (int/string/clamp/invalid), `boolify()` behaviour for YAML strings, `gotify_image_url` precedence over `attach_image`, camera snapshot success/failure, no `gotify_*` key leakage into payload, service exception handling, `supported_features`, `default_config`.
-
-______________________________________________________________________
-
-## Priority mapping reference
-
-| SuperNotify | Gotify int | Gotify label |
-| ----------- | ---------- | ------------ |
-| `critical`  | 10         | max urgency  |
-| `high`      | 7          | high         |
-| `medium`    | 5          | default      |
-| `low`       | 2          | low          |
-| `minimum`   | 0          | silent/min   |
-
-______________________________________________________________________
-
-## Configuration example
+Home Assistant Configuration
 
 ```yaml
-# configuration.yaml (HA)
 notify:
   - platform: gotify
     name: gotify
     url: http://gotify.local
     token: !secret gotify_token
-
-# supernotify delivery config
-deliveries:
-  gotify_allarme:
-    transport: gotify
-    action: notify.gotify          # only needed if auto-discovery doesn't find your service
-    priority: high
-    data:
-      gotify_click: "https://ha.local:8123/lovelace/sicurezza"
-      gotify_attach_image: true
-      gotify_markdown: true
-
-  gotify_info:
-    transport: gotify
-    action: notify.gotify
-    priority: low                  # → Gotify priority 2
 ```
 
-______________________________________________________________________
+Supernotify Configuration
 
-## Deviations from standard patterns (intentional)
+```yaml
+delivery:
+  gotify_alarm:
+    transport: gotify
+    action: notify.gotify          # only needed if discovery doesn't find it
+    data:
+      gotify_click: "https://ha.example.com/lovelace/security"
+      gotify_attach_image: true
+      gotify_markdown: true
+```
 
-**No `raw_data` passthrough** (CLAUDE.md §4 pattern): The standard pattern passes residual `raw_data` keys to `action_data`. For Gotify this is deliberately omitted — the HACS service has a fixed schema and unknown top-level keys cause silent failures or HTTP 400s on future integration updates. This decision is documented with an inline comment in `deliver()`.
+## Example Call
 
-**No static default `action:`**: `default_config` sets no fixed `action`, since the HACS service name is user-controlled. `auto_configure()` fills it in dynamically once discovered (see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a manually configured delivery omits `action:`.
+```yaml
+action: supernotify.notify
+data:
+  message: "**Front door** open - check the dashboard"
+  priority: critical
+  delivery: gotify_alarm
+  media:
+    camera_entity_id: camera.front_door
+```
 
 ## Discovery
 
-**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
+**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the HACS integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
 
-______________________________________________________________________
+## Notes
 
-## Related
+- The HACS integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
+- Without a title, the integration uses "Home Assistant".
 
-- Fixes the `generic` transport workaround for Gotify (priority string bug)
-- Follows the same transport pattern as the ntfy transport (PR #TBD)
-- HACS integration: https://github.com/1RandomDev/homeassistant-gotify
-- Gotify extras docs: https://gotify.net/docs/msgextras
+## References
+
+- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+- [Gotify message extras](https://gotify.net/docs/msgextras)

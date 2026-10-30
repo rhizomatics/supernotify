@@ -4,7 +4,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_ac
 
 Tip
 
-There's a new much easier way to set this up, which also provides a live progress bar using [Appliances AutoNotify](https://github.com/rhizomatics/appliances_autonotify)
+There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances.
 
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 

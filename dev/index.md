@@ -16,6 +16,8 @@ The goal - to make the **simplest possible notification** do as **many notificat
 
 **No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) and cut out duplicate notifications.
 
+Avoid even setting up automations using [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk/) and [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) including "live" activities on Apple and Android devices.
+
 Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
