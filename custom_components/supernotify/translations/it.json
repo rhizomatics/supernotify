@@ -548,6 +548,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "I binary_sensor di delivery e transport verranno rimossi",
             "description": "Ogni delivery e ogni transport ha ora uno switch (ad esempio `switch.supernotify_delivery_XXXX` o `switch.supernotify_transport_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` di delivery e transport sono da ora in sola lettura, riflettono soltanto se la delivery o il transport è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di uno di questi `binary_sensor` non abilita né disabilita più la delivery o il transport, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Impostazioni Supernotify in YAML ignorate",
+            "description": "Lo YAML `supernotify:` di primo livello contiene impostazioni che ora si definiscono nelle opzioni dell'integrazione Supernotify, in **Impostazioni → Dispositivi e servizi → Supernotify → Configura**, e quindi vengono ignorate: {keys}.\n\nDefiniscile invece nelle opzioni e rimuovile dallo YAML per eliminare questo avviso."
+        },
+        "archive_path": {
+            "title": "Percorso dell'archivio non utilizzabile",
+            "description": "Le notifiche non possono essere archiviate su file in {path} (errore: {error}). Scegli un altro percorso nelle opzioni di archivio dell'integrazione Supernotify, oppure correggi i permessi della cartella, quindi ricarica Supernotify."
         }
     },
     "exceptions": {
@@ -606,13 +614,11 @@
                         "name": "File",
                         "data": {
                             "file_path": "Percorso Archivio",
-                            "file_retention_days": "Giorni di conservazione",
-                            "purge_interval": "Intervallo di pulizia (minuti)"
+                            "file_retention_days": "Giorni di conservazione"
                         },
                         "data_description": {
                             "file_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
-                            "file_retention_days": "Per quanti giorni vengono conservate le notifiche archiviate",
-                            "purge_interval": "Intervallo minimo in minuti tra le pulizie automatiche dell'archivio"
+                            "file_retention_days": "Per quanti giorni vengono conservate le notifiche archiviate"
                         }
                     },
                     "mqtt": {
@@ -772,6 +778,27 @@
                 "medium": "Media",
                 "low": "Bassa",
                 "minimum": "Minima"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Esplicita",
+                "fixed": "Fissa",
+                "implicit": "Implicita"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Esecuzione reale",
+                "simulate": "Simulazione"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Scenario",
+                "recipient": "Recipient",
+                "delivery": "Delivery",
+                "transport": "Transport"
             }
         }
     }

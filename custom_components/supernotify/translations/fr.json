@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Les capteurs binaires de livraison et de transport vont être supprimés",
             "description": "Chaque livraison et chaque transport dispose désormais d'un interrupteur (par exemple `switch.supernotify_delivery_XXXX` ou `switch.supernotify_transport_XXXX`) qui l'active et le désactive. Les entités `binary_sensor` des livraisons et des transports sont désormais en lecture seule, reflètent uniquement si la livraison ou le transport est activé, et seront supprimées dans une version future. Écrire l'état de l'un de ces `binary_sensor` n'active ni ne désactive plus la livraison ou le transport : modifiez toute automatisation, script ou tableau de bord qui le fait, ou qui s'appuie autrement sur ces entités, pour qu'il utilise l'interrupteur."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Des paramètres Supernotify en YAML sont ignorés",
+            "description": "Le YAML `supernotify:` de premier niveau contient des paramètres qui se règlent désormais dans les options de l'intégration Supernotify, sous **Paramètres → Appareils et services → Supernotify → Configurer**, et sont donc ignorés : {keys}.\n\nRéglez-les plutôt dans les options, puis retirez-les du YAML pour faire disparaître cet avertissement."
+        },
+        "archive_path": {
+            "title": "Le chemin d'archive est inutilisable",
+            "description": "Les notifications ne peuvent pas être archivées en fichier dans {path} (erreur : {error}). Choisissez un autre chemin dans les options d'archive de l'intégration Supernotify, ou corrigez les droits du dossier, puis rechargez Supernotify."
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "Fichier",
                         "data": {
                             "file_path": "Chemin des archives",
-                            "file_retention_days": "Jours de rétention",
-                            "purge_interval": "Intervalle de purge (minutes)"
+                            "file_retention_days": "Jours de rétention"
                         },
                         "data_description": {
                             "file_path": "Chemin de stockage pour les notifications archivées, utile pour déboguer la configuration, les scénarios, etc. Les chemins relatifs sont résolus dans le répertoire de configuration de Home Assistant",
-                            "file_retention_days": "Nombre de jours de conservation des notifications archivées",
-                            "purge_interval": "Intervalle minimal en minutes entre les purges automatiques de l'archive"
+                            "file_retention_days": "Nombre de jours de conservation des notifications archivées"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "Moyenne",
                 "low": "Basse",
                 "minimum": "Minimale"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Explicite",
+                "fixed": "Fixe",
+                "implicit": "Implicite"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Exécution réelle",
+                "simulate": "Simulation"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Scénario",
+                "recipient": "Destinataire",
+                "delivery": "Livraison",
+                "transport": "Transport"
             }
         }
     }

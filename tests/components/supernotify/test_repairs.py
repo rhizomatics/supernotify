@@ -100,6 +100,26 @@ async def test_shim_backfills_archive_options_on_pre_existing_entry_without_wait
     assert entry.options["dupe_check"]["ttl"] == 120
 
 
+async def test_shim_migrates_legacy_options_once_leaving_the_entrys_own(hass: HomeAssistant) -> None:
+    """Once the entry has archive settings, from the options flow, a leftover legacy block's no
+    longer overwrites them - only what the entry doesn't have yet is migrated"""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={"archive": {"enabled": False, "file_path": "/config/mine"}})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "archive": {"enabled": True, "file_path": "/config/archive/supernotify"},
+        "dupe_check": {"ttl": 120},
+    }
+    await async_get_service(hass, legacy_config)
+    await hass.async_block_till_done()
+
+    assert entry.options["archive"] == {"enabled": False, "file_path": "/config/mine"}
+    assert entry.options["dupe_check"]["ttl"] == 120
+
+
 async def test_shim_backfills_data_fields_on_pre_existing_entry_without_waiting_for_repair(hass: HomeAssistant) -> None:
     """Regression test: template_path/media_path/media_url_prefix/mobile_discovery/
     recipients_discovery from the legacy block were never synced onto a pre-existing entry at

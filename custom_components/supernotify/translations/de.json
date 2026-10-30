@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Binärsensoren für Lieferungen und Transporte werden entfernt",
             "description": "Jede Lieferung und jeder Transport hat jetzt einen Schalter (zum Beispiel `switch.supernotify_delivery_XXXX` oder `switch.supernotify_transport_XXXX`), der sie aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Lieferungen und Transporte sind ab sofort schreibgeschützt, spiegeln nur noch wider, ob die Lieferung oder der Transport aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands eines dieser `binary_sensor` aktiviert oder deaktiviert die Lieferung oder den Transport nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Schalter verwenden."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Supernotify-Einstellungen in YAML werden ignoriert",
+            "description": "Das `supernotify:`-YAML auf oberster Ebene enthält Einstellungen, die jetzt in den Optionen der Supernotify-Integration unter **Einstellungen → Geräte & Dienste → Supernotify → Konfigurieren** festgelegt werden und daher ignoriert werden: {keys}.\n\nLege sie stattdessen in den Optionen fest und entferne sie aus dem YAML, um diese Warnung zu beseitigen."
+        },
+        "archive_path": {
+            "title": "Archivpfad kann nicht verwendet werden",
+            "description": "Benachrichtigungen können nicht als Datei unter {path} archiviert werden (Fehler: {error}). Wähle in den Archivoptionen der Supernotify-Integration einen anderen Pfad oder korrigiere die Berechtigungen des Ordners und lade Supernotify dann neu."
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "Datei",
                         "data": {
                             "file_path": "Archivpfad",
-                            "file_retention_days": "Aufbewahrungstage",
-                            "purge_interval": "Bereinigungsintervall (Minuten)"
+                            "file_retention_days": "Aufbewahrungstage"
                         },
                         "data_description": {
                             "file_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
-                            "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden",
-                            "purge_interval": "Mindestintervall in Minuten zwischen automatischen Archivbereinigungen"
+                            "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "Mittel",
                 "low": "Niedrig",
                 "minimum": "Minimal"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Explizit",
+                "fixed": "Fest",
+                "implicit": "Implizit"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Echter Lauf",
+                "simulate": "Simulation"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Szenario",
+                "recipient": "Empfänger",
+                "delivery": "Zustellung",
+                "transport": "Transport"
             }
         }
     }

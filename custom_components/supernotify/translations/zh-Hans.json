@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "推送和传输方式的二进制传感器将被移除",
             "description": "每个推送和传输方式现在都有一个开关（例如 `switch.supernotify_delivery_XXXX` 或 `switch.supernotify_transport_XXXX`）用于启用和停用它。推送和传输方式的 `binary_sensor` 实体从现在起为只读，仅反映推送或传输方式是否已启用，并将在未来版本中移除。写入这些 `binary_sensor` 的状态不再会启用或停用推送或传输方式，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用开关。"
+        },
+        "yaml_entry_owned_keys": {
+            "title": "YAML 中的 Supernotify 设置已被忽略",
+            "description": "顶层 `supernotify:` YAML 中包含现在应在 Supernotify 集成选项中设置的项（**设置 → 设备与服务 → Supernotify → 配置**），因此已被忽略：{keys}。\n\n请改在选项中设置，并从 YAML 中删除它们以清除此警告。"
+        },
+        "archive_path": {
+            "title": "无法使用存档路径",
+            "description": "无法将通知以文件形式存档到 {path}（错误：{error}）。请在 Supernotify 集成的存档选项中选择其他路径，或修复该文件夹的权限，然后重新加载 Supernotify。"
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "文件",
                         "data": {
                             "file_path": "存档路径",
-                            "file_retention_days": "保留天数",
-                            "purge_interval": "清理间隔（分钟）"
+                            "file_retention_days": "保留天数"
                         },
                         "data_description": {
                             "file_path": "已存档通知的存储路径，用于调试配置、场景等。相对路径将基于 Home Assistant 配置目录进行解析",
-                            "file_retention_days": "已存档通知保留的天数",
-                            "purge_interval": "自动存档清理之间的最小间隔（分钟）"
+                            "file_retention_days": "已存档通知保留的天数"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "中",
                 "low": "低",
                 "minimum": "最低"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "显式",
+                "fixed": "固定",
+                "implicit": "隐式"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "正式运行",
+                "simulate": "模拟"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "场景",
+                "recipient": "接收者",
+                "delivery": "推送",
+                "transport": "传输"
             }
         }
     }

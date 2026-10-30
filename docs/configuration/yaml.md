@@ -7,6 +7,9 @@ tags:
 
 By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](../quick_start/index.md).
 
+Those settings are ignored if they're in the `supernotify` YAML section, and a single repair lists the ones found, so
+they can be set in the integration's options instead and removed from the YAML.
+
 ## Naming the Integration
 
 By default every automation calls the action `notify.supernotify` for Notify compatibility or `supernotify.notify` for friendlier UI. If you need a different name (for example to match existing automations), set it from the Integrations page: **Settings → Devices & Services → Supernotify → Configure**, or during initial setup. This is the only place the name is set - it is not a YAML key.

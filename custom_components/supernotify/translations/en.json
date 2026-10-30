@@ -484,13 +484,11 @@
                         "name": "File",
                         "data": {
                             "file_path": "Archive Path",
-                            "file_retention_days": "Retention Days",
-                            "purge_interval": "Purge Interval (minutes)"
+                            "file_retention_days": "Retention Days"
                         },
                         "data_description": {
                             "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc. Relative paths are resolved within the Home Assistant config directory",
-                            "file_retention_days": "How many days of archived notifications to keep",
-                            "purge_interval": "Minimum interval in minutes between automatic archive purges"
+                            "file_retention_days": "How many days of archived notifications to keep"
                         }
                     },
                     "mqtt": {
@@ -663,6 +661,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Delivery and transport binary sensors will be removed",
             "description": "Each delivery and transport now has a switch (for example `switch.supernotify_delivery_XXXX` or `switch.supernotify_transport_XXXX`) that enables and disables it. The delivery and transport `binary_sensor` entities are read-only from now on, only mirroring whether the delivery or transport is enabled, and will be removed in a future version. Writing the state of one of these `binary_sensor` entities no longer enables or disables the delivery or transport, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the switch instead."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Supernotify settings in YAML are ignored",
+            "description": "The top-level `supernotify:` YAML has settings that are now set in the Supernotify integration's options, under **Settings → Devices & services → Supernotify → Configure**, so are ignored: {keys}.\n\nSet them in the options instead, and remove them from the YAML to clear this warning."
+        },
+        "archive_path": {
+            "title": "Archive path cannot be used",
+            "description": "Notifications can't be archived to file at {path} (error: {error}). Choose another path in the Supernotify integration's archive options, or fix the folder's permissions, then reload Supernotify."
         }
     },
     "exceptions": {
@@ -772,6 +778,27 @@
                 "medium": "Medium",
                 "low": "Low",
                 "minimum": "Minimum"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Explicit",
+                "fixed": "Fixed",
+                "implicit": "Implicit"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Live run",
+                "simulate": "Simulation"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Scenario",
+                "recipient": "Recipient",
+                "delivery": "Delivery",
+                "transport": "Transport"
             }
         }
     }

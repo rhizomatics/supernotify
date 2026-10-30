@@ -73,6 +73,17 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("de", "selector.archive_verbosity.options.standard"),  # "Standard" is also the German word for standard
     ("fr", "selector.archive_verbosity.options.standard"),  # "Standard" is also the French word for standard
     ("it", "selector.archive_verbosity.options.standard"),  # "Standard" is a standard Italian loanword
+    ("de", "selector.dry_run.options.simulate"),  # "Simulation" is also the German word for simulation
+    ("fr", "selector.dry_run.options.simulate"),  # "Simulation" is also the French word for simulation
+    ("it", "selector.override_kind.options.scenario"),  # "scenario" stays English in Italian, see CLAUDE.md
+    ("it", "selector.override_kind.options.recipient"),  # "recipient" stays English in Italian, see CLAUDE.md
+    ("it", "selector.override_kind.options.delivery"),  # "delivery" stays English in Italian, see CLAUDE.md
+    ("it", "selector.override_kind.options.transport"),  # "transport" stays English in Italian, see CLAUDE.md
+    ("nl", "selector.override_kind.options.scenario"),  # "Scenario" is also the Dutch word for scenario
+    ("de", "selector.override_kind.options.transport"),  # "Transport" is also the German word for transport
+    ("fr", "selector.override_kind.options.transport"),  # "Transport" is also the French word for transport
+    ("nl", "selector.override_kind.options.transport"),  # "Transport" is also the Dutch word for transport
+    ("pl", "selector.override_kind.options.transport"),  # "Transport" is also the Polish word for transport
 }
 
 

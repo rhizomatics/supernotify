@@ -80,13 +80,11 @@ notify:
         delivery_selection:
           selector:
             select:
+              translation_key: delivery_selection
               options:
-                - value: explicit
-                  label: Explicit
-                - value: fixed
-                  label: Fixed
-                - value: implicit
-                  label: Implicit
+                - explicit
+                - fixed
+                - implicit
         delivery_control:
           example: |
             email:
@@ -126,11 +124,10 @@ notify:
           default: live
           selector:
             select:
+              translation_key: dry_run
               options:
-                - value: live
-                  label: Live Run
-                - value: simulate
-                  label: Simulation
+                - live
+                - simulate
         data:
           selector:
             object:
@@ -237,15 +234,12 @@ reset_overrides:
       required: false
       selector:
         select:
+          translation_key: override_kind
           options:
-            - value: scenario
-              label: Scenario
-            - value: recipient
-              label: Recipient
-            - value: delivery
-              label: Delivery
-            - value: transport
-              label: Transport
+            - scenario
+            - recipient
+            - delivery
+            - transport
 clear_snoozes:
 snooze:
   fields:

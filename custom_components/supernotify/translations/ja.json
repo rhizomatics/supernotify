@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "配信とトランスポートのバイナリセンサーは削除されます",
             "description": "各配信と各トランスポートに、有効・無効を切り替えるスイッチ（例: `switch.supernotify_delivery_XXXX` や `switch.supernotify_transport_XXXX`）が追加されました。配信とトランスポートの `binary_sensor` エンティティは今後は読み取り専用となり、配信またはトランスポートが有効かどうかを反映するだけで、将来のバージョンで削除されます。これらの `binary_sensor` の状態を書き込んでも、配信やトランスポートは有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、スイッチを使うように変更してください。"
+        },
+        "yaml_entry_owned_keys": {
+            "title": "YAML の Supernotify 設定は無視されます",
+            "description": "最上位の `supernotify:` YAML に、現在は Supernotify 統合のオプション（**設定 → デバイスとサービス → Supernotify → 設定**）で設定する項目があるため、無視されます: {keys}。\n\n代わりにオプションで設定し、この警告を消すには YAML から削除してください。"
+        },
+        "archive_path": {
+            "title": "アーカイブパスを使用できません",
+            "description": "{path} に通知をファイルとしてアーカイブできません（エラー: {error}）。Supernotify 統合のアーカイブオプションで別のパスを選ぶか、フォルダーの権限を修正してから、Supernotify を再読み込みしてください。"
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "ファイル",
                         "data": {
                             "file_path": "アーカイブパス",
-                            "file_retention_days": "保持日数",
-                            "purge_interval": "パージ間隔（分）"
+                            "file_retention_days": "保持日数"
                         },
                         "data_description": {
                             "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
-                            "file_retention_days": "アーカイブされた通知を保持する日数",
-                            "purge_interval": "自動アーカイブパージの間隔（分単位の最小値）"
+                            "file_retention_days": "アーカイブされた通知を保持する日数"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "中",
                 "low": "低",
                 "minimum": "最低"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "明示",
+                "fixed": "固定",
+                "implicit": "暗黙"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "本番実行",
+                "simulate": "シミュレーション"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "シナリオ",
+                "recipient": "受信者",
+                "delivery": "配信",
+                "transport": "トランスポート"
             }
         }
     }

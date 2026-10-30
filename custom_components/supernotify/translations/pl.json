@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Czujniki binarne dostarczeń i transportów zostaną usunięte",
             "description": "Każde dostarczenie i każdy transport ma teraz przełącznik (na przykład `switch.supernotify_delivery_XXXX` lub `switch.supernotify_transport_XXXX`), który je włącza i wyłącza. Encje `binary_sensor` dostarczeń i transportów są odtąd tylko do odczytu, jedynie odzwierciedlają, czy dostarczenie lub transport jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu jednej z tych encji `binary_sensor` nie włącza ani nie wyłącza już dostarczenia ani transportu, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Ustawienia Supernotify w YAML są ignorowane",
+            "description": "YAML `supernotify:` najwyższego poziomu zawiera ustawienia, które teraz ustawia się w opcjach integracji Supernotify, w **Ustawienia → Urządzenia oraz usługi → Supernotify → Konfiguruj**, dlatego są ignorowane: {keys}.\n\nUstaw je zamiast tego w opcjach i usuń z YAML, aby usunąć to ostrzeżenie."
+        },
+        "archive_path": {
+            "title": "Nie można użyć ścieżki archiwum",
+            "description": "Nie można archiwizować powiadomień do pliku w {path} (błąd: {error}). Wybierz inną ścieżkę w opcjach archiwum integracji Supernotify lub popraw uprawnienia folderu, a następnie przeładuj Supernotify."
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "Plik",
                         "data": {
                             "file_path": "Ścieżka archiwum",
-                            "file_retention_days": "Dni przechowywania",
-                            "purge_interval": "Interwał czyszczenia (minuty)"
+                            "file_retention_days": "Dni przechowywania"
                         },
                         "data_description": {
                             "file_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
-                            "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia",
-                            "purge_interval": "Minimalny odstęp w minutach między automatycznymi czyszczeniami archiwum"
+                            "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "Średni",
                 "low": "Niski",
                 "minimum": "Minimalny"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Jawny",
+                "fixed": "Stały",
+                "implicit": "Domyślny"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Rzeczywiste wysłanie",
+                "simulate": "Symulacja"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Scenariusz",
+                "recipient": "Odbiorca",
+                "delivery": "Dostarczenie",
+                "transport": "Transport"
             }
         }
     }

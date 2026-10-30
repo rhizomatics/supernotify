@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Binary-sensoren voor bezorgingen en transporten worden verwijderd",
             "description": "Elke bezorging en elk transport heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_delivery_XXXX` of `switch.supernotify_transport_XXXX`) waarmee deze wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van bezorgingen en transporten zijn vanaf nu alleen-lezen, geven alleen weer of de bezorging of het transport is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een van deze `binary_sensor`-entiteiten schakelt de bezorging of het transport niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar wordt gebruikt."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Supernotify-instellingen in YAML worden genegeerd",
+            "description": "De `supernotify:`-YAML op het hoogste niveau bevat instellingen die nu in de opties van de Supernotify-integratie worden ingesteld, onder **Instellingen → Apparaten en diensten → Supernotify → Configureren**, en daarom worden genegeerd: {keys}.\n\nStel ze in plaats daarvan in de opties in en verwijder ze uit de YAML om deze waarschuwing te laten verdwijnen."
+        },
+        "archive_path": {
+            "title": "Archiefpad kan niet worden gebruikt",
+            "description": "Meldingen kunnen niet als bestand worden gearchiveerd in {path} (fout: {error}). Kies een ander pad in de archiefopties van de Supernotify-integratie, of herstel de rechten van de map, en laad Supernotify daarna opnieuw."
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "Bestand",
                         "data": {
                             "file_path": "Archiefpad",
-                            "file_retention_days": "Bewaardagen",
-                            "purge_interval": "Opschoningsinterval (minuten)"
+                            "file_retention_days": "Bewaardagen"
                         },
                         "data_description": {
                             "file_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
-                            "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard",
-                            "purge_interval": "Minimale interval in minuten tussen automatische archiefopschoningen"
+                            "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "Gemiddeld",
                 "low": "Laag",
                 "minimum": "Minimaal"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Expliciet",
+                "fixed": "Vast",
+                "implicit": "Impliciet"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Echte uitvoering",
+                "simulate": "Simulatie"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Scenario",
+                "recipient": "Ontvanger",
+                "delivery": "Bezorging",
+                "transport": "Transport"
             }
         }
     }

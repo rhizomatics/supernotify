@@ -35,18 +35,24 @@ Archiving has to be enabled for any of these, including events.
 | `enabled`             | off                   | Turn on archiving |
 | `file_path`           | `supernotify/archive` | Directory for the archive files, relative to the Home Assistant config directory unless absolute |
 | `file_retention_days` | 3                     | Days to keep archive files before the nightly housekeeping removes them |
-| `purge_interval`      | 60                    | Minimum minutes between automatic purges |
 | `mqtt_topic`          | none                  | MQTT topic to publish each notification under, as `<mqtt_topic>/<file name>` |
 | `mqtt_qos`            | 0                     | MQTT quality of service |
-| `mqtt_retain`         | on                    | Publish as MQTT retained messages |
+| `mqtt_retain`         | off                   | Publish as MQTT retained messages |
 | `event_name`          | `supernotification`   | Home Assistant event type to fire |
 | `event_selection`     | none                  | Which notification outcomes fire an event, see [Outcomes](#outcomes) |
 | `diagnostics`         | `ERROR`               | Which notification outcomes are archived with full diagnostic content, see [Outcomes](#outcomes) |
 
 !!! warning "MQTT retained messages"
     With `mqtt_retain` on, the broker keeps one retained message per notification, under its own topic, until
-    something clears it. Supernotify's housekeeping only removes archive files, not MQTT messages, so turn
+    something clears it. Supernotify's housekeeping only removes archive files, not MQTT messages, so leave
     `mqtt_retain` off unless something else clears them.
+
+The options are only set in the integration's options. An `archive:` section in the top-level `supernotify:` YAML
+is ignored, with a repair raised to say so. An `archive:` in the old `notify: - platform: supernotify` YAML is only
+used to fill in the options once, when migrating from Supernotify v1.
+
+If file archiving is on but its path can't be created or written to, a repair is raised naming the path and the
+error, and cleared once Supernotify is reloaded with a path that works.
 
 ## Archive Files
 

@@ -5,6 +5,12 @@
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
 # v2.16.2
+## ⚠️ Deprecated
+- *Archive*: `purge_interval` is ignored, since purges only run nightly or when `purge_archive` is called. It's gone from the options, and `purge_archive` no longer returns an `interval`
+
+## 📝 Other changes
+- *Archive*: `mqtt_retain` now defaults to off: with one topic per notification, retained messages built up on the broker forever, since housekeeping only removes files. An archive already set up keeps its setting
+
 ## ✨ Enhancements
 - *Pushover*: new `pushover_tags`, so an emergency can be cancelled by tag with the `pushover.cancel` action
 - *ntfy*: the `notify` entity the ntfy integration creates for each topic can be a target, selecting the `ntfy` delivery ahead of the generic Notify Entity one, so it gets priority, images and buttons. `ntfy_device_id` is no longer required, and is used when no ntfy entity is targeted
@@ -13,11 +19,13 @@
 ## 🐛 Bug fixes
 - *Archive*
   - `purge_archive` with `days: 0` removed nothing, using the retention days instead, though it reported `days: 0`. It now removes every archive file
-  - A relative archive path, such as the default `supernotify/archive`, was found from where Home Assistant was started rather than its config directory as the options say, so could end up elsewhere outside a container install
+  - A relative archive, media or template path, such as the default `supernotify/archive`, was found from where Home Assistant was started rather than its config directory as the options say, so could end up elsewhere outside a container install
   - The startup log listed the `diagnostics` outcomes as the ones archived as events, rather than `event_selection`
-  - `purge_archive` reported a fixed 180 minute `interval`, rather than the configured `purge_interval`
+  - An `archive:` section in the top-level `supernotify:` YAML, which isn't validated there, replaced the archive options, and with `event_selection` set stopped Supernotify starting. Settings the options own, like `archive`, `dupe_check`, `housekeeping` and the media and template paths, are now ignored in that YAML, with a single repair naming them
+  - An `archive:` in the old `notify: - platform: supernotify` YAML was copied over the archive options on every start, undoing any change made in the options. It's now only used to fill in what the options don't have yet, when migrating
+  - An archive path that can't be created or written to only logged a warning. It now raises a repair, cleared once the path works
   - An `after` or `before` in `enquire_archive` that isn't a date and time failed with an unexplained error, rather than being rejected with the field named
-  - The priority and outcome choices in the `enquire_archive` and `notify` actions were shown in English only, or as `PARTIAL_DELIVERY` style names. They're now translated
+  - The choices in the `notify`, `enquire_archive` and `reset_overrides` actions - priority, outcome, delivery selection, dry run and kind - were shown in English only, or as `PARTIAL_DELIVERY` style names. They're now translated
   - Docs rewritten: every option and its default, that events need archiving on and are saved by the recorder, that retained MQTT messages are never cleared, the outcome table, which said `ALL` was the default, the delivery outcomes, the file naming, and an up to date example. The OTEL recipe's YAML, which Supernotify doesn't read, replaced with the options to set
 - *Kodi*, *Discord*, *Matrix*: a delivery with no valid target was counted as a transport error. It's now skipped
 - *ntfy*

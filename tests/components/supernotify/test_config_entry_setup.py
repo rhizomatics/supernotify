@@ -11,6 +11,8 @@ from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
@@ -56,6 +58,56 @@ async def test_setup_entry_uses_archive_path_from_options(hass: HomeAssistant) -
 
     assert entry.runtime_data is not None
     assert entry.runtime_data.context.archive.configured_archive_path == "/config/supernotify_archive"
+
+
+async def test_yaml_settings_owned_by_the_entry_ignored_with_one_repair(hass: HomeAssistant, tmp_path: Path) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={"archive": {"enabled": True, "file_path": str(tmp_path)}})
+    entry.add_to_hass(hass)
+    yaml_config = {"archive": {"enabled": False, "event_selection": "SUCCESS"}, "dupe_check": {"ttl": 5}}
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_config})
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.context.archive.enabled
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "yaml_entry_owned_keys")
+    assert issue is not None
+    assert issue.translation_placeholders == {"keys": "archive, dupe_check"}
+
+
+async def test_no_repair_without_yaml_settings_owned_by_the_entry(hass: HomeAssistant) -> None:
+    MockConfigEntry(domain=DOMAIN, data={}, options={}).add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"delivery": {}}})
+    await hass.async_block_till_done()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, "yaml_entry_owned_keys") is None
+
+
+async def test_unusable_archive_path_raises_repair_cleared_once_fixed(hass: HomeAssistant, tmp_path: Path) -> None:
+    not_a_dir = tmp_path / "archive"
+    not_a_dir.write_text("")
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={"archive": {"enabled": True, "file_path": str(not_a_dir)}})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "archive_path")
+    assert issue is not None
+    assert issue.translation_placeholders == {"path": str(not_a_dir), "error": "not a directory"}
+
+    hass.config_entries.async_update_entry(entry, options={"archive": {"enabled": True, "file_path": str(tmp_path / "ok")}})
+    await hass.async_block_till_done()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, "archive_path") is None
+
+
+async def test_relative_media_and_template_paths_within_config_dir(hass: HomeAssistant) -> None:
+    os.makedirs(hass.config.path("my/templates"))  # a missing template dir is left unused
+    entry = MockConfigEntry(domain=DOMAIN, data={"media_path": "my/media", "template_path": "my/templates"}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    context = entry.runtime_data.context
+    assert str(context.media_storage.media_path) == hass.config.path("my/media")
+    assert str(context.custom_template_path) == hass.config.path("my/templates")
 
 
 async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:

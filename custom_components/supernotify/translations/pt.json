@@ -513,6 +513,14 @@
         "delivery_transport_binary_sensor_deprecated": {
             "title": "Os sensores binários de entrega e transporte serão removidos",
             "description": "Cada entrega e cada transporte tem agora um interruptor (por exemplo `switch.supernotify_delivery_XXXX` ou `switch.supernotify_transport_XXXX`) que o ativa e desativa. As entidades `binary_sensor` das entregas e dos transportes passam a ser só de leitura, apenas refletem se a entrega ou o transporte está ativado, e serão removidas numa versão futura. Escrever o estado de um destes `binary_sensor` deixa de ativar ou desativar a entrega ou o transporte, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor."
+        },
+        "yaml_entry_owned_keys": {
+            "title": "Definições do Supernotify em YAML ignoradas",
+            "description": "O YAML `supernotify:` de nível superior tem definições que agora são configuradas nas opções da integração Supernotify, em **Definições → Dispositivos e serviços → Supernotify → Configurar**, pelo que são ignoradas: {keys}.\n\nConfigure-as antes nas opções e remova-as do YAML para eliminar este aviso."
+        },
+        "archive_path": {
+            "title": "Não é possível usar o caminho do arquivo",
+            "description": "As notificações não podem ser arquivadas em ficheiro em {path} (erro: {error}). Escolha outro caminho nas opções de arquivo da integração Supernotify, ou corrija as permissões da pasta, e depois recarregue o Supernotify."
         }
     },
     "exceptions": {
@@ -571,13 +579,11 @@
                         "name": "Arquivo",
                         "data": {
                             "file_path": "Caminho do arquivo",
-                            "file_retention_days": "Dias de retenção",
-                            "purge_interval": "Intervalo de limpeza (minutos)"
+                            "file_retention_days": "Dias de retenção"
                         },
                         "data_description": {
                             "file_path": "Caminho de armazenamento para notificações arquivadas, útil para depurar configuração, cenários etc. Caminhos relativos são resolvidos dentro do diretório de configuração do Home Assistant",
-                            "file_retention_days": "Por quantos dias as notificações arquivadas são mantidas",
-                            "purge_interval": "Intervalo mínimo em minutos entre limpezas automáticas do arquivo"
+                            "file_retention_days": "Por quantos dias as notificações arquivadas são mantidas"
                         }
                     },
                     "mqtt": {
@@ -737,6 +743,27 @@
                 "medium": "Média",
                 "low": "Baixa",
                 "minimum": "Mínima"
+            }
+        },
+        "delivery_selection": {
+            "options": {
+                "explicit": "Explícita",
+                "fixed": "Fixa",
+                "implicit": "Implícita"
+            }
+        },
+        "dry_run": {
+            "options": {
+                "live": "Execução real",
+                "simulate": "Simulação"
+            }
+        },
+        "override_kind": {
+            "options": {
+                "scenario": "Cenário",
+                "recipient": "Destinatário",
+                "delivery": "Entrega",
+                "transport": "Transporte"
             }
         }
     }

@@ -53,7 +53,7 @@ Why not time of day?
     - Auto Arm now by default more closely follows HA alarm convention, so `ARMED_NIGHT` is bed time, and occupied darkness pre-bed time is `ARMED_HOME`
 
 Why not existing selector?
-  Intention to keep it simple, without 2nd level mapping and regexp. However that doesnt have to be exposed via UI
+  Intention to keep it simple, without 2nd level mapping and regexp. However that doesn't have to be exposed via UI
 
 ```yaml title="Using selector class and alt naming scheme"
 delivery:
