@@ -729,6 +729,15 @@
                 "camera": "摄像头",
                 "tag": "标签"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "紧急",
+                "high": "高",
+                "medium": "中",
+                "low": "低",
+                "minimum": "最低"
+            }
         }
     }
 }

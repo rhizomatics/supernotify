@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import tempfile
 import time
 from pathlib import Path
@@ -250,12 +251,15 @@ async def test_archive_no_mqtt_publish_when_topic_blank(mock_hass_api: HomeAssis
     mock_hass_api.mqtt_publish.assert_not_called()  # type: ignore
 
 
-def test_event_archiver_specific_diagnostic_flags(mock_hass_api: HomeAssistantAPI) -> None:
-
-    # Lines 85, 90, 92, 98: each flag triggers its own log in else branch
-    flags = OutcomeSelection.SUCCESS | OutcomeSelection.FALLBACK_DELIVERY | OutcomeSelection.NO_DELIVERY | OutcomeSelection.DUPE
-    archiver = EventArchiver(mock_hass_api, "test.event", flags)
-    assert archiver.diagnostics == flags
+def test_event_archiver_logs_event_selection_not_diagnostics(
+    mock_hass_api: HomeAssistantAPI, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO)
+    archiver = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.DUPE, OutcomeSelection.ERROR)
+    assert archiver.selection == OutcomeSelection.DUPE
+    assert archiver.diagnostics == OutcomeSelection.ERROR
+    assert "Archiving DUPE notifications as test.event events" in caplog.text
+    assert "ERROR" not in caplog.text
 
 
 async def test_archive_directory_init_path_not_creatable() -> None:
@@ -317,14 +321,16 @@ async def test_archive_destination_abstract_stub_returns_none() -> None:
     assert result is None
 
 
-def test_event_archiver_none_diagnostics_logs_nothing(mock_hass_api: HomeAssistantAPI) -> None:
-    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.NONE)
-    assert uut.diagnostics == OutcomeSelection.NONE
+def test_event_archiver_no_selection_logs_nothing(mock_hass_api: HomeAssistantAPI, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    EventArchiver(mock_hass_api, "test.event", OutcomeSelection.NONE)
+    assert "events" not in caplog.text
 
 
-def test_event_archiver_partial_delivery_diagnostic_flag(mock_hass_api: HomeAssistantAPI) -> None:
-    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.PARTIAL_DELIVERY)
-    assert uut.diagnostics == OutcomeSelection.PARTIAL_DELIVERY
+async def test_event_archiver_fires_nothing_for_unselected_outcome(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.ERROR)
+    assert await uut.archive(ArchiveCrashDummy()) is False  # a NO_DELIVERY outcome
+    mock_hass_api.fire_event.assert_not_called()  # type: ignore
 
 
 async def test_event_archiver_archive_fires_event(mock_hass_api: HomeAssistantAPI) -> None:

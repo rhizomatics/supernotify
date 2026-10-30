@@ -22,17 +22,13 @@ notify:
     priority:
       selector:
         select:
+          translation_key: priority
           options:
-            - value: critical
-              label: Critical
-            - value: high
-              label: High
-            - value: medium
-              label: Medium
-            - value: low
-              label: Low
-            - value: minimum
-              label: Minimum
+            - critical
+            - high
+            - medium
+            - low
+            - minimum
     delivery:
       example: "email"
       selector:
@@ -176,13 +172,14 @@ enquire_archive:
       required: false
       selector:
         select:
+          translation_key: outcome_selection
           options:
-            - SUCCESS
-            - ERROR
-            - PARTIAL_DELIVERY
-            - NO_DELIVERY
-            - DUPE
-            - FALLBACK_DELIVERY
+            - success
+            - error
+            - partial_delivery
+            - no_delivery
+            - dupe
+            - fallback_delivery
     period:
       required: false
       selector:
@@ -210,17 +207,13 @@ enquire_archive:
         select:
           multiple: true
           custom_value: true
+          translation_key: priority
           options:
-            - value: critical
-              label: Critical
-            - value: high
-              label: High
-            - value: medium
-              label: Medium
-            - value: low
-              label: Low
-            - value: minimum
-              label: Minimum
+            - critical
+            - high
+            - medium
+            - low
+            - minimum
 enquire_last_notification:
   fields:
     diagnostics:

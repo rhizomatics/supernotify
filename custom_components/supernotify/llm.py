@@ -361,7 +361,7 @@ class RecentNotificationsTool(SupernotifyTool):
         archive = self.engine.context.archive
         result: dict[str, Any] = {}
         if archive.archive_directory and archive.archive_directory.enabled:
-            archived = await archive.recent(since, MAX_NOTIFICATIONS)
+            archived = await archive.archive_directory.list_entries(limit=MAX_NOTIFICATIONS, after=since)
         else:
             last = self.engine.last_notification
             archived = [last.contents()] if last and last.created >= since else []

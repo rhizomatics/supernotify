@@ -729,6 +729,15 @@
                 "camera": "कैमरा",
                 "tag": "टैग"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "गंभीर",
+                "high": "उच्च",
+                "medium": "मध्यम",
+                "low": "निम्न",
+                "minimum": "न्यूनतम"
+            }
         }
     }
 }

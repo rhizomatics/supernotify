@@ -764,6 +764,15 @@
                 "camera": "Telecamera",
                 "tag": "Etichetta (tag)"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Critica",
+                "high": "Alta",
+                "medium": "Media",
+                "low": "Bassa",
+                "minimum": "Minima"
+            }
         }
     }
 }

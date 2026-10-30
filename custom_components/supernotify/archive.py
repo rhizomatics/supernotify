@@ -122,8 +122,6 @@ class ArchivableObject:
         return self.selected(outcome_policy)
 
     def selected(self, outcome_policy: OutcomeSelection) -> bool:
-        if outcome_policy & OutcomeSelection.NONE:
-            return False
         return bool(
             outcome_policy & OutcomeSelection.ALL
             or (outcome_policy & OutcomeSelection.SUCCESS and self.outcome() == DeliveryOutcome.SUCCESS)
@@ -143,39 +141,28 @@ class ArchiveDestination:
 
 class EventArchiver(ArchiveDestination):
     def __init__(
-        self, hass_api: HomeAssistantAPI, event_name: str, diagnostics: OutcomeSelection = OutcomeSelection.ERROR
+        self,
+        hass_api: HomeAssistantAPI,
+        event_name: str,
+        selection: OutcomeSelection = OutcomeSelection.NONE,
+        diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
     ) -> None:
         self.hass_api = hass_api
         self.event_name = event_name
+        self.selection = selection
         self.diagnostics = diagnostics
-        if diagnostics & OutcomeSelection.NONE:
-            pass
-        elif diagnostics & OutcomeSelection.ALL:
-            _LOGGER.info("SUPERNOTIFY Archiving all notifications as %s events", event_name)
-        else:
-            if diagnostics & OutcomeSelection.SUCCESS:
-                _LOGGER.info("SUPERNOTIFY Archiving successful notifications as %s events", event_name)
-            if diagnostics & OutcomeSelection.PARTIAL_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY Archiving partial delivery notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.FALLBACK_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY Archiving fallback notifications as %s events", event_name)
-            if diagnostics & OutcomeSelection.NO_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY Archiving no delivery notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.ERROR:
-                _LOGGER.info("SUPERNOTIFY Archiving error notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.DUPE:
-                _LOGGER.info("SUPERNOTIFY Archiving dupe notifications as %s events", event_name)
+        if selection:
+            _LOGGER.info("SUPERNOTIFY Archiving %s notifications as %s events", selection.name, event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
+        if not archive_object.selected(self.selection):
+            return False
         try:
             payload = archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics))
             self.hass_api.fire_event(self.event_name, payload, context=archive_object.ha_context)
             return True
         except Exception:
-            _LOGGER.warning(f"SUPERNOTIFY Failed to archive to event {self.event_name}")
+            _LOGGER.warning("SUPERNOTIFY Failed to archive to event %s", self.event_name)
             return False
 
 
@@ -337,24 +324,6 @@ class ArchiveDirectory(ArchiveDestination):
             return sum(1 for p in await aiofiles.os.listdir(path) if p != WRITE_TEST)
         return 0
 
-    async def recent(self, since: dt.datetime, limit: int) -> list[dict[str, Any]]:
-        """Archived notifications written since a given time, newest first"""
-        if not self.archive_path or not await self.archive_path.exists():
-            return []
-        cutoff: float = since.timestamp()
-        candidates: list[tuple[float, str]] = []
-        for entry in await aiofiles.os.scandir(self.archive_path):
-            if entry.name.endswith(".json") and (modified := entry.stat().st_mtime) >= cutoff:
-                candidates.append((modified, entry.path))
-        results: list[dict[str, Any]] = []
-        for _modified, path in sorted(candidates, reverse=True)[:limit]:
-            try:
-                async with aiofiles.open(path) as file:
-                    results.append(json.loads(await file.read()))
-            except (OSError, ValueError) as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to read archived notification %s: %s", path, e)
-        return results
-
     async def cleanup(self, days: int, force: bool) -> int:
         if (
             not force
@@ -370,7 +339,7 @@ class ArchiveDirectory(ArchiveDestination):
             try:
                 archive = await aiofiles.os.scandir(self.archive_path)
                 for entry in archive:
-                    if entry.name == ".startup":
+                    if entry.name == WRITE_TEST:
                         continue
                     # st_ctime is used deliberately here (not st_birthtime): archive files are
                     # written once and never modified afterwards, so ctime reflects creation time
@@ -430,13 +399,10 @@ class NotificationArchive:
             self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
             await self.archive_topic.initialize()
 
-        self.event_archiver = EventArchiver(self.hass_api, self.archive_event_name, self.diagnostics)
+        self.event_archiver = EventArchiver(self.hass_api, self.archive_event_name, self.event_selection, self.diagnostics)
 
     async def size(self) -> int:
         return await self.archive_directory.size() if self.archive_directory else 0
-
-    async def recent(self, since: dt.datetime, limit: int) -> list[dict[str, Any]]:
-        return await self.archive_directory.recent(since, limit) if self.archive_directory else []
 
     async def cleanup(self, days: int | None = None, force: bool = False) -> int:
         days = days or self.archive_days
@@ -448,7 +414,7 @@ class NotificationArchive:
             archived = True
         if self.archive_directory and await self.archive_directory.archive(archive_object):
             archived = True
-        if self.event_archiver and archive_object.selected(self.event_selection):
+        if self.event_archiver:
             await self.event_archiver.archive(archive_object)
 
         return archived

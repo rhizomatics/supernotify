@@ -8,7 +8,7 @@ Review the functionality across the code base, including architecture alignment 
 | Function                    | Review Date   | Fix Version |
 | --------------------------- | ------------- | ----------- |
 | Dupe Detection              |               |             |
-| Archiving                   |               |             |
+| Archiving                   | 30th Oct 2026 | `v2.16.2`   |
 | Snoozing                    |               |             |
 | Media Grab                  |               |             |
 | Diagnostics                 |               |             |

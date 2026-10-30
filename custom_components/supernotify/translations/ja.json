@@ -729,6 +729,15 @@
                 "camera": "カメラ",
                 "tag": "タグ"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "緊急",
+                "high": "高",
+                "medium": "中",
+                "low": "低",
+                "minimum": "最低"
+            }
         }
     }
 }

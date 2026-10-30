@@ -729,6 +729,15 @@
                 "camera": "Caméra",
                 "tag": "Étiquette"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Critique",
+                "high": "Haute",
+                "medium": "Moyenne",
+                "low": "Basse",
+                "minimum": "Minimale"
+            }
         }
     }
 }

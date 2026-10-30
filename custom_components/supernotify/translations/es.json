@@ -729,6 +729,15 @@
                 "camera": "Cámara",
                 "tag": "Etiqueta"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Crítica",
+                "high": "Alta",
+                "medium": "Media",
+                "low": "Baja",
+                "minimum": "Mínima"
+            }
         }
     }
 }

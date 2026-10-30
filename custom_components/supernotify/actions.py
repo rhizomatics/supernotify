@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_by_day, summarize_notification
+from .archive import summarize_by_day, summarize_notification
 from .common import ensure_list
 from .compat import vol
 from .const import (
@@ -165,6 +165,8 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
         vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
         vol.Optional("priority"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
+        vol.Optional("after"): cv.datetime,
+        vol.Optional("before"): cv.datetime,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -421,14 +423,12 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             return summarize_by_day([entry]) if verbosity == VERBOSITY_DAILY else at_verbosity(entry)
         daily: bool = verbosity == VERBOSITY_DAILY
         limit: int = int(call.data["limit"]) if "limit" in call.data else (sys.maxsize if daily else 20)
-        after_raw: str | None = call.data.get("after")
-        before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
         period: str | None = call.data.get("period")
         priority: list[str] | None = call.data.get("priority") or None
         # a date/time given without a time zone is local time
-        after = dt_util.as_local(dt.datetime.fromisoformat(after_raw)) if after_raw else None
-        before = dt_util.as_local(dt.datetime.fromisoformat(before_raw)) if before_raw else None
+        after: dt.datetime | None = dt_util.as_local(call.data["after"]) if "after" in call.data else None
+        before: dt.datetime | None = dt_util.as_local(call.data["before"]) if "before" in call.data else None
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
         entries = await archive.archive_directory.list_entries(
@@ -450,7 +450,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return {
             "purged": purged,
             "remaining": arch_size,
-            "interval": ARCHIVE_PURGE_MIN_INTERVAL,
+            "interval": engine.context.archive.purge_minute_interval,
             "days": engine.context.archive.archive_days if days is None else days,
         }
 

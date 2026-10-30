@@ -729,6 +729,15 @@
                 "camera": "Beveiligingscamera",
                 "tag": "Label"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Kritiek",
+                "high": "Hoog",
+                "medium": "Gemiddeld",
+                "low": "Laag",
+                "minimum": "Minimaal"
+            }
         }
     }
 }

@@ -764,6 +764,15 @@
                 "camera": "Camera",
                 "tag": "Tag"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Critical",
+                "high": "High",
+                "medium": "Medium",
+                "low": "Low",
+                "minimum": "Minimum"
+            }
         }
     }
 }

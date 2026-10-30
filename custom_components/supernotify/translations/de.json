@@ -729,6 +729,15 @@
                 "camera": "Kamera",
                 "tag": "Schlagwort"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Kritisch",
+                "high": "Hoch",
+                "medium": "Mittel",
+                "low": "Niedrig",
+                "minimum": "Minimal"
+            }
         }
     }
 }

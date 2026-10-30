@@ -729,6 +729,15 @@
                 "camera": "Kamera",
                 "tag": "Etykieta"
             }
+        },
+        "priority": {
+            "options": {
+                "critical": "Krytyczny",
+                "high": "Wysoki",
+                "medium": "Średni",
+                "low": "Niski",
+                "minimum": "Minimalny"
+            }
         }
     }
 }
