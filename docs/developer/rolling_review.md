@@ -20,6 +20,7 @@ Review the functionality across the code base, including architecture alignment 
 | Multi-lingual               | 20th Oct 2026 | `v2.16.0`   |
 | Transport Base and Delivery |               |             |
 | Architecture Diagrams       |               |             |
+| Non-HA Dependencies         |               |             |
 
 ## Transports
 

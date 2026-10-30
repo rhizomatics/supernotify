@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from homeassistant.core import Event, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.compat import vol
 
 if TYPE_CHECKING:
     import pathlib
@@ -33,7 +33,7 @@ async def archiving(hass: HomeAssistant, tmp_path: pathlib.Path, event_selection
     return events
 
 
-async def enquire(hass: HomeAssistant, action: str, **data: Any) -> dict[str, Any]:  # ruff: ignore[any-type]
+async def enquire(hass: HomeAssistant, action: str, **data: Any) -> dict[str, Any]:
     response = await hass.services.async_call(DOMAIN, action, data, blocking=True, return_response=SupportsResponse.ONLY)
     assert response is not None
     return dict(response)
@@ -80,5 +80,6 @@ async def test_enquire_archive_rejects_invalid_date(
     hass: HomeAssistant, dummy_notify: DummyNotificationService, tmp_path: pathlib.Path
 ) -> None:
     await archiving(hass, tmp_path, "NONE")
-    with pytest.raises(HomeAssistantError):
+    # rejected by the action's schema, before any search, rather than as an unexpected error
+    with pytest.raises(vol.Invalid):
         await enquire(hass, "enquire_archive", after="last tuesday")

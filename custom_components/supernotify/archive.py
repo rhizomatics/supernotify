@@ -405,7 +405,7 @@ class NotificationArchive:
         return await self.archive_directory.size() if self.archive_directory else 0
 
     async def cleanup(self, days: int | None = None, force: bool = False) -> int:
-        days = days or self.archive_days
+        days = self.archive_days if days is None else days
         return await self.archive_directory.cleanup(days, force) if self.archive_directory else 0
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
