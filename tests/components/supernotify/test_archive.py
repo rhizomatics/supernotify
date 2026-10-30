@@ -32,6 +32,7 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE_PATH,
 )
 from custom_components.supernotify.engine import SupernotifyEngine
+from custom_components.supernotify.hass_api import HomeAssistantAPI as RealHomeAssistantAPI
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
@@ -424,3 +425,18 @@ async def test_notification_archive_fires_event_when_selected(mock_hass_api: Hom
     msg = ArchiveCrashDummy()
     assert await uut.archive(msg) is False  # no directory/topic configured, but event still fires
     mock_hass_api.fire_event.assert_called_once()  # type: ignore
+
+
+async def test_relative_archive_path_resolved_in_config_dir(mock_hass: HomeAssistant, tmp_path: Path) -> None:
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: "supernotify/archive"}, RealHomeAssistantAPI(mock_hass))
+    await uut.initialize()
+    assert uut.archive_directory is not None
+    assert str(uut.archive_directory.archive_path) == str(tmp_path / "supernotify" / "archive")
+    assert uut.archive_directory.enabled
+
+
+async def test_cleanup_with_zero_days_purges_everything(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: str(tmp_path), CONF_ARCHIVE_DAYS: 3}, mock_hass_api)
+    await uut.initialize()
+    (tmp_path / "2026-10-30T05-57_abc.json").write_text("{}")
+    assert await uut.cleanup(days=0, force=True) == 1

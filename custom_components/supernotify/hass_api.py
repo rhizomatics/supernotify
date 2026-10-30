@@ -313,6 +313,10 @@ class HomeAssistantAPI:
                 return reg_entry.platform
         return None
 
+    def config_path(self, path: str) -> str:
+        """A path relative to the Home Assistant config directory, or the path itself if absolute."""
+        return self._hass.config.path(path)
+
     def device_for_entity(self, entity_id: str) -> str | None:
         """The device this entity belongs to, if any."""
         entity_registry: EntityRegistry | None = self._entity_registry()

@@ -11,6 +11,14 @@
 - *LaMetric*: the `notify` entity the LaMetric integration creates for each display can be a target, selecting the `lametric` delivery ahead of the generic Notify Entity one, so it gets priority sounds, icons and charts. Several displays can be targeted at once. `device_id` is no longer required, and is used when no LaMetric entity is targeted
 
 ## 🐛 Bug fixes
+- *Archive*
+  - `purge_archive` with `days: 0` removed nothing, using the retention days instead, though it reported `days: 0`. It now removes every archive file
+  - A relative archive path, such as the default `supernotify/archive`, was found from where Home Assistant was started rather than its config directory as the options say, so could end up elsewhere outside a container install
+  - The startup log listed the `diagnostics` outcomes as the ones archived as events, rather than `event_selection`
+  - `purge_archive` reported a fixed 180 minute `interval`, rather than the configured `purge_interval`
+  - An `after` or `before` in `enquire_archive` that isn't a date and time failed with an unexplained error, rather than being rejected with the field named
+  - The priority and outcome choices in the `enquire_archive` and `notify` actions were shown in English only, or as `PARTIAL_DELIVERY` style names. They're now translated
+  - Docs rewritten: every option and its default, that events need archiving on and are saved by the recorder, that retained MQTT messages are never cleared, the outcome table, which said `ALL` was the default, the delivery outcomes, the file naming, and an up to date example. The OTEL recipe's YAML, which Supernotify doesn't read, replaced with the options to set
 - *Kodi*, *Discord*, *Matrix*: a delivery with no valid target was counted as a transport error. It's now skipped
 - *ntfy*
   - A notification's `data` meant for other deliveries, such as `clickAction` for Mobile Push, was passed to `ntfy.publish`, which rejects anything it doesn't know, so the message failed. Only the ntfy fields listed in the docs are now passed on

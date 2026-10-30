@@ -388,7 +388,7 @@ class NotificationArchive:
             _LOGGER.warning("SUPERNOTIFY Archive path not configured")
         else:
             self.archive_directory = ArchiveDirectory(
-                self.configured_archive_path,
+                self.hass_api.config_path(self.configured_archive_path),
                 purge_minute_interval=self.purge_minute_interval,
                 diagnostics=self.diagnostics,
                 hass_api=self.hass_api,

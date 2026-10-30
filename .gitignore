@@ -70,6 +70,7 @@ coverage.xml
 .pytest_cache/
 cover/
 .ruff_cache
+MagicMock/
 
 # Translations
 *.mo

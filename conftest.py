@@ -158,6 +158,8 @@ def mock_hass(
     # an unconfigured Mock trips `Path(hass.config.config_dir)` with a TypeError, which
     # load_storage() logs as a misleading "Unable to load storage" warning
     hass.config.config_dir = str(tmp_path)
+    # like a real Config.path(), relative to the config dir
+    hass.config.path = lambda *path: str(tmp_path.joinpath(*path))
     hass.data = {}
     hass.data["device_registry"] = mock_device_registry
     hass.data["entity_registry"] = mock_entity_registry
@@ -254,6 +256,7 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked.entity_ids_for_domain.return_value = []
     mocked.entity_ids_for_platform.return_value = []
     mocked.translations.side_effect = english_translations
+    mocked.config_path = Mock(side_effect=lambda path: path)
     return mocked
 
 
