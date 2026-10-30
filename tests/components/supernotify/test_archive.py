@@ -193,11 +193,6 @@ async def test_cleanup_archive(mock_hass_api: HomeAssistantAPI) -> None:
     with patch("aiofiles.os.scandir", return_value=mock_files) as _scan, patch("aiofiles.os.unlink") as rmfr:
         await uut.cleanup()
         rmfr.assert_called_once_with("xyz")
-    # skip cleanup for a few hours
-    assert uut.archive_directory is not None
-    first_purge = uut.archive_directory.last_purge
-    await uut.cleanup()
-    assert first_purge == uut.archive_directory.last_purge
 
 
 async def test_archive_size(mock_hass_api: HomeAssistantAPI) -> None:
@@ -269,16 +264,16 @@ async def test_archive_directory_init_path_not_creatable() -> None:
         patch.object(anyio.Path, "exists", new=AsyncMock(return_value=False)),
         patch.object(anyio.Path, "mkdir", new=AsyncMock(side_effect=PermissionError("no permission"))),
     ):
-        uut = ArchiveDirectory("/no/permission/path", 60)
+        uut = ArchiveDirectory("/no/permission/path")
         await uut.initialize()
         assert not uut.enabled
 
 
 async def test_archive_directory_cleanup_no_path() -> None:
 
-    uut = ArchiveDirectory("/some/path", 60)
+    uut = ArchiveDirectory("/some/path")
     # skip initialize so archive_path stays None
-    result = await uut.cleanup(1, True)
+    result = await uut.cleanup(1)
     assert result == 0
 
 
@@ -288,7 +283,7 @@ async def test_archive_directory_cleanup_skips_startup(mock_hass_api: HomeAssist
     from unittest.mock import MagicMock, patch
 
     with tempfile.TemporaryDirectory() as tmp:
-        uut = ArchiveDirectory(tmp, 60)
+        uut = ArchiveDirectory(tmp)
         await uut.initialize()
         old_time = MagicMock(return_value=MagicMock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
         startup_entry = MagicMock()
@@ -300,7 +295,7 @@ async def test_archive_directory_cleanup_skips_startup(mock_hass_api: HomeAssist
         old_entry.stat = old_time
         with patch("aiofiles.os.scandir", return_value=[startup_entry, old_entry]):
             with patch("aiofiles.os.unlink") as mock_unlink:
-                purged = await uut.cleanup(1, True)
+                purged = await uut.cleanup(1)
         assert purged == 1  # startup skipped, old_file purged
         mock_unlink.assert_called_once()
 
@@ -361,22 +356,22 @@ async def test_archive_topic_archive_handles_publish_exception(mock_hass_api: Ho
 async def test_archive_directory_init_touch_fails() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         with patch.object(anyio.Path, "touch", new=AsyncMock(side_effect=PermissionError("no permission"))):
-            uut = ArchiveDirectory(tmp, 60)
+            uut = ArchiveDirectory(tmp)
             await uut.initialize()
         assert not uut.enabled
 
 
 async def test_archive_directory_size_without_initialize() -> None:
-    uut = ArchiveDirectory("/never/initialized", 60)
+    uut = ArchiveDirectory("/never/initialized")
     assert await uut.size() == 0
 
 
 async def test_archive_directory_cleanup_handles_scandir_exception() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        uut = ArchiveDirectory(tmp, 60)
+        uut = ArchiveDirectory(tmp)
         await uut.initialize()
         with patch("aiofiles.os.scandir", side_effect=OSError("boom")):
-            purged = await uut.cleanup(1, True)
+            purged = await uut.cleanup(1)
         assert purged == 0
 
 
@@ -392,7 +387,7 @@ class ArchiveFirstCallCrashes(ArchivableObject):
 
 async def test_archive_directory_archive_falls_back_to_minimal_on_error() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        uut = ArchiveDirectory(tmp, 60, diagnostics=OutcomeSelection.ALL)
+        uut = ArchiveDirectory(tmp, diagnostics=OutcomeSelection.ALL)
         await uut.initialize()
         msg = ArchiveFirstCallCrashes()
         assert await uut.archive(msg) is True
@@ -413,7 +408,7 @@ class ArchiveAlwaysCrashes(ArchivableObject):
 
 async def test_archive_directory_archive_fallback_also_fails() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        uut = ArchiveDirectory(tmp, 60, diagnostics=OutcomeSelection.ALL)
+        uut = ArchiveDirectory(tmp, diagnostics=OutcomeSelection.ALL)
         await uut.initialize()
         msg = ArchiveAlwaysCrashes()
         assert await uut.archive(msg) is False
@@ -439,4 +434,4 @@ async def test_cleanup_with_zero_days_purges_everything(mock_hass_api: HomeAssis
     uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: str(tmp_path), CONF_ARCHIVE_DAYS: 3}, mock_hass_api)
     await uut.initialize()
     (tmp_path / "2026-10-30T05-57_abc.json").write_text("{}")
-    assert await uut.cleanup(days=0, force=True) == 1
+    assert await uut.cleanup(days=0) == 1

@@ -60,6 +60,7 @@ MANUAL_MIGRATION_ISSUE_ID = "legacy_yaml_manual_migration_required"
 PYTHON_313_DEPRECATED_ISSUE_ID = "python_313_deprecated"
 RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "recipient_binary_sensor_deprecated"
 DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "delivery_transport_binary_sensor_deprecated"
+YAML_ENTRY_OWNED_KEYS_ISSUE_ID = "yaml_entry_owned_keys"
 SUPERNOTIFY_YAML_FILENAME = "supernotify.yaml"
 CONFIGURATION_YAML_FILENAME = "configuration.yaml"
 
@@ -88,8 +89,9 @@ _YAML_ONLY_KEYS = (
 
 def async_sync_entry_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
     """As long as the legacy `notify: - platform: supernotify` block exists, it stays
-    authoritative for the owning entry's name/template_path/media_path/etc and
-    archive/dupe_check/housekeeping settings - synced onto the entry on every load (not gated
+    authoritative for the owning entry's name/template_path/media_path/etc - synced onto the
+    entry on every load - while its archive/dupe_check/housekeeping settings are migrated once,
+    for whichever the entry doesn't have yet, the options flow owning them from then on (not gated
     behind the interactive migration flow), matching what the legacy platform loader itself
     always did for `name:` (slugify(name or "notify") determined the service - see
     homeassistant.components.notify.legacy.async_setup_legacy).
@@ -122,7 +124,9 @@ def async_sync_entry_from_legacy_config(hass: HomeAssistant, legacy_config: dict
         data[CONF_NAME] = legacy_name
     data.update(extract_legacy_data(legacy_config))
 
-    options = {**entry.options, **extract_legacy_options(legacy_config)}
+    # migrated once - an entry's own archive/dupe_check/housekeeping options, as set in the options
+    # flow, win over the legacy block's from then on
+    options = {**extract_legacy_options(legacy_config), **entry.options}
 
     if data != entry.data or options != entry.options:
         hass.config_entries.async_update_entry(entry, data=data, options=options)
@@ -141,6 +145,24 @@ def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str,
         # YAML-parsed data, since notify.py's shim never runs it through any schema) is nested,
         # so it's carried through as a JSON string and decoded back in async_create_fix_flow.
         data={"legacy_config": json.dumps(legacy_config, default=str)},
+    )
+
+
+def async_check_yaml_entry_owned_keys(hass: HomeAssistant, keys: list[str]) -> None:
+    """Raise (or clear) a single warning naming the settings in the top-level `supernotify:` YAML
+    that are set in the integration's options instead, and so ignored there."""
+    if not keys:
+        ir.async_delete_issue(hass, DOMAIN, YAML_ENTRY_OWNED_KEYS_ISSUE_ID)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        YAML_ENTRY_OWNED_KEYS_ISSUE_ID,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=YAML_ENTRY_OWNED_KEYS_ISSUE_ID,
+        translation_placeholders={"keys": ", ".join(sorted(keys))},
+        learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/",
     )
 
 

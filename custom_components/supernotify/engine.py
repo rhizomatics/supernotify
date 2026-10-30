@@ -139,14 +139,15 @@ class SupernotifyEngine:
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(
-                media_path,
+                hass_api.config_path(media_path) if media_path else None,
                 media_url_prefix=media_url_prefix,
                 days=self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7),
             ),
             Snoozer(snooze),
             recipients or [],
             mobile_actions,
-            template_path,
+            # like the media and archive paths, relative to the Home Assistant config directory
+            hass_api.config_path(template_path) if template_path else None,
             cameras=cameras,
         )
 

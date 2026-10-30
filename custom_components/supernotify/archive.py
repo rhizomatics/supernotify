@@ -25,7 +25,6 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
-    CONF_ARCHIVE_PURGE_INTERVAL,
 )
 from .schema import DeliveryOutcome, OutcomeSelection
 
@@ -40,9 +39,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-ARCHIVE_PURGE_MIN_INTERVAL = 3 * 60
 ARCHIVE_DEFAULT_DAYS = 1
 WRITE_TEST = ".startup"
+ARCHIVE_PATH_ISSUE = "archive_path"
 
 
 def _filename_period(filename: str) -> tuple[float, float] | None:
@@ -172,7 +171,7 @@ class ArchiveTopic(ArchiveDestination):
         hass_api: HomeAssistantAPI,
         topic: str,
         qos: int = 0,
-        retain: bool = True,
+        retain: bool = False,
         diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
     ) -> None:
         self.hass_api: HomeAssistantAPI = hass_api
@@ -215,7 +214,6 @@ class ArchiveDirectory(ArchiveDestination):
     def __init__(
         self,
         path: str,
-        purge_minute_interval: int,
         diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
         hass_api: HomeAssistantAPI | None = None,
     ) -> None:
@@ -223,28 +221,32 @@ class ArchiveDirectory(ArchiveDestination):
         self.configured_path: str = path
         self.archive_path: anyio.Path | None = None
         self.enabled: bool = False
+        # why the path can't be used, if it can't
+        self.error: str | None = None
         self.diagnostics: OutcomeSelection = diagnostics
-        self.last_purge: dt.datetime | None = None
-        self.purge_minute_interval: int = purge_minute_interval
 
     async def initialize(self) -> None:
         verify_archive_path: Path = Path(self.configured_path)
-        if verify_archive_path and not await verify_archive_path.exists():
+        if not await verify_archive_path.exists():
             _LOGGER.info("SUPERNOTIFY Archive path not found at %s", verify_archive_path)
             try:
                 await verify_archive_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Archive path %s cannot be created: %s", verify_archive_path, e)
-        if verify_archive_path and await verify_archive_path.exists() and await verify_archive_path.is_dir():
-            try:
-                await verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
-                self.archive_path = verify_archive_path
-                _LOGGER.info("SUPERNOTIFY Archiving notifications to file system at %s", verify_archive_path)
-                self.enabled = True
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Archive path %s cannot be written: %s", verify_archive_path, e)
-        else:
-            _LOGGER.warning("SUPERNOTIFY Archive path %s is not a directory or does not exist", verify_archive_path)
+                self.error = str(e)
+                return
+        if not await verify_archive_path.is_dir():
+            _LOGGER.warning("SUPERNOTIFY Archive path %s is not a directory", verify_archive_path)
+            self.error = "not a directory"
+            return
+        try:
+            await verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
+            self.archive_path = verify_archive_path
+            _LOGGER.info("SUPERNOTIFY Archiving notifications to file system at %s", verify_archive_path)
+            self.enabled = True
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Archive path %s cannot be written: %s", verify_archive_path, e)
+            self.error = str(e)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         archived: bool = False
@@ -324,14 +326,7 @@ class ArchiveDirectory(ArchiveDestination):
             return sum(1 for p in await aiofiles.os.listdir(path) if p != WRITE_TEST)
         return 0
 
-    async def cleanup(self, days: int, force: bool) -> int:
-        if (
-            not force
-            and self.last_purge is not None
-            and self.last_purge > dt.datetime.now(dt.UTC) - dt.timedelta(minutes=self.purge_minute_interval)
-        ):
-            return 0
-
+    async def cleanup(self, days: int) -> int:
         cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(days=days)
         cutoff = cutoff.astimezone(dt.UTC)
         purged = 0
@@ -352,7 +347,6 @@ class ArchiveDirectory(ArchiveDestination):
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to clean up archive at %s: %s", self.archive_path, e, exc_info=True)
             _LOGGER.info("SUPERNOTIFY Purged %s archived notifications for cutoff %s", purged, cutoff)
-            self.last_purge = dt.datetime.now(dt.UTC)
         else:
             _LOGGER.debug("SUPERNOTIFY Skipping archive purge for unknown path %s", self.archive_path)
         return purged
@@ -376,9 +370,7 @@ class NotificationArchive:
         self.archive_days = int(config.get(CONF_ARCHIVE_DAYS, ARCHIVE_DEFAULT_DAYS))
         self.mqtt_topic: str | None = config.get(CONF_ARCHIVE_MQTT_TOPIC)
         self.mqtt_qos: int = int(config.get(CONF_ARCHIVE_MQTT_QOS, 0))
-        self.mqtt_retain: bool = bool(config.get(CONF_ARCHIVE_MQTT_RETAIN, True))
-
-        self.purge_minute_interval = int(config.get(CONF_ARCHIVE_PURGE_INTERVAL, ARCHIVE_PURGE_MIN_INTERVAL))
+        self.mqtt_retain: bool = bool(config.get(CONF_ARCHIVE_MQTT_RETAIN, False))
 
     async def initialize(self) -> None:
         if not self.enabled:
@@ -389,11 +381,19 @@ class NotificationArchive:
         else:
             self.archive_directory = ArchiveDirectory(
                 self.hass_api.config_path(self.configured_archive_path),
-                purge_minute_interval=self.purge_minute_interval,
                 diagnostics=self.diagnostics,
                 hass_api=self.hass_api,
             )
             await self.archive_directory.initialize()
+            if self.archive_directory.error is None:
+                self.hass_api.delete_issue(ARCHIVE_PATH_ISSUE)
+            else:
+                self.hass_api.raise_issue(
+                    ARCHIVE_PATH_ISSUE,
+                    ARCHIVE_PATH_ISSUE,
+                    {"path": self.archive_directory.configured_path, "error": self.archive_directory.error},
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/",
+                )
 
         if self.mqtt_topic:
             self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
@@ -404,9 +404,9 @@ class NotificationArchive:
     async def size(self) -> int:
         return await self.archive_directory.size() if self.archive_directory else 0
 
-    async def cleanup(self, days: int | None = None, force: bool = False) -> int:
+    async def cleanup(self, days: int | None = None) -> int:
         days = self.archive_days if days is None else days
-        return await self.archive_directory.cleanup(days, force) if self.archive_directory else 0
+        return await self.archive_directory.cleanup(days) if self.archive_directory else 0
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         archived: bool = False

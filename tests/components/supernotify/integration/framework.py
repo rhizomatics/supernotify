@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import tempfile
-from contextlib import chdir
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import Mock
 
@@ -67,10 +65,6 @@ class House:
         self._cameras: dict[str, str | None] = cameras or {}
         self.pirs: dict[str, str | None] = pirs or {}
         self.service_calls: dict[str, list[ServiceCall]] = {}
-        # holds the temp dir used for the zero-YAML component's default (relative) media/archive/
-        # template paths, so they resolve under a throwaway directory rather than the real cwd -
-        # see setup() and cleanup()
-        self._media_root: tempfile.TemporaryDirectory[str] | None = None
         # camera entity_id -> its mock, used by _camera_for_image() to identify which camera a
         # delivered image came from
         self._camera_entities: dict[str, MockCameraEntity] = {}
@@ -162,17 +156,9 @@ class House:
             self.service_calls.setdefault(call.domain, [])
             self.service_calls[call.domain].append(call)
 
-        # unless the config sets them, CONF_MEDIA_PATH etc default to relative paths, which
-        # resolve against the process cwd. Without this, that's the repo root, and every test
-        # run leaves real files behind under <repo>/supernotify/. chdir into a throwaway temp
-        # dir just for this call, since MediaStorage.initialize() resolves the relative path to
-        # an absolute one immediately and keeps that absolute path for the rest of this House's
-        # lifetime - the cwd doesn't need to stay changed afterwards.
         supernotify_config = parse_yaml(self.config) if self.config else {}
-        self._media_root = tempfile.TemporaryDirectory(prefix="supernotify_test_")
-        with chdir(self._media_root.name):
-            assert await async_setup_component(hass, SUPERNOTIFY_DOMAIN, {SUPERNOTIFY_DOMAIN: supernotify_config})
-            await hass.async_block_till_done()
+        assert await async_setup_component(hass, SUPERNOTIFY_DOMAIN, {SUPERNOTIFY_DOMAIN: supernotify_config})
+        await hass.async_block_till_done()
 
         # setting up the notify platform registers the real, entity-backed notify.send_message -
         # replace it with a stub, since these devices have no backing NotifyEntity to dispatch to
@@ -194,11 +180,8 @@ class House:
             hass.services.async_register(domain, service, fake_call_service)
 
     def cleanup(self) -> None:
-        """Remove the temp dir created in setup() for the zero-YAML media/archive/template
-        paths. Call from the owning fixture's teardown."""
-        if self._media_root is not None:
-            self._media_root.cleanup()
-            self._media_root = None
+        """Nothing left to remove, the default media/archive/template paths being under the test's
+        own config dir (see conftest.py's hass_config_dir)"""
 
     def supernotify_device_id(self) -> str:
         """The HA device-registry id of the single 'SuperNotify' device, for tests targeting it

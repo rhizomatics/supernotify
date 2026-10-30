@@ -108,11 +108,17 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
     by CONFIG_SCHEMA when that YAML was first loaded, so it's merged in as-is rather than
     re-validated (a second pass would reject values schema validation already coerced, e.g.
     cv.template's Template objects - see CONFIG_ENTRY_SCHEMA's docstring in schema.py).
+
+    Settings the entry owns, like `archive`, are ignored in that YAML section, with a repair
+    issue naming them, rather than overriding the entry unvalidated.
     """
-    from .schema import CONFIG_ENTRY_SCHEMA
+    from .repairs import async_check_yaml_entry_owned_keys
+    from .schema import CONFIG_ENTRY_SCHEMA, ENTRY_OWNED_KEYS
 
     yaml_config = hass.data.get(DOMAIN, {}).get(KEY_YAML_CONFIG, {})
-    return {**CONFIG_ENTRY_SCHEMA({**entry.data, **entry.options}), **yaml_config}
+    async_check_yaml_entry_owned_keys(hass, [key for key in yaml_config if key in ENTRY_OWNED_KEYS])
+    yaml_only = {key: value for key, value in yaml_config.items() if key not in ENTRY_OWNED_KEYS}
+    return {**CONFIG_ENTRY_SCHEMA({**entry.data, **entry.options}), **yaml_only}
 
 
 # Delivery names auto-configured under the old "DEFAULT_x" naming (see

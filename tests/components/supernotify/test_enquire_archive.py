@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.archive import _filename_period
 
-from .hass_setup_lib import assert_json_round_trip
+from .hass_setup_lib import assert_json_round_trip, setup_supernotify
 
 
 def _write_archive_entry(
@@ -56,8 +56,7 @@ async def _setup(hass: HomeAssistant, archive_path: str) -> None:
         },
         "archive": {"enabled": True, "file_path": archive_path},
     }
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-    await hass.async_block_till_done()
+    await setup_supernotify(hass, config)
 
 
 async def test_enquire_archive_no_archive_configured(hass: HomeAssistant) -> None:

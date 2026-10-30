@@ -18,7 +18,7 @@ from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import FULL_CONFIG_SCHEMA, EnvelopeOutcome
 
-from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
+from .hass_setup_lib import assert_clean_notification, assert_json_round_trip, setup_supernotify
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceResponse, State
@@ -33,8 +33,7 @@ async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEn
     """Set up supernotify from a top-level `supernotify:` YAML config and return the live
     service - the config entry (bootstrapped automatically) is the sole owner of it now, so
     there's no more hass.data["notify_services"][DOMAIN] legacy-platform bucket to read."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-    await hass.async_block_till_done()
+    await setup_supernotify(hass, config)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     return entry.runtime_data
 

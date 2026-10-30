@@ -541,8 +541,8 @@ ARCHIVE_SCHEMA = vol.All(
         vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
         vol.Optional(CONF_ARCHIVE_MQTT_TOPIC): cv.string,
         vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
-        vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
-        vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
+        vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=False): cv.boolean,
+        vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL): cv.positive_int,  # deprecated v2.16.2, ignored
         vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
         vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=OutcomeSelection.NONE): parse_event_policy,
         vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=OutcomeSelection.ERROR): parse_event_policy,
@@ -610,6 +610,20 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
+)
+
+# Set in the integration's own config and options flows - in the top-level `supernotify:` YAML
+# they're ignored, the legacy notify platform block being the only YAML they're ever taken from
+ENTRY_OWNED_KEYS: tuple[str, ...] = (
+    CONF_DELIVERY_CONTROL,
+    CONF_TEMPLATE_PATH,
+    CONF_MEDIA_PATH,
+    CONF_MEDIA_URL_PREFIX,
+    CONF_ARCHIVE,
+    CONF_HOUSEKEEPING,
+    CONF_DUPE_CHECK,
+    CONF_MOBILE_DISCOVERY,
+    CONF_RECIPIENTS_DISCOVERY,
 )
 
 # The union of CONFIG_ENTRY_SCHEMA and SUPERNOTIFY_YAML_SCHEMA - for validating a single,

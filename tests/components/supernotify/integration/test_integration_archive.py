@@ -59,7 +59,7 @@ async def test_notification_archived_found_and_purged(
     assert event.data["id"] == summary["id"]
 
     purged = await enquire(hass, "purge_archive", days=0)
-    assert purged == {"purged": 1, "remaining": 0, "interval": 60, "days": 0}
+    assert purged == {"purged": 1, "remaining": 0, "days": 0}
     assert (await enquire(hass, "enquire_archive"))["count"] == 0
 
 

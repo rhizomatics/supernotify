@@ -36,7 +36,6 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
-    CONF_ARCHIVE_PURGE_INTERVAL,
     CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
@@ -309,7 +308,6 @@ class SupernotifyOptionsFlow(OptionsFlow):
                 CONF_ENABLED: user_input[CONF_ENABLED],
                 CONF_ARCHIVE_PATH: file_section[CONF_ARCHIVE_PATH],
                 CONF_ARCHIVE_DAYS: file_section[CONF_ARCHIVE_DAYS],
-                CONF_ARCHIVE_PURGE_INTERVAL: file_section[CONF_ARCHIVE_PURGE_INTERVAL],
                 CONF_ARCHIVE_MQTT_TOPIC: mqtt_section[CONF_ARCHIVE_MQTT_TOPIC],
                 CONF_ARCHIVE_MQTT_QOS: mqtt_section[CONF_ARCHIVE_MQTT_QOS],
                 CONF_ARCHIVE_MQTT_RETAIN: mqtt_section[CONF_ARCHIVE_MQTT_RETAIN],
@@ -335,7 +333,6 @@ class SupernotifyOptionsFlow(OptionsFlow):
                     # schema" / HTTP 500).
                     vol.Optional(CONF_ARCHIVE_PATH, default=ARCHIVE_DIR): cv.string,
                     vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
-                    vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
                 }),
                 {"collapsed": False},
             ),
@@ -343,7 +340,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
                 vol.Schema({
                     vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=""): cv.string,
                     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
-                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
+                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=False): cv.boolean,
                 }),
                 {"collapsed": True},
             ),
@@ -365,12 +362,11 @@ class SupernotifyOptionsFlow(OptionsFlow):
             "file": {
                 CONF_ARCHIVE_PATH: current.get(CONF_ARCHIVE_PATH, ARCHIVE_DIR),
                 CONF_ARCHIVE_DAYS: current.get(CONF_ARCHIVE_DAYS, 3),
-                CONF_ARCHIVE_PURGE_INTERVAL: current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60),
             },
             "mqtt": {
                 CONF_ARCHIVE_MQTT_TOPIC: current.get(CONF_ARCHIVE_MQTT_TOPIC, ""),
                 CONF_ARCHIVE_MQTT_QOS: current.get(CONF_ARCHIVE_MQTT_QOS, 0),
-                CONF_ARCHIVE_MQTT_RETAIN: current.get(CONF_ARCHIVE_MQTT_RETAIN, True),
+                CONF_ARCHIVE_MQTT_RETAIN: current.get(CONF_ARCHIVE_MQTT_RETAIN, False),
             },
             "event": {
                 CONF_ARCHIVE_EVENT_NAME: current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification"),

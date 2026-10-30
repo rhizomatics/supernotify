@@ -99,6 +99,13 @@ class DummyNotificationService(BaseNotificationService):
 
 
 @pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """A throwaway Home Assistant config dir, so the media, archive and template paths, relative
+    to it by default, leave nothing behind in the shared testing_config"""
+    return hass_tmp_config_dir
+
+
+@pytest.fixture
 def mock_device_registry() -> DeviceRegistry:
     mocked = Mock(spec=DeviceRegistry)
     mocked.devices = {}

@@ -50,3 +50,22 @@ Why not `occupancy`?
   Its only simple if combinations limited, and occupancy is accounted for by alarm control panels (`ARMED_HOME`,`DISARMED`,`ARMED_NIGHT`)
 Why not time of day?
   `ARMED_NIGHT` covers some of that, although there are bigger gaps - 1) day/night during `ARMED_AWAY` or `ARMED_VACATION` and 2) night-time vs bed-time, such as switch on floodlights if its dark but only squelch announcements when its bedtime (it can be dark at 4pm in Scottish winter and bright daylight at 4am in summer)
+    - Auto Arm now by default more closely follows HA alarm convention, so `ARMED_NIGHT` is bed time, and occupied darkness pre-bed time is `ARMED_HOME`
+Why not existing selector?
+  Intention to keep it simple, without 2nd level mapping and regexp. However that doesnt have to be exposed via UI
+
+```yaml title="Using selector class and alt naming scheme"
+delivery:
+    siren:
+      quick_select:
+         include:
+            - PRIORITY_CRITICAL_ARMED_ANY
+            - PRIORITY_CRITICAL_DISARMED
+            ...
+     alexa_devices:
+       quick_select:
+         exclude:
+            - PRIORITY_ANY_ARMED_AWAY
+            - PRIORITY_MINIMAL_ARMED_ANY
+            - PRIORITY_MINIMAL_DISARMED
+ ```

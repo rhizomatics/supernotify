@@ -556,9 +556,6 @@ class MediaStorage:
 
     async def initialize(self, hass_api: HomeAssistantAPI) -> None:
         self.hass_api = hass_api  # TODO: should not be set on initialize
-        if self.media_path is not None and not self.media_path.is_absolute():
-            self.media_path = await self.media_path.absolute()
-            _LOGGER.debug("SUPERNOTIFY Media path updated to %s", self.media_path)
         if self.media_path and not await self.media_path.exists():
             _LOGGER.info("SUPERNOTIFY Media path not found at %s, attempting to create.", self.media_path)
             try:

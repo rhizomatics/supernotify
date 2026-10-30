@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_ACTION_TOOLS, CONF_LLM_DIAGNOSTIC_TOOLS, CONF_LLM_TOOLS
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
+from tests.components.supernotify.hass_setup_lib import setup_supernotify
 
 # the llm platform and probatio are only in the newer Home Assistant installed for py3.14 - drop with py3.13
 pytest.importorskip("homeassistant.components.llm")
@@ -78,8 +79,7 @@ async def _setup(
     hass.states.async_set("person.alice", "home", {"friendly_name": "Alice", "user_id": ALICE_USER_ID})
     hass.states.async_set("person.bob", "not_home", {"friendly_name": "Bob"})
     assert await async_setup_component(hass, "llm", {})
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: _config(archive_path)})
-    await hass.async_block_till_done()
+    await setup_supernotify(hass, _config(archive_path))
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     hass.config_entries.async_update_entry(
         entry,

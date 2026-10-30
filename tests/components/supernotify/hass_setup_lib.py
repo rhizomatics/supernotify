@@ -32,7 +32,9 @@ from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.supernotify import DOMAIN as SUPERNOTIFY_DOMAIN
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.const import (
@@ -62,7 +64,7 @@ from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
-from custom_components.supernotify.schema import FULL_CONFIG_SCHEMA, EnvelopeOutcome
+from custom_components.supernotify.schema import ENTRY_OWNED_KEYS, FULL_CONFIG_SCHEMA, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snoozer
 
 from .doubles_lib import DummyService
@@ -521,6 +523,17 @@ def set_state(
         states.async_set(entity_id, str(state), attributes=attributes)
     else:
         states.set(entity_id, str(state), attributes=attributes)
+
+
+async def setup_supernotify(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Set up Supernotify from a test config combining the top-level YAML with settings like
+    `archive`, which go to the config entry as options, as the options flow would set them"""
+    options: dict[str, Any] = {key: config[key] for key in ENTRY_OWNED_KEYS if key in config}
+    if options:
+        MockConfigEntry(domain=SUPERNOTIFY_DOMAIN, data={}, options=options).add_to_hass(hass)
+    yaml_config: dict[str, Any] = {key: value for key, value in config.items() if key not in ENTRY_OWNED_KEYS}
+    assert await setup.async_setup_component(hass, SUPERNOTIFY_DOMAIN, {SUPERNOTIFY_DOMAIN: yaml_config})
+    await hass.async_block_till_done()
 
 
 def register_mobile_app(

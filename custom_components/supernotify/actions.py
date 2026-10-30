@@ -445,12 +445,11 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
                 translation_domain=DOMAIN,
                 translation_key="no_archive_configured",
             )
-        purged = await engine.context.archive.cleanup(days=days, force=True)
+        purged = await engine.context.archive.cleanup(days=days)
         arch_size = await engine.context.archive.size()
         return {
             "purged": purged,
             "remaining": arch_size,
-            "interval": engine.context.archive.purge_minute_interval,
             "days": engine.context.archive.archive_days if days is None else days,
         }
 
