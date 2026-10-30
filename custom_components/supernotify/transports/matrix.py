@@ -51,6 +51,7 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, TRANSPORT_MATRIX
 from custom_components.supernotify.model import (
     DebugTrace,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -145,7 +146,8 @@ class MatrixTransport(Transport):
         rooms = self.select_rooms(envelope)
         if not rooms:
             _LOGGER.warning("SUPERNOTIFY matrix: no valid room targets (expected !room:server or #alias:server)")
-            self.record_error("no valid Matrix room targets", "deliver")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Resolve format: explicit override, or html when a title must be

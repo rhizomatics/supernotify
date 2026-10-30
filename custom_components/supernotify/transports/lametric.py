@@ -7,17 +7,20 @@ Requires: Home Assistant lametric integration (core, auto-discovered via mDNS/SS
 No action: required in delivery config — uses lametric.message or lametric.chart
 based on presence of lametric_chart_data in envelope data.
 
-Target: NEVER — LaMetric is a fixed device, not person-routed.
-The device_id must be specified in delivery config data:
+Targets are the `notify` entity the integration creates for each device, whose device is
+looked up, or a fixed device_id in the delivery config data:
 
-    deliveries:
-      - name: lametric
+    delivery:
+      lametric:
         transport: lametric
         data:
           device_id: "49b6e2186ef37e164818aacb9cea1f53"
 
+There's no room for a title on the display, so only the message is shown.
+
 New data keys (all optional unless noted):
-    device_id           str       REQUIRED. LaMetric device UUID from HA device registry.
+    device_id           str       LaMetric device UUID from HA device registry, sent to
+                                  as well as any targeted LaMetric notify entities.
                                   Obtain from: HA Settings → Devices → LaMetric → device ID.
                                   Example: "49b6e2186ef37e164818aacb9cea1f53"
     lametric_sound      str       Built-in sound name. Overrides priority default.
@@ -66,9 +69,12 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
     DebugTrace,
+    SuppressionReason,
+    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -141,11 +147,32 @@ class LaMetricTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.MESSAGE | TransportFeature.TITLE
+        return TransportFeature.MESSAGE
 
     @property
     def default_config(self) -> TransportConfig:
-        return super().default_config
+        config = super().default_config
+        # a delivery may instead fix its display with device_id in data, with no target - like
+        # mqtt's topic, Notification._target_required() stops the standard delivery firing unprompted
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        return config
+
+    @property
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
+        # the notify entity for each display is the integration's own, claimed ahead of the
+        # generic notify_entity transport, like ntfy's
+        return [TargetEntityCategory(domain="notify", platform=HA_LAMETRIC_DOMAIN)]
+
+    def device_ids(self, envelope: Envelope, device_id: str | None) -> list[str]:
+        """The fixed device_id, then the device of each targeted LaMetric notify entity"""
+        device_ids: list[str] = [device_id] if device_id else []
+        for entity_id in envelope.target.domain_entity_ids("notify") if envelope.target else []:
+            entity_device_id: str | None = self.hass_api.device_for_entity(entity_id)
+            if entity_device_id is None:
+                _LOGGER.warning("SUPERNOTIFY lametric: no device found for %s", entity_id)
+            elif entity_device_id not in device_ids:
+                device_ids.append(entity_device_id)
+        return device_ids
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_LAMETRIC_DOMAIN) is not None
@@ -163,13 +190,14 @@ class LaMetricTransport(Transport):
         # 1. Extract raw data (flat dict — rule #6)
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
 
-        # 2. Pop device_id (required — configured in delivery data)
-        device_id: str | None = raw_data.pop("device_id", None)
-        if not device_id:
-            _LOGGER.debug(
-                "SUPERNOTIFY lametric: device_id missing from delivery data, skipping. "
-                "Add 'device_id: <uuid>' under data: in your lametric delivery config."
+        # 2. Displays to send to, from device_id in data or LaMetric notify entity targets
+        device_ids: list[str] = self.device_ids(envelope, raw_data.pop("device_id", None))
+        if not device_ids:
+            _LOGGER.warning(
+                "SUPERNOTIFY lametric: no LaMetric notify entity target or device_id in delivery data, skipping"
             )
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # 3. Pop all lametric-specific keys (must NOT reach the HA service)
@@ -189,48 +217,46 @@ class LaMetricTransport(Transport):
         final_icon = lametric_icon if lametric_icon is not None else _ICON_MAP.get(sn_priority)
 
         # 5. Optionally simplify message text for small physical display
-        message = self.simplify(envelope.message, strip_urls=True) if lametric_simplify else envelope.message
+        message = (self.simplify(envelope.message, strip_urls=True) if lametric_simplify else envelope.message) or ""
 
         # 6A. CHART path — if lametric_chart_data is provided
         if lametric_chart_data is not None:
             if not isinstance(lametric_chart_data, list):
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "SUPERNOTIFY lametric: lametric_chart_data must be a list of ints, got %s",
                     type(lametric_chart_data).__name__,
                 )
                 return False
 
+            qualified_action = "lametric.chart"
             action_data: dict[str, Any] = {
-                "device_id": device_id,
                 "data": lametric_chart_data,  # field name is "data" for lametric.chart
                 "cycles": final_cycles,
                 "priority": final_priority,
                 "icon_type": final_icon_type,
             }
-            if final_sound:
-                action_data["sound"] = final_sound
-
-            return await self.call_action(
-                envelope,
-                qualified_action="lametric.chart",
-                action_data=action_data,
-            )
-
-        # 6B. MESSAGE path (default)
-        action_data = {
-            "device_id": device_id,
-            "message": message,
-            "cycles": final_cycles,
-            "priority": final_priority,
-            "icon_type": final_icon_type,
-        }
-        if final_icon:
-            action_data["icon"] = final_icon
+        else:
+            # 6B. MESSAGE path (default)
+            qualified_action = "lametric.message"
+            action_data = {
+                "message": message,
+                "cycles": final_cycles,
+                "priority": final_priority,
+                "icon_type": final_icon_type,
+            }
+            if final_icon:
+                action_data["icon"] = final_icon
         if final_sound:
             action_data["sound"] = final_sound
 
-        return await self.call_action(
-            envelope,
-            qualified_action="lametric.message",
-            action_data=action_data,
-        )
+        # the actions take a single device_id, so one call per display
+        results: list[bool] = [
+            await self.call_action(
+                envelope,
+                qualified_action=qualified_action,
+                action_data={"device_id": device_id, **action_data},
+                implied_target=True,
+            )
+            for device_id in device_ids
+        ]
+        return all(results)

@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
+    SuppressionReason,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -79,11 +80,11 @@ def test_transport_name():
     assert t.name == "lametric"
 
 
-def test_supported_features_message_and_title():
+def test_supported_features_message_without_title():
     t = _make_transport()
     f = t.supported_features
     assert f & TransportFeature.MESSAGE
-    assert f & TransportFeature.TITLE
+    assert not f & TransportFeature.TITLE
 
 
 def test_supported_features_no_images_actions_spoken():
@@ -158,6 +159,7 @@ async def test_deliver_missing_device_id_returns_false():
     result = await t.deliver(env)
 
     assert result is False
+    assert env.skip_reason == SuppressionReason.NO_TARGET
     t.call_action.assert_not_awaited()
 
 

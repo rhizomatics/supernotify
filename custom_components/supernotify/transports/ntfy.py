@@ -2,10 +2,15 @@
 
 Sends push notifications via ntfy (https://ntfy.sh) or self-hosted instance.
 ntfy is an official HA integration since 2025.5.
-Uses ntfy.publish action with device_id target (topics configured in HA integration).
+Uses the ntfy.publish action, targeting the `notify` entity the integration creates for each
+topic, or the topic's device with `ntfy_device_id`.
 
-Supported data: keys (all optional except ntfy_device_id):
-    ntfy_device_id   str         device_id of the ntfy topic configured in HA (required)
+Only the fields ntfy.publish accepts are passed on: its schema rejects any other key, so the
+rest of the notification's data, meant for other deliveries, is dropped.
+
+Supported data: keys (all optional):
+    ntfy_device_id   str         device_id of an ntfy topic, used as well as, or instead of,
+                                 a ntfy `notify` entity target
     ntfy_priority    int         5=urgent, 4=high, 3=default, 2=low, 1=min
     ntfy_tags        list[str]   tag/emoji shortcodes (e.g. ["warning", "house"])
     ntfy_click       str         URL opened on notification tap
@@ -33,15 +38,16 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     TRANSPORT_NTFY,
 )
-from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, SuppressionReason, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -125,7 +131,16 @@ class NtfyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = super().default_config
         config.delivery_defaults.action = "ntfy.publish"
+        # a delivery may instead fix its topic with ntfy_device_id in data, with no target - like
+        # mqtt's topic, Notification._target_required() stops the standard delivery firing unprompted
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         return config
+
+    @property
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
+        # the notify entity for each topic is the integration's own, claimed ahead of the
+        # generic notify_entity transport, like telegram's
+        return [TargetEntityCategory(domain="notify", platform=HA_NTFY_DOMAIN)]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is not None
@@ -151,8 +166,11 @@ class NtfyTransport(Transport):
         email = raw_data.pop("ntfy_email", None)
         actions = raw_data.pop("ntfy_actions", [])
 
-        if not device_id:
-            _LOGGER.warning("SUPERNOTIFY ntfy: ntfy_device_id not configured in delivery data")
+        entity_ids: list[str] = envelope.target.domain_entity_ids("notify") if envelope.target else []
+        if not device_id and not entity_ids:
+            _LOGGER.warning("SUPERNOTIFY ntfy: no ntfy notify entity or ntfy_device_id to send to")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Validate ntfy_priority range (1-5)
@@ -197,9 +215,13 @@ class NtfyTransport(Transport):
             action_data["attach"] = image_url
             action_data["filename"] = filename
 
-        # Residual generic keys (non ntfy_*) passed to payload
-        action_data.update(raw_data)
+        if raw_data:
+            _LOGGER.debug("SUPERNOTIFY ntfy: dropping data keys not accepted by ntfy.publish: %s", sorted(raw_data))
 
-        target_data = {ATTR_DEVICE_ID: device_id}
+        target_data: dict[str, Any] = {}
+        if entity_ids:
+            target_data[ATTR_ENTITY_ID] = entity_ids
+        if device_id:
+            target_data[ATTR_DEVICE_ID] = device_id
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

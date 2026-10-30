@@ -4,14 +4,15 @@ Coverage:
 - _parse_delay(): all supported input formats
 - deliver(): happy path, priorities, optional fields
 - Priority mapping SuperNotify -> ntfy integer (all 5 levels)
-- ntfy_device_id missing -> False without service call
+- no ntfy_device_id or ntfy notify entity -> skipped without service call
 - ntfy_actions truncated to max 3
 - ntfy_attach_image: camera_entity_id, snapshot_url, absent
 - Graceful fallback if camera.snapshot fails
 - ntfy_* keys NOT present in final payload
 - ntfy_priority override on automatic mapping
 - ntfy_markdown: bool True/False and YAML string "true"/"false" (boolify test)
-- target_data uses device_id (not entity_id)
+- target_data uses device_id and/or the ntfy notify entities targeted
+- data meant for other deliveries isn't passed on
 - Service exception -> return False + error_count incremented
 
 Path in upstream repo: tests/components/supernotify/test_transport_ntfy.py
@@ -35,6 +36,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import SuppressionReason
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.ntfy import NtfyTransport, _parse_delay
 from tests.components.supernotify.hass_setup_lib import TestingContext
@@ -175,16 +177,29 @@ async def test_deliver_with_title() -> None:
 # ---------------------------------------------------------------------------
 
 
-async def test_deliver_missing_device_id_returns_false() -> None:
-    """Without ntfy_device_id -> False, no service call."""
+async def test_deliver_missing_device_id_skipped() -> None:
+    """Without ntfy_device_id or an ntfy notify entity -> skipped, no service call."""
     ctx = _ctx()
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_NTFY)
 
-    result = await uut.deliver(_envelope(ctx))
+    e = _envelope(ctx)
+    result = await uut.deliver(e)
 
     assert result is False
+    assert e.skip_reason == SuppressionReason.NO_TARGET
     ctx.hass.services.async_call.assert_not_called()  # type: ignore
+
+
+async def test_other_deliveries_data_not_passed_on() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_NTFY)
+
+    e = _envelope(ctx, data={"ntfy_device_id": "dev1", "clickAction": "/lovelace/security"})
+    await uut.deliver(e)
+
+    assert "clickAction" not in e.calls[0].action_data  # type: ignore[operator]
 
 
 # ---------------------------------------------------------------------------

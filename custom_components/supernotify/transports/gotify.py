@@ -164,5 +164,5 @@ class GotifyTransport(Transport):
 
         action_data[ATTR_DATA] = payload_data
 
-        # raw_data residuo non passato - schema HACS e' fisso
+        # the rest of raw_data isn't passed on - the HACS integration only reads priority and extras
         return await self.call_action(envelope, action_data=action_data)

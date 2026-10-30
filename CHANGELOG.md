@@ -7,9 +7,19 @@
 # v2.16.2
 ## ✨ Enhancements
 - *Pushover*: new `pushover_tags`, so an emergency can be cancelled by tag with the `pushover.cancel` action
+- *ntfy*: the `notify` entity the ntfy integration creates for each topic can be a target, selecting the `ntfy` delivery ahead of the generic Notify Entity one, so it gets priority, images and buttons. `ntfy_device_id` is no longer required
 
 ## 🐛 Bug fixes
-- *Kodi*, *Discord*: a delivery with no valid target was counted as a transport error. It's now skipped
+- *Kodi*, *Discord*, *Matrix*: a delivery with no valid target was counted as a transport error. It's now skipped
+- *ntfy*
+  - A notification's `data` meant for other deliveries, such as `clickAction` for Mobile Push, was passed to `ntfy.publish`, which rejects anything it doesn't know, so the message failed. Only the ntfy fields listed in the docs are now passed on
+  - Without `ntfy_device_id`, the delivery was counted as failed. It's now skipped
+  - Docs rewritten: targets, all the data keys and their limits, that the image is sent as a URL, and the example config corrected
+- *LaMetric*
+  - The title was recorded as sent, though LaMetric has no title and it was never shown. The docs now say only the message is shown
+  - Without a `device_id`, the delivery was counted as failed, logged only at debug level. It's now skipped with a warning
+  - Docs rewritten: the delivery config used a list rather than the `delivery:` mapping, the data keys listed, and the example call corrected
+- *Gotify*: docs rewritten: the delivery config used `deliveries:` rather than `delivery:`, the default delivery is only used when named, failures in the HACS integration aren't seen by Supernotify, and outdated notes removed
 - *Pushover*
   - `pushover_device` was sent in `data`, where the integration ignores it, so every device got the notification. Devices are now sent as the `target`, and a list is accepted
   - `pushover_callback` was sent as `callback`, which the integration ignores, so an emergency was never acknowledged to the webhook. It's now sent as `callback_url`

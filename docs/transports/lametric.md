@@ -6,52 +6,66 @@ tags:
 ---
 # LaMetric TIME Transport Adaptor
 
+| Transport ID | Source      | Requirements | Optional |
+| ------------ | ----------- | ------------ | -------- |
+| `lametric` | :material-github:[`lametric.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/lametric.py) | :material-home-assistant: [LaMetric Integration](https://www.home-assistant.io/integrations/lametric/) | - |
+
 ## Motivation
 
+LaMetric TIME is a smart display with a [Home Assistant integration](https://www.home-assistant.io/integrations/lametric/),
+discovered automatically on the network, which provides `lametric.message` for text and `lametric.chart` for bar charts.
 
-LaMetric TIME is a popular IoT display device with [native Home Assistant integration](https://www.home-assistant.io/integrations/lametric/) (auto-discovered via mDNS/SSDP). The HA lametric integration exposes two services: lametric.message (text notifications) and lametric.chart (bar chart data).
+The LaMetric transport adds:
 
-While LaMetric can be used with the [Generic Transport](generic.md) for basic text, this integration adds:
+* SuperNotify's priority mapped to LaMetric's display settings - cycles, sound, icon and icon type
+* Bar charts from `lametric_chart_data`, for example the last few sensor readings
+* Optionally, message text shortened for the small display, with URLs removed
 
-* Map SuperNotify's 5-level priority to LaMetric's display parameters (cycles, sound, icon, icon_type) automatically
-* Send bar chart data (lametric.chart) for sensor visualization (temperature, CPU, battery)
-* Apply icon type selection (alert = red flashing, info = blue, none) per priority
-* Provide per-priority defaults for sound effects (alarm1, knock-knock, notification)
+The display has no room for a title, so only the message is shown.
 
 ## Requirements
 
-* Home Assistant LaMetric integration installed and configured (auto-discovery)
-* `device_id` available in HA device registry (Settings → Devices → LaMetric → Device ID)
-* No additional Python packages required
+* The LaMetric integration set up in Home Assistant
+* The device id, set as `device_id` in the delivery's `data`. Find it in *Settings → Devices & services → LaMetric*,
+  or with the template `{{ device_id('notify.<name>') }}` for the `notify` entity the integration creates.
+
+A delivery without a `device_id` is skipped.
 
 ## Priority Mapping
 
-Priority Mapping
-
-SuperNotify priority → LaMetric display parameters (all auto-applied, all overridable):
+Each of these can be overridden with the data keys below.
 
 | SuperNotify | LaMetric priority | cycles | icon_type | sound  | icon  |
 | --          | --                | --     | --        | --     | --    |
-| critical.   | critical          | 0 (∞)  | alert.    | alarm1 | a1784 |
+| critical    | critical          | 0 (until dismissed) | alert | alarm1 | a1784 |
 | high        | warning           | 2      | alert     | knock-knock | i140 |
-| medium | info | 1 | info | notification | i2867 |
-| low | info | 1 | none | (silent) | i2867 |
-| minimum | info | 1 | none | (silent) | —
+| medium      | info              | 1      | info      | notification | i2867 |
+| low         | info              | 1      | none      | (silent) | i2867 |
+| minimum     | info              | 1      | none      | (silent) | (none) |
 
-All lametric_* keys are removed from ``data` before calling the underlying LaMetric Home Assistant action.
+## Data Keys
+
+* `device_id` — the LaMetric device id, **required**
+* `lametric_sound` — a built-in sound, such as `alarm1`…`alarm13`, `bicycle`, `cash`, `dog`, `knock-knock`,
+  `letter_email`, `notification`, `positive1`, `win`, `wind`
+* `lametric_icon` — an icon id from the [LaMetric icon gallery](https://developer.lametric.com/icons), such as `i2867`
+* `lametric_cycles` — times the notification is shown, `0` to stay until dismissed
+* `lametric_icon_type` — `none`, `info` or `alert`
+* `lametric_chart_data` — a list of numbers, sent as a bar chart with `lametric.chart` instead of the message
+* `lametric_simplify` — shorten the message and remove URLs (default `false`)
+
+Other `data` isn't passed on, since the LaMetric actions reject what they don't know.
 
 ## Example Configuration
 
-```yaml title="Supernotify configuration snippet"
-# Minimal — device_id required, all other params auto from priority
-deliveries:
-  - name: lametric
+```yaml title="Supernotify Configuration"
+delivery:
+  lametric:
     transport: lametric
     data:
       device_id: "49b6e2186ef37e164818aacb9cea1f53"
 
-# Doorbell — explicit overrides
-  - name: lametric_campanello
+  lametric_doorbell:
     transport: lametric
     data:
       device_id: "49b6e2186ef37e164818aacb9cea1f53"
@@ -59,64 +73,46 @@ deliveries:
       lametric_icon: "i140"
       lametric_icon_type: "alert"
       lametric_cycles: 2
-
-# Bar chart — temperature sensor (last 6 readings)
-  - name: lametric_temperatura
-    transport: lametric
-    data:
-      device_id: "49b6e2186ef37e164818aacb9cea1f53"
-      lametric_chart_data: [18, 20, 22, 21, 23, 24]
-      lametric_cycles: 3
 ```
 
 ## Example Call
 
-This example presumes Supernotify configured with this delivery.
-
-```yaml title="Supernotify configuration snippet"
-lametric_test:
-  transport: lametric
-  inclusion: explicit
-  data:
-    device_id: "<lametric-device-uuid>"
-    lametric_icon: "i2867"
-    lametric_sound: "notification"
+```yaml
+action: supernotify.notify
+data:
+  message: "Temperature trend"
+  delivery:
+    lametric:
+      data:
+        lametric_chart_data: [18, 20, 22, 21, 23, 24]
+        lametric_cycles: 3
 ```
 
-Then call this action ...
+And a message, with the archived result:
 
 ```yaml
 action: supernotify.notify
 data:
-  message: "Test transport nativo LaMetric - Se vedi questo sul display LaMetric, funziona!"
-  delivery_selection: fixed
-  delivery:
-    lametric_test:
-      enabled: true
+  message: "LaMetric smoke test - if you see this on the display, it works!"
+  delivery: lametric
 ```
-
-And the resulting archived notification looks like:
 
 ```json
 {
-  "delivered": 1, "failed": 0, "error_count": 0,
-  "stats": { "total_duration_ms": 8.5, "delivery_success_rate": 1.0 },
   "deliveries": {
-    "lametric_test": {
+    "lametric": {
       "delivered": [{
         "calls": [{
           "domain": "lametric", "action": "message",
           "action_data": {
-            "device_id": "<uuid>",
-            "message": "Test transport nativo LaMetric - ...",
+            "device_id": "49b6e2186ef37e164818aacb9cea1f53",
+            "message": "LaMetric smoke test - if you see this on the display, it works!",
             "cycles": 1,
             "priority": "info",
             "icon_type": "info",
             "icon": "i2867",
             "sound": "notification"
-          },
-          "elapsed": 0.0085,
-          "failed_calls": []
+          }
         }]
       }]
     }
@@ -126,8 +122,6 @@ And the resulting archived notification looks like:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `lametric` integration is already configured and no
-`lametric` delivery is defined, a `lametric` delivery is generated automatically — but since
-`device_id` has no automatic mapping to a recipient or entity, it only fires when selected
-explicitly (`data: {delivery: [lametric]}` or a scenario), not by default. You'll still
-need to supply `device_id` yourself.
+**Delivery (explicit selection).** If the `lametric` integration is configured and no `lametric` delivery is
+defined, a `lametric` delivery is generated automatically. It has no `device_id`, so it's only useful named in a
+call with one in its `data`. Defining your own delivery, with the `device_id`, is easier.

@@ -313,6 +313,12 @@ class HomeAssistantAPI:
                 return reg_entry.platform
         return None
 
+    def device_for_entity(self, entity_id: str) -> str | None:
+        """The device this entity belongs to, if any."""
+        entity_registry: EntityRegistry | None = self._entity_registry()
+        reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
+        return reg_entry.device_id if reg_entry else None
+
     def entity_spoken_names(self, entity_id: str) -> set[str]:
         """What an entity can be called, by entity_id, object_id, friendly name or alias - and by
         object_id then domain, so 'driveway camera' is camera.driveway - as spoken_name() has them"""

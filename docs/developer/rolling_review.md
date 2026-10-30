@@ -3,6 +3,8 @@
 
 ## Functionality
 
+Review the functionality across the code base, including architecture alignment with current Supernotify and Home Assistant including opportunities to simplify using newer platform features. Check also test coverage, including end to end flow gaps.  For documentation check gaps on explaining functionality, errors in text or examples. Ensure there is no user visible text, including for repairs/exceptions that is hard-coded for English and create translation keys for them.
+
 | Function                    | Review Date   | Fix Version |
 | --------------------------- | ------------- | ----------- |
 | Dupe Detection              |               |             |
@@ -43,6 +45,7 @@ Review the transport, including architecture alignment with current Supernotify 
 | `discord`            | 30th Oct 2026 | `v2.16.2`   |
 | `persistent`         | 30th Oct 2026 | `v2.16.2`   |
 | `pushover`           | 30th Oct 2026 | `v2.16.2`   |
-| `ntfy`               |               |             |
-| `lametric`           |               |             |
-| `matrix`             |               |             |
+| `ntfy`               | 30th Oct 2026 | `v2.16.2`   |
+| `lametric`           | 30th Oct 2026 | `v2.16.2`   |
+| `matrix`             | 30th Oct 2026 | `v2.16.2`   |
+| `gotify`             | 30th Oct 2026 | `v2.16.2`   |
