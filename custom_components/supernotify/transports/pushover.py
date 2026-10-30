@@ -1,17 +1,12 @@
 """Pushover transport for SuperNotify.
 
 Sends push notifications via Pushover (https://pushover.net).
-Requires the official HA Pushover integration configured in configuration.yaml:
+Requires the official HA Pushover integration, added from Settings > Devices & services
+with an API token and user key.
 
-    notify:
-      - name: pushover_home
-        platform: pushover
-        api_key: YOUR_PUSHOVER_API_KEY
-        user_key: YOUR_PUSHOVER_USER_KEY
-
-The notify service name (e.g. notify.pushover_home) MUST be specified as
-`action:` on the delivery - there is no default, since the name depends on
-the user's configuration.yaml entry.
+The notify service name (e.g. notify.pushover) is found automatically when the
+integration is set up. If it's named differently, or there are several accounts, set it as
+`action:` on the delivery.
 
 Priority mapping (SuperNotify -> Pushover integer):
     critical -> 2  (emergency: requires retry+expire, repeats until acknowledged)
@@ -41,13 +36,19 @@ Supported data keys (all optional unless noted):
                                      (links, bold, italic). Default: false.
     pushover_ttl        int          Seconds before automatic deletion of the
                                      notification from the device.
-    pushover_device     str          Send to a specific device (device name as
-                                     configured in Pushover, e.g. "iphone").
+    pushover_device     str|list     Send to specific devices (device names as
+                                     configured in Pushover, e.g. "iphone"),
+                                     passed as the service `target`.
                                      Default: all devices on the account.
+    pushover_tags       str|list     Tags for the notification. An emergency (priority=2)
+                                     with tags can be cancelled with the
+                                     `pushover.cancel` action.
     pushover_attach_image bool       Grab camera snapshot (uses
                                      media.camera_entity_id from the SuperNotify
                                      call) and attach it to the notification.
-                                     Requires TransportFeature.SNAPSHOT_IMAGE.
+                                     The media folder must be listed in
+                                     homeassistant.allowlist_external_dirs, or the
+                                     integration rejects the attachment.
 """
 
 from __future__ import annotations
@@ -55,9 +56,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify.common import boolify
+from custom_components.supernotify.common import boolify, ensure_list
 from custom_components.supernotify.const import TRANSPORT_PUSHOVER
 from custom_components.supernotify.model import (
     DebugTrace,
@@ -127,6 +128,7 @@ class PushoverTransport(Transport):
         html_flag = boolify(raw_data.pop("pushover_html", False), default=False)
         ttl_raw = raw_data.pop("pushover_ttl", None)
         device = raw_data.pop("pushover_device", None)
+        tags = raw_data.pop("pushover_tags", None)
         attach_image = boolify(raw_data.pop("pushover_attach_image", False), default=False)
 
         # --- Priority: validate override or use auto-mapping ---
@@ -207,7 +209,7 @@ class PushoverTransport(Transport):
             push_data["expire"] = expire_val
 
             if callback:
-                push_data["callback"] = callback
+                push_data["callback_url"] = callback
 
             _LOGGER.debug(
                 "SUPERNOTIFY pushover: emergency mode - retry=%ds expire=%ds",
@@ -229,8 +231,11 @@ class PushoverTransport(Transport):
                 push_data["ttl"] = int(ttl_raw)
             except TypeError, ValueError:
                 _LOGGER.warning("SUPERNOTIFY pushover: invalid pushover_ttl %r, ignored", ttl_raw)
+        if tags:
+            push_data["tags"] = [str(t) for t in ensure_list(tags)]
         if device:
-            push_data["device"] = device
+            # the integration takes devices as the notify target, and ignores a `device` in data
+            action_data[ATTR_TARGET] = [str(d) for d in ensure_list(device)]
 
         # --- Camera image attachment via envelope.grab_image() (v1.14.0+) ---
         if attach_image:

@@ -39,10 +39,10 @@ Review the transport, including architecture alignment with current Supernotify 
 | `html5`              | 29th Oct 2026 | `v2.16.1`   |
 | `media`              | 29th Oct 2026 | `v2.16.1`   |
 | `telegram`           | 29th Oct 2026 | `v2.16.1`   |
-| `kodi`               |               |             |
-| `discord`            |               |             |
-| `persistent`         |               |             |
-| `pushover`           |               |             |
+| `kodi`               | 30th Oct 2026 | `v2.16.2`   |
+| `discord`            | 30th Oct 2026 | `v2.16.2`   |
+| `persistent`         | 30th Oct 2026 | `v2.16.2`   |
+| `pushover`           | 30th Oct 2026 | `v2.16.2`   |
 | `ntfy`               |               |             |
 | `lametric`           |               |             |
 | `matrix`             |               |             |

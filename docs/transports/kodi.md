@@ -26,7 +26,7 @@ instances, and the camera snapshot as the overlay icon.
 ## Configuration
 
 Targets are the Kodi `media_player` entities; other targets are dropped and a delivery with no
-valid target fails.
+valid target is skipped.
 
 ```yaml
 delivery:
@@ -50,7 +50,9 @@ than an mDNS `.local` hostname, which some players cannot resolve when fetching 
 
 ## Discovery
 
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is
+generated automatically. It isn't used unless asked for, since a `media_player` target could equally be meant for
+`tts`, `media` or Alexa: name it in `delivery`, a scenario or a recipient, with the Kodi `media_player` entities as targets.
 
 ## Notes
 

@@ -63,6 +63,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -176,7 +177,8 @@ class KodiTransport(Transport):
         targets = envelope.target.entity_ids if envelope.target else []
         if not targets:
             _LOGGER.warning("SUPERNOTIFY kodi: no valid media_player targets")
-            self.record_error("no valid Kodi media_player targets", "deliver")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Coerce displaytime and clamp to the Kodi minimum

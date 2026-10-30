@@ -30,7 +30,7 @@ Notes on the HA `discord` notify service:
 - `target` is REQUIRED: a list of numeric Discord channel or user IDs
   (snowflakes, strings of digits). Without a target the service logs an
   error and sends nothing, so targets are pre-filtered here: non-numeric
-  entries are dropped with a debug log and an empty result fails the
+  entries are dropped with a debug log and an empty result skips the
   delivery (TargetRequired.ALWAYS, no sensible default exists).
 - There is no `title` field in the service schema: the title is composed
   into the message body as Discord markdown (`**title**` + newline +
@@ -60,6 +60,7 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
     DebugTrace,
+    SuppressionReason,
     TransportConfig,
     TransportFeature,
 )
@@ -148,7 +149,8 @@ class DiscordTransport(Transport):
         channels = self.select_channels(envelope)
         if not channels:
             _LOGGER.warning("SUPERNOTIFY discord: no valid targets (expected numeric channel or user IDs)")
-            self.record_error("no valid Discord channel or user ID targets", "deliver")
+            envelope.skipped = 1
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
 
         # Validate embed passthrough shape

@@ -31,7 +31,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from homeassistant.core import HomeAssistant
 
-from custom_components.supernotify.model import TargetRequired, TransportFeature
+from custom_components.supernotify.model import SuppressionReason, TargetRequired, TransportFeature
 from custom_components.supernotify.transport import PRIORITY_PREFIX
 from custom_components.supernotify.transports.discord import (
     _MAX_MESSAGE_LENGTH,
@@ -573,7 +573,8 @@ async def test_deliver_no_valid_targets_fails() -> None:
     result = await uut.deliver(envelope)
 
     assert result is False
-    uut.record_error.assert_called_once()
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    uut.record_error.assert_not_called()
     uut.call_action.assert_not_awaited()
 
 
@@ -585,7 +586,8 @@ async def test_deliver_empty_target_list_fails() -> None:
     result = await uut.deliver(envelope)
 
     assert result is False
-    uut.record_error.assert_called_once()
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    uut.record_error.assert_not_called()
     uut.call_action.assert_not_awaited()
 
 

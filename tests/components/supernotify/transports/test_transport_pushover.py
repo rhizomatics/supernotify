@@ -224,6 +224,19 @@ async def test_emergency_auto_retry_expire() -> None:
     assert push_data["expire"] == 3600
 
 
+async def test_emergency_invalid_retry_expire_use_defaults() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_PUSHOVER)
+
+    e = _envelope(ctx, priority=PRIORITY_CRITICAL, data={"pushover_retry": "soon", "pushover_expire": "later"})
+    await uut.deliver(e)
+
+    push_data = e.calls[0].action_data["data"]  # type: ignore[index]
+    assert push_data["retry"] == 60
+    assert push_data["expire"] == 3600
+
+
 async def test_emergency_explicit_retry_expire() -> None:
     """Emergency with explicit retry/expire -> used as specified."""
     ctx = _ctx()
@@ -303,7 +316,7 @@ async def test_emergency_callback_included() -> None:
         )
         await uut.deliver(e)
 
-    assert e.calls[0].action_data["data"]["callback"] == "https://homeassistant.local/api/webhook/ack"  # type: ignore[index]
+    assert e.calls[0].action_data["data"]["callback_url"] == "https://homeassistant.local/api/webhook/ack"  # type: ignore[index]
 
 
 async def test_non_emergency_no_retry_expire() -> None:
@@ -318,7 +331,7 @@ async def test_non_emergency_no_retry_expire() -> None:
     push_data = e.calls[0].action_data["data"]  # type: ignore[index]
     assert "retry" not in push_data
     assert "expire" not in push_data
-    assert "callback" not in push_data
+    assert "callback_url" not in push_data
 
 
 # ---------------------------------------------------------------------------
@@ -351,7 +364,42 @@ async def test_deliver_all_optional_fields() -> None:
     assert push_data["url_title"] == "Open HA"
     assert push_data["html"] == 1
     assert push_data["ttl"] == 3600
-    assert push_data["device"] == "iphone"
+    assert "device" not in push_data
+    assert e.calls[0].action_data["target"] == ["iphone"]  # type: ignore[index]
+
+
+@pytest.mark.parametrize(("tags", "expected"), [("alarm", ["alarm"]), (["alarm", "water"], ["alarm", "water"]), (123, ["123"])])
+async def test_tags_sent_as_list(tags: str | list[str] | int, expected: list[str]) -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_PUSHOVER)
+
+    e = _envelope(ctx, data={"pushover_tags": tags})
+    await uut.deliver(e)
+
+    assert e.calls[0].action_data["data"]["tags"] == expected  # type: ignore[index]
+
+
+async def test_device_list_sent_as_target() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_PUSHOVER)
+
+    e = _envelope(ctx, data={"pushover_device": ["iphone", "pixel"]})
+    await uut.deliver(e)
+
+    assert e.calls[0].action_data["target"] == ["iphone", "pixel"]  # type: ignore[index]
+
+
+async def test_numeric_device_sent_as_string_target() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_PUSHOVER)
+
+    e = _envelope(ctx, data={"pushover_device": 123})
+    await uut.deliver(e)
+
+    assert e.calls[0].action_data["target"] == ["123"]  # type: ignore[index]
 
 
 async def test_html_flag_maps_to_integer_1() -> None:
@@ -424,7 +472,7 @@ async def test_optional_fields_absent_when_not_set() -> None:
     await uut.deliver(e)
 
     push_data = e.calls[0].action_data["data"]  # type: ignore[index]
-    for key in ("sound", "url", "url_title", "html", "ttl", "device", "attachment", "callback"):
+    for key in ("sound", "url", "url_title", "html", "ttl", "device", "tags", "attachment", "callback_url"):
         assert key not in push_data, f"Field '{key}' should not be in the payload"
 
 

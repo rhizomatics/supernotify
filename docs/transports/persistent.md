@@ -12,21 +12,30 @@ tags:
 
 Place a notification on Home Assistant application screen.
 
-Pass a notification ID, either fixed in the transport or delivery configuration, or passed in the action `data`.
+The `title` and `message` are shown as they are, with no other `data`, and no target.
+
+Pass a `notification_id` in the action's `extra_data`, or fixed in the delivery's `data`. A later notification with
+the same ID replaces the earlier one, rather than adding another, and without an ID a new
+notification is always added.
+
+Unlike other discovered transports, the `persistent` delivery isn't selected by default, since a popup for
+every notification would be intrusive. Name it in `delivery`, or set `inclusion` to include it.
 
 ## Example
 
-Persistent notification has a Delivery automatically discovered where the integration is available, called `persistent`, so send like:
+A `persistent` delivery is created automatically, so send like:
 
 ```yaml
-  - action: supernotify.notify
+- action: supernotify.notify
+  data:
+    message: Testing an e-mail that also shows as persistent notification
     target:
       - homeowner@24acaciaavenue.com
-    data:
-        message: Testing an e-mail that also shows as persistent notification
-        delivery:
-          - email
-          - persistent
+    delivery:
+      - email
+      - persistent
+    extra_data:
+      notification_id: front_door
 ```
 
 

@@ -1,6 +1,20 @@
-## 🔥 Early Access
+## 🔥 New
 
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
+
+[Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
+
+# v2.16.2
+## ✨ Enhancements
+- *Pushover*: new `pushover_tags`, so an emergency can be cancelled by tag with the `pushover.cancel` action
+
+## 🐛 Bug fixes
+- *Kodi*, *Discord*: a delivery with no valid target was counted as a transport error. It's now skipped
+- *Pushover*
+  - `pushover_device` was sent in `data`, where the integration ignores it, so every device got the notification. Devices are now sent as the `target`, and a list is accepted
+  - `pushover_callback` was sent as `callback`, which the integration ignores, so an emergency was never acknowledged to the webhook. It's now sent as `callback_url`
+  - Docs rewritten: the integration is set up in the UI, not with `platform: pushover` YAML, the `allowlist_external_dirs` needed for images, all the data keys and their limits, and the example call corrected
+- *Persistent*: docs extended for `notification_id` replacing an earlier notification, and for the delivery being opt-in
 
 # v2.16.1
 ## ✨ Enhancements
