@@ -2,311 +2,194 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/
 
-Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
+Debugging notification rules, scenarios etc is much easier when each notification, complete with its debug trail, is archived.
 
-This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select.
+This preserves not just the notification data, but also key context like occupancy, and the decisions made on which scenarios and deliveries to select, and what happened to each delivery.
 
-Key fields to check if something doesn't seem right:
+Archiving is set up in the Supernotify integration's options, under *Settings → Devices & services → Supernotify → Configure → Archive*, and can go to any of:
 
-- `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
-- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
-- `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
+- **Files**, one per notification, which can be searched with the [`enquire_archive`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action, and which Supernotify's assistant tools use to answer questions about recent notifications
+- An **MQTT** topic
+- Home Assistant **events**, for example for [Remote Logger](https://remote-logger.rhizomatics.org.uk) to send to an OpenTelemetry or Syslog service
 
-A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
+Archiving has to be enabled for any of these, including events.
+
+## Options
+
+| Option                | Default               | Usage                                                                                            |
+| --------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| `enabled`             | off                   | Turn on archiving                                                                                |
+| `file_path`           | `supernotify/archive` | Directory for the archive files, relative to the Home Assistant config directory unless absolute |
+| `file_retention_days` | 3                     | Days to keep archive files before the nightly housekeeping removes them                          |
+| `purge_interval`      | 60                    | Minimum minutes between automatic purges                                                         |
+| `mqtt_topic`          | none                  | MQTT topic to publish each notification under, as `<mqtt_topic>/<file name>`                     |
+| `mqtt_qos`            | 0                     | MQTT quality of service                                                                          |
+| `mqtt_retain`         | on                    | Publish as MQTT retained messages                                                                |
+| `event_name`          | `supernotification`   | Home Assistant event type to fire                                                                |
+| `event_selection`     | none                  | Which notification outcomes fire an event, see [Outcomes](#outcomes)                             |
+| `diagnostics`         | `ERROR`               | Which notification outcomes are archived with full diagnostic content, see [Outcomes](#outcomes) |
+
+MQTT retained messages
+
+With `mqtt_retain` on, the broker keeps one retained message per notification, under its own topic, until something clears it. Supernotify's housekeeping only removes archive files, not MQTT messages, so turn `mqtt_retain` off unless something else clears them.
+
+## Archive Files
+
+Each notification is a JSON file named for the local time it was created, to the minute, and its id, for example `2026-10-30T05-57_6f129330-d461-11f1-9aab-3343dedd5bbc.json`. A housekeeping job runs each night to remove files older than `file_retention_days`, and the [`purge_archive`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action can do it immediately, with `days: 0` removing everything.
 
 Tip
 
-Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archived notifications.
+Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archive files, or the `enquire_archive` action to search them by date, outcome or priority.
 
-The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration for this is the same as for selecting [Event Generation](#event-generation). A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`, whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
+Key fields to check if something doesn't seem right:
 
-## Example Configuration
+- `outcome` - what happened overall, one of the [outcomes](#outcomes) below
+- `selected_deliveries` - what was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
+- `deliveries` - what happened to each delivery: `success`, `error` or `suppressed` for each message sent, with the action calls made and any that failed, or `skipped` with the reason if nothing was sent
+- `enabled_scenarios` and `occupancy` - the scenarios that applied, and who was in or out
 
-This example switches on both file system and MQTT topic archiving. Additional options (`mqtt_qos`, `mqtt_retain`) are available if needed to fine tune the MQTT publication.
+## Diagnostics
+
+An archived notification can be a record of the key details, or have the full diagnostic content as well, including its `debug_trace`. `diagnostics` chooses which outcomes get the full content, by default only those with an error. A notification sent with `debug: true` always gets the full content, whatever `diagnostics` is set to.
 
 ## Event Generation
 
-HomeAssistant [events](https://www.home-assistant.io/docs/configuration/events/) can be generated for notifications, with the option of full debug tracing. These can be consumed by other HomeAssistant integrations and automations, including by [Remote Logger](https://remote-logger.rhizomatics.org.uk) which can be used to send them off to an OpenTelemetry or Syslog service.
+Home Assistant [events](https://www.home-assistant.io/docs/configuration/events/) can be fired for notifications, carrying the same content as the archive file. These can be used to trigger automations, or sent elsewhere by [Remote Logger](https://remote-logger.rhizomatics.org.uk). Choose which outcomes fire an event with `event_selection`, which by default is none.
 
-Event generation is switched on by setting `event_selection` to the combination of notification outcomes desired, otherwise it will default to `NONE`
+Home Assistant's recorder saves events to its database, so an event for every notification with full diagnostics can make it grow quickly. Exclude the event type from the recorder if it's only needed live:
 
-The options for event policy selection are:
+Home Assistant Configuration
 
-| Policy Flag       | Usage                                                               |
-| ----------------- | ------------------------------------------------------------------- |
-| NONE              | Default, send no events. All other flags ignored if set             |
-| ALL               | Default, send all events. All other flags ignored if set            |
-| SUCCESS           | Successful delivery with no errors, misses or suppressions          |
-| NO_DELIVERY       | No deliveries made, with no errors                                  |
-| PARTIAL_DELIVERY  | Some deliveries made, others missed                                 |
-| FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
-| ERROR             | Notifications with at least one delivery error                      |
-| DUPE              | Notifications suppressed as duplicates                              |
-
-(These are the same options used for `diagnostics`)
+```yaml
+recorder:
+  exclude:
+    event_types:
+      - supernotification
+```
 
 See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) for more.
 
+## Outcomes
+
+`event_selection` and `diagnostics` take any combination of:
+
+| Outcome             | Usage                                                                       |
+| ------------------- | --------------------------------------------------------------------------- |
+| `SUCCESS`           | Delivered, with no errors, misses or suppressions                           |
+| `NO_DELIVERY`       | Nothing delivered, with no errors                                           |
+| `PARTIAL_DELIVERY`  | Some deliveries made, others missed                                         |
+| `FALLBACK_DELIVERY` | A fallback delivery made, after an error or with no other delivery applying |
+| `ERROR`             | At least one delivery error                                                 |
+| `DUPE`              | Suppressed as a duplicate                                                   |
+| `ALL`               | Every notification, whatever the outcome                                    |
+
+Selecting none means no notification - no events, or no full diagnostics.
+
 ## Example Notification
 
-```yaml
+A notification with a single delivery, as archived without full diagnostics:
+
+```json
 {
-  "created": "2025-11-04T15:09:21.375872+00:00",
-  "debug_trace": [
-    "A Car was detected on the Driveway camera.",
-    null,
-    {
-      "tag": "1762268908.791668-ksvmf7",
-      "group": "driveway-frigate-notification",
-      "color": "#03a9f4",
-      "subject": "",
-      "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-      "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-      "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "ttl": 0,
-      "priority": "high",
-      "alert_once": false,
-      "notification_icon": "mdi:homeassistant",
-      "sticky": false,
-      "channel": "alarm_stream",
-      "car_ui": false,
-      "fontsize": "large",
-      "position": "center",
-      "duration": 10,
-      "transparency": "0%",
-      "interrupt": false,
-      "subtitle": "",
-      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "attachment": {
-        "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-        "content-type": "application/vnd.apple.mpegurl"
-      },
-      "push": {
-        "sound": {
-          "name": "default",
-          "volume": 1.0
-        },
-        "interruption-level": 1
-      },
-      "entity_id": "camera.driveway",
-      "actions": [
-        {
-          "action": "URI",
-          "title": "View Clip",
-          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-          "icon": "",
-          "destructive": false
-        },
-        {
-          "action": "URI",
-          "title": "View Snapshot",
-          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
-          "icon": "",
-          "destructive": false
-        },
-        {
-          "action": "silence-automation.generate_apple_event_for_frigate_driveway",
-          "title": "Silence New Notifications",
-          "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
-          "icon": "",
-          "destructive": true
-        }
-      ]
-    },
-    null,
-    {},
-    {
-      "override_disable_deliveries": [],
-      "override_enable_deliveries": [],
-      "scenario_enable_deliveries": [
-        "email",
-        "alexa_announce",
-        "mobile_push",
-        "high_chime_alert"
-      ],
-      "default_enable_deliveries": [],
-      "scenario_disable_deliveries": [
-        "html_email",
-        "alexa_inform",
-        "chime_person",
-        "chime_dog",
-        "chime_doorbell",
-        "chime_unknown_vehicle",
-        "chime_known_vehicle",
-        "chime_red_alert",
-        "upstairs_siren",
-        "downstairs_siren"
-      ]
-    }
-  ],
-  "_message": "A Car was detected on the Driveway camera.",
-  "target": [],
-  "_title": null,
-  "id": "3deb818c-b990-11f0-a89d-000c29e67c70",
-  "snapshot_image_path": null,
-  "delivered": 0,
-  "errored": 0,
-  "skipped": 0,
-  "delivery_error": null,
-  "data": {
-    "tag": "1762268908.791668-ksvmf7",
-    "group": "driveway-frigate-notification",
-    "color": "#03a9f4",
-    "subject": "",
-    "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-    "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-    "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-    "ttl": 0,
-    "alert_once": false,
-    "notification_icon": "mdi:homeassistant",
-    "sticky": false,
-    "channel": "alarm_stream",
-    "car_ui": false,
-    "fontsize": "large",
-    "position": "center",
-    "duration": 10,
-    "transparency": "0%",
-    "interrupt": false,
-    "subtitle": "",
-    "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-    "attachment": {
-      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-      "content-type": "application/vnd.apple.mpegurl"
-    },
-    "push": {
-      "sound": {
-        "name": "default",
-        "volume": 1.0
-      },
-      "interruption-level": 1
-    },
-    "entity_id": "camera.driveway"
-  },
+  "id": "6f129330-d461-11f1-9aab-3343dedd5bbc",
+  "outcome": "success",
+  "created": "2026-10-30T05:57:16.559931+00:00",
+  "title": "Security",
+  "message": "Front door opened",
   "priority": "high",
-  "message_html": null,
-  "required_scenario_names": [],
+  "stats": {
+    "total_duration_ms": 1.0,
+    "slowest_delivery": "dummy",
+    "fastest_delivery": "dummy",
+    "delivery_success_rate": 1.0
+  },
+  "delivered": 1,
+  "failed": 0,
+  "suppressed": 0,
+  "skipped": 0,
+  "missed": 0,
+  "fallback": 0,
+  "error_count": 0,
+  "dupe": false,
+  "force_resend": false,
+  "delivery_selection": "implicit",
+  "delivery_overrides": {},
+  "selected_deliveries": {
+    "dummy": null
+  },
+  "delivery_provenance": {
+    "dummy": {
+      "enabled_by": ["default"]
+    }
+  },
   "applied_scenario_names": [],
   "constrain_scenario_names": [],
-  "delivery_selection": "implicit",
-  "delivery_overrides_type": "NoneType",
-  "delivery_overrides": {},
-  "action_groups": [
-    "alarm_panel",
-    "lights"
-  ],
-  "media": {
-    "snapshot_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-    "clip_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8"
+  "required_scenario_names": [],
+  "enabled_scenarios": [],
+  "selected_scenario_names": [],
+  "delivery_exceptions": {},
+  "uncategorized_targets": {},
+  "unassigned_targets": {},
+  "deliveries": {
+    "dummy": {
+      "success": [
+        {
+          "target": {},
+          "delivery_name": "dummy",
+          "notification_id": "6f129330-d461-11f1-9aab-3343dedd5bbc",
+          "priority": "high",
+          "data": {},
+          "id": "6f129330-d461-11f1-9aab-3343dedd5bbc_dummy",
+          "message": "Front door opened",
+          "title": "Security",
+          "delivered": 1,
+          "error_count": 0,
+          "skipped": 0,
+          "skip_reason": null,
+          "calls": [
+            {
+              "timestamp": "2026-10-30T05:57:16.563211+00:00",
+              "domain": "notify",
+              "action": "dummy",
+              "action_data": {
+                "message": "Front door opened",
+                "title": "Security"
+              },
+              "elapsed": 0.001,
+              "debug": false
+            }
+          ],
+          "failed_calls": [],
+          "delivery_error": null
+        }
+      ]
+    }
   },
+  "original_context": {
+    "id": "01M66E5KGF5VPR7AVE73F1TDQK",
+    "parent_id": null,
+    "user_id": null
+  },
+  "version": "2.16.2",
+  "dry_run": "live",
+  "action_groups": [],
+  "media": {},
   "debug": false,
-  "actions": [
-    {
-      "action": "URI",
-      "title": "View Clip",
-      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "icon": "",
-      "destructive": false
-    },
-    {
-      "action": "URI",
-      "title": "View Snapshot",
-      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
-      "icon": "",
-      "destructive": false
-    },
-    {
-      "action": "silence-automation.generate_apple_event_for_frigate_driveway",
-      "title": "Silence New Notifications",
-      "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
-      "icon": "",
-      "destructive": true
-    }
-  ],
-  "delivery_results": {},
-  "delivery_errors": {},
-  "selected_delivery_names": [
-    "high_chime_alert",
-    "mobile_push",
-    "alexa_devices_announce_all",
-    "email"
-  ],
-  "enabled_scenarios": {
-    "high_alert": {
-      "name": "high_alert",
-      "enabled": true,
-      "alias": "make a fuss if alarm armed or high priority",
-      "media": null,
-      "delivery_selection": "implicit",
-      "action_groups": [
-        "alarm_panel",
-        "lights"
-      ],
-      "delivery": {
-        "email": null,
-        "alexa_devices_announce_all": null,
-        "mobile_push": null,
-        "high_chime_alert": null
-      },
-      "default": false
-    }
-  },
-  "selected_scenario_names": [
-    "high_alert"
-  ],
-  "people_by_occupancy": [],
-  "suppressed": "DUPE",
   "occupancy": {
-    "home": [
-      {
-        "person": "person.joe_mctoe",
-        "email": "joe@mctoefamily.net",
-        "phone_number": "+4377332010983",
-        "delivery": {},
-        "mobile_devices": [
-          {
-            "manufacturer": "Apple",
-            "model": "iPhone15,2",
-            "mobile_app_id": "mobile_app_joephonepro",
-            "device_tracker": "device_tracker.joephonepro",
-            "device_id": "a0591c4af99b6a4037f7346f390e9918",
-            "device_name": "jPhonePro"
-          }
-        ],
-        "mobile_discovery": true,
-        "user_id": "cbed93ea6eac7d575710dc519e5e3dc1",
-        "state": "home"
-      },
-      {
-        "person": "person.jane_mctoe",
-        "email": "jane@mctoefamily.org",
-        "delivery": {},
-        "mobile_devices": [
-          {
-            "manufacturer": "Apple",
-            "model": "iPhone13,2",
-            "mobile_app_id": "mobile_app_jane_s_iphone_13",
-            "device_tracker": "device_tracker.jane_s_iphone_13",
-            "device_id": "71ba297a58a3b601e1646c54d0e23dbf",
-            "device_name": "Jane's iPhone 13"
-          }
-        ],
-        "mobile_discovery": true,
-        "user_id": "1cba227f2c0cb65cfd3cafde6ce0c4d8",
-        "state": "home"
-      }
-    ],
+    "home": [],
     "not_home": []
   },
   "condition_variables": {
-    "occupancy": [
-      "ALL_HOME"
-    ],
     "applied_scenarios": [],
     "required_scenarios": [],
     "constrain_scenarios": [],
+    "notification_message": "Front door opened",
+    "notification_title": "Security",
     "notification_priority": "high",
-    "notification_message": "A Car was detected on the Driveway camera.",
-    "notification_title": ""
+    "occupancy": ["UNDEFINED_OCCUPANTS"],
+    "notification_data": {},
+    "camera": {}
   }
 }
 ```

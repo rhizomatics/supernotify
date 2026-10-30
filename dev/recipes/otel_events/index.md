@@ -12,14 +12,9 @@ Consolidate the notification events with Home Assistant's own system logs, so fu
 
 ### 1. Switch on event archiving
 
-In this example not all messages are sent, successful and partial deliveries are ignored.
+In the Supernotify integration's options, under *Configure → Archive*, turn on archiving and, in the *Event* section, choose the outcomes to send as events. In this example not all notifications are sent, successful and partial deliveries are ignored, so pick *No Delivery*, *Fallback Delivery* and *Error*.
 
-supernotify config
-
-```yaml
-    archive:
-      event_selection: NO_DELIVERY | BACKUP_DELIVERY | ERROR
-```
+See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/#event-generation) for the options, and for keeping the events out of the recorder database.
 
 ### 2. Configure Remote Logger
 
