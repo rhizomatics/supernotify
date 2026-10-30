@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">358 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">341<span class="text"> run</span></button>
+            <span class="text">357 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">340<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">17<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">7<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_model_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-30 13:16 +0000
+            created at 2026-10-30 15:41 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -638,9 +638,9 @@
     <p class="pln"><span class="n"><a id="t556" href="#t556">556</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t557" href="#t557">557</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">initialize</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">hass_api</span><span class="op">:</span> <span class="nam">HomeAssistantAPI</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t558" href="#t558">558</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">hass_api</span> <span class="op">=</span> <span class="nam">hass_api</span>  <span class="com"># TODO: should not be set on initialize</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t559" href="#t559">559</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">.</span><span class="nam">is_absolute</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t560" href="#t560">560</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">.</span><span class="nam">absolute</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t561" href="#t561">561</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">&quot;SUPERNOTIFY Media path updated to %s&quot;</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t559" href="#t559">559</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t560" href="#t560">560</a></span><span class="t">            <span class="com"># a relative path is within the Home Assistant config directory</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t561" href="#t561">561</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">hass_api</span><span class="op">.</span><span class="nam">config_path</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t562" href="#t562">562</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span> <span class="key">and</span> <span class="key">not</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t563" href="#t563">563</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">&quot;SUPERNOTIFY Media path not found at %s, attempting to create.&quot;</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">media_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -751,7 +751,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_model_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-30 13:16 +0000
+            created at 2026-10-30 15:41 +0000
         </p>
     </div>
 </footer>

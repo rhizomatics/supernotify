@@ -1206,12 +1206,11 @@
         },
         "mqtt_retain": {
           "type": "boolean",
-          "default": true
+          "default": false
         },
         "purge_interval": {
           "type": "integer",
-          "minimum": 0,
-          "default": 60
+          "minimum": 0
         },
         "event_name": {
           "type": "string",
