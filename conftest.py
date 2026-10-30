@@ -7,6 +7,7 @@ import logging
 import pathlib
 import threading
 from dataclasses import dataclass
+from shutil import copytree
 from typing import TYPE_CHECKING, Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
@@ -33,6 +34,7 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import get_scheduled_timer_handles
+from pytest_homeassistant_custom_component.common import get_test_config_dir
 from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
     INSTANCES,
     HASocketBlockedError,
@@ -99,10 +101,13 @@ class DummyNotificationService(BaseNotificationService):
 
 
 @pytest.fixture
-def hass_config_dir(hass_tmp_config_dir: str) -> str:
+def hass_config_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
     """A throwaway Home Assistant config dir, so the media, archive and template paths, relative
-    to it by default, leave nothing behind in the shared testing_config"""
-    return hass_tmp_config_dir
+    to it by default, leave nothing behind in the shared testing_config - apart from the test's
+    own tmp_path, which tests use for media and archive directories of their own"""
+    config_dir: pathlib.Path = tmp_path_factory.mktemp("hass_config")
+    copytree(get_test_config_dir(), config_dir, symlinks=True, dirs_exist_ok=True)
+    return str(config_dir)
 
 
 @pytest.fixture
