@@ -51,6 +51,7 @@ Why not `occupancy`?
 Why not time of day?
   `ARMED_NIGHT` covers some of that, although there are bigger gaps - 1) day/night during `ARMED_AWAY` or `ARMED_VACATION` and 2) night-time vs bed-time, such as switch on floodlights if its dark but only squelch announcements when its bedtime (it can be dark at 4pm in Scottish winter and bright daylight at 4am in summer)
     - Auto Arm now by default more closely follows HA alarm convention, so `ARMED_NIGHT` is bed time, and occupied darkness pre-bed time is `ARMED_HOME`
+
 Why not existing selector?
   Intention to keep it simple, without 2nd level mapping and regexp. However that doesnt have to be exposed via UI
 
@@ -61,6 +62,8 @@ delivery:
          include:
             - PRIORITY_CRITICAL_ARMED_ANY
             - PRIORITY_CRITICAL_DISARMED
+            - PRIORITY_CRITICAL # implies ARMED_ANY
+            - ARMED_VACATION # implies PRIORITY_ANY
             ...
      alexa_devices:
        quick_select:
@@ -68,4 +71,33 @@ delivery:
             - PRIORITY_ANY_ARMED_AWAY
             - PRIORITY_MINIMAL_ARMED_ANY
             - PRIORITY_MINIMAL_DISARMED
+ ```
+
+ Why a mix of notification state and property status?
+  Priority from notification, armed status is of the house
+  Armed status condenses several property status
+
+  This mode of separate selectors is ostensibly simpler, but makes it harder to do AND/OR conditions simply, e.g. "critical priority OR (high priority AND alarm armed)"
+
+```yaml title="Using separate selectors"
+delivery:
+    siren:
+      alarm_status:
+         include:
+            - ARMED_ANY
+            - ARMED_VACATION
+            ...
+      priority:
+         include:
+            - PRIORITY_CRITICAL
+            ...
+     alexa_devices:
+       alarm_status:
+         exclude:
+            - ARMED_HOME
+            - DISARMED
+        priority:
+          exclude:
+            - PRIORITY_MINIMAL
+
  ```

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import pathlib
 import tempfile
 import uuid
@@ -349,6 +350,9 @@ class TestingContext(Context):
             # here - an unconfigured Mock trips `Path(hass.config.config_dir)` with a TypeError,
             # which load_storage() logs as a misleading "Unable to load storage" warning
             self.hass.config.config_dir = tempfile.mkdtemp(prefix="supernotify_test_")
+            # like a real Config.path(), relative to the config dir
+            config_dir: str = self.hass.config.config_dir
+            self.hass.config.path = lambda *path: os.path.join(config_dir, *path)
             self.hass.data = {}
             self.device_registry = AsyncMock(spec=DeviceRegistry)
             self.device_registry.devices = [dev for dev in self.devices.values() if dev.discover]

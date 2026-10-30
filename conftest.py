@@ -263,7 +263,8 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked.entity_ids_for_domain.return_value = []
     mocked.entity_ids_for_platform.return_value = []
     mocked.translations.side_effect = english_translations
-    mocked.config_path = Mock(side_effect=lambda path: path)
+    # like a real config_path(), relative to the config dir
+    mocked.config_path = Mock(side_effect=lambda path: str(pathlib.Path(mock_hass.config.config_dir) / path))
     return mocked
 
 

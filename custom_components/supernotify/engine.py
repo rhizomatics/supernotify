@@ -139,7 +139,7 @@ class SupernotifyEngine:
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(
-                hass_api.config_path(media_path) if media_path else None,
+                media_path,
                 media_url_prefix=media_url_prefix,
                 days=self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7),
             ),
