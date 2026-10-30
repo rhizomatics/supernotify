@@ -79,7 +79,7 @@ delivery:
 
   This mode of separate selectors is ostensibly simpler, but makes it harder to do AND/OR conditions simply, e.g. "critical priority OR (high priority AND alarm armed)"
 
-```yaml title="Using separate selectors"
+```yaml title="Using separate selectors - REJECT"
 delivery:
     siren:
       alarm_status:
