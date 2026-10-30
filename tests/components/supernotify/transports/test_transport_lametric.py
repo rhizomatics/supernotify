@@ -95,11 +95,52 @@ def test_supported_features_no_images_actions_spoken():
     assert not (f & TransportFeature.SPOKEN)
 
 
-def test_default_config_target_required_never():
+def test_default_config_target_required_optional():
+    # optional, so a delivery with a fixed device_id in data needs no target
     t = _make_transport()
     cfg = t.default_config
     assert isinstance(cfg, TransportConfig)
-    assert cfg.delivery_defaults.target_required == TargetRequired.NEVER
+    assert cfg.delivery_defaults.target_required == TargetRequired.OPTIONAL
+
+
+@pytest.mark.asyncio
+async def test_deliver_to_device_of_each_notify_entity_target():
+    t = _make_transport()
+    devices = {"notify.lametric_kitchen": "kitchen_dev", "notify.lametric_office": "office_dev", "notify.lametric_gone": None}
+    t.hass_api.device_for_entity = devices.get
+    env = _make_envelope(data={"device_id": "kitchen_dev"})
+    env.target.domain_entity_ids.return_value = list(devices)
+    t.call_action = AsyncMock(return_value=True)
+
+    assert await t.deliver(env) is True
+
+    sent_to = [c.kwargs["action_data"]["device_id"] for c in t.call_action.await_args_list]
+    assert sent_to == ["kitchen_dev", "office_dev"]
+
+
+@pytest.mark.asyncio
+async def test_deliver_entity_target_wins_over_device_id():
+    t = _make_transport()
+    t.hass_api.device_for_entity = {"notify.lametric_office": "office_dev"}.get
+    env = _make_envelope(data={"device_id": "kitchen_dev"})
+    env.target.domain_entity_ids.return_value = ["notify.lametric_office"]
+    t.call_action = AsyncMock(return_value=True)
+
+    await t.deliver(env)
+
+    assert [c.kwargs["action_data"]["device_id"] for c in t.call_action.await_args_list] == ["office_dev"]
+
+
+@pytest.mark.asyncio
+async def test_deliver_fails_if_any_display_fails():
+    t = _make_transport()
+    t.hass_api.device_for_entity = {"notify.lametric_office": "office_dev", "notify.lametric_hall": "hall_dev"}.get
+    env = _make_envelope()
+    env.target.domain_entity_ids.return_value = ["notify.lametric_office", "notify.lametric_hall"]
+    t.call_action = AsyncMock(side_effect=[True, False])
+
+    assert await t.deliver(env) is False
+    assert t.call_action.await_count == 2
 
 
 def test_validate_action_always_true():

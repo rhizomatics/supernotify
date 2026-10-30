@@ -9,8 +9,8 @@ Only the fields ntfy.publish accepts are passed on: its schema rejects any other
 rest of the notification's data, meant for other deliveries, is dropped.
 
 Supported data: keys (all optional):
-    ntfy_device_id   str         device_id of an ntfy topic, used as well as, or instead of,
-                                 a ntfy `notify` entity target
+    ntfy_device_id   str         device_id of an ntfy topic, used when no ntfy `notify`
+                                 entity is targeted
     ntfy_priority    int         5=urgent, 4=high, 3=default, 2=low, 1=min
     ntfy_tags        list[str]   tag/emoji shortcodes (e.g. ["warning", "house"])
     ntfy_click       str         URL opened on notification tap
@@ -218,10 +218,7 @@ class NtfyTransport(Transport):
         if raw_data:
             _LOGGER.debug("SUPERNOTIFY ntfy: dropping data keys not accepted by ntfy.publish: %s", sorted(raw_data))
 
-        target_data: dict[str, Any] = {}
-        if entity_ids:
-            target_data[ATTR_ENTITY_ID] = entity_ids
-        if device_id:
-            target_data[ATTR_DEVICE_ID] = device_id
+        # targeted entities win over a fixed device, like mqtt's topic
+        target_data: dict[str, Any] = {ATTR_ENTITY_ID: entity_ids} if entity_ids else {ATTR_DEVICE_ID: device_id}
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

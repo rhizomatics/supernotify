@@ -23,13 +23,16 @@ The LaMetric transport adds:
 
 The display has no room for a title, so only the message is shown.
 
-## Requirements
+## Targets
 
-* The LaMetric integration set up in Home Assistant
-* The device id, set as `device_id` in the delivery's `data`. Find it in *Settings → Devices & services → LaMetric*,
-  or with the template `{{ device_id('notify.<name>') }}` for the `notify` entity the integration creates.
+Target the `notify` entity the LaMetric integration creates for each display, for example `notify.lametric_kitchen`,
+directly or through a recipient. The `lametric` delivery is selected for these entities ahead of the generic
+[Notify Entity](notify_entity.md) one, without needing to be named, and each display targeted is sent the notification.
 
-A delivery without a `device_id` is skipped.
+Alternatively, fix the display on a delivery with `device_id` in its `data`, used when no LaMetric entity is targeted.
+Find it in *Settings → Devices & services → LaMetric*, or with the template `{{ device_id('notify.lametric_kitchen') }}`.
+
+A delivery with neither is skipped.
 
 ## Priority Mapping
 
@@ -45,7 +48,7 @@ Each of these can be overridden with the data keys below.
 
 ## Data Keys
 
-* `device_id` — the LaMetric device id, **required**
+* `device_id` — the LaMetric device id, used when no LaMetric `notify` entity is targeted
 * `lametric_sound` — a built-in sound, such as `alarm1`…`alarm13`, `bicycle`, `cash`, `dog`, `knock-knock`,
   `letter_email`, `notification`, `positive1`, `win`, `wind`
 * `lametric_icon` — an icon id from the [LaMetric icon gallery](https://developer.lametric.com/icons), such as `i2867`
@@ -88,7 +91,16 @@ data:
         lametric_cycles: 3
 ```
 
-And a message, with the archived result:
+And a message to a display's entity, with no delivery configured:
+
+```yaml
+action: supernotify.notify
+data:
+  message: "Washing done"
+  target: notify.lametric_kitchen
+```
+
+Or to the configured delivery, with the archived result:
 
 ```yaml
 action: supernotify.notify
@@ -122,6 +134,6 @@ data:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `lametric` integration is configured and no `lametric` delivery is
-defined, a `lametric` delivery is generated automatically. It has no `device_id`, so it's only useful named in a
-call with one in its `data`. Defining your own delivery, with the `device_id`, is easier.
+**Delivery (default selection).** If the `lametric` integration is configured and no `lametric` delivery is
+defined, a `lametric` delivery is generated automatically. It's used when a target is one of the integration's
+`notify` entities, and otherwise not, since it has no display to send to.

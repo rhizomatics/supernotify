@@ -26,7 +26,7 @@ topic).
 Transports whose target category is itself ambiguous (kodi, tts, and the generic
 `media` transport all match a bare `media_player` entity, so there's no reliable
 way to tell which one a given entity was meant for), that declare no target
-category at all (lametric, pushover, gotify), or where firing unprompted
+category at all (pushover, gotify), or where firing unprompted
 would simply be unwelcome (persistent) - declare no unique/fallback categories, so
 `default_inclusion()` infers `explicit` for them, same as before this mechanism
 existed, without needing to say so per-transport any more.
@@ -136,7 +136,11 @@ async def test_unused_transport_log_level_depends_on_config(
 
 @pytest.mark.parametrize(
     ("transport_name", "domain"),
-    {k: v for k, v in CONFIG_ENTRY_EXPLICIT.items() if k not in (TRANSPORT_MQTT, TRANSPORT_TELEGRAM, TRANSPORT_NTFY)}.items(),
+    {
+        k: v
+        for k, v in CONFIG_ENTRY_EXPLICIT.items()
+        if k not in (TRANSPORT_MQTT, TRANSPORT_TELEGRAM, TRANSPORT_NTFY, TRANSPORT_LAMETRIC)
+    }.items(),
 )
 async def test_auto_configure_with_config_entry_never_matches(hass: HomeAssistant, transport_name: str, domain: str) -> None:
     entry = MockConfigEntry(domain=domain, data={})
@@ -179,6 +183,19 @@ async def test_ntfy_auto_configure_with_config_entry_is_default(hass: HomeAssist
     result = uut.build_standard_deliveries(ctx.hass_api)
     # the integration's own notify entities are claimed, so it can be selected by default
     dc = DeliveryConfig(result[TRANSPORT_NTFY], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_DEFAULT]
+
+
+async def test_lametric_auto_configure_with_config_entry_is_default(hass: HomeAssistant) -> None:
+    MockConfigEntry(domain="lametric", data={}).add_to_hass(hass)
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_LAMETRIC)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    # the integration's own notify entities are claimed, so it can be selected by default
+    dc = DeliveryConfig(result[TRANSPORT_LAMETRIC], uut.delivery_defaults)
     assert dc.inclusion == [INCLUSION_DEFAULT]
 
 

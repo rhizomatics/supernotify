@@ -7,7 +7,8 @@
 # v2.16.2
 ## ✨ Enhancements
 - *Pushover*: new `pushover_tags`, so an emergency can be cancelled by tag with the `pushover.cancel` action
-- *ntfy*: the `notify` entity the ntfy integration creates for each topic can be a target, selecting the `ntfy` delivery ahead of the generic Notify Entity one, so it gets priority, images and buttons. `ntfy_device_id` is no longer required
+- *ntfy*: the `notify` entity the ntfy integration creates for each topic can be a target, selecting the `ntfy` delivery ahead of the generic Notify Entity one, so it gets priority, images and buttons. `ntfy_device_id` is no longer required, and is used when no ntfy entity is targeted
+- *LaMetric*: the `notify` entity the LaMetric integration creates for each display can be a target, selecting the `lametric` delivery ahead of the generic Notify Entity one, so it gets priority sounds, icons and charts. Several displays can be targeted at once. `device_id` is no longer required, and is used when no LaMetric entity is targeted
 
 ## 🐛 Bug fixes
 - *Kodi*, *Discord*, *Matrix*: a delivery with no valid target was counted as a transport error. It's now skipped
@@ -18,6 +19,7 @@
 - *LaMetric*
   - The title was recorded as sent, though LaMetric has no title and it was never shown. The docs now say only the message is shown
   - Without a `device_id`, the delivery was counted as failed, logged only at debug level. It's now skipped with a warning
+  - `lametric_chart_data` that wasn't a list was dropped with only a debug log. It's now a warning
   - Docs rewritten: the delivery config used a list rather than the `delivery:` mapping, the data keys listed, and the example call corrected
 - *Gotify*: docs rewritten: the delivery config used `deliveries:` rather than `delivery:`, the default delivery is only used when named, failures in the HACS integration aren't seen by Supernotify, and outdated notes removed
 - *Pushover*

@@ -28,7 +28,8 @@ Target the `notify` entity of an ntfy topic, for example `notify.ntfy_alerts`, d
 The `ntfy` delivery is selected for these entities ahead of the generic [Notify Entity](notify_entity.md) one,
 without needing to be named.
 
-Alternatively, fix the topic on a delivery with `ntfy_device_id`, the topic's device id. Find it in
+Alternatively, fix the topic on a delivery with `ntfy_device_id`, the topic's device id, used when no ntfy entity
+is targeted. Find it in
 *Settings → Devices & services → ntfy*, or with the template `{{ device_id('notify.ntfy_alerts') }}`.
 
 A delivery with neither is skipped.
@@ -40,7 +41,7 @@ All are optional, and only the fields `ntfy.publish` accepts are passed on: its 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ntfy_device_id` | `str` | — | Device id of an ntfy topic, sent to as well as any targeted entities |
+| `ntfy_device_id` | `str` | — | Device id of an ntfy topic, used when no ntfy `notify` entity is targeted |
 | `ntfy_priority` | `int` 1–5 | from priority | Override the priority (5=urgent, 1=min); anything else is ignored |
 | `ntfy_tags` | `list[str]` | — | Tags, shown as emoji where they match an [ntfy shortcode](https://docs.ntfy.sh/emojis/), e.g. `["warning", "house"]` |
 | `ntfy_click` | `str` (URL) | notification action `uri` | URL opened when the notification is tapped |

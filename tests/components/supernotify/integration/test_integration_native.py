@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -49,13 +50,20 @@ STUB_ACTIONS = [
 
 
 async def native_house(hass: HomeAssistant) -> House:
-    for domain in ("kodi", "ntfy", "lametric"):
+    for domain in ("kodi", "ntfy"):
         MockConfigEntry(domain=domain, data={}).add_to_hass(hass)
     entity_registry = er.async_get(hass)
     lounge = entity_registry.async_get_or_create("media_player", "kodi", "lounge_id", suggested_object_id="kodi_lounge")
     hass.states.async_set(lounge.entity_id, "idle")
     topic = entity_registry.async_get_or_create("notify", "ntfy", "alerts_id", suggested_object_id="ntfy_alerts")
     hass.states.async_set(topic.entity_id, "unknown")
+    lametric_entry = MockConfigEntry(domain="lametric", data={})
+    lametric_entry.add_to_hass(hass)
+    display = dr.async_get(hass).async_get_or_create(config_entry_id=lametric_entry.entry_id, identifiers={("lametric", "sn1")})
+    clock = entity_registry.async_get_or_create(
+        "notify", "lametric", "sn1-message", suggested_object_id="lametric_kitchen", device_id=display.id
+    )
+    hass.states.async_set(clock.entity_id, "unknown")
     for action in STUB_ACTIONS:
         domain, service = action.split(".", 1)
         hass.services.async_register(domain, service, AsyncMock())
@@ -187,6 +195,20 @@ async def test_lametric_shows_message_without_title(hass: HomeAssistant) -> None
         assert shown.data["message"] == "Door open"
         assert shown.data["priority"] == "critical"
         assert shown.data["cycles"] == 0
+    finally:
+        house.cleanup()
+
+
+async def test_lametric_selected_for_its_own_notify_entity(hass: HomeAssistant) -> None:
+    house = await native_house(hass)
+    try:
+        await house.call("""
+            message: Washing done
+            target: notify.lametric_kitchen
+        """)
+        (shown,) = calls(house, "lametric", "message")
+        assert shown.data["device_id"] == dr.async_get(hass).async_get_device(identifiers={("lametric", "sn1")}).id  # type: ignore[union-attr]
+        assert not calls(house, "notify", "send_message")
     finally:
         house.cleanup()
 

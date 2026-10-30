@@ -19,8 +19,8 @@ looked up, or a fixed device_id in the delivery config data:
 There's no room for a title on the display, so only the message is shown.
 
 New data keys (all optional unless noted):
-    device_id           str       LaMetric device UUID from HA device registry, sent to
-                                  as well as any targeted LaMetric notify entities.
+    device_id           str       LaMetric device UUID from HA device registry, used when
+                                  no LaMetric notify entity is targeted.
                                   Obtain from: HA Settings → Devices → LaMetric → device ID.
                                   Example: "49b6e2186ef37e164818aacb9cea1f53"
     lametric_sound      str       Built-in sound name. Overrides priority default.
@@ -164,14 +164,16 @@ class LaMetricTransport(Transport):
         return [TargetEntityCategory(domain="notify", platform=HA_LAMETRIC_DOMAIN)]
 
     def device_ids(self, envelope: Envelope, device_id: str | None) -> list[str]:
-        """The fixed device_id, then the device of each targeted LaMetric notify entity"""
-        device_ids: list[str] = [device_id] if device_id else []
+        """The device of each targeted LaMetric notify entity, or else the fixed device_id, like mqtt's topic"""
+        device_ids: list[str] = []
         for entity_id in envelope.target.domain_entity_ids("notify") if envelope.target else []:
             entity_device_id: str | None = self.hass_api.device_for_entity(entity_id)
             if entity_device_id is None:
                 _LOGGER.warning("SUPERNOTIFY lametric: no device found for %s", entity_id)
             elif entity_device_id not in device_ids:
                 device_ids.append(entity_device_id)
+        if not device_ids and device_id:
+            device_ids.append(device_id)
         return device_ids
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
@@ -193,9 +195,7 @@ class LaMetricTransport(Transport):
         # 2. Displays to send to, from device_id in data or LaMetric notify entity targets
         device_ids: list[str] = self.device_ids(envelope, raw_data.pop("device_id", None))
         if not device_ids:
-            _LOGGER.warning(
-                "SUPERNOTIFY lametric: no LaMetric notify entity target or device_id in delivery data, skipping"
-            )
+            _LOGGER.warning("SUPERNOTIFY lametric: no LaMetric notify entity target or device_id in delivery data, skipping")
             envelope.skipped = 1
             envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
