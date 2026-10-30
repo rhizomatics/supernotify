@@ -41,6 +41,11 @@ Switch from `voluptuous` to `probatio`
 - Delivery
   - `selection`
 
+### Archive
+- Envelope
+  - `failedcalls`, a duplicate of the sanitised `failed_calls` with `action_data` left unsanitised. Remove once
+    [supernotify-cards](https://github.com/lollox80/supernotify-cards) reads `failed_calls`, its last known reader
+
 ## Notification Features
 
 ### Quick Selectors
