@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Supernotify Core Classes",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1190,
+      460
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "recipient",
+      "type": "frontend",
+      "label": "Recipient",
+      "sublabel": "person + contacts",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "target",
+      "type": "frontend",
+      "label": "Target",
+      "sublabel": "targets + person_ids",
+      "pos": [
+        280,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "notification",
+      "type": "backend",
+      "label": "Notification",
+      "sublabel": "message, priority, data",
+      "pos": [
+        520,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "envelope",
+      "type": "messagebus",
+      "label": "Envelope",
+      "sublabel": "message, data, calls",
+      "pos": [
+        760,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "backend",
+      "label": "Delivery",
+      "sublabel": "action, data, target",
+      "pos": [
+        760,
+        60
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "transport",
+      "type": "backend",
+      "label": "Transport",
+      "sublabel": "deliver(envelope)",
+      "pos": [
+        1000,
+        60
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "recipient",
+      "to": "target",
+      "label": "target(delivery)",
+      "labelDy": -26
+    },
+    {
+      "from": "notification",
+      "to": "target",
+      "label": "_target 0..1",
+      "variant": "emphasis",
+      "labelDy": -26
+    },
+    {
+      "from": "notification",
+      "to": "envelope",
+      "label": "envelopes 0..*",
+      "variant": "emphasis",
+      "labelDy": -26
+    },
+    {
+      "from": "notification",
+      "to": "delivery",
+      "label": "selected 1..*",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "from": "envelope",
+      "to": "delivery",
+      "label": "delivery 1"
+    },
+    {
+      "from": "envelope",
+      "to": "target",
+      "label": "target 1",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "from": "delivery",
+      "to": "transport",
+      "label": "transport 1",
+      "labelDy": -26
+    },
+    {
+      "from": "delivery",
+      "to": "target",
+      "label": "default target 0..1",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Notification",
+      "items": [
+        "_target: Target from the action call, if one was given",
+        "selected_deliveries: the Deliveries chosen for this notification",
+        "deliveries[name][outcome]: Envelopes by delivery and outcome"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Envelope",
+      "items": [
+        "One Notification copy for one Delivery and a Target set",
+        "Holds its own message, title and merged data",
+        "calls: each Home Assistant action the Transport made"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Target + Recipient",
+      "items": [
+        "Target groups direct targets by category, plus person_ids",
+        "Recipient.target(delivery) gives that person's Target for a delivery",
+        "Delivery.target is the delivery's own default Target"
+      ]
+    }
+  ]
+}

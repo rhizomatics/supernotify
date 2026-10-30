@@ -1,0 +1,20 @@
+# JSON Schema for Supernotify
+
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/
+
+These are auto-generated from the Home Assistant [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions for configuration and action `data` calls.
+
+## JSON Schema Files
+
+| Schema                   | JSON Definition                                                                                                                            | Documentation                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Full Configuration       | [Full_Configuration.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Full_Configuration/index.md)       |
+| Scenario Definition      | [Scenario_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Scenario_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Scenario_Definition/index.md)      |
+| Notify Action Data       | [Notify_Action_Data.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action_Data.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)       |
+| Notify Action            | [Notify_Action.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json)                       | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action/index.md)            |
+| Delivery Definition      | [Delivery_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/index.md)      |
+| Delivery Customization   | [Delivery_Customization.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Customization.schema.json)     | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/index.md)   |
+| Recipient Definition     | [Recipient_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Recipient_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Recipient_Definition/index.md)     |
+| Camera Definition        | [Camera_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Camera_Definition.schema.json)               | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Camera_Definition/index.md)        |
+| Transport Definition     | [Transport_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Transport_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Transport_Definition/index.md)     |
+| Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md) |
