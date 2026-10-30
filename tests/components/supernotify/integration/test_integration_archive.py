@@ -9,6 +9,7 @@ import pytest
 from homeassistant.core import Event, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.supernotify import DOMAIN
 
@@ -21,10 +22,10 @@ if TYPE_CHECKING:
 
 
 async def archiving(hass: HomeAssistant, tmp_path: pathlib.Path, event_selection: str) -> list[Event[Any]]:
-    config = {
-        "delivery": {"dummy": {"transport": "generic", "action": "notify.dummy", "inclusion": ["default"]}},
-        "archive": {"enabled": True, "archive_path": str(tmp_path), "event_selection": event_selection},
-    }
+    # archiving is set in the options flow, which stores the outcomes as names
+    archive = {"enabled": True, "file_path": str(tmp_path), "event_selection": event_selection}
+    MockConfigEntry(domain=DOMAIN, data={}, options={"archive": archive}).add_to_hass(hass)
+    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy", "inclusion": ["default"]}}}
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     await hass.async_block_till_done()
     events: list[Event[Any]] = []
