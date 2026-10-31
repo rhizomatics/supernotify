@@ -278,7 +278,7 @@ async def test_tts_entity_defaults_to_first_found_without_nabu_casa() -> None:
         deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
         services={"tts": ["speak"]},
     )
-    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign]  # ty: ignore[missing-slot]
+    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign,assignment]  # ty: ignore[missing-slot]
         "media_player": ["media_player.kitchen_speakers"],
         "tts": ["tts.piper", "tts.google_translate_en_com"],
     }.get(domain, [])
@@ -295,7 +295,7 @@ async def test_tts_skipped_with_no_tts_entity() -> None:
         deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
         services={"tts": ["speak"]},
     )
-    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign]  # ty: ignore[missing-slot]
+    ctx.hass.states.async_entity_ids = lambda domain=None: {  # type: ignore[method-assign,assignment]  # ty: ignore[missing-slot]
         "media_player": ["media_player.kitchen_speakers"],
     }.get(domain, [])
     await ctx.test_initialize()
