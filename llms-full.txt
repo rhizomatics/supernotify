@@ -17,15 +17,17 @@ Source: https://supernotify.rhizomatics.org.uk/latest/
 
 Recipes
 
-Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), try making [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md).
+Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/), try making [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
 The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-**No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) and cut out duplicate notifications.
+**No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
+Avoid even setting up automations using [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk/) and [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) including "live" activities on Apple and Android devices.
+
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -91,14 +93,14 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
   - Optionally archive notifications to file system and/or MQTT topic
   - Full support for Home Assistant [Context](https://data.home-assistant.io/docs/context/) so notification actions can be traced back to source automations
   - Includes full debug information, including occupancy assumptions, delivery and target selections
-  - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
+  - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/)
   - Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
 ## YAML Only for Advanced Use
 
 Presently Supernotify supports standard Home Assistant UI based config for the basic setup, and [YAML configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) for advanced features. YAML will be preserved for ease of working with larger rule bases.
 
-A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) in the documentation, and this mobile push example:
+A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/) in the documentation, and this mobile push example:
 
 With zero YAML all UI config
 
@@ -1732,311 +1734,197 @@ In addition to this reference documentation, see also the sample configuration s
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/
 
-Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
+Debugging notification rules, scenarios etc is much easier when each notification, complete with its debug trail, is archived.
 
-This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select.
+This preserves not just the notification data, but also key context like occupancy, and the decisions made on which scenarios and deliveries to select, and what happened to each delivery.
 
-Key fields to check if something doesn't seem right:
+Archiving is set up in the Supernotify integration's options, under *Settings → Devices & services → Supernotify → Configure → Archive*, and can go to any of:
 
-- `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
-- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
-- `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
+- **Files**, one per notification, which can be searched with the [`enquire_archive`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action, and which Supernotify's assistant tools use to answer questions about recent notifications
+- An **MQTT** topic
+- Home Assistant **events**, for example for [Remote Logger](https://remote-logger.rhizomatics.org.uk) to send to an OpenTelemetry or Syslog service
 
-A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
+Archiving has to be enabled for any of these, including events.
+
+## Options
+
+| Option                | Default               | Usage                                                                                            |
+| --------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| `enabled`             | off                   | Turn on archiving                                                                                |
+| `file_path`           | `supernotify/archive` | Directory for the archive files, relative to the Home Assistant config directory unless absolute |
+| `file_retention_days` | 3                     | Days to keep archive files before the nightly housekeeping removes them                          |
+| `mqtt_topic`          | none                  | MQTT topic to publish each notification under, as `<mqtt_topic>/<file name>`                     |
+| `mqtt_qos`            | 0                     | MQTT quality of service                                                                          |
+| `mqtt_retain`         | off                   | Publish as MQTT retained messages                                                                |
+| `event_name`          | `supernotification`   | Home Assistant event type to fire                                                                |
+| `event_selection`     | none                  | Which notification outcomes fire an event, see [Outcomes](#outcomes)                             |
+| `diagnostics`         | `ERROR`               | Which notification outcomes are archived with full diagnostic content, see [Outcomes](#outcomes) |
+
+MQTT retained messages
+
+With `mqtt_retain` on, the broker keeps one retained message per notification, under its own topic, until something clears it. Supernotify's housekeeping only removes archive files, not MQTT messages, so leave `mqtt_retain` off unless something else clears them.
+
+The options are only set in the integration's options. An `archive:` section in the top-level `supernotify:` YAML is ignored, with a repair raised to say so. An `archive:` in the old `notify: - platform: supernotify` YAML is only used to fill in the options once, when migrating from Supernotify v1.
+
+If file archiving is on but its path can't be created or written to, a repair is raised naming the path and the error, and cleared once Supernotify is reloaded with a path that works.
+
+## Archive Files
+
+Each notification is a JSON file named for the local time it was created, to the minute, and its id, for example `2026-10-30T05-57_6f129330-d461-11f1-9aab-3343dedd5bbc.json`. A housekeeping job runs each night to remove files older than `file_retention_days`, and the [`purge_archive`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action can do it immediately, with `days: 0` removing everything.
 
 Tip
 
-Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archived notifications.
+Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archive files, or the `enquire_archive` action to search them by date, outcome or priority.
 
-The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration for this is the same as for selecting [Event Generation](#event-generation). A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`, whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
+Key fields to check if something doesn't seem right:
 
-## Example Configuration
+- `outcome` - what happened overall, one of the [outcomes](#outcomes) below
+- `selected_deliveries` - what was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
+- `deliveries` - what happened to each delivery: `success`, `error` or `suppressed` for each message sent, with the action calls made and any that failed, or `skipped` with the reason if nothing was sent
+- `enabled_scenarios` and `occupancy` - the scenarios that applied, and who was in or out
 
-This example switches on both file system and MQTT topic archiving. Additional options (`mqtt_qos`, `mqtt_retain`) are available if needed to fine tune the MQTT publication.
+## Diagnostics
+
+An archived notification can be a record of the key details, or have the full diagnostic content as well, including its `debug_trace`. `diagnostics` chooses which outcomes get the full content, by default only those with an error. A notification sent with `debug: true` always gets the full content, whatever `diagnostics` is set to.
 
 ## Event Generation
 
-HomeAssistant [events](https://www.home-assistant.io/docs/configuration/events/) can be generated for notifications, with the option of full debug tracing. These can be consumed by other HomeAssistant integrations and automations, including by [Remote Logger](https://remote-logger.rhizomatics.org.uk) which can be used to send them off to an OpenTelemetry or Syslog service.
+Home Assistant [events](https://www.home-assistant.io/docs/configuration/events/) can be fired for notifications, carrying the same content as the archive file. These can be used to trigger automations, or sent elsewhere by [Remote Logger](https://remote-logger.rhizomatics.org.uk). Choose which outcomes fire an event with `event_selection`, which by default is none.
 
-Event generation is switched on by setting `event_selection` to the combination of notification outcomes desired, otherwise it will default to `NONE`
+Home Assistant's recorder saves events to its database, so an event for every notification with full diagnostics can make it grow quickly. Exclude the event type from the recorder if it's only needed live:
 
-The options for event policy selection are:
+Home Assistant Configuration
 
-| Policy Flag       | Usage                                                               |
-| ----------------- | ------------------------------------------------------------------- |
-| NONE              | Default, send no events. All other flags ignored if set             |
-| ALL               | Default, send all events. All other flags ignored if set            |
-| SUCCESS           | Successful delivery with no errors, misses or suppressions          |
-| NO_DELIVERY       | No deliveries made, with no errors                                  |
-| PARTIAL_DELIVERY  | Some deliveries made, others missed                                 |
-| FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
-| ERROR             | Notifications with at least one delivery error                      |
-| DUPE              | Notifications suppressed as duplicates                              |
-
-(These are the same options used for `diagnostics`)
+```yaml
+recorder:
+  exclude:
+    event_types:
+      - supernotification
+```
 
 See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) for more.
 
+## Outcomes
+
+`event_selection` and `diagnostics` take any combination of:
+
+| Outcome             | Usage                                                                       |
+| ------------------- | --------------------------------------------------------------------------- |
+| `SUCCESS`           | Delivered, with no errors, misses or suppressions                           |
+| `NO_DELIVERY`       | Nothing delivered, with no errors                                           |
+| `PARTIAL_DELIVERY`  | Some deliveries made, others missed                                         |
+| `FALLBACK_DELIVERY` | A fallback delivery made, after an error or with no other delivery applying |
+| `ERROR`             | At least one delivery error                                                 |
+| `DUPE`              | Suppressed as a duplicate                                                   |
+| `ALL`               | Every notification, whatever the outcome                                    |
+
+Selecting none means no notification - no events, or no full diagnostics.
+
 ## Example Notification
 
-```yaml
+A notification with a single delivery, as archived without full diagnostics:
+
+```json
 {
-  "created": "2025-11-04T15:09:21.375872+00:00",
-  "debug_trace": [
-    "A Car was detected on the Driveway camera.",
-    null,
-    {
-      "tag": "1762268908.791668-ksvmf7",
-      "group": "driveway-frigate-notification",
-      "color": "#03a9f4",
-      "subject": "",
-      "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-      "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-      "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "ttl": 0,
-      "priority": "high",
-      "alert_once": false,
-      "notification_icon": "mdi:homeassistant",
-      "sticky": false,
-      "channel": "alarm_stream",
-      "car_ui": false,
-      "fontsize": "large",
-      "position": "center",
-      "duration": 10,
-      "transparency": "0%",
-      "interrupt": false,
-      "subtitle": "",
-      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "attachment": {
-        "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-        "content-type": "application/vnd.apple.mpegurl"
-      },
-      "push": {
-        "sound": {
-          "name": "default",
-          "volume": 1.0
-        },
-        "interruption-level": 1
-      },
-      "entity_id": "camera.driveway",
-      "actions": [
-        {
-          "action": "URI",
-          "title": "View Clip",
-          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-          "icon": "",
-          "destructive": false
-        },
-        {
-          "action": "URI",
-          "title": "View Snapshot",
-          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
-          "icon": "",
-          "destructive": false
-        },
-        {
-          "action": "silence-automation.generate_apple_event_for_frigate_driveway",
-          "title": "Silence New Notifications",
-          "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
-          "icon": "",
-          "destructive": true
-        }
-      ]
-    },
-    null,
-    {},
-    {
-      "override_disable_deliveries": [],
-      "override_enable_deliveries": [],
-      "scenario_enable_deliveries": [
-        "email",
-        "alexa_announce",
-        "mobile_push",
-        "high_chime_alert"
-      ],
-      "default_enable_deliveries": [],
-      "scenario_disable_deliveries": [
-        "html_email",
-        "alexa_inform",
-        "chime_person",
-        "chime_dog",
-        "chime_doorbell",
-        "chime_unknown_vehicle",
-        "chime_known_vehicle",
-        "chime_red_alert",
-        "upstairs_siren",
-        "downstairs_siren"
-      ]
-    }
-  ],
-  "_message": "A Car was detected on the Driveway camera.",
-  "target": [],
-  "_title": null,
-  "id": "3deb818c-b990-11f0-a89d-000c29e67c70",
-  "snapshot_image_path": null,
-  "delivered": 0,
-  "errored": 0,
-  "skipped": 0,
-  "delivery_error": null,
-  "data": {
-    "tag": "1762268908.791668-ksvmf7",
-    "group": "driveway-frigate-notification",
-    "color": "#03a9f4",
-    "subject": "",
-    "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-    "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-    "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-    "ttl": 0,
-    "alert_once": false,
-    "notification_icon": "mdi:homeassistant",
-    "sticky": false,
-    "channel": "alarm_stream",
-    "car_ui": false,
-    "fontsize": "large",
-    "position": "center",
-    "duration": 10,
-    "transparency": "0%",
-    "interrupt": false,
-    "subtitle": "",
-    "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-    "attachment": {
-      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
-      "content-type": "application/vnd.apple.mpegurl"
-    },
-    "push": {
-      "sound": {
-        "name": "default",
-        "volume": 1.0
-      },
-      "interruption-level": 1
-    },
-    "entity_id": "camera.driveway"
-  },
+  "id": "6f129330-d461-11f1-9aab-3343dedd5bbc",
+  "outcome": "success",
+  "created": "2026-10-30T05:57:16.559931+00:00",
+  "title": "Security",
+  "message": "Front door opened",
   "priority": "high",
-  "message_html": null,
-  "required_scenario_names": [],
+  "stats": {
+    "total_duration_ms": 1.0,
+    "slowest_delivery": "dummy",
+    "fastest_delivery": "dummy",
+    "delivery_success_rate": 1.0
+  },
+  "delivered": 1,
+  "failed": 0,
+  "suppressed": 0,
+  "skipped": 0,
+  "missed": 0,
+  "fallback": 0,
+  "error_count": 0,
+  "dupe": false,
+  "force_resend": false,
+  "delivery_selection": "implicit",
+  "delivery_overrides": {},
+  "selected_deliveries": {
+    "dummy": null
+  },
+  "delivery_provenance": {
+    "dummy": {
+      "enabled_by": ["default"]
+    }
+  },
   "applied_scenario_names": [],
   "constrain_scenario_names": [],
-  "delivery_selection": "implicit",
-  "delivery_overrides_type": "NoneType",
-  "delivery_overrides": {},
-  "action_groups": [
-    "alarm_panel",
-    "lights"
-  ],
-  "media": {
-    "snapshot_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
-    "clip_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8"
+  "required_scenario_names": [],
+  "enabled_scenarios": [],
+  "selected_scenario_names": [],
+  "delivery_exceptions": {},
+  "uncategorized_targets": {},
+  "unassigned_targets": {},
+  "deliveries": {
+    "dummy": {
+      "success": [
+        {
+          "target": {},
+          "delivery_name": "dummy",
+          "notification_id": "6f129330-d461-11f1-9aab-3343dedd5bbc",
+          "priority": "high",
+          "data": {},
+          "id": "6f129330-d461-11f1-9aab-3343dedd5bbc_dummy",
+          "message": "Front door opened",
+          "title": "Security",
+          "delivered": 1,
+          "error_count": 0,
+          "skipped": 0,
+          "skip_reason": null,
+          "calls": [
+            {
+              "timestamp": "2026-10-30T05:57:16.563211+00:00",
+              "domain": "notify",
+              "action": "dummy",
+              "action_data": {
+                "message": "Front door opened",
+                "title": "Security"
+              },
+              "elapsed": 0.001,
+              "debug": false
+            }
+          ],
+          "failed_calls": [],
+          "delivery_error": null
+        }
+      ]
+    }
   },
+  "original_context": {
+    "id": "01M66E5KGF5VPR7AVE73F1TDQK",
+    "parent_id": null,
+    "user_id": null
+  },
+  "version": "2.16.2",
+  "dry_run": "live",
+  "action_groups": [],
+  "media": {},
   "debug": false,
-  "actions": [
-    {
-      "action": "URI",
-      "title": "View Clip",
-      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
-      "icon": "",
-      "destructive": false
-    },
-    {
-      "action": "URI",
-      "title": "View Snapshot",
-      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
-      "icon": "",
-      "destructive": false
-    },
-    {
-      "action": "silence-automation.generate_apple_event_for_frigate_driveway",
-      "title": "Silence New Notifications",
-      "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
-      "icon": "",
-      "destructive": true
-    }
-  ],
-  "delivery_results": {},
-  "delivery_errors": {},
-  "selected_delivery_names": [
-    "high_chime_alert",
-    "mobile_push",
-    "alexa_devices_announce_all",
-    "email"
-  ],
-  "enabled_scenarios": {
-    "high_alert": {
-      "name": "high_alert",
-      "enabled": true,
-      "alias": "make a fuss if alarm armed or high priority",
-      "media": null,
-      "delivery_selection": "implicit",
-      "action_groups": [
-        "alarm_panel",
-        "lights"
-      ],
-      "delivery": {
-        "email": null,
-        "alexa_devices_announce_all": null,
-        "mobile_push": null,
-        "high_chime_alert": null
-      },
-      "default": false
-    }
-  },
-  "selected_scenario_names": [
-    "high_alert"
-  ],
-  "people_by_occupancy": [],
-  "suppressed": "DUPE",
   "occupancy": {
-    "home": [
-      {
-        "person": "person.joe_mctoe",
-        "email": "joe@mctoefamily.net",
-        "phone_number": "+4377332010983",
-        "delivery": {},
-        "mobile_devices": [
-          {
-            "manufacturer": "Apple",
-            "model": "iPhone15,2",
-            "mobile_app_id": "mobile_app_joephonepro",
-            "device_tracker": "device_tracker.joephonepro",
-            "device_id": "a0591c4af99b6a4037f7346f390e9918",
-            "device_name": "jPhonePro"
-          }
-        ],
-        "mobile_discovery": true,
-        "user_id": "cbed93ea6eac7d575710dc519e5e3dc1",
-        "state": "home"
-      },
-      {
-        "person": "person.jane_mctoe",
-        "email": "jane@mctoefamily.org",
-        "delivery": {},
-        "mobile_devices": [
-          {
-            "manufacturer": "Apple",
-            "model": "iPhone13,2",
-            "mobile_app_id": "mobile_app_jane_s_iphone_13",
-            "device_tracker": "device_tracker.jane_s_iphone_13",
-            "device_id": "71ba297a58a3b601e1646c54d0e23dbf",
-            "device_name": "Jane's iPhone 13"
-          }
-        ],
-        "mobile_discovery": true,
-        "user_id": "1cba227f2c0cb65cfd3cafde6ce0c4d8",
-        "state": "home"
-      }
-    ],
+    "home": [],
     "not_home": []
   },
   "condition_variables": {
-    "occupancy": [
-      "ALL_HOME"
-    ],
     "applied_scenarios": [],
     "required_scenarios": [],
     "constrain_scenarios": [],
+    "notification_message": "Front door opened",
+    "notification_title": "Security",
     "notification_priority": "high",
-    "notification_message": "A Car was detected on the Driveway camera.",
-    "notification_title": ""
+    "occupancy": ["UNDEFINED_OCCUPANTS"],
+    "notification_data": {},
+    "camera": {}
   }
 }
 ```
@@ -3488,6 +3376,8 @@ Source: https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/
 
 By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
 
+Those settings are ignored if they're in the `supernotify` YAML section, and a single repair lists the ones found, so they can be set in the integration's options instead and removed from the YAML.
+
 ## Naming the Integration
 
 By default every automation calls the action `notify.supernotify` for Notify compatibility or `supernotify.notify` for friendlier UI. If you need a different name (for example to match existing automations), set it from the Integrations page: **Settings → Devices & Services → Supernotify → Configure**, or during initial setup. This is the only place the name is set - it is not a YAML key.
@@ -4616,7 +4506,7 @@ Provides a native SuperNotify transport for [Discord](https://discord.com/) thro
 
 The `discord` integration is set up in Home Assistant with a bot token. The bot must be invited to the server with the *Send Messages* permission. The action name depends on the config entry (`notify.discord`, `notify.discord_2`, …), so any `notify.*` action is accepted.
 
-Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target fails.
+Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target is skipped.
 
 ```yaml
 delivery:
@@ -5170,138 +5060,91 @@ Generic is a catch-all for user-defined actions, so there's nothing for Supernot
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
+| Transport ID | Source                                                                                                                 | Requirements                                                                                | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------- |
+| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration | -        |
+
 ## Motivation
 
-Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires the [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+[Gotify](https://gotify.net) is a self-hosted push notification server. The Gotify transport adds, beyond a plain `notify` call:
 
-## Notes
+- SuperNotify's priority mapped to Gotify's 0–10
+- A tap-through URL, defaulting to a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
+- An expanded image (`bigImageUrl`), from a URL or a camera snapshot
+- Markdown rendering
+- An Android intent opened when the message arrives
 
-- **`action:` is required** — unlike most transports, there is no default action. The HACS integration lets users name the service freely (`notify.gotify`, `notify.my_server`, etc.), so `validate_action()` accepts any `notify.*` service and warns if the action is missing or uses the wrong domain.
-- **Camera snapshot** — `gotify_attach_image: true` triggers a `camera.snapshot` call and builds a publicly-reachable URL. `gotify_image_url` (explicit URL) takes precedence and skips the snapshot entirely.
-- **No raw_data passthrough** — the HACS payload schema is fixed (`{message, title, data: {priority, extras}}`). Unknown keys would cause silent failures or future breakage; they are intentionally dropped (documented with an inline comment).
-- **Separate snapshot path** — uses `supernotify_gotify_snapshot.jpg` (not the ntfy snapshot path) to prevent race conditions when both transports fire concurrently.
+## Priority Mapping
 
-______________________________________________________________________
+| SuperNotify | Gotify |
+| ----------- | ------ |
+| `critical`  | 10     |
+| `high`      | 7      |
+| `medium`    | 5      |
+| `low`       | 2      |
+| `minimum`   | 0      |
 
-## Testing
+## Data Keys
 
-Tested on Home Assistant 2026.3.4 with:
+- `gotify_priority` — `0` to `10`, overriding the mapping; a number outside that is brought into range
+- `gotify_click` — URL opened when the notification is tapped
+- `gotify_image_url` — URL of an image shown expanded, used ahead of a snapshot
+- `gotify_attach_image` — use the camera snapshot as the expanded image (default `false`)
+- `gotify_markdown` — render the message as Markdown (default `false`)
+- `gotify_intent_url` — Android intent URL opened when the message arrives, needing the Gotify app's *Intent Action Permission*
 
-- Gotify server v2.4.0 (self-hosted, local network)
-- HACS integration `1RandomDev/homeassistant-gotify` v1.0.2
-- SuperNotify v1.12.2
+The image is sent as a URL, so the Gotify app must be able to reach Home Assistant's media folder, through the external URL when away from home. Other `data` isn't passed on, since the integration only reads the priority and extras.
 
-**Test cases verified on real HA:**
+## Configuration
 
-```yaml
-# 1. Basic message — priority auto-mapping
-action: supernotify.notify
-data:
-  message: "Test base Gotify"
-  title: "SuperNotify Test"
-  delivery: [gotify_base]
-# Result: notification received, priority=5 (int) in Gotify ✅
-
-# 2. Critical alert — priority mapping
-action: supernotify.notify
-data:
-  message: "Allarme ingresso attivo"
-  title: "🚨 Allarme"
-  delivery: [gotify_base]
-  priority: critical
-# Result: priority=10, notification shown with max urgency ✅
-
-# 3. With bigImageUrl from camera snapshot
-action: supernotify.notify
-data:
-  message: "Movimento rilevato"
-  delivery: [gotify_con_camera]
-  extra_data:
-    gotify_attach_image: true
-  media:
-    camera_entity_id: camera.ingresso
-# Result: snapshot taken, bigImageUrl present, image visible on tap ✅
-
-# 4. With click URL and Markdown
-action: supernotify.notify
-data:
-  message: "**Porta aperta** — controlla la dashboard"
-  delivery: [gotify_base]
-  extra_data:
-    gotify_click: "https://ha.local:8123/lovelace/sicurezza"
-    gotify_markdown: true
-# Result: bold text rendered, tap opens HA dashboard ✅
-
-# 5. Missing action: — validate_action warning
-# Delivery configured without action: notify.*
-# Result: warning logged, delivery suppressed, no crash ✅
-```
-
-**Unit tests:** `tests/components/supernotify/test_transport_gotify.py`
-
-- 35 test cases covering: `_build_extras()` (all combinations), `validate_action()`, `deliver()` happy path, all 5 priority levels, `gotify_priority` override (int/string/clamp/invalid), `boolify()` behaviour for YAML strings, `gotify_image_url` precedence over `attach_image`, camera snapshot success/failure, no `gotify_*` key leakage into payload, service exception handling, `supported_features`, `default_config`.
-
-______________________________________________________________________
-
-## Priority mapping reference
-
-| SuperNotify | Gotify int | Gotify label |
-| ----------- | ---------- | ------------ |
-| `critical`  | 10         | max urgency  |
-| `high`      | 7          | high         |
-| `medium`    | 5          | default      |
-| `low`       | 2          | low          |
-| `minimum`   | 0          | silent/min   |
-
-______________________________________________________________________
-
-## Configuration example
+Home Assistant Configuration
 
 ```yaml
-# configuration.yaml (HA)
 notify:
   - platform: gotify
     name: gotify
     url: http://gotify.local
     token: !secret gotify_token
-
-# supernotify delivery config
-deliveries:
-  gotify_allarme:
-    transport: gotify
-    action: notify.gotify          # only needed if auto-discovery doesn't find your service
-    priority: high
-    data:
-      gotify_click: "https://ha.local:8123/lovelace/sicurezza"
-      gotify_attach_image: true
-      gotify_markdown: true
-
-  gotify_info:
-    transport: gotify
-    action: notify.gotify
-    priority: low                  # → Gotify priority 2
 ```
 
-______________________________________________________________________
+Supernotify Configuration
 
-## Deviations from standard patterns (intentional)
+```yaml
+delivery:
+  gotify_alarm:
+    transport: gotify
+    action: notify.gotify          # only needed if discovery doesn't find it
+    data:
+      gotify_click: "https://ha.example.com/lovelace/security"
+      gotify_attach_image: true
+      gotify_markdown: true
+```
 
-**No `raw_data` passthrough** (CLAUDE.md §4 pattern): The standard pattern passes residual `raw_data` keys to `action_data`. For Gotify this is deliberately omitted — the HACS service has a fixed schema and unknown top-level keys cause silent failures or HTTP 400s on future integration updates. This decision is documented with an inline comment in `deliver()`.
+## Example Call
 
-**No static default `action:`**: `default_config` sets no fixed `action`, since the HACS service name is user-controlled. `auto_configure()` fills it in dynamically once discovered (see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a manually configured delivery omits `action:`.
+```yaml
+action: supernotify.notify
+data:
+  message: "**Front door** open - check the dashboard"
+  priority: critical
+  delivery: gotify_alarm
+  media:
+    camera_entity_id: camera.front_door
+```
 
 ## Discovery
 
-**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
+**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the HACS integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
 
-______________________________________________________________________
+## Notes
 
-## Related
+- The HACS integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
+- Without a title, the integration uses "Home Assistant".
 
-- Fixes the `generic` transport workaround for Gotify (priority string bug)
-- Follows the same transport pattern as the ntfy transport (PR #TBD)
-- HACS integration: https://github.com/1RandomDev/homeassistant-gotify
-- Gotify extras docs: https://gotify.net/docs/msgextras
+## References
+
+- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+- [Gotify message extras](https://gotify.net/docs/msgextras)
 
 # HTML5 Browser Push Transport Adaptor
 
@@ -5385,7 +5228,7 @@ Shows on-screen overlay notifications on Kodi media centers through the Home Ass
 
 ## Configuration
 
-Targets are the Kodi `media_player` entities; other targets are dropped and a delivery with no valid target fails.
+Targets are the Kodi `media_player` entities; other targets are dropped and a delivery with no valid target is skipped.
 
 ```yaml
 delivery:
@@ -5408,7 +5251,7 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 
 ## Discovery
 
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically. It isn't used unless asked for, since a `media_player` target could equally be meant for `tts`, `media` or Alexa: name it in `delivery`, a scenario or a recipient, with the Kodi `media_player` entities as targets.
 
 ## Notes
 
@@ -5419,53 +5262,66 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/lametric/
 
+| Transport ID | Source                                                                                                                     | Requirements                                                                 | Optional |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------- |
+| `lametric`   | [`lametric.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/lametric.py) | [LaMetric Integration](https://www.home-assistant.io/integrations/lametric/) | -        |
+
 ## Motivation
 
-LaMetric TIME is a popular IoT display device with [native Home Assistant integration](https://www.home-assistant.io/integrations/lametric/) (auto-discovered via mDNS/SSDP). The HA lametric integration exposes two services: lametric.message (text notifications) and lametric.chart (bar chart data).
+LaMetric TIME is a smart display with a [Home Assistant integration](https://www.home-assistant.io/integrations/lametric/), discovered automatically on the network, which provides `lametric.message` for text and `lametric.chart` for bar charts.
 
-While LaMetric can be used with the [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) for basic text, this integration adds:
+The LaMetric transport adds:
 
-- Map SuperNotify's 5-level priority to LaMetric's display parameters (cycles, sound, icon, icon_type) automatically
-- Send bar chart data (lametric.chart) for sensor visualization (temperature, CPU, battery)
-- Apply icon type selection (alert = red flashing, info = blue, none) per priority
-- Provide per-priority defaults for sound effects (alarm1, knock-knock, notification)
+- SuperNotify's priority mapped to LaMetric's display settings - cycles, sound, icon and icon type
+- Bar charts from `lametric_chart_data`, for example the last few sensor readings
+- Optionally, message text shortened for the small display, with URLs removed
 
-## Requirements
+The display has no room for a title, so only the message is shown.
 
-- Home Assistant LaMetric integration installed and configured (auto-discovery)
-- `device_id` available in HA device registry (Settings → Devices → LaMetric → Device ID)
-- No additional Python packages required
+## Targets
+
+Target the `notify` entity the LaMetric integration creates for each display, for example `notify.lametric_kitchen`, directly or through a recipient. The `lametric` delivery is selected for these entities ahead of the generic [Notify Entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) one, without needing to be named, and each display targeted is sent the notification.
+
+Alternatively, fix the display on a delivery with `device_id` in its `data`, used when no LaMetric entity is targeted. Find it in *Settings → Devices & services → LaMetric*, or with the template `{{ device_id('notify.lametric_kitchen') }}`.
+
+A delivery with neither is skipped.
 
 ## Priority Mapping
 
-Priority Mapping
+Each of these can be overridden with the data keys below.
 
-SuperNotify priority → LaMetric display parameters (all auto-applied, all overridable):
+| SuperNotify | LaMetric priority | cycles              | icon_type | sound        | icon   |
+| ----------- | ----------------- | ------------------- | --------- | ------------ | ------ |
+| critical    | critical          | 0 (until dismissed) | alert     | alarm1       | a1784  |
+| high        | warning           | 2                   | alert     | knock-knock  | i140   |
+| medium      | info              | 1                   | info      | notification | i2867  |
+| low         | info              | 1                   | none      | (silent)     | i2867  |
+| minimum     | info              | 1                   | none      | (silent)     | (none) |
 
-| SuperNotify | LaMetric priority | cycles | icon_type | sound        | icon  |
-| ----------- | ----------------- | ------ | --------- | ------------ | ----- |
-| critical.   | critical          | 0 (∞)  | alert.    | alarm1       | a1784 |
-| high        | warning           | 2      | alert     | knock-knock  | i140  |
-| medium      | info              | 1      | info      | notification | i2867 |
-| low         | info              | 1      | none      | (silent)     | i2867 |
-| minimum     | info              | 1      | none      | (silent)     | —     |
+## Data Keys
 
-All lametric\_\* keys are removed from `` `data `` before calling the underlying LaMetric Home Assistant action.
+- `device_id` — the LaMetric device id, used when no LaMetric `notify` entity is targeted
+- `lametric_sound` — a built-in sound, such as `alarm1`…`alarm13`, `bicycle`, `cash`, `dog`, `knock-knock`, `letter_email`, `notification`, `positive1`, `win`, `wind`
+- `lametric_icon` — an icon id from the [LaMetric icon gallery](https://developer.lametric.com/icons), such as `i2867`
+- `lametric_cycles` — times the notification is shown, `0` to stay until dismissed
+- `lametric_icon_type` — `none`, `info` or `alert`
+- `lametric_chart_data` — a list of numbers, sent as a bar chart with `lametric.chart` instead of the message
+- `lametric_simplify` — shorten the message and remove URLs (default `false`)
+
+Other `data` isn't passed on, since the LaMetric actions reject what they don't know.
 
 ## Example Configuration
 
-Supernotify configuration snippet
+Supernotify Configuration
 
 ```yaml
-# Minimal — device_id required, all other params auto from priority
-deliveries:
-  - name: lametric
+delivery:
+  lametric:
     transport: lametric
     data:
       device_id: "49b6e2186ef37e164818aacb9cea1f53"
 
-# Doorbell — explicit overrides
-  - name: lametric_campanello
+  lametric_doorbell:
     transport: lametric
     data:
       device_id: "49b6e2186ef37e164818aacb9cea1f53"
@@ -5473,66 +5329,55 @@ deliveries:
       lametric_icon: "i140"
       lametric_icon_type: "alert"
       lametric_cycles: 2
-
-# Bar chart — temperature sensor (last 6 readings)
-  - name: lametric_temperatura
-    transport: lametric
-    data:
-      device_id: "49b6e2186ef37e164818aacb9cea1f53"
-      lametric_chart_data: [18, 20, 22, 21, 23, 24]
-      lametric_cycles: 3
 ```
 
 ## Example Call
 
-This example presumes Supernotify configured with this delivery.
-
-Supernotify configuration snippet
-
 ```yaml
-lametric_test:
-  transport: lametric
-  inclusion: explicit
-  data:
-    device_id: "<lametric-device-uuid>"
-    lametric_icon: "i2867"
-    lametric_sound: "notification"
+action: supernotify.notify
+data:
+  message: "Temperature trend"
+  delivery:
+    lametric:
+      data:
+        lametric_chart_data: [18, 20, 22, 21, 23, 24]
+        lametric_cycles: 3
 ```
 
-Then call this action ...
+And a message to a display's entity, with no delivery configured:
 
 ```yaml
 action: supernotify.notify
 data:
-  message: "Test transport nativo LaMetric - Se vedi questo sul display LaMetric, funziona!"
-  delivery_selection: fixed
-  delivery:
-    lametric_test:
-      enabled: true
+  message: "Washing done"
+  target: notify.lametric_kitchen
 ```
 
-And the resulting archived notification looks like:
+Or to the configured delivery, with the archived result:
+
+```yaml
+action: supernotify.notify
+data:
+  message: "LaMetric smoke test - if you see this on the display, it works!"
+  delivery: lametric
+```
 
 ```json
 {
-  "delivered": 1, "failed": 0, "error_count": 0,
-  "stats": { "total_duration_ms": 8.5, "delivery_success_rate": 1.0 },
   "deliveries": {
-    "lametric_test": {
+    "lametric": {
       "delivered": [{
         "calls": [{
           "domain": "lametric", "action": "message",
           "action_data": {
-            "device_id": "<uuid>",
-            "message": "Test transport nativo LaMetric - ...",
+            "device_id": "49b6e2186ef37e164818aacb9cea1f53",
+            "message": "LaMetric smoke test - if you see this on the display, it works!",
             "cycles": 1,
             "priority": "info",
             "icon_type": "info",
             "icon": "i2867",
             "sound": "notification"
-          },
-          "elapsed": 0.0085,
-          "failed_calls": []
+          }
         }]
       }]
     }
@@ -5542,7 +5387,7 @@ And the resulting archived notification looks like:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `lametric` integration is already configured and no `lametric` delivery is defined, a `lametric` delivery is generated automatically — but since `device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [lametric]}` or a scenario), not by default. You'll still need to supply `device_id` yourself.
+**Delivery (default selection).** If the `lametric` integration is configured and no `lametric` delivery is defined, a `lametric` delivery is generated automatically. It's used when a target is one of the integration's `notify` entities, and otherwise not, since it has no display to send to.
 
 # Matrix Transport Adaptor
 
@@ -6075,141 +5920,112 @@ Example Notification to every notify entity in the kitchen, and those labelled d
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/
 
+| Transport ID | Source                                                                                                             | Requirements                                                         | Optional |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | -------- |
+| `ntfy`       | [`ntfy.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/ntfy.py) | [ntfy Integration](https://www.home-assistant.io/integrations/ntfy/) | -        |
+
 ## Motivation
 
-ntfy became an official Home Assistant integration in version 2025.5. It provides a privacy-first, self-hostable push notification service with a rich action API, priority levels, action buttons, scheduled delivery, image attachments, and message update/cancellation via `sequence_id`.
+[ntfy](https://ntfy.sh) is a privacy-first, self-hostable push notification service, with an official Home Assistant integration since 2025.5. The integration creates a `notify` entity for each topic, and an `ntfy.publish` action with priority levels, action buttons, scheduled delivery, image attachments and message updates.
 
-The existing `generic` transport can call `ntfy.publish`, but it cannot:
+The ntfy transport adds:
 
-- map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
-- validate action button payloads before sending
-- attach camera snapshots via HA's `camera.snapshot` service
-- apply `boolify()` for YAML boolean strings
+- SuperNotify's 5 priority levels mapped to ntfy's 1–5
+- Camera snapshots attached to the notification
+- Action buttons checked before sending, so one bad button doesn't stop the message
+- The tap-through URL defaulting to a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions)
+
+## Targets
+
+Target the `notify` entity of an ntfy topic, for example `notify.ntfy_alerts`, directly or through a recipient. The `ntfy` delivery is selected for these entities ahead of the generic [Notify Entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) one, without needing to be named.
+
+Alternatively, fix the topic on a delivery with `ntfy_device_id`, the topic's device id, used when no ntfy entity is targeted. Find it in *Settings → Devices & services → ntfy*, or with the template `{{ device_id('notify.ntfy_alerts') }}`.
+
+A delivery with neither is skipped.
 
 ## Data keys
 
-All keys are optional unless noted. Keys with prefix `ntfy_` are extracted by the transport and never forwarded to `ntfy.publish`.
+All are optional, and only the fields `ntfy.publish` accepts are passed on: its schema rejects anything else, so `data` meant for other deliveries, like Mobile Push's `clickAction`, is dropped.
 
-| Key                 | Type         | Default         | Description                                                                                                                                                                                    |
-| ------------------- | ------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ntfy_device_id`    | `str`        | —               | **Required.** `device_id` of the ntfy topic configured in HA                                                                                                                                   |
-| `ntfy_priority`     | `int` 1–5    | from SN mapping | Override priority (5=urgent, 1=min)                                                                                                                                                            |
-| `ntfy_tags`         | `list[str]`  | `[]`            | ntfy emoji shortcodes e.g. `["warning", "house"]`                                                                                                                                              |
-| `ntfy_click`        | `str` (URL)  | —               | URL opened when notification is tapped, defaults to the `uri` of a [notification level action](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#notification-level-actions) |
-| `ntfy_attach_image` | `bool`       | `false`         | Attach camera snapshot (requires `media.camera_entity_id`)                                                                                                                                     |
-| `ntfy_filename`     | `str`        | `snapshot.jpg`  | Filename for the attachment                                                                                                                                                                    |
-| `ntfy_icon`         | `str` (URL)  | —               | JPEG/PNG icon URL                                                                                                                                                                              |
-| `ntfy_markdown`     | `bool`       | `false`         | Enable Markdown rendering in message body                                                                                                                                                      |
-| `ntfy_delay`        | `str`        | —               | Scheduled delivery: `"10m"`, `"1h30m"`, `"HH:MM"`                                                                                                                                              |
-| `ntfy_sequence_id`  | `str`        | —               | Message ID for subsequent update/cancellation                                                                                                                                                  |
-| `ntfy_email`        | `str`        | —               | Email forwarding address                                                                                                                                                                       |
-| `ntfy_actions`      | `list[dict]` | `[]`            | Action buttons, max 3 (types: view/http/broadcast/copy)                                                                                                                                        |
+| Key                 | Type         | Default                   | Description                                                                                                          |
+| ------------------- | ------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `ntfy_device_id`    | `str`        | —                         | Device id of an ntfy topic, used when no ntfy `notify` entity is targeted                                            |
+| `ntfy_priority`     | `int` 1–5    | from priority             | Override the priority (5=urgent, 1=min); anything else is ignored                                                    |
+| `ntfy_tags`         | `list[str]`  | —                         | Tags, shown as emoji where they match an [ntfy shortcode](https://docs.ntfy.sh/emojis/), e.g. `["warning", "house"]` |
+| `ntfy_click`        | `str` (URL)  | notification action `uri` | URL opened when the notification is tapped                                                                           |
+| `ntfy_attach_image` | `bool`       | `false`                   | Attach the camera snapshot, from `media.camera_entity_id`                                                            |
+| `ntfy_filename`     | `str`        | `snapshot.jpg`            | Filename for the attachment                                                                                          |
+| `ntfy_icon`         | `str` (URL)  | —                         | JPEG or PNG icon URL                                                                                                 |
+| `ntfy_markdown`     | `bool`       | `false`                   | Render the message as Markdown                                                                                       |
+| `ntfy_delay`        | `str`        | —                         | Delay delivery: `"10m"`, `"1h30m"`, `"45s"` or `"HH:MM"`, between 10 seconds and 3 days                              |
+| `ntfy_sequence_id`  | `str`        | —                         | Id that a later notification with the same id updates                                                                |
+| `ntfy_email`        | `str`        | —                         | Also forward to this e-mail address                                                                                  |
+| `ntfy_actions`      | `list[dict]` | —                         | Up to 3 action buttons, see below                                                                                    |
 
-______________________________________________________________________
+A `snapshot_url` in `media` is attached whether or not `ntfy_attach_image` is set. Either way, the image is sent as a URL, so ntfy must be able to reach Home Assistant's media folder.
 
-## Testing
-
-Tested on Home Assistant 2026.3.4 with the ntfy official integration connected to a self-hosted ntfy instance (ntfy v2.x).
-
-**Functional tests performed:**
-
-- [x] Base delivery: message and title appear correctly in ntfy app
-- [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
-- [x] Priority mapping: `minimum` delivers silently with no vibration
-- [x] `ntfy_tags`: emoji tags visible in notification
-- [x] `ntfy_click`: tap opens correct URL
-- [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
-- [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
-- [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
-- [x] `ntfy_sequence_id` — second call with same ID updates the notification
-- [x] `ntfy_device_id` missing → `return False` with warning in log
-- [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
-- [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
-- [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
-
-**Example configuration:**
+### Action buttons
 
 ```yaml
-# example delivery config — minimal
-ntfy_home:
-  transport: ntfy
-  inclusion: default
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_click: "http://homeassistant.local:8123"
-
-# example delivery config — security channel with camera snapshot
-ntfy_security:
-  transport: ntfy
-  inclusion: default
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_attach_image: true
-    ntfy_click: "http://homeassistant.local:8123/lovelace/sicurezza"
-    ntfy_tags:
-      - house
-      - rotating_light
-
-# example delivery config — alarm channel with action buttons
-ntfy_alarms:
-  transport: ntfy
-  inclusion: scenario
-  data:
-    ntfy_device_id: "abc123def456"
-    ntfy_tags: [rotating_light, sos]
-    ntfy_attach_image: true
-    ntfy_actions:
-      - action: view
-        label: "Open dashboard"
-        url: "http://homeassistant.local:8123/lovelace/allarmi"
-        clear: true
-      - action: http
-        label: "✅ Acknowledge"
-        url: "http://homeassistant.local:8123/api/webhook/ack_alarm"
-        method: POST
-        clear: true
+ntfy_actions:
+  - action: view
+    label: Open dashboard
+    url: https://ha.example.com/lovelace/security
+    clear: true
+  - action: http
+    label: Acknowledge
+    url: https://ha.example.com/api/webhook/ack_alarm
+    method: POST
+  - action: broadcast
+    label: Intent
+    intent: io.heckel.ntfy.USER_ACTION
+  - action: copy
+    label: Copy code
+    value: "1234"
 ```
 
-**Example call:**
+A button without an `action` or `label` is dropped with a warning, and only the first 3 are sent.
+
+## Example
+
+Supernotify Configuration
+
+```yaml
+delivery:
+  ntfy_security:
+    transport: ntfy
+    inclusion: default
+    data:
+      ntfy_device_id: "abc123def456"
+      ntfy_attach_image: true
+      ntfy_tags: [house, rotating_light]
+```
+
+Notification
 
 ```yaml
 action: supernotify.notify
 data:
   message: "Motion detected at entrance"
-  title: "📷 Front Camera"
+  title: "Front Camera"
   media:
-    camera_entity_id: camera.ezviz_ingresso
+    camera_entity_id: camera.front_door
 ```
 
-**Expected behavior:**
+Or, with no delivery configured, send to the topic's entity:
 
-- ntfy app receives push with title, message, attached snapshot, and action buttons
-- Tapping "Open dashboard" navigates to the HA security Lovelace view
-- Tapping "Acknowledge" sends POST to the HA webhook
-- Priority `critical` bypasses Do Not Disturb on mobile
-
-______________________________________________________________________
-
-## How to get the device_id
-
-```text
-Developer Tools → Template →
-{{ device_id('notify.nome_topic') }}
+```yaml
+action: supernotify.notify
+data:
+  message: "Washing done"
+  target: notify.ntfy_alerts
+  extra_data:
+    ntfy_tags: [tshirt]
 ```
-
-Or: Settings → Devices & Services → ntfy → click the topic device.
-
-______________________________________________________________________
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `ntfy` integration is already configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since `ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery: [ntfy]}` or a scenario), not by default. You'll still need to supply `ntfy_device_id` yourself.
-
-## Notes
-
-- `TargetRequired.NEVER`: the topic target is conveyed via `ntfy_device_id` in `data`, not via HA's standard `target` field. This avoids the transport being suppressed when no person target is present in the notification call.
-- Camera snapshot uses `camera.snapshot` to `/config/www/` (accessible at `/local/`), then attaches via `hass_api.abs_url()`. This works for both cloud and local ntfy.
-- `_parse_delay()` accepts both `"10m"` / `"1h30m"` shorthand and `"HH:MM"` / `"HH:MM:SS"`. Unrecognized formats are passed through with a warning.
+**Delivery (default selection).** If the `ntfy` integration is configured and no `ntfy` delivery is defined, an `ntfy` delivery is generated automatically. It's used when a target is one of the integration's `notify` entities, and otherwise not, since it has no topic to send to.
 
 # Persistent Transport Adaptor
 
@@ -6221,21 +6037,27 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/persistent/
 
 Place a notification on Home Assistant application screen.
 
-Pass a notification ID, either fixed in the transport or delivery configuration, or passed in the action `data`.
+The `title` and `message` are shown as they are, with no other `data`, and no target.
+
+Pass a `notification_id` in the action's `extra_data`, or fixed in the delivery's `data`. A later notification with the same ID replaces the earlier one, rather than adding another, and without an ID a new notification is always added.
+
+Unlike other discovered transports, the `persistent` delivery isn't selected by default, since a popup for every notification would be intrusive. Name it in `delivery`, or set `inclusion` to include it.
 
 ## Example
 
-Persistent notification has a Delivery automatically discovered where the integration is available, called `persistent`, so send like:
+A `persistent` delivery is created automatically, so send like:
 
 ```yaml
-  - action: supernotify.notify
+- action: supernotify.notify
+  data:
+    message: Testing an e-mail that also shows as persistent notification
     target:
       - homeowner@24acaciaavenue.com
-    data:
-        message: Testing an e-mail that also shows as persistent notification
-        delivery:
-          - email
-          - persistent
+    delivery:
+      - email
+      - persistent
+    extra_data:
+      notification_id: front_door
 ```
 
 ## References
@@ -6255,41 +6077,41 @@ Provides a native SuperNotify transport for [Pushover](https://pushover.net/), t
 
 ## Features
 
-- 5-level priority mapping — SuperNotify critical/high/medium/low/minimum maps to Pushover -2…2 integers automatically.
-- Emergency mode (priority=2) — Pushover requires retry and expire.
-- SuperNotify auto-supplies sensible defaults (60s / 3600s) when not explicitly configured, with a debug log noting the values used.
-- Parameter clamping — retry clamped to minimum 30s, expire clamped to maximum 10800s (3h), matching Pushover API limits.
-- Camera snapshot attachment — pushover_attach_image: true calls grab_image() (v1.14.0+ API), correctly declares
-- Waits for the camera PTZ to complete before sending.
+- 5-level priority mapping — SuperNotify critical/high/medium/low/minimum maps to Pushover 2…-2 automatically, or override with `pushover_priority`.
+- Emergency mode (priority 2, so `critical`) — Pushover requires `retry` and `expire`, so 60s / 3600s are supplied when not configured. A `retry` under 30s is raised to 30s, and an `expire` over 10800s (3h) lowered to 10800s.
+- Camera snapshot attachment — `pushover_attach_image: true` grabs the camera image, waiting for any camera PTZ to complete before sending.
+- Send to selected devices with `pushover_device`.
 
 ## Pushover Data Keys
 
-Data keys covering the full Pushover feature set:
+- `pushover_priority` — `-2` to `2`, overriding the priority mapping; anything else is ignored
+- `pushover_sound` — a [Pushover sound](https://pushover.net/api#sounds), such as `siren`
+- `pushover_url` / `pushover_url_title` — a link shown with the notification, and its label
+- `pushover_retry` — seconds between repeats for an emergency, minimum 30, default 60
+- `pushover_expire` — seconds before an emergency stops repeating, maximum 10800, default 3600
+- `pushover_callback` — public URL Pushover calls when an emergency is acknowledged, such as a Home Assistant webhook
+- `pushover_html` — allow HTML formatting in the message (default `false`)
+- `pushover_ttl` — seconds before the notification is deleted from the device
+- `pushover_device` — a device name, or list of names, as configured in Pushover; default is all devices
+- `pushover_tags` — a tag, or list of tags, so an emergency can be cancelled with Home Assistant's `pushover.cancel` action, by tag; an emergency without tags can only be acknowledged in the Pushover app
+- `pushover_attach_image` — attach the camera snapshot (default `false`)
 
-- `pushover_priority`
-- `pushover_sound`
-- `pushover_url`
-- `pushover_url_title`
-- `pushover_retry`
-- `pushover_expire`
-- `pushover_callback`
-- `pushover_html`
-- `pushover_ttl`
-- `pushover_device`
-- `pushover_attach_image`
+`pushover_retry`, `pushover_expire` and `pushover_callback` only apply to an emergency. Any other `data` key isn't passed on, since the Pushover action rejects what it doesn't know. Pushover's `timestamp` isn't supported.
 
 ## Configuration
 
 ### Add Pushover to Home Assistant
 
+Add the [Pushover integration](https://www.home-assistant.io/integrations/pushover/) from *Settings → Devices & services*, with your API token and user key. The old `platform: pushover` YAML is no longer used.
+
+For `pushover_attach_image`, the Supernotify media folder must be in Home Assistant's allowed paths, or the integration refuses the attachment:
+
 Home Assistant Configuration
 
 ```yaml
-notify:
-  - name: pushover_home
-    platform: pushover
-    api_key: "YOUR_PUSHOVER_API_KEY"
-    user_key: "YOUR_PUSHOVER_USER_KEY"
+homeassistant:
+  allowlist_external_dirs:
+    - /config/supernotify/media
 ```
 
 ### Add Pushover to Supernotify
@@ -6299,47 +6121,51 @@ notify:
 Supernotify Configuration
 
 ```yaml
-pushover_home:
-  transport: pushover
-  action: notify.pushover_home   # REQUIRED — must match configuration.yaml name
-  inclusion: default
+delivery:
+  pushover_home:
+    transport: pushover
+    action: notify.pushover_home   # the notify action the integration created
+    inclusion: default             # send every notification to Pushover
 ```
 
-#### Maxmimal
+#### Maximal
 
 Supernotify Configuration
 
 ```yaml
-pushover_home:
-  transport: pushover
-  action: notify.pushover_home
-  inclusion: default
-  data:
-    pushover_sound: "siren"
-    pushover_url: "https://homeassistant.local:8123"
-    pushover_url_title: "Open HA"
-    pushover_html: false
-    pushover_ttl: 3600
-    pushover_device: "iphone"        # send to specific device only
-    pushover_attach_image: true      # attach camera snapshot
+delivery:
+  pushover_home:
+    transport: pushover
+    action: notify.pushover_home
+    inclusion: default
+    data:
+      pushover_sound: "siren"
+      pushover_url: "https://homeassistant.local:8123"
+      pushover_url_title: "Open HA"
+      pushover_html: false
+      pushover_ttl: 3600
+      pushover_device: "iphone"        # send to specific device only
+      pushover_attach_image: true      # attach camera snapshot
 ```
 
 #### Emergency delivery
 
-Activates when priority=critical or via scenario
+Sent as an emergency when the notification priority is `critical`, or if `pushover_priority: 2` is set. This one is only used where a scenario selects it.
 
 Supernotify Configuration
 
 ```yaml
-pushover_emergency:
-  transport: pushover
-  action: notify.pushover_home
-  inclusion: scenario
-  data:
-    pushover_sound: "siren"
-    pushover_retry: 60               # repeat every 60s (min 30)
-    pushover_expire: 1800            # stop after 30 min (max 10800)
-    pushover_callback: "http://homeassistant.local:8123/api/webhook/pushover_ack"
+delivery:
+  pushover_emergency:
+    transport: pushover
+    action: notify.pushover_home
+    inclusion: scenario
+    data:
+      pushover_sound: "siren"
+      pushover_retry: 60               # repeat every 60s (min 30)
+      pushover_expire: 1800            # stop after 30 min (max 10800)
+      pushover_callback: "http://homeassistant.local:8123/api/webhook/pushover_ack"
+      pushover_tags: alarm             # lets pushover.cancel stop it by tag
 ```
 
 ### Example Call
@@ -6347,12 +6173,13 @@ pushover_emergency:
 ```yaml
 action: supernotify.notify
 data:
-  message: "Test transport nativo Pushover - Se ricevi con suono magic, funziona!"
-  title: "PR Pushover Smoke Test"
+  message: "Pushover smoke test - if you hear the magic sound, it works!"
+  title: "Pushover Smoke Test"
   delivery_selection: fixed
   delivery:
-    pushover_test:
-      enabled: true
+    pushover_home:
+      data:
+        pushover_sound: magic
 ```
 
 #### Resulting Notification Archive
@@ -6362,13 +6189,13 @@ data:
   "delivered": 1, "failed": 0, "error_count": 0,
   "stats": { "total_duration_ms": 3.0, "delivery_success_rate": 1.0 },
   "deliveries": {
-    "pushover_test": {
+    "pushover_home": {
       "delivered": [{
         "calls": [{
-          "domain": "notify", "action": "pushover",
+          "domain": "notify", "action": "pushover_home",
           "action_data": {
-            "message": "Test transport nativo Pushover - ...",
-            "title": "PR Pushover Smoke Test",
+            "message": "Pushover smoke test - ...",
+            "title": "Pushover Smoke Test",
             "data": { "priority": 0, "sound": "magic" }
           },
           "elapsed": 0.003,
@@ -6382,7 +6209,7 @@ data:
 
 ## Discovery
 
-**Default delivery.** If the official Pushover integration is already configured and no `pushover` delivery is defined, a `pushover` delivery is generated automatically and fires on every notification — once discovered, the `notify.pushover_*` service is fully self-contained (it already knows its own recipients), so no extra per-delivery data is needed.
+**Default delivery.** If the Pushover integration is already configured and no `pushover` delivery is defined, a `pushover` delivery is generated automatically, using the integration's `notify` action. It isn't used unless asked for, since a Pushover account has no target to recognise it by: name it in `delivery`, a scenario or a recipient, or define your own delivery with `inclusion: default` to send every notification to Pushover. For several Pushover accounts, define a delivery for each, with its `action`.
 
 # SMS (Text Messaging) Transport Adaptor
 
@@ -7258,7 +7085,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_ac
 
 Tip
 
-There's a new much easier way to set this up, which also provides a live progress bar using [Appliances AutoNotify](https://github.com/rhizomatics/appliances_autonotify)
+There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances.
 
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 
@@ -7773,14 +7600,9 @@ Consolidate the notification events with Home Assistant's own system logs, so fu
 
 ### 1. Switch on event archiving
 
-In this example not all messages are sent, successful and partial deliveries are ignored.
+In the Supernotify integration's options, under *Configure → Archive*, turn on archiving and, in the *Event* section, choose the outcomes to send as events. In this example not all notifications are sent, successful and partial deliveries are ignored, so pick *No Delivery*, *Fallback Delivery* and *Error*.
 
-supernotify config
-
-```yaml
-    archive:
-      event_selection: NO_DELIVERY | BACKUP_DELIVERY | ERROR
-```
+See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/#event-generation) for the options, and for keeping the events out of the recorder database.
 
 ### 2. Configure Remote Logger
 
@@ -8583,13 +8405,13 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | ANY   | always          | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
-| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |
+| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | FIRST | optional        | default   | MESSAGE                                                        |
 | [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | ANY   | always          | explicit  | IMAGES, VIDEO, SNAPSHOT_IMAGE, SOUND                           |
 | [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, VIDEO, ACTIONS, SNAPSHOT_IMAGE         |
 | [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | FIRST | optional        | default   | MESSAGE                                                        |
 | [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | LAST  | always          | default   | MESSAGE, TITLE                                                 |
-| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
+| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | FIRST | optional        | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |
 | [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE, TITLE                                                 |
@@ -8611,13 +8433,13 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | -                                                                           | -                         | -                                                                                 |
 | [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | entity_id (domain=notify, platform=html5)                                   | -                         | -                                                                                 |
 | [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | -                                                                           | -                         | entity_id (domain=media_player)                                                   |
-| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | -                                                                           | -                         | -                                                                                 |
+| [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | entity_id (domain=notify, platform=lametric)                                | -                         | -                                                                                 |
 | [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | matrix_room                                                                 | -                         | -                                                                                 |
 | [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | -                                                                           | -                         | entity_id (domain=media_player)                                                   |
 | [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | mobile_app_id                                                               | -                         | -                                                                                 |
 | [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | topic                                                                       | -                         | -                                                                                 |
 | [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | -                                                                           | entity_id (domain=notify) | -                                                                                 |
-| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | -                                                                           | -                         | -                                                                                 |
+| [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | entity_id (domain=notify, platform=ntfy)                                    | -                         | -                                                                                 |
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | -                                                                           | -                         | -                                                                                 |
 | [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | -                                                                           | -                         | -                                                                                 |
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | phone                                                                       | -                         | -                                                                                 |
