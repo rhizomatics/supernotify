@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Supernotify Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1180,
+      560
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "archive",
+      "type": "database",
+      "label": "NotificationArchive",
+      "sublabel": "file / MQTT / event",
+      "pos": [
+        260,
+        60
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "automation",
+      "type": "external",
+      "label": "Automation / script",
+      "sublabel": "calls supernotify.notify",
+      "pos": [
+        40,
+        210
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      }
+    },
+    {
+      "id": "entities",
+      "type": "frontend",
+      "label": "Supernotify entities",
+      "sublabel": "switch, sensor, notify",
+      "pos": [
+        260,
+        360
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "engine",
+      "type": "backend",
+      "label": "SupernotifyEngine",
+      "sublabel": "Context",
+      "pos": [
+        260,
+        210
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "scenarios",
+      "type": "backend",
+      "label": "ScenarioRegistry",
+      "sublabel": "Scenario",
+      "pos": [
+        490,
+        60
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "deliveries",
+      "type": "backend",
+      "label": "DeliveryRegistry",
+      "sublabel": "Delivery + Transport",
+      "pos": [
+        490,
+        210
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "people",
+      "type": "backend",
+      "label": "PeopleRegistry",
+      "sublabel": "Recipient",
+      "pos": [
+        490,
+        360
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "email",
+      "type": "backend",
+      "label": "Email",
+      "sublabel": "EmailTransport",
+      "pos": [
+        740,
+        60
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "alexa",
+      "type": "backend",
+      "label": "Alexa Devices",
+      "sublabel": "AlexaDevicesTransport",
+      "pos": [
+        740,
+        160
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "mobile",
+      "type": "backend",
+      "label": "Mobile Push",
+      "sublabel": "MobilePushTransport",
+      "pos": [
+        740,
+        260
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "more",
+      "type": "backend",
+      "label": "18 more",
+      "sublabel": "SMS, TTS, ntfy, Telegram…",
+      "pos": [
+        740,
+        360
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "smtp",
+      "type": "external",
+      "label": "SMTP",
+      "sublabel": "notify.<smtp>",
+      "pos": [
+        980,
+        60
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      }
+    },
+    {
+      "id": "alexa_int",
+      "type": "external",
+      "label": "Alexa Devices",
+      "sublabel": "notify entities",
+      "pos": [
+        980,
+        160
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      }
+    },
+    {
+      "id": "mobile_app",
+      "type": "external",
+      "label": "Mobile App",
+      "sublabel": "notify.mobile_app_*",
+      "pos": [
+        980,
+        260
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      }
+    },
+    {
+      "id": "hass_api",
+      "type": "backend",
+      "label": "HomeAssistantAPI",
+      "sublabel": "facade over Home Assistant core",
+      "pos": [
+        260,
+        470
+      ],
+      "size": [
+        620,
+        56
+      ]
+    },
+    {
+      "id": "ha_core",
+      "type": "external",
+      "label": "Home Assistant core",
+      "sublabel": "services, states, events",
+      "tag": "entity + device registries",
+      "pos": [
+        980,
+        470
+      ],
+      "size": [
+        160,
+        56
+      ],
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      }
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Supernotify integration",
+      "wraps": [
+        "archive",
+        "entities",
+        "engine",
+        "scenarios",
+        "deliveries",
+        "people",
+        "email",
+        "alexa",
+        "mobile",
+        "more",
+        "hass_api"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Transports (21)",
+      "wraps": [
+        "email",
+        "alexa",
+        "mobile",
+        "more"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Home Assistant integrations",
+      "wraps": [
+        "smtp",
+        "alexa_int",
+        "mobile_app"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "automation",
+      "to": "engine",
+      "label": "action call",
+      "variant": "emphasis"
+    },
+    {
+      "from": "engine",
+      "to": "entities",
+      "label": "entity platforms",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 62
+    },
+    {
+      "from": "engine",
+      "to": "archive",
+      "label": "archive",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "from": "engine",
+      "to": "scenarios"
+    },
+    {
+      "from": "engine",
+      "to": "deliveries",
+      "variant": "emphasis"
+    },
+    {
+      "from": "engine",
+      "to": "people"
+    },
+    {
+      "from": "deliveries",
+      "to": "email"
+    },
+    {
+      "from": "deliveries",
+      "to": "alexa"
+    },
+    {
+      "from": "deliveries",
+      "to": "mobile"
+    },
+    {
+      "from": "deliveries",
+      "to": "more"
+    },
+    {
+      "from": "email",
+      "to": "smtp",
+      "label": "notify action"
+    },
+    {
+      "from": "alexa",
+      "to": "alexa_int",
+      "label": "notify.send_message",
+      "labelDy": -24
+    },
+    {
+      "from": "mobile",
+      "to": "mobile_app",
+      "label": "notify action"
+    },
+    {
+      "from": "hass_api",
+      "to": "ha_core",
+      "label": "core APIs",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Engine + registries",
+      "items": [
+        "SupernotifyEngine builds a Context holding each registry, HomeAssistantAPI, DupeChecker, Snoozer and MediaStorage",
+        "DeliveryRegistry keeps only viable transports and their deliveries",
+        "PeopleRegistry builds Recipients from person entities and their Mobile App devices"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Entities",
+      "items": [
+        "switch per scenario, recipient, transport and delivery",
+        "binary_sensor per scenario; notify.recipient_<name> per recipient",
+        "notifications + failures sensors; reset-overrides button"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Home Assistant integrations",
+      "items": [
+        "All Home Assistant access goes through HomeAssistantAPI: call_service, states, events, registries, conditions, storage",
+        "Email calls the SMTP notify action; Alexa Devices calls notify.send_message",
+        "Mobile Push calls notify.mobile_app_<device>"
+      ]
+    }
+  ]
+}
