@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Supernotify Notification Flow",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      560
+    ],
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "notification path"
+        },
+        "default": {
+          "label": "evaluated input"
+        },
+        "dashed": {
+          "label": "after all deliveries"
+        },
+        "database": {
+          "label": "stored state"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "Home Assistant caller"
+    },
+    {
+      "label": "Notification"
+    },
+    {
+      "label": "Delivery selection"
+    },
+    {
+      "label": "Target generation"
+    },
+    {
+      "label": "Home Assistant Integrations"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "automation",
+      "type": "frontend",
+      "label": "Automation / script",
+      "sublabel": "calls an action",
+      "stage": 0,
+      "row": 0,
+      "tag": "Home Assistant",
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      },
+      "width": 152
+    },
+    {
+      "id": "notification",
+      "type": "backend",
+      "label": "Notification",
+      "sublabel": "created from call",
+      "stage": 1,
+      "row": 0,
+      "tag": "SupernotifyEngine"
+    },
+    {
+      "id": "archive",
+      "type": "database",
+      "label": "Archive + event",
+      "sublabel": "supernotify_notification",
+      "stage": 1,
+      "row": 2,
+      "tag": "file / MQTT / event"
+    },
+    {
+      "id": "deliveries",
+      "type": "backend",
+      "label": "Delivery selection",
+      "sublabel": "evaluates conditions",
+      "stage": 2,
+      "row": 0,
+      "tag": "ranked deliveries"
+    },
+    {
+      "id": "scenarios",
+      "type": "database",
+      "label": "Scenarios",
+      "sublabel": "named + conditions",
+      "stage": 2,
+      "row": 2,
+      "tag": "configured"
+    },
+    {
+      "id": "targets",
+      "type": "backend",
+      "label": "Targets + envelopes",
+      "sublabel": "per delivery",
+      "stage": 3,
+      "row": 0,
+      "tag": "resolve + select"
+    },
+    {
+      "id": "people",
+      "type": "database",
+      "label": "Recipients",
+      "sublabel": "from person entities",
+      "stage": 3,
+      "row": 2,
+      "tag": "people registry"
+    },
+    {
+      "id": "transport",
+      "type": "backend",
+      "label": "Transport",
+      "sublabel": "e.g. email, mobile_push",
+      "stage": 4,
+      "row": 0,
+      "tag": "reshapes data"
+    },
+    {
+      "id": "ha_action",
+      "type": "external",
+      "label": "Home Assistant action",
+      "sublabel": "e.g. notify.*",
+      "stage": 4,
+      "row": 2,
+      "tag": "owned by integration",
+      "brand": {
+        "url": "https://www.home-assistant.io/",
+        "sha256": "ba76b1f0bb94a4eb01f19e34507e099248cfd790c1c713e1e956394c2c5155e4"
+      },
+      "width": 152
+    }
+  ],
+  "flows": [
+    {
+      "from": "automation",
+      "to": "notification",
+      "label": "supernotify.notify",
+      "classification": "message, target, data",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": 53
+    },
+    {
+      "from": "notification",
+      "to": "deliveries",
+      "label": "priority, message",
+      "classification": "ConditionVariables",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "scenarios",
+      "to": "deliveries",
+      "label": "active scenarios",
+      "classification": "enable / disable",
+      "labelDy": -64
+    },
+    {
+      "from": "people",
+      "to": "scenarios",
+      "label": "occupancy",
+      "classification": "condition variable"
+    },
+    {
+      "from": "deliveries",
+      "to": "targets",
+      "label": "each delivery",
+      "classification": "run concurrently",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "people",
+      "to": "targets",
+      "label": "person → targets",
+      "classification": "all people if no target",
+      "labelDy": -64
+    },
+    {
+      "from": "targets",
+      "to": "transport",
+      "label": "envelope",
+      "classification": "delivery data",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "transport",
+      "to": "ha_action",
+      "label": "async_call",
+      "classification": "Home Assistant Context",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "from": "notification",
+      "to": "archive",
+      "label": "outcome",
+      "classification": "after all deliveries",
+      "variant": "dashed",
+      "labelDy": 64
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Delivery selection",
+      "items": [
+        "Occupancy and ConditionVariables built first, then scenarios whose conditions match (or named in apply_scenarios)",
+        "Deliveries = scenario-enabled + inclusion: default + the call's delivery block, less disabled ones",
+        "Per delivery, at send time: priority and delivery conditions checked"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Target generation",
+      "items": [
+        "Runs separately for each selected delivery, concurrently",
+        "People resolved to direct targets; scenario targets added; delivery picks its categories",
+        "Envelope data: delivery, then target, then scenario, then the call's data"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Outcome + ownership",
+      "items": [
+        "Delivered = the Home Assistant action returned without error",
+        "Nothing delivered → fallback deliveries",
+        "The integration owns the actual send once the action is called"
+      ]
+    }
+  ]
+}

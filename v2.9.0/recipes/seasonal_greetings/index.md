@@ -1,0 +1,117 @@
+______________________________________________________________________
+
+tags:
+
+- xmas
+- holiday
+- scenario
+- alexa
+- chime
+- recipe
+- condition title: Seasonal Greetings description: Use a Supernotify scenario to add a seasonal note to notifications, and override standard chimes with Christmas cheer
+
+______________________________________________________________________
+
+# Recipe - Seasonal Greetings
+
+## Purpose
+
+Add a Xmas, Halloween or whatever else flavour to messages;
+
+## Implementation
+
+A scenario using Home Assistant date conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_general`, and to the email text.
+
+The `enabled:` with null value is used so that the delivery will be overridden only if its has already been selected before this scenario was applied, otherwise the scenario would add on these deliveries to every notification during the date condition period.
+
+## Example Configuration
+
+Use a scenario with a condition to identify when in a date range.
+
+The speech markup requires use of the `speak` rather than `announce` entities provided by Alexa Devices integration.
+
+```yaml
+scenarios:
+    xmas:
+      alias: Christmas season
+      conditions:
+        condition: or
+        conditions:
+          - "{{ (12,24) <= (now().month, now().day) <= (12,31) }}"
+          - "{{ (1,1) <= (now().month, now().day) <= (1,1) }}"
+      delivery:
+       email_general:
+            data:
+              message_template: '{{notification_message}} Ho Ho Ho!'
+       alexa_general:
+            enabled:
+            data:
+              message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">bah humbug</say-as>'
+
+    halloween:
+      alias: Spooky season
+      conditions:
+        condition: and
+        conditions:
+          - "{{ (10,31) == (now().month, now().day) }}"
+      delivery:
+          alexa_general:
+            enabled:
+            data:
+              message_template: '{{notification_message}}<break time="1s"><audio src="soundbank://soundlibrary/horror/horror_04"/>'
+
+    birthdays:
+      alias: Family birthdays
+      conditions:
+        condition: or
+        conditions:
+          - "{{ (5,23) == (now().month, now().day) }}"
+          - "{{ (11,9) == (now().month, now().day) }}"
+      delivery:
+       alexa_general:
+            enabled:
+            data:
+              message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">hip hip hooray</say-as>'
+```
+
+## Variations
+
+The [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) has lots more ways of doing this.
+
+Set up aliases for common chimes, and a secondary seasonal version, in the Chime transport defaults:
+
+```yaml
+transports:
+  chime:
+    delivery_defaults:
+      options:
+        chime_aliases:
+          doorbell:
+            alexa_devices: amzn_sfx_doorbell_chime_02
+            switch:
+              target: switch.chime_ding_dong
+          xmas_doorbell: christmas_05
+delivery:
+  doorbell_rang:
+    transport: chime
+    data:
+      chime_tune: doorbell
+```
+
+Then create a date condition scenario, that overrides the chime alias for your `doorbell_rang` delivery:
+
+```yaml
+scenarios:
+    xmas:
+      alias: Christmas season
+      conditions:
+        condition: or
+        conditions:
+          - "{{ (12,24) <= (now().month, now().day) <= (12,31) }}"
+          - "{{ (1,1) <= (now().month, now().day) <= (1,1) }}"
+      delivery:
+        doorbell_rang:
+          enabled:
+          data:
+            chime_tune: xmas_doorbell
+```
