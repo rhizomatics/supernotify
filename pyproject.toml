@@ -55,7 +55,7 @@ dev=[
     "genbadge[all]",
     # generic transport testing
     "notify-events",
-    "aiontfy==0.8.5",
+    "aiontfy==0.8.6",
     # home assistant smtp testing
     "aiosmtplib==5.1.3",
     "zeroconf>=0.150.1",
