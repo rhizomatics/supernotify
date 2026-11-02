@@ -23,6 +23,9 @@ if TYPE_CHECKING:
 
     from . import SupernotifyConfigEntry
 
+# Entities are pushed, never polled, and their actions only change local state
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
