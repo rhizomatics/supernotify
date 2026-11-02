@@ -71,6 +71,9 @@ if TYPE_CHECKING:
     from .scenario import Scenario, ScenarioRegistry
     from .transport import Transport
 
+# Entities are pushed, never polled, and their actions only change local state
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -1,8 +1,10 @@
 ---
 # Quality Scale tracking for Supernotify integration
-# Updated: 2026-08-06 (previous update: 2025-12-19)
-# Rule set verified against https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist
-# (HA 2026.7). Since 2025-12-19: test-coverage moved Bronze -> Silver, device-class renamed
+# Updated: 2026-11-02 (previous updates: 2026-08-06, 2025-12-19)
+# Rule set verified against https://contributors.home-assistant.io/core/quality-scale/rules/#checklist
+# (HA 2026.10.4; 54 rules). 2026-11-02: no rules added, removed, renamed or moved since 2026-08-06;
+# statuses re-checked against the code (2026-Q4 architecture review).
+# 2026-08-06 (HA 2026.7): Since 2025-12-19: test-coverage moved Bronze -> Silver, device-class renamed
 # entity-device-class, disabled-by-default renamed entity-disabled-by-default, stale-device-removal
 # renamed stale-devices, entity-description retired, and Gold gained: discovery, discovery-update-info,
 # docs-data-update, docs-examples, docs-known-limitations, docs-supported-devices, docs-supported-functions,
@@ -15,15 +17,15 @@ rules:
   # ==================
 
   action-setup:
-    status: done
+    status: todo
     comment: |
-      notify.supernotify is registered directly from async_setup_entry() (__init__.py),
-      bypassing legacy platform discovery - see build_supernotify_action() in notify.py,
-      shared with the still-supported YAML async_get_service() path. The dozen supplemental
-      supernotify.* debugging/admin services are now also shared: extracted into
-      async_register_supplemental_services()/async_unregister_supplemental_services()
-      (notify.py), called from both async_get_service() (YAML) and async_setup_entry/
-      async_unload_entry (__init__.py), guarded against double registration.
+      Only supernotify.reload is registered in async_setup (__init__.py). The supernotify.*
+      engine actions (actions.py async_register_engine_actions) are registered from
+      async_setup_entry and removed in async_unload_entry, so while the entry is not loaded
+      they don't exist and automations using them fail validation. The rule wants them
+      registered once in async_setup, looking up the loaded entry and raising a translated
+      ServiceValidationError when it isn't loaded. notify.supernotify itself is the legacy
+      notify service, which follows the entry.
 
   appropriate-polling:
     status: exempt
@@ -202,7 +204,9 @@ rules:
 
   parallel-updates:
     status: done
-    comment: PARALLEL_UPDATES constant configured (notify.py).
+    comment: |
+      PARALLEL_UPDATES = 0 in every entity platform (notify, binary_sensor, sensor, switch,
+      button): entities are pushed, never polled, and their actions only change local state.
 
   reauthentication-flow:
     status: exempt
@@ -214,8 +218,7 @@ rules:
     status: done
     comment: |
       Moved from Bronze to Silver in the current rule set.
-      625 test functions across 49 files (up from 208/25 files in Dec 2025).
-      Checked-in .coverage report shows 95% total line coverage.
+      2026-11-02: 2760 tests pass on HA 2026.10.4 with 97% line coverage.
 
   # ==================
   # GOLD TIER
@@ -281,7 +284,9 @@ rules:
 
   docs-troubleshooting:
     status: todo
-    comment: No dedicated troubleshooting doc found under docs/.
+    comment: |
+      docs/help/troubleshooting.md lists the debugging tools (archive, diagnostics, debug mode,
+      enquire actions) but not common symptoms with their causes and fixes, which the rule asks for.
 
   docs-use-cases:
     status: done
@@ -315,11 +320,11 @@ rules:
       delivery", and made a disabled recipient show as "Disconnected").
 
   entity-disabled-by-default:
-    status: todo
+    status: done
     comment: |
-      Renamed from disabled-by-default. No _attr_entity_registry_enabled_default
-      usage found - diagnostic/noisy entities are not currently disabled by
-      default (correcting a previous incorrect "done" status here).
+      Renamed from disabled-by-default. The deprecated delivery/transport binary_sensors, which
+      most users don't need, are disabled by default (binary_sensor.py). The scenario and
+      recipient entities and the counters are the main state users act on, so stay enabled.
 
   entity-translations:
     status: done
@@ -332,9 +337,11 @@ rules:
       together in the entity list.
 
   exception-translations:
-    status: todo
+    status: done
     comment: |
-      Need to add translatable exception messages using translation_key.
+      Every ServiceValidationError raised by the actions (actions.py) and the setup
+      ConfigEntryNotReady (__init__.py) use translation_domain/translation_key, with the
+      messages in translations/en.json "exceptions".
 
   icon-translations:
     status: done
@@ -345,20 +352,19 @@ rules:
       (test_icons.py checks every on/off entity has one).
 
   reconfiguration-flow:
-    status: todo
+    status: done
     comment: |
-      New rule. Depends on config-flow landing first; the draft Phase 1 PR
-      (design/roadmap/configflow_proposal.md) already includes a reconfigure
-      step for global settings (paths, archive, dupe check, discovery toggles).
+      config_flow.py async_step_reconfigure edits the user-step settings held in entry data,
+      using async_update_and_abort so the update listener's reload isn't doubled.
+      Covered in tests/components/supernotify/test_config_flow.py.
 
   repair-issues:
-    status: todo
+    status: done
     comment: |
-      Partial infrastructure exists: hass_api.py creates repair issues but all
-      but one are is_fixable=False, i.e. informational rather than the
-      guided/actionable fix flows this rule expects. repairs.py also raises one
-      persistent "recipient_binary_sensor_deprecated" issue, never re-raised once
-      dismissed, for the deprecated recipient binary_sensors.
+      The rule needs issues to be actionable, not fixable. repairs.py has a repair flow for
+      migrating legacy YAML (is_fixable=True), and raises actionable issues for deprecated
+      binary_sensors, manual migration and an unsupported Python version; scenario.py raises
+      them for invalid scenario conditions.
 
   stale-devices:
     status: exempt
@@ -386,6 +392,6 @@ rules:
   strict-typing:
     status: todo
     comment: |
-      py.typed present and type hints extensive, but mypy suppressions remain
-      widespread (# type: ignore in notification.py, media_grab.py, hass_api.py,
-      transport.py, model.py, snoozer.py, scenario.py) - not yet "done".
+      py.typed present and mypy passes, but not in strict mode (no strict settings in
+      pyproject.toml), and 14 "# type: ignore" remain (hass_api.py, notification.py,
+      media_grab.py, target.py, snoozer.py, scenario.py, llm.py).
