@@ -11,8 +11,7 @@ description: Use the Live Activity feature introduced in Home Assistant 2026.7 t
 
 !!! tip
     There's a new much easier way to set this up, which also
-    provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering
-    supported appliances.
+    provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances, including dishwashers, ovens, robot vacuums and more.
 
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 

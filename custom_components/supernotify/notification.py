@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_EXCLUDE
 from homeassistant.helpers.trace import trace_id_get
 
 from custom_components.supernotify.delivery import DeliveryProvenance
@@ -155,6 +155,14 @@ class Notification(ArchivableObject):
         if action_data.get(ATTR_RECIPIENTS) and not isinstance(target, dict):
             _LOGGER.warning("SUPERNOTIFY recipients key in notify action data deprecated, list recipients in target instead")
             target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
+
+        # what to leave out of the target, from the target selector's 'Exclude target' in Home
+        # Assistant 2026.11 - resolved on first use, see _without_excluded()
+        self._exclude: dict[str, Any] | None = None
+        self._excluded: Target | None = None
+        if isinstance(target, dict) and CONF_EXCLUDE in target:
+            target = dict(target)
+            self._exclude = target.pop(CONF_EXCLUDE) or None
 
         # an explicitly empty list of targets is a choice to have none, so the recipients aren't
         # used by default, leaving only targets from deliveries and scenarios. A missing or blank
@@ -1270,6 +1278,9 @@ class Notification(ArchivableObject):
         self, computed_target: Target, delivery: Delivery, stages: tuple[str, str, str, str]
     ) -> Target:
         """Snooze-filter, resolve indirect/scenario targets, then apply delivery target selection."""
+        # before the people are resolved to their own targets, and again after selection has
+        # resolved areas, floors, labels and groups to entities
+        computed_target = self._without_excluded(computed_target)
         computed_target = self.context.snoozer.filter_recipients(
             computed_target,
             self.priority,
@@ -1284,9 +1295,21 @@ class Notification(ArchivableObject):
         computed_target += self.resolve_scenario_targets(delivery)
         computed_target = self._short_circuit_own_entities(computed_target, delivery)
         self.debug_trace.record_target(delivery.name, stages[2], computed_target)
-        computed_target = delivery.select_targets(computed_target)
+        computed_target = self._without_excluded(delivery.select_targets(computed_target))
         self.debug_trace.record_target(delivery.name, stages[3], computed_target)
         return computed_target
+
+    def _without_excluded(self, target: Target) -> Target:
+        if not self._exclude:
+            return target
+        if self._excluded is None:
+            entity_ids, device_ids = self.context.hass_api.resolve_target_exclusion(self._exclude)
+            self._excluded = Target({
+                ATTR_ENTITY_ID: sorted(entity_ids),
+                ATTR_PERSON_ID: sorted(entity_ids),
+                ATTR_DEVICE_ID: sorted(device_ids),
+            })
+        return target - self._excluded
 
     def generate_targets(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> list[Target]:
 

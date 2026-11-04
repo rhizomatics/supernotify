@@ -61,6 +61,22 @@ Supernotify resolves them to entities itself, using the same core logic as Home 
 
 An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
 
+### Excluding Targets
+
+Entities, devices, areas, floors and labels can be left out of a target with an `exclude` block, as **Exclude target** in the Home Assistant 2026.11 action editor gives, for example the ground floor but not the kitchen:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            floor_id: ground_floor
+            exclude:
+              area_id: kitchen
+```
+
+The exclusion is applied after areas, floors, labels and groups are resolved to entities, so a member of a group can be left out, and excluding a `person` entity leaves out that recipient and their phones, e-mail and other targets. It applies to everything the notification would go to, including the default recipients when `exclude` is the only thing in the target, and scenario targets - the one exception is a delivery's own default target, used when the notification has no targets left for it. It works on any version of Home Assistant Supernotify supports, although the action editor only offers it from 2026.11.
+
 ## Simple Targeting
 
 Simple targeting is a single value, or a big mixed list, that Supernotify sorts out itself. Anything in an *Auto* category is recognized from its format, and everything else gets a category prefix.

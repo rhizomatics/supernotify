@@ -47,5 +47,5 @@
         "cachetools"
     ],
     "single_config_entry": true,
-    "version": "2.16.2"
+    "version": "2.17.0"
 }

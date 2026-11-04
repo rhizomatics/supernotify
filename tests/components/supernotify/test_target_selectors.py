@@ -203,6 +203,27 @@ def test_resolve_target_selectors_survives_errors(hass: HomeAssistant, caplog: p
     assert "Unable to resolve target selectors" in caplog.text
 
 
+def test_resolve_target_exclusion(hass: HomeAssistant) -> None:
+    uut = HomeAssistantAPI(hass)
+    kitchen = ar.async_get(hass).async_create("Kitchen")
+    kitchen_chime = _register_entity(hass, "switch", "kitchen_chime", area_id=kitchen.id)
+    _register_entity(hass, "switch", "lounge_chime")
+    speakers = er.async_get(hass).async_get_or_create("media_player", "group", "speakers", suggested_object_id="speakers")
+    hass.states.async_set(speakers.entity_id, "on", {ATTR_ENTITY_ID: ["media_player.a", "media_player.b"]})
+
+    entity_ids, device_ids = uut.resolve_target_exclusion({ATTR_AREA_ID: [kitchen.id], ATTR_ENTITY_ID: [speakers.entity_id]})
+    # a platform group's members too, so they can't come back when a targeted group is expanded
+    assert entity_ids == {kitchen_chime, speakers.entity_id, "media_player.a", "media_player.b"}
+    assert device_ids == set()
+
+
+def test_resolve_target_exclusion_survives_errors(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    uut = HomeAssistantAPI(hass)
+    with patch("custom_components.supernotify.hass_api.async_extract_referenced_entity_ids", side_effect=RuntimeError("boom")):
+        assert uut.resolve_target_exclusion({ATTR_AREA_ID: ["kitchen"]}) == (set(), set())
+    assert "Unable to resolve target exclusion" in caplog.text
+
+
 # ---------------------------------------------------------------------------
 # Notification: target generation end to end
 # ---------------------------------------------------------------------------
@@ -278,3 +299,18 @@ async def test_transport_never_sees_selectors(mock_hass, unmocked_config) -> Non
         selected = delivery.select_targets(Target({ATTR_ENTITY_ID: ["notify.pong"], ATTR_AREA_ID: ["kitchen"]}))
     assert selected == Target(["notify.pong", "notify.hob"])
     assert selected.area_ids == []
+
+
+async def test_generate_targets_leaves_out_excluded() -> None:
+    ctx = await _generic_context()
+    delivery = ctx.delivery("chatty")
+    with (
+        patch.object(ctx.hass_api, "resolve_target_selectors", side_effect=_resolver({"kitchen": ["custom.a", "custom.b"]})),
+        patch.object(ctx.hass_api, "resolve_target_exclusion", return_value=({"custom.b"}, set())) as exclusion,
+    ):
+        uut = Notification(ctx, "testing 123", target={ATTR_AREA_ID: ["kitchen"], "exclude": {ATTR_ENTITY_ID: ["custom.b"]}})
+        targets: list[Target] = uut.generate_targets(delivery)
+        uut.generate_targets(delivery)
+    assert targets[0].entity_ids == ["custom.a"]
+    # resolved once for the notification
+    exclusion.assert_called_once_with({ATTR_ENTITY_ID: ["custom.b"]})

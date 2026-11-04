@@ -571,6 +571,23 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to resolve target selectors %s: %s", selection, e)
         return resolution
 
+    def resolve_target_exclusion(self, exclude: dict[str, list[str]]) -> tuple[set[str], set[str]]:
+        """Entity ids and device ids an `exclude` block of a target leaves out, as Home Assistant
+        2026.11 does for entity actions - config and diagnostic entities included, and with the
+        members of any group, so one can't come back when its group is expanded.
+        """
+        try:
+            selected = async_extract_referenced_entity_ids(
+                self._hass, TargetSelection(exclude), expand_group=True, primary_entities_only=False
+            )
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to resolve target exclusion %s: %s", exclude, e)
+            return set(), set()
+        entity_ids: set[str] = selected.referenced | selected.indirectly_referenced
+        for entity_id in list(entity_ids):
+            entity_ids.update(self.group_members(entity_id) or [])
+        return entity_ids, set(selected.referenced_devices)
+
     def find_service(self, domain: str, module: str) -> str | None:
         try:
             service_objs: dict[str, Service] = self._hass.services.async_services_for_domain(domain)

@@ -190,3 +190,85 @@ async def test_notify_with_ad_hoc_notification_level_action(hass: HomeAssistant,
     assert "url" not in sent["mobile_app_bob_phone"]
     for data in sent.values():
         assert data["actions"] == [{"action": "POUR", "title": "Pour it"}]
+
+
+async def test_notify_targets_floor_excluding_area(hass: HomeAssistant, town_house: House) -> None:
+    """Home Assistant 2026.11 target exclusions, as produced by the target selector's 'Exclude target'"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+            floor_id: ground
+            exclude:
+                area_id: kitchen
+    """,
+        expected_calls={"notify": ["send_message"]},
+        expected_entities={
+            "notify": [
+                "notify.garage",
+                "notify.lounge",
+            ]
+        },
+    )
+
+
+async def test_notify_targets_floor_excluding_entity(hass: HomeAssistant, town_house: House) -> None:
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+            floor_id: ground
+            exclude:
+                entity_id: notify.garage
+    """,
+        expected_calls={"notify": ["send_message"]},
+        expected_entities={
+            "notify": [
+                "notify.kitchen",
+                "notify.lounge",
+            ]
+        },
+    )
+
+
+async def test_notify_targets_people_excluding_person(hass: HomeAssistant, town_house: House) -> None:
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+            entity_id:
+              - person.alice
+              - person.bob
+            exclude:
+                entity_id: person.alice
+    """,
+        expected_calls={"notify": ["mobile_app_bob_phone"]},
+        expected_entities={},
+    )
+
+
+async def test_notify_exclusion_matching_nothing_changes_nothing(hass: HomeAssistant, town_house: House) -> None:
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+            area_id: kitchen
+            exclude:
+                area_id: bedroom
+    """,
+        expected_calls={"notify": ["send_message"]},
+        expected_entities={"notify": ["notify.kitchen"]},
+    )
+
+
+async def test_notify_default_recipients_excluding_person(hass: HomeAssistant, town_house: House) -> None:
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+            exclude:
+                entity_id: person.bob
+    """,
+        expected_calls={"notify": ["mobile_app_alice_phone"]},
+        expected_entities={},
+    )

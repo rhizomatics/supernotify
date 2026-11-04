@@ -4,6 +4,13 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.17.0
+## 🚨 Breaking changes
+- Home Assistant 2026.5 is now the minimum version
+
+## ✨ Enhancements
+- *Targets*: an `exclude` block leaves entities, devices, areas, floors, labels or people out of a `supernotify.notify` target, as **Exclude target** in the Home Assistant 2026.11 action editor gives. Previously the exclusion was rejected, or with 2026.11 ignored. See [Excluding Targets](https://supernotify.rhizomatics.org.uk/usage/targets/#excluding-targets)
+
 # v2.16.2
 ## ⚠️ Deprecated
 - *Archive*: `purge_interval` is ignored, since purges only run nightly or when `purge_archive` is called. It's gone from the options, and `purge_archive` no longer returns an `interval`

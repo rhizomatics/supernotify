@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_EMAIL,
     CONF_ENABLED,
+    CONF_EXCLUDE,
     CONF_HOST,
     CONF_ICON,
     CONF_ID,
@@ -248,19 +249,28 @@ def validate_scenario_names(scenarios: dict) -> dict:
     return scenarios
 
 
-# TARGET_FIELDS includes entity, device, area, floor, label ids
+# entity, device, area, floor, label ids - without the `exclude` block TARGET_FIELDS has from
+# Home Assistant 2026.11, which is only taken by the supernotify.notify action
+_TARGET_ID_FIELDS = {k: v for k, v in cv.TARGET_FIELDS.items() if str(k) != CONF_EXCLUDE}
+_TARGET_FIELDS = _TARGET_ID_FIELDS | {
+    vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),
+    vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
+    vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
+    vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
+    vol.Optional(cv.string): vol.All(cv.ensure_list, [str]),
+}
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
-    cv.TARGET_FIELDS
-    | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),
-        vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
-        vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
-        vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
-        vol.Optional(cv.string): vol.All(cv.ensure_list, [str]),
-    },
+    _TARGET_FIELDS,
     str,
     # any list, as unquoted phone numbers arrive as numbers - but not list[str], which voluptuous
     # calls, turning a mapping that failed above into a list of its keys
+    list,
+)
+# a target with what to leave out of it, as the target selector's 'Exclude target' gives from
+# Home Assistant 2026.11 - defined here rather than taken from it, for earlier versions
+ACTION_TARGET_SCHEMA = vol.Any(
+    _TARGET_FIELDS | {vol.Optional(CONF_EXCLUDE): vol.Schema(_TARGET_ID_FIELDS)},
+    str,
     list,
 )
 
@@ -691,7 +701,7 @@ NOTIFY_ACTION_SCHEMA = vol.All(
     _ACTION_DATA_FIELDS_SCHEMA.extend({
         vol.Optional(CONF_MESSAGE): cv.string,
         vol.Optional(CONF_TITLE): cv.string,
-        vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        vol.Optional(CONF_TARGET): ACTION_TARGET_SCHEMA,
         # pass-through data exempt from the legacy nested-data migration - see actions.py
         vol.Optional(ATTR_EXTRA_DATA): vol.Any(None, DATA_SCHEMA),
         # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label

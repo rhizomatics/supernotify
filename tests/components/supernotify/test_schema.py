@@ -77,3 +77,11 @@ def test_recipient_schema_accepts_person_without_user_id() -> None:
 def test_recipient_schema_rejects_recipient_with_neither_person_nor_user_id() -> None:
     with pytest.raises(vol.Invalid):
         RECIPIENT_SCHEMA({"alias": "Nobody"})
+
+
+def test_target_exclude_only_accepted_by_notify_action() -> None:
+    target = {"floor_id": "ground", "exclude": {"area_id": "kitchen"}}
+    assert NOTIFY_ACTION_SCHEMA({"target": target})["target"] == {"floor_id": ["ground"], "exclude": {"area_id": ["kitchen"]}}
+    # not a target category in delivery, recipient or scenario config
+    with pytest.raises(vol.Invalid):
+        TARGET_SCHEMA(target)

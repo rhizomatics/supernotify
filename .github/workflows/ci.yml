@@ -67,8 +67,8 @@ jobs:
       matrix:
         include:
           - python-version: "3.14"
-            ha-version: "2026.4"
-            ha-override: "2026.4.*"
+            ha-version: "2026.5"
+            ha-override: "2026.5.*"
           - python-version: "3.14"
             ha-version: "2026.10"
 

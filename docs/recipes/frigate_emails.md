@@ -12,6 +12,10 @@ description: Send out multiple notification types with the Frigate Blueprint, in
 ---
 # Recipe - Frigate Blueprint Emails
 
+!!! info
+    There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints
+    and automations, and automatically configures all the Frigate cameras it finds.
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded

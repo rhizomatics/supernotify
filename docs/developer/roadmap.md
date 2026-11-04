@@ -259,7 +259,7 @@ Still to do:
 
 - Gather beta feedback on how well agents choose and fill in the tools, and how often the sentences are understood, then decide what to keep and whether to leave beta.
 - The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so on older HA, still
-  allowed by the `hacs.json` minimum of 2026.4.0, the tools just don't appear. Pin down the release and
+  allowed by the `hacs.json` minimum of 2026.5.0, the tools just don't appear. Pin down the release and
   say so in the docs.
 - Sentences in other languages, registered for the language being spoken. Each needs wording from a native speaker, and the replies translated too.
 - More sentences, if the feedback asks for them, such as snoozing one delivery or camera.
