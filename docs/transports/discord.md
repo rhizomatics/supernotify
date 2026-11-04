@@ -34,6 +34,12 @@ config entry (`notify.discord`, `notify.discord_2`, …), so any `notify.*` acti
 Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is
 required: non-numeric entries are dropped and a delivery with no valid target is skipped.
 
+From Home Assistant 2026.11, a channel or user can also be added to the integration, which
+creates a `notify` entity for it. Targeting that entity selects this delivery ahead of the
+generic Notify Entity one, and the title is composed into the message as above, since the
+entity ignores a title. The entity only takes text, so the embed, images and urls only go to
+targets given as IDs.
+
 ```yaml
 delivery:
   discord_alerts:

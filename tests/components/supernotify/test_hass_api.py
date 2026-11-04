@@ -1018,3 +1018,16 @@ def test_smtp_recipients_maps_addresses_to_notify_entities(hass: HomeAssistant) 
 def test_media_dirs(hass: HomeAssistant) -> None:
     hass.config.media_dirs = {"local": "/media"}
     assert HomeAssistantAPI(hass).media_dirs == {"local": "/media"}
+
+
+def test_entity_spoken_names_include_full_entity_name(hass: HomeAssistant) -> None:
+    """From Home Assistant 2026.11, an entity's name is composed with its device's, while the
+    friendly name stays as it was until the name is changed"""
+    from homeassistant.helpers import entity_registry as er
+
+    entry = er.async_get(hass).async_get_or_create("camera", "test", "porch", suggested_object_id="porch")
+    hass.states.async_set(entry.entity_id, "idle", {"friendly_name": "Porch"})
+    with patch.object(er, "async_get_full_entity_name", return_value="Doorbell Porch", create=True):
+        names = HomeAssistantAPI(hass).entity_spoken_names(entry.entity_id)
+    assert "doorbell porch" in names
+    assert "porch" in names

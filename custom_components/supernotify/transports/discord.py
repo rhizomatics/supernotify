@@ -5,6 +5,11 @@ integration (legacy notify platform). The service is typically
 `notify.discord`, but the actual slug depends on the config entry name
 (e.g. `notify.discord_2`), so any `notify.*` action is accepted.
 
+From Home Assistant 2026.11, the integration also creates a `notify` entity for
+each channel or user set up as a subentry. One targeted is sent the message by
+`notify.send_message`, with the title composed into it as below, since the
+entity ignores a title - the embed, images and urls only go by the legacy action.
+
 Supported data keys (all optional):
     discord_embed            dict   Discord embed passthrough, forwarded as
                                     service `data.embed` (title, description,
@@ -56,6 +61,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from homeassistant.const import ATTR_ENTITY_ID
+
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
@@ -75,6 +82,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Discord message content hard limit
 _MAX_MESSAGE_LENGTH = 2000
+
+HA_DISCORD_DOMAIN = "discord"
 
 
 class DiscordTransport(Transport):
@@ -105,7 +114,9 @@ class DiscordTransport(Transport):
         # still validates the shape itself once it arrives. discord_channel is nonetheless a
         # dedicated category name no other transport uses, so a value explicitly qualified
         # with it is unambiguous - safe to auto-select on
-        return [ATTR_DISCORD_CHANNEL]
+        # the notify entity for each channel is the integration's own, claimed ahead of the
+        # generic notify_entity transport, like ntfy's
+        return [ATTR_DISCORD_CHANNEL, TargetEntityCategory(domain="notify", platform=HA_DISCORD_DOMAIN)]
 
     def validate_action(self, action: str | None) -> bool:
         return self.validate_notify_action(action)
@@ -118,7 +129,9 @@ class DiscordTransport(Transport):
         on, but targets are cleaned here anyway: non-numeric entries are
         dropped with a debug log. Duplicates are removed preserving order.
         """
-        raw_targets: list[Any] = envelope.target.resolved_targets() if envelope.target else []
+        raw_targets: list[Any] = [
+            t for t in (envelope.target.resolved_targets() if envelope.target else []) if not str(t).startswith("notify.")
+        ]
         channels: list[str] = []
         for target in raw_targets:
             candidate = str(target).strip() if target is not None else ""
@@ -147,8 +160,9 @@ class DiscordTransport(Transport):
 
         # Resolve and pre-validate numeric channel/user ID targets
         channels = self.select_channels(envelope)
-        if not channels:
-            _LOGGER.warning("SUPERNOTIFY discord: no valid targets (expected numeric channel or user IDs)")
+        entity_ids: list[str] = envelope.target.domain_entity_ids("notify") if envelope.target else []
+        if not channels and not entity_ids:
+            _LOGGER.warning("SUPERNOTIFY discord: no valid targets (expected numeric channel or user IDs, or notify entities)")
             envelope.skipped = 1
             envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
@@ -162,18 +176,7 @@ class DiscordTransport(Transport):
         # service has no title field), unless the embed carries its own
         # title (the embed then renders the title and the body stays plain).
         embed_has_title = bool(embed and embed.get("title"))
-        message_text = envelope.message or ""
-        if envelope.title and not embed_has_title:
-            message_text = f"**{envelope.title}**\n{message_text}"
-
-        # Opt-in emoji prefix mapped from SuperNotify priority
-        if priority_prefix:
-            message_text = self.priority_prefix(envelope) + message_text
-
-        # Truncate to the Discord content limit
-        if len(message_text) > _MAX_MESSAGE_LENGTH:
-            message_text = message_text[:_MAX_MESSAGE_LENGTH]
-            _LOGGER.debug("SUPERNOTIFY discord: message truncated to %d chars", _MAX_MESSAGE_LENGTH)
+        message_text = self.compose_message(envelope, with_title=not embed_has_title, priority_prefix=priority_prefix)
 
         # Grab camera snapshot if requested; images are local paths and the
         # discord integration checks them against allowlist_external_dirs
@@ -220,4 +223,32 @@ class DiscordTransport(Transport):
                 sorted(raw_data),
             )
 
-        return await self.call_action(envelope, action_data=action_data)
+        results: list[bool] = []
+        if channels:
+            results.append(await self.call_action(envelope, action_data=action_data))
+        if entity_ids:
+            if service_data:
+                _LOGGER.debug("SUPERNOTIFY discord: notify entities only take text, not %s", sorted(service_data))
+            results.append(
+                await self.call_action(
+                    envelope,
+                    qualified_action="notify.send_message",
+                    # the embed's own title isn't sent to an entity, so the title always goes in the text
+                    action_data={"message": self.compose_message(envelope, with_title=True, priority_prefix=priority_prefix)},
+                    target_data={ATTR_ENTITY_ID: entity_ids},
+                )
+            )
+        return all(results)
+
+    def compose_message(self, envelope: Envelope, with_title: bool, priority_prefix: bool) -> str:
+        """The title as Discord markdown, an opt-in emoji prefix mapped from the priority, and
+        the message, truncated to the Discord content limit"""
+        message_text = envelope.message or ""
+        if envelope.title and with_title:
+            message_text = f"**{envelope.title}**\n{message_text}"
+        if priority_prefix:
+            message_text = self.priority_prefix(envelope) + message_text
+        if len(message_text) > _MAX_MESSAGE_LENGTH:
+            message_text = message_text[:_MAX_MESSAGE_LENGTH]
+            _LOGGER.debug("SUPERNOTIFY discord: message truncated to %d chars", _MAX_MESSAGE_LENGTH)
+        return message_text

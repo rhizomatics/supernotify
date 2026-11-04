@@ -43,6 +43,33 @@ async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
     )
 
 
+async def test_notify_alexa_with_title(mock_hass, unmocked_config) -> None:  # type: ignore
+    context = unmocked_config
+
+    uut = AlexaDevicesTransport(context)
+    context.configure_for_tests([uut])
+    await context.initialize()
+    await uut.initialize()
+
+    await uut.deliver(
+        Envelope(
+            Delivery("default", {}, uut),
+            Notification(context, message="hello there", title="Dinner"),
+            target=Target(["notify.bedroom_echo_announce"]),
+        )
+    )
+    unmocked_config.hass_api.call_service.assert_called_with(
+        "notify",
+        "send_message",
+        service_data={"message": "hello there", "title": "Dinner"},
+        target={
+            "entity_id": ["notify.bedroom_echo_announce"],
+        },
+        debug=False,
+        context=None,
+    )
+
+
 async def test_notify_alexa_no_targets(mock_hass, unmocked_config) -> None:
     context = unmocked_config
 

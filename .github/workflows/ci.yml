@@ -62,6 +62,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # a failure here doesn't fail ci-ok for a row still waiting on its test harness
+    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
@@ -71,6 +73,11 @@ jobs:
             ha-override: "2026.5.*"
           - python-version: "3.14"
             ha-version: "2026.10"
+          - python-version: "3.14"
+            ha-version: "2026.11"
+            ha-override: "2026.11.*"
+            # until pytest-homeassistant-custom-component has a 2026.11 release - remove once it has
+            experimental: true
 
     steps:
       - uses: actions/checkout@v7.0.1

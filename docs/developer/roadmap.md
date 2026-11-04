@@ -324,6 +324,8 @@ Its possible these are really the same thing as options, but lacking the documen
 
 Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
 
+Add optional warnings to message bodies on missing attachments, identified where MESSAGE feature supported and either not SPOKEN or a new LONG_MESSAGE or RICH_MESSAGE feature supported, as in email
+
 Entire missed deliveries are tracked but not missed targets. Most transports are fire and forget so don't know a target has failed - mobile_push is one that does if the `action` has gone away, and it is an important transport. This would include tracking in the logs and archived notification a list of failed targets, with reasons, and also flagging the entire delivery as 'partial' if an explicitly requested mobile_app couldn't be reached ( notification would be a `success` if multiple implicit targets generated and 1 of them failed)
 
 Scenarios can mess with targets but its complicated in config and in code, and not clear how you could use a scenario to a) add targets, b) suppress targets, c) set a fixed list of targets. Presently requires delivery level target add.

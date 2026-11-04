@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pathlib
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -183,7 +184,9 @@ async def test_deliver_with_preformatted_html() -> None:
     )
 
 
-async def test_deliver_with_preformatted_html_and_image() -> None:
+async def test_deliver_with_preformatted_html_and_image(tmp_path: pathlib.Path) -> None:
+    picture = tmp_path / "picture.jpg"
+    picture.write_bytes(b"jpeg")
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
         deliveries={"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
@@ -206,7 +209,7 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
         },
     )
     await notification.initialize()
-    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path("/local/picture.jpg")
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path(picture)
     await uut.deliver(
         Envelope(Delivery("default", context.delivery_config("default"), uut), notification, target=notification._target)
     )
@@ -219,7 +222,7 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
             "message": "hello there",
             # the notification's snapshot_url, so the image links to it
             "data": {
-                "images": ["/local/picture.jpg"],
+                "images": [str(picture)],
                 "html": '<H3>testing</H3><div><p><a href="http://mycamera.thing"><img src="cid:picture.jpg"/></a></p></div>',
             },
         },
@@ -1002,11 +1005,26 @@ async def _sent_by_notify_smtp(delivery: dict, action_data: dict | None = None, 
     return context.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
 
 
-async def test_smtp_keys_in_data_are_passed_on() -> None:
+async def test_smtp_keys_in_data_are_passed_on(tmp_path: pathlib.Path) -> None:
     """Regression: smtp's own `html` and `images` were only passed on from a nested `data`"""
-    sent = await _sent_by_notify_smtp({"data": {"html": "<b>hi</b>", "images": ["/tmp/a.jpg"]}}, {"data": {"cc": "c@d.com"}})
+    image = tmp_path / "a.jpg"
+    image.write_bytes(b"jpeg")
+    sent = await _sent_by_notify_smtp({"data": {"html": "<b>hi</b>", "images": [str(image)]}}, {"data": {"cc": "c@d.com"}})
 
-    assert sent["data"] == {"html": "<b>hi</b>", "images": ["/tmp/a.jpg"], "cc": "c@d.com"}
+    assert sent["data"] == {"html": "<b>hi</b>", "images": [str(image)], "cc": "c@d.com"}
+
+
+async def test_missing_images_left_out_for_ha_smtp(tmp_path: pathlib.Path, caplog: pytest.LogCaptureFixture) -> None:
+    """Home Assistant's SMTP integration fails the whole email for a missing image from 2026.11"""
+    image = tmp_path / "a.jpg"
+    image.write_bytes(b"jpeg")
+    sent = await _sent_by_notify_smtp({"data": {"images": [str(image), str(tmp_path / "gone.jpg")]}})
+    assert sent["message"] == "hello there"
+    assert sent["data"] == {"images": [str(image)]}
+    assert "gone.jpg not found" in caplog.text
+
+    sent = await _sent_by_notify_smtp({"data": {"images": [str(tmp_path / "gone.jpg")], "cc": "c@d.com"}})
+    assert sent["data"] == {"cc": "c@d.com"}
 
 
 async def test_nested_data_is_moved_up(caplog: pytest.LogCaptureFixture) -> None:
@@ -1029,24 +1047,28 @@ async def test_supernotify_keys_are_not_passed_on() -> None:
     assert "data" not in sent
 
 
-async def test_grabbed_image_is_added_to_given_images() -> None:
+async def test_grabbed_image_is_added_to_given_images(tmp_path: pathlib.Path) -> None:
+    given = tmp_path / "a.jpg"
+    grabbed = tmp_path / "picture.jpg"
+    given.write_bytes(b"jpeg")
+    grabbed.write_bytes(b"jpeg")
     context = TestingContext(deliveries={"mail": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}})
     await context.test_initialize()
     uut = context.transport(TRANSPORT_EMAIL)
     notification = Notification(context, message="hello there")
     await notification.initialize()
-    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path("/local/picture.jpg")
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path(grabbed)
     await uut.deliver(
         Envelope(
             Delivery("mail", context.delivery_config("mail"), uut),
             notification,
             target=Target(["a@b.com"]),
-            data={"images": ["/tmp/a.jpg"]},
+            data={"images": [str(given)]},
         )
     )
 
     sent = context.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
-    assert sent["data"]["images"] == ["/tmp/a.jpg", "/local/picture.jpg"]
+    assert sent["data"]["images"] == [str(given), str(grabbed)]
 
 
 async def test_template_gets_notification_snapshot_url(hass: HomeAssistant, tmp_aiopath: Path) -> None:
@@ -1209,11 +1231,12 @@ async def test_ha_smtp_mode_uses_smtp_send_message(hass: HomeAssistant) -> None:
     }
 
 
-async def test_smtp_send_message_attaches_camera_when_snapshot_not_in_media_dirs(hass: HomeAssistant) -> None:
-    with patch(
-        "custom_components.supernotify.envelope.Envelope.grab_image",
-        return_value=Path("/config/supernotify/media/image/snap.jpg"),
-    ):
+async def test_smtp_send_message_attaches_camera_when_snapshot_not_in_media_dirs(
+    hass: HomeAssistant, tmp_path: pathlib.Path
+) -> None:
+    snap = tmp_path / "snap.jpg"
+    snap.write_bytes(b"jpeg")
+    with patch("custom_components.supernotify.envelope.Envelope.grab_image", return_value=Path(snap)):
         calls, _ = await _sent_by_smtp_send_message(
             hass, ["alice@example.com"], {"media": {"camera_entity_id": "camera.porch"}}
         )
@@ -1227,12 +1250,12 @@ async def test_smtp_send_message_attaches_camera_when_snapshot_not_in_media_dirs
     ]
 
 
-async def test_smtp_send_message_attaches_snapshot_from_media_dirs(hass: HomeAssistant) -> None:
-    hass.config.media_dirs = {"supernotify": "/config/media/supernotify"}
-    with patch(
-        "custom_components.supernotify.envelope.Envelope.grab_image",
-        return_value=Path("/config/media/supernotify/image/snap.jpg"),
-    ):
+async def test_smtp_send_message_attaches_snapshot_from_media_dirs(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    hass.config.media_dirs = {"supernotify": str(tmp_path)}
+    snap = tmp_path / "image" / "snap.jpg"
+    snap.parent.mkdir()
+    snap.write_bytes(b"jpeg")
+    with patch("custom_components.supernotify.envelope.Envelope.grab_image", return_value=Path(snap)):
         calls, _ = await _sent_by_smtp_send_message(hass, ["alice@example.com"])
 
     assert calls[0].data["attachments"][0]["media_source"]["media_content_id"] == (

@@ -199,7 +199,7 @@ async def test_other_deliveries_data_not_passed_on() -> None:
     e = _envelope(ctx, data={"ntfy_device_id": "dev1", "clickAction": "/lovelace/security"})
     await uut.deliver(e)
 
-    assert "clickAction" not in e.calls[0].action_data  # type: ignore[operator]
+    assert "clickAction" not in e.calls[0].action_data  # type: ignore[operator]  # ty: ignore[unsupported-operator]
 
 
 # ---------------------------------------------------------------------------

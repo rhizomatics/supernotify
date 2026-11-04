@@ -71,7 +71,7 @@ coverage.xml
 cover/
 .ruff_cache
 MagicMock/
-supernotify/
+^supernotify/
 
 # Translations
 *.mo

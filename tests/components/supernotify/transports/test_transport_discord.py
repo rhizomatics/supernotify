@@ -32,6 +32,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.model import SuppressionReason, TargetRequired, TransportFeature
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import PRIORITY_PREFIX
 from custom_components.supernotify.transports.discord import (
     _MAX_MESSAGE_LENGTH,
@@ -71,6 +72,7 @@ def _make_envelope(
     priority: str | None = "medium",
     grab_image_value: Path | None = None,
     grab_image_raises: bool = False,
+    entity_ids: list[str] | None = None,
 ) -> MagicMock:
     """Build a mock Envelope exposing the attributes deliver() consumes."""
     envelope = MagicMock()
@@ -80,6 +82,7 @@ def _make_envelope(
     envelope.priority = priority
     envelope.target = MagicMock()
     envelope.target.resolved_targets = MagicMock(return_value=[CHANNEL_ID] if targets is None else targets)
+    envelope.target.domain_entity_ids = MagicMock(return_value=entity_ids or [])
     if grab_image_raises:
         envelope.grab_image = AsyncMock(side_effect=OSError("camera offline"))
     else:
@@ -756,3 +759,48 @@ async def test_schema_usage(hass: HomeAssistant, maximal: bool) -> None:
         },
     )
     await assert_schema_usage(hass, case, maximal)
+
+
+# ---------------------------------------------------------------------------
+# Notify entities for channel subentries, from Home Assistant 2026.11
+# ---------------------------------------------------------------------------
+
+
+def test_claims_discord_notify_entities() -> None:
+    transport = _make_transport()
+    assert TargetEntityCategory(domain="notify", platform="discord") in transport.unique_target_categories
+
+
+async def test_deliver_to_notify_entity_composes_title() -> None:
+    transport = _make_transport()
+    envelope = _make_envelope(
+        message="This is the body",
+        title="Important Alert",
+        targets=["notify.discord_general"],
+        entity_ids=["notify.discord_general"],
+        data={"discord_embed": {"title": "Embedded"}},
+    )
+
+    assert await transport.deliver(envelope) is True
+
+    # only the entity, as there's no channel id, with the title in the text as the embed isn't sent
+    transport.call_action.assert_awaited_once_with(
+        envelope,
+        qualified_action="notify.send_message",
+        action_data={"message": "**Important Alert**\nThis is the body"},
+        target_data={"entity_id": ["notify.discord_general"]},
+    )
+
+
+async def test_deliver_to_channel_and_notify_entity() -> None:
+    transport = _make_transport()
+    envelope = _make_envelope(
+        title="Alert", targets=[CHANNEL_ID, "notify.discord_general"], entity_ids=["notify.discord_general"]
+    )
+
+    assert await transport.deliver(envelope) is True
+
+    assert transport.call_action.await_count == 2
+    legacy, entity = transport.call_action.await_args_list
+    assert legacy.kwargs["action_data"]["target"] == [CHANNEL_ID]
+    assert entity.kwargs["qualified_action"] == "notify.send_message"

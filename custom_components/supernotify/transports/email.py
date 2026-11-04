@@ -16,6 +16,7 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 import aiofiles
+import aiofiles.os
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import (
@@ -445,10 +446,27 @@ class EmailTransport(Transport):
         action exposes."""
         if envelope.delivery.action:
             # explicit action, use that
-            return await self.call_action(envelope, action_data=action_data)
+            return await self.call_action(envelope, action_data=await self._without_missing_images(action_data))
         if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT and self.local_smtp:
             return await self._send_direct_smtp(envelope, action_data)
-        return await self._send_ha_smtp(envelope, action_data)
+        return await self._send_ha_smtp(envelope, await self._without_missing_images(action_data))
+
+    async def _without_missing_images(self, action_data: dict[str, Any]) -> dict[str, Any]:
+        """Leave out image files that can't be found, as a direct send does, so at least the text gets
+        through - Home Assistant's SMTP integration fails the whole email for one from 2026.11"""
+        data: dict[str, Any] = action_data.get(ATTR_DATA) or {}
+        if not data.get("images"):
+            return action_data
+        images: list[str] = []
+        for image in ensure_list(data["images"]):
+            if await aiofiles.os.path.exists(image):
+                images.append(image)
+            else:
+                _LOGGER.warning("SUPERNOTIFY SMTP attachment %s not found, skipping", image)
+        data = {k: v for k, v in data.items() if k != "images"}
+        if images:
+            data["images"] = images
+        return {**action_data, ATTR_DATA: data}
 
     async def _send_ha_smtp(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
         """Through Home Assistant's SMTP integration - smtp.send_message to the addresses set up there as

@@ -23,6 +23,8 @@ Announce, or speak, a notification using Home Assistant's built-in *Alexa Device
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
+From Home Assistant 2026.11, the title is shown on the screen of an Echo with one, for an `_announce` entity. The `_speak` entities don't take a title.
+
 *Note* Home Assistant recommend sending multiple notifications to an [Alexa Device Group](https://www.amazon.co.uk/gp/help/customer/display.html?nodeId=GS8URL9U6PW8SPTA), rather than an explicit list of Alexa devices, to minimize the likelihood of Amazon rate-limiting API calls. Home Assistant managed groups work for announcements, but not speaking, and don't have the API efficiency of Alexa's own groups.
 
 When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html) is available, for example:

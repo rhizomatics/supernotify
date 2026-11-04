@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.group.const import DOMAIN as HA_GROUP_DOMAIN
-from homeassistant.components.notify.const import ATTR_MESSAGE
+from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TARGET
 from homeassistant.helpers.typing import ConfigType
 
@@ -63,7 +63,7 @@ class AlexaDevicesTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.MESSAGE | TransportFeature.SPOKEN
+        return TransportFeature.MESSAGE | TransportFeature.TITLE | TransportFeature.SPOKEN
 
     @property
     def default_config(self) -> TransportConfig:
@@ -135,6 +135,10 @@ class AlexaDevicesTransport(Transport):
             return False
 
         action_data: dict[str, Any] = {ATTR_MESSAGE: envelope.message or ""}
+        if envelope.title:
+            # shown on an Echo's screen by its `announce` entity, from Home Assistant 2026.11 - Home
+            # Assistant only passes it on to an entity that supports a title, so not to `speak`
+            action_data[ATTR_TITLE] = envelope.title
         target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

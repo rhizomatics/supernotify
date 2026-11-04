@@ -335,6 +335,13 @@ class HomeAssistantAPI:
         reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
         if reg_entry:
             names.extend(a for a in reg_entry.aliases if isinstance(a, str))
+            # from Home Assistant 2026.11 an entity's name is composed with its device's, but the
+            # friendly name stays as it was until the name is changed, so the composed one is added
+            full_entity_name: Callable[[HomeAssistant, RegistryEntry], str] | None = getattr(
+                er, "async_get_full_entity_name", None
+            )
+            if full_entity_name and (full_name := full_entity_name(self._hass, reg_entry)):
+                names.append(full_name)
         return {spoken_name(n) for n in names}
 
     def sender_entity_ids(self, ha_context: HomeAssistantContext | None) -> list[str]:

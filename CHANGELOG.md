@@ -9,9 +9,13 @@
 - Home Assistant 2026.5 is now the minimum version
 
 ## 📝 Other changes
+- *Email*: an image file that can't be found is left out of an email sent by Home Assistant's SMTP integration, with a warning, as it already was for a direct send, so the text still goes out. From Home Assistant 2026.11 the SMTP integration otherwise fails the whole email
 - *Docs*: installation and removal from the Home Assistant Marketplace, which takes over from HACS in Home Assistant 2026.11, with HACS kept for earlier versions. The badges and **Open in the Home Assistant Marketplace** buttons now use the Marketplace
 
 ## ✨ Enhancements
+- *Alexa Devices*: the title is shown on an Echo's screen by its announce entity, from Home Assistant 2026.11
+- *Discord*: the `notify` entity Home Assistant 2026.11 creates for each channel or user can be a target, selecting the `discord` delivery ahead of the generic Notify Entity one, with the title composed into the message
+- *Voice*: an entity can be named by its full name, as Home Assistant 2026.11 composes it from its device's, as well as by its friendly name
 - *Targets*: an `exclude` block leaves entities, devices, areas, floors, labels or people out of a `supernotify.notify` target, as **Exclude target** in the Home Assistant 2026.11 action editor gives. Previously the exclusion was rejected, or with 2026.11 ignored. See [Excluding Targets](https://supernotify.rhizomatics.org.uk/usage/targets/#excluding-targets)
 
 # v2.16.2
