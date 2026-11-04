@@ -4047,6 +4047,8 @@ Example Notification
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
+From Home Assistant 2026.11, the title is shown on the screen of an Echo with one, for an `_announce` entity. The `_speak` entities don't take a title.
+
 *Note* Home Assistant recommend sending multiple notifications to an [Alexa Device Group](https://www.amazon.co.uk/gp/help/customer/display.html?nodeId=GS8URL9U6PW8SPTA), rather than an explicit list of Alexa devices, to minimize the likelihood of Amazon rate-limiting API calls. Home Assistant managed groups work for announcements, but not speaking, and don't have the API efficiency of Alexa's own groups.
 
 When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html) is available, for example:
@@ -4531,6 +4533,8 @@ Provides a native SuperNotify transport for [Discord](https://discord.com/) thro
 The `discord` integration is set up in Home Assistant with a bot token. The bot must be invited to the server with the *Send Messages* permission. The action name depends on the config entry (`notify.discord`, `notify.discord_2`, …), so any `notify.*` action is accepted.
 
 Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target is skipped.
+
+From Home Assistant 2026.11, a channel or user can also be added to the integration, which creates a `notify` entity for it. Targeting that entity selects this delivery ahead of the generic Notify Entity one, and the title is composed into the message as above, since the entity ignores a title. The entity only takes text, so the embed, images and urls only go to targets given as IDs.
 
 ```yaml
 delivery:
@@ -8428,7 +8432,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 
 | Transport                                                                                                  | Rank  | Target Required | Inclusion | Features                                                       |
 | ---------------------------------------------------------------------------------------------------------- | ----- | --------------- | --------- | -------------------------------------------------------------- |
-| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | FIRST | always          | default   | MESSAGE, SPOKEN                                                |
+| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | FIRST | always          | default   | MESSAGE, TITLE, SPOKEN                                         |
 | [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
 | [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | ANY   | optional        | explicit  | SOUND                                                          |
 | [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
@@ -8459,7 +8463,7 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | entity_id (domain=notify, platform=alexa_devices), entity_id (domain=group) | -                         | -                                                                                 |
 | [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | -                                                                           | -                         | entity_id (domain=media_player, platform=alexa_media)                             |
 | [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | -                                                                           | -                         | entity_id (domain=switch/script/group/rest_command/siren/media_player), device_id |
-| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | discord_channel                                                             | -                         | -                                                                                 |
+| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | discord_channel, entity_id (domain=notify, platform=discord)                | -                         | -                                                                                 |
 | [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | email                                                                       | -                         | -                                                                                 |
 | [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                                                                           | -                         | -                                                                                 |
 | [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | -                                                                           | -                         | -                                                                                 |
