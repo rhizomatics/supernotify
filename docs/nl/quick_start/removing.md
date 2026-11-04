@@ -2,7 +2,7 @@
 title: Verwijderen
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
 description: Supernotify voor Home Assistant verwijderen en opruimen wat achterblijft
@@ -10,7 +10,9 @@ description: Supernotify voor Home Assistant verwijderen en opruimen wat achterb
 
 # Supernotify verwijderen
 
-Kies in het HACS-menu `Supernotify` en kies `Verwijderen` in het menu `...`.
+Ga naar **Instellingen → Marketplace**, open **Supernotify** en kies **Deïnstalleren** in het menu met de drie puntjes. Zolang het nog is ingesteld, kan het niet worden gedeïnstalleerd, dus verwijder het eerst via **Instellingen → Apparaten & diensten**, of kies **Verwijderen en deïnstalleren**, wat ook de apparaten en entiteiten ervan verwijdert.
+
+Vóór Home Assistant 2026.11: Kies in het HACS-menu `Supernotify` en kies `Verwijderen` in het menu `...`.
 
 ### Configuratie opruimen { #cleaning-up-config }
 

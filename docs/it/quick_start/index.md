@@ -2,10 +2,10 @@
 title: Avvio rapido
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Avvio rapido di Supernotify per Home Assistant - installazione da HACS e configurazione dall'interfaccia, senza YAML
+description: Avvio rapido di Supernotify per Home Assistant - installazione dal Marketplace e configurazione dall'interfaccia, senza YAML
 ---
 # Avvio rapido
 

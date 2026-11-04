@@ -2,10 +2,10 @@
 title: Schnellstart
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Schnellstart für Supernotify für Home Assistant - Installation über HACS und Einrichtung über die Oberfläche, ganz ohne YAML
+description: Schnellstart für Supernotify für Home Assistant - Installation über den Marketplace und Einrichtung über die Oberfläche, ganz ohne YAML
 ---
 # Schnellstart
 

@@ -2,10 +2,10 @@
 title: Démarrage rapide
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Démarrage rapide de Supernotify pour Home Assistant - installation depuis HACS et configuration depuis l'interface, sans YAML
+description: Démarrage rapide de Supernotify pour Home Assistant - installation depuis le Marketplace et configuration depuis l'interface, sans YAML
 ---
 # Démarrage rapide
 

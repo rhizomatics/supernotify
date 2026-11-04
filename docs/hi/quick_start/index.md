@@ -2,10 +2,10 @@
 title: त्वरित शुरुआत
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Home Assistant के लिए Supernotify की त्वरित शुरुआत - HACS से इंस्टॉल करें और बिना YAML के UI से सेट अप करें
+description: Home Assistant के लिए Supernotify की त्वरित शुरुआत - Marketplace से इंस्टॉल करें और बिना YAML के UI से सेट अप करें
 ---
 # त्वरित शुरुआत
 

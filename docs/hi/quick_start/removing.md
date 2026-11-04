@@ -2,7 +2,7 @@
 title: हटाना
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
 description: Home Assistant के लिए Supernotify को हटाएँ और जो कुछ बचा हो उसे साफ़ करें
@@ -10,7 +10,9 @@ description: Home Assistant के लिए Supernotify को हटाएँ 
 
 # Supernotify को हटाना
 
-HACS मेनू में `Supernotify` चुनें और `...` मेनू से `Remove` चुनें।
+**सेटिंग्स → Marketplace** पर जाएँ, **Supernotify** खोलें, और तीन बिंदुओं वाले मेनू से **Uninstall** चुनें। जब तक यह सेट अप है, इसे अनइंस्टॉल नहीं किया जा सकता, इसलिए पहले इसे **सेटिंग्स → डिवाइस और सेवाएँ** से हटाएँ, या **Delete and uninstall** चुनें, जो इसके डिवाइस और एंटिटी भी हटा देता है।
+
+Home Assistant 2026.11 से पहले: HACS मेनू में `Supernotify` चुनें और `...` मेनू से `Remove` चुनें।
 
 ### कॉन्फ़िगरेशन की सफ़ाई { #cleaning-up-config }
 

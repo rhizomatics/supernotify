@@ -2,10 +2,10 @@
 title: クイックスタート
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Home Assistant 用 Supernotify のクイックスタート - HACS からインストールし、YAML なしで UI から設定します
+description: Home Assistant 用 Supernotify のクイックスタート - Marketplace からインストールし、YAML なしで UI から設定します
 ---
 # クイックスタート
 

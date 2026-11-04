@@ -2,10 +2,10 @@
 title: 快速入门
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: 适用于 Home Assistant 的 Supernotify 快速入门 - 通过 HACS 安装并在界面中完成设置，无需 YAML
+description: 适用于 Home Assistant 的 Supernotify 快速入门 - 通过 Marketplace 安装并在界面中完成设置，无需 YAML
 ---
 # 快速入门
 

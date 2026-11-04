@@ -2,7 +2,7 @@
 title: 削除
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
 description: Home Assistant 用 Supernotify を削除し、残ったものを片付けます
@@ -10,7 +10,9 @@ description: Home Assistant 用 Supernotify を削除し、残ったものを片
 
 # Supernotify を削除する
 
-HACS のメニューで `Supernotify` を選び、`...` メニューから `削除` を選びます。
+**設定 → Marketplace** を開き、**Supernotify** を開いて、3 点メニューから **アンインストール** を選びます。設定が残っている間はアンインストールできないので、先に **設定 → デバイスとサービス** から削除するか、デバイスとエンティティも削除する **削除してアンインストール** を選びます。
+
+Home Assistant 2026.11 より前: HACS のメニューで `Supernotify` を選び、`...` メニューから `削除` を選びます。
 
 ### 設定の後片付け { #cleaning-up-config }
 

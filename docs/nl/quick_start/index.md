@@ -2,10 +2,10 @@
 title: Snel aan de slag
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Snel aan de slag met Supernotify voor Home Assistant - installeren via HACS en instellen via de interface, zonder YAML
+description: Snel aan de slag met Supernotify voor Home Assistant - installeren via de Marketplace en instellen via de interface, zonder YAML
 ---
 # Snel aan de slag
 

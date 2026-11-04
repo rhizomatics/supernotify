@@ -8,6 +8,9 @@
 ## 🚨 Breaking changes
 - Home Assistant 2026.5 is now the minimum version
 
+## 📝 Other changes
+- *Docs*: installation and removal from the Home Assistant Marketplace, which takes over from HACS in Home Assistant 2026.11, with HACS kept for earlier versions. The badges and **Open in the Home Assistant Marketplace** buttons now use the Marketplace
+
 ## ✨ Enhancements
 - *Targets*: an `exclude` block leaves entities, devices, areas, floors, labels or people out of a `supernotify.notify` target, as **Exclude target** in the Home Assistant 2026.11 action editor gives. Previously the exclusion was rejected, or with 2026.11 ignored. See [Excluding Targets](https://supernotify.rhizomatics.org.uk/usage/targets/#excluding-targets)
 
