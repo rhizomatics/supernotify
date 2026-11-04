@@ -2,7 +2,7 @@
 
 # Supernotify
 
-[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![hacs][hacsbadge]][hacs]
+[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![Home Assistant Marketplace][marketplacebadge]][marketplace]
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
@@ -12,8 +12,8 @@
 [![CodeQL](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql)
 [![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
 
- <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=rhizomatics&repository=supernotify" target="_blank" rel="noopener noreferrer">
-     <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Adicionar ao HACS">
+ <a href="https://my.home-assistant.io/redirect/marketplace_repository/?owner=rhizomatics&repository=supernotify&category=integration" target="_blank" rel="noopener noreferrer">
+     <img src="https://my.home-assistant.io/badges/marketplace_repository.svg" alt="Abrir no Home Assistant Marketplace">
    </a>
 <br/>
 <br/>
@@ -45,7 +45,7 @@ Apenas com a configuração da interface, comece as notificações push móveis 
 
 ## Distribuição
 
-Supernotify é um componente personalizado disponível através do [Home Assistant Community Shop](https://hacs.xyz) (**HACS**). É gratuito e de código aberto sob a [licença Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+Supernotify é um componente personalizado disponível no [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace), ou através do [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) antes do Home Assistant 2026.11. É gratuito e de código aberto sob a [licença Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Documentação
 
@@ -117,7 +117,7 @@ Muito pode ser feito com a simples configuração sem YAML, incluindo a automaç
 
 ##  Rhizomatics Open Source para Home Assistant
 
-### HACS
+### Home Assistant Marketplace
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - Armar e desarmar automaticamente painéis de controle de alarme do Home Assistant usando botões físicos, presença, calendários e mais
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Captura de eventos OpenTelemetry (OTLP) e Syslog para Home Assistant
 
@@ -127,5 +127,5 @@ Muito pode ser feito com a simples configuração sem YAML, incluindo a automaç
 - [Anpr2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - Integração com câmeras ANPR/ALPR de placas via sistema de arquivos para MQTT
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Notificação automática via MQTT em atualizações de imagens Docker
 
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg
+[marketplace]: https://www.home-assistant.io/integrations/marketplace
+[marketplacebadge]: https://img.shields.io/badge/Home%20Assistant-Marketplace-blue.svg

@@ -140,7 +140,7 @@ plugins:
         Start here:
           - index.md: Overview of what Supernotify does
           - quick_start/index.md: Quick Start overview
-          - quick_start/installation.md: Install from HACS and set up from the UI, with no YAML
+          - quick_start/installation.md: Install from the Marketplace and set up from the UI, with no YAML
           - quick_start/first_notification.md: Send a first notification, to everyone, one person or the speakers
           - quick_start/next_steps.md: What to do next - automations, a dashboard, switches, targets and recipes
           - quick_start/basic_concepts.md: Basic concepts - targets, recipients, deliveries and priority

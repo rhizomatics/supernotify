@@ -2,7 +2,7 @@
 
 # Supernotify
 
-[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![hacs][hacsbadge]][hacs]
+[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![Home Assistant Marketplace][marketplacebadge]][marketplace]
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
@@ -12,8 +12,8 @@
 [![CodeQL](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql)
 [![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
 
- <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=rhizomatics&repository=supernotify" target="_blank" rel="noopener noreferrer">
-     <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="HACS में जोड़ें">
+ <a href="https://my.home-assistant.io/redirect/marketplace_repository/?owner=rhizomatics&repository=supernotify&category=integration" target="_blank" rel="noopener noreferrer">
+     <img src="https://my.home-assistant.io/badges/marketplace_repository.svg" alt="Home Assistant Marketplace में खोलें">
    </a>
 <br/>
 <br/>
@@ -45,7 +45,7 @@ Supernotify का एक ही लक्ष्य है — **न्यून
 
 ## वितरण
 
-Supernotify [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के माध्यम से उपलब्ध एक कस्टम घटक है। यह [Apache 2.0 लाइसेंस](https://www.apache.org/licenses/LICENSE-2.0) के तहत मुफ्त और ओपन सोर्स है।
+Supernotify [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace) में उपलब्ध एक कस्टम घटक है, और Home Assistant 2026.11 से पहले [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के माध्यम से। यह [Apache 2.0 लाइसेंस](https://www.apache.org/licenses/LICENSE-2.0) के तहत मुफ्त और ओपन सोर्स है।
 
 ## दस्तावेज़ीकरण
 
@@ -117,7 +117,7 @@ Supernotify अब बुनियादी सेटअप के लिए म
 
 ##  Home Assistant के लिए Rhizomatics Open Source
 
-### HACS
+### Home Assistant Marketplace
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - भौतिक बटन, उपस्थिति, कैलेंडर और अधिक का उपयोग करके Home Assistant अलार्म नियंत्रण पैनलों को स्वचालित रूप से सक्रिय/निष्क्रिय करें
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Home Assistant के लिए OpenTelemetry (OTLP) और Syslog ईवेंट कैप्चर
 
@@ -127,5 +127,5 @@ Supernotify अब बुनियादी सेटअप के लिए म
 - [Anpr2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - फ़ाइल सिस्टम के माध्यम से ANPR/ALPR लाइसेंस प्लेट कैमरों के साथ MQTT में एकीकरण
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Docker इमेज अपडेट पर MQTT के माध्यम से स्वचालित सूचना
 
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg
+[marketplace]: https://www.home-assistant.io/integrations/marketplace
+[marketplacebadge]: https://img.shields.io/badge/Home%20Assistant-Marketplace-blue.svg

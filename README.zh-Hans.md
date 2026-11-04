@@ -2,7 +2,7 @@
 
 # Supernotify
 
-[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![hacs][hacsbadge]][hacs]
+[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![Home Assistant Marketplace][marketplacebadge]][marketplace]
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
@@ -12,8 +12,8 @@
 [![CodeQL](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql)
 [![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
 
- <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=rhizomatics&repository=supernotify" target="_blank" rel="noopener noreferrer">
-     <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="添加到 HACS">
+ <a href="https://my.home-assistant.io/redirect/marketplace_repository/?owner=rhizomatics&repository=supernotify&category=integration" target="_blank" rel="noopener noreferrer">
+     <img src="https://my.home-assistant.io/badges/marketplace_repository.svg" alt="在 Home Assistant Marketplace 中打开">
    </a>
 <br/>
 <br/>
@@ -45,7 +45,7 @@ Supernotify 只有一个目标——**用最简单的通知触发尽可能多的
 
 ## 分发方式
 
-Supernotify 是通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**）提供的自定义组件。基于 [Apache 2.0 许可证](https://www.apache.org/licenses/LICENSE-2.0)，免费开源。
+Supernotify 是可从 [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace) 获取的自定义组件（Home Assistant 2026.11 之前通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**）获取）。基于 [Apache 2.0 许可证](https://www.apache.org/licenses/LICENSE-2.0)，免费开源。
 
 ## 文档
 
@@ -117,7 +117,7 @@ Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置�
 
 ##  面向 Home Assistant 的 Rhizomatics 开源项目
 
-### HACS
+### Home Assistant Marketplace
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - 使用物理按钮、在家状态、日历等自动布防/撤防 Home Assistant 警报控制面板
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - 适用于 Home Assistant 的 OpenTelemetry（OTLP）和 Syslog 事件采集
 
@@ -127,5 +127,5 @@ Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置�
 - [Anpr2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - 通过文件系统将 ANPR/ALPR 车牌摄像头与 MQTT 集成
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Docker 镜像更新时通过 MQTT 自动通知
 
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg
+[marketplace]: https://www.home-assistant.io/integrations/marketplace
+[marketplacebadge]: https://img.shields.io/badge/Home%20Assistant-Marketplace-blue.svg

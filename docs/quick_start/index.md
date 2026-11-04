@@ -2,10 +2,10 @@
 title: Quick Start
 tags:
   - installation
-  - hacs
+  - marketplace
   - configuration
   - quickstart
-description: Quick Start for Supernotify for Home Assistant from HACS and set it up from the UI, with no YAML
+description: Quick Start for Supernotify for Home Assistant from the Marketplace and set it up from the UI, with no YAML
 
 ---
 # Quick Start
