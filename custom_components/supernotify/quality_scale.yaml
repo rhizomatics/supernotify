@@ -87,7 +87,7 @@ rules:
 
   docs-installation-instructions:
     status: done
-    comment: HACS installation documented.
+    comment: Marketplace installation documented, and HACS for Home Assistant before 2026.11.
 
   docs-removal-instructions:
     status: done

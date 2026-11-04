@@ -14,7 +14,7 @@ Hints and suggestions for configuring non-SuperNotify notification in HomeAssist
 If you have a Mikrotik 4G router for broadband or fallback, then you can probably
 send SMS notifications through it, using *Mikrotik SMS* custom component.
 
-Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repo in HACS.
+Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repository in the Marketplace, with **Add from link**, or in HACS before Home Assistant 2026.11.
 
 ## Configuring an MQTT Siren with Zigbee2MQTT
 
