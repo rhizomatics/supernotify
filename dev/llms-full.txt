@@ -33,7 +33,7 @@ This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain,
 
 ## Distribution
 
-Supernotify is a custom component available via the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) integration. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+Supernotify is a custom component available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace), or the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) before Home Assistant 2026.11. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Documentation
 
@@ -128,7 +128,7 @@ An alternative `supernotify.notify` action is now available that is much easier 
 
 ## Rhizomatics Open Source for Home Assistant
 
-### HACS
+### Home Assistant Marketplace
 
 - [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk) - Live activities on your phone for dishwashers, robot vacuums, power monitors etc with no config, no YAML, no blueprints, no automations.
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more. Integrates with Frigate profiles.
@@ -160,9 +160,15 @@ If you don't end up liking it, then use the [removal](https://supernotify.rhizom
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/
 
+## Install from the Marketplace
+
+From Home Assistant 2026.11, go to **Settings → Marketplace**, search for **Supernotify** and open it, or go straight there with this button:
+
+Select **Install**, and **Install** again to confirm. Supernotify is in the Marketplace's catalog, so there's no custom repository to add. If Home Assistant needs a restart, a repair under **Settings → System → Repairs** offers to do it. See the [Marketplace documentation](https://www.home-assistant.io/integrations/marketplace) for more.
+
 ## Install from HACS
 
-First, make sure you have **HACS** installed.
+Before Home Assistant 2026.11, the Marketplace was the separate **HACS** integration, so first make sure you have **HACS** installed.
 
 If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required.
 
@@ -458,7 +464,9 @@ See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/
 
-From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+Go to **Settings → Marketplace**, open **Supernotify**, and choose **Uninstall** from the three dots menu. It can't be uninstalled while it's still set up, so either remove it from **Settings → Devices & Services** first, or choose **Delete and uninstall**, which also deletes its devices and entities.
+
+Before Home Assistant 2026.11, from the HACS menu, select `Supernotify` and choose `Remove` from the `...` menu.
 
 ### Cleaning Up Config
 
@@ -1440,6 +1448,22 @@ Home Assistant's standard target selectors can be used as well as addresses and 
 Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
 
 An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+
+### Excluding Targets
+
+Entities, devices, areas, floors and labels can be left out of a target with an `exclude` block, as **Exclude target** in the Home Assistant 2026.11 action editor gives, for example the ground floor but not the kitchen:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            floor_id: ground_floor
+            exclude:
+              area_id: kitchen
+```
+
+The exclusion is applied after areas, floors, labels and groups are resolved to entities, so a member of a group can be left out, and excluding a `person` entity leaves out that recipient and their phones, e-mail and other targets. It applies to everything the notification would go to, including the default recipients when `exclude` is the only thing in the target, and scenario targets - the one exception is a delivery's own default target, used when the notification has no targets left for it. It works on any version of Home Assistant Supernotify supports, although the action editor only offers it from 2026.11.
 
 ## Simple Targeting
 
@@ -3516,7 +3540,7 @@ Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-ho
 
 ## Other Email Options
 
-- [ha-smtp](https://github.com/manjotsc/ha-smtp) - HACS integration for SMTP that doesn't need YAML config
+- [ha-smtp](https://github.com/manjotsc/ha-smtp) - custom integration for SMTP that doesn't need YAML config
 - [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration
 - [MS365 Mail for Home Assistant](https://rogerselwyn.github.io/MS365-Mail/) - Microsoft based e-mail sending
 - Self Hosting
@@ -4071,7 +4095,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_pla
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
 | `alexa_media_player` | [`alexa_media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_media_player.py) | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player) | -        |
 
-Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
+Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace).
 
 ## Example
 
@@ -4187,7 +4211,7 @@ ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
+**Delivery (explicit selection).** If the `alexa_media` custom integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
 
 ## References
 
@@ -5060,9 +5084,9 @@ Generic is a catch-all for user-defined actions, so there's nothing for Supernot
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
-| Transport ID | Source                                                                                                                 | Requirements                                                                                | Optional |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------- |
-| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration | -        |
+| Transport ID | Source                                                                                                                 | Requirements                                                                                  | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration | -        |
 
 ## Motivation
 
@@ -5134,16 +5158,16 @@ data:
 
 ## Discovery
 
-**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the HACS integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
+**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the custom integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
 
 ## Notes
 
-- The HACS integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
+- The custom integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
 - Without a title, the integration uses "Home Assistant".
 
 ## References
 
-- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration
 - [Gotify message extras](https://gotify.net/docs/msgextras)
 
 # HTML5 Browser Push Transport Adaptor
@@ -6260,7 +6284,7 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) custom integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
 
 # Telegram Transport Adaptor
 
@@ -7085,7 +7109,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_ac
 
 Tip
 
-There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances.
+There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances, including dishwashers, ovens, robot vacuums and more.
 
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 
@@ -7241,6 +7265,10 @@ scenarios:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/
 
+Info
+
+There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints and automations, and automatically configures all the Frigate cameras it finds.
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI.
@@ -7336,6 +7364,10 @@ This will work identically for any transport, there's nothing generic specific i
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/
 
+Info
+
+There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints and automations, and automatically configures all the Frigate cameras it finds.
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI. You need to have this also as email for family members without mobile push available.
@@ -7382,7 +7414,7 @@ Hints and suggestions for configuring non-SuperNotify notification in HomeAssist
 
 If you have a Mikrotik 4G router for broadband or fallback, then you can probably send SMS notifications through it, using *Mikrotik SMS* custom component.
 
-Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repo in HACS.
+Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repository in the Marketplace, with **Add from link**, or in HACS before Home Assistant 2026.11.
 
 ## Configuring an MQTT Siren with Zigbee2MQTT
 
@@ -7606,7 +7638,7 @@ See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/arch
 
 ### 2. Configure Remote Logger
 
-Install the HACS component [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
+Install the custom integration [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
 
 In the Home Assistant integration dialog, select custom event generation, and add `supernotification`.
 
@@ -8011,7 +8043,7 @@ Send mobile push notifications without any configuration.
 
 All you need is:
 
-1. Install Supernotify from HACS ([Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md))
+1. Install Supernotify from the Marketplace ([Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md))
    - By default, the configuration will have *Mobile Device Discovery* and *Person Discovery* switched on
 1. If they don't already have it, set up the [Home Assistant Companion App](https://companion.home-assistant.io) for each person/device to be notified
    - This needs a *username* and *password* for each user, see [Adding a Person to Home Assistant](https://www.home-assistant.io/integrations/person/#adding-a-person-to-home-assistant)

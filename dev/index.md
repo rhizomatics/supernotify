@@ -24,7 +24,7 @@ This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain,
 
 ## Distribution
 
-Supernotify is a custom component available via the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) integration. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+Supernotify is a custom component available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace), or the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) before Home Assistant 2026.11. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Documentation
 
@@ -119,7 +119,7 @@ An alternative `supernotify.notify` action is now available that is much easier 
 
 ## Rhizomatics Open Source for Home Assistant
 
-### HACS
+### Home Assistant Marketplace
 
 - [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk) - Live activities on your phone for dishwashers, robot vacuums, power monitors etc with no config, no YAML, no blueprints, no automations.
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more. Integrates with Frigate profiles.

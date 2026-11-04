@@ -18,7 +18,7 @@ See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/arch
 
 ### 2. Configure Remote Logger
 
-Install the HACS component [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
+Install the custom integration [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
 
 In the Home Assistant integration dialog, select custom event generation, and add `supernotification`.
 

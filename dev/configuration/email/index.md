@@ -104,7 +104,7 @@ Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-ho
 
 ## Other Email Options
 
-- [ha-smtp](https://github.com/manjotsc/ha-smtp) - HACS integration for SMTP that doesn't need YAML config
+- [ha-smtp](https://github.com/manjotsc/ha-smtp) - custom integration for SMTP that doesn't need YAML config
 - [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration
 - [MS365 Mail for Home Assistant](https://rogerselwyn.github.io/MS365-Mail/) - Microsoft based e-mail sending
 - Self Hosting

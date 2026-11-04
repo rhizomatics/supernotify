@@ -6,7 +6,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_pla
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
 | `alexa_media_player` | [`alexa_media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_media_player.py) | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player) | -        |
 
-Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
+Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace).
 
 ## Example
 
@@ -122,7 +122,7 @@ ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
+**Delivery (explicit selection).** If the `alexa_media` custom integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
 
 ## References
 

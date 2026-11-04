@@ -2,9 +2,15 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/
 
+## Install from the Marketplace
+
+From Home Assistant 2026.11, go to **Settings → Marketplace**, search for **Supernotify** and open it, or go straight there with this button:
+
+Select **Install**, and **Install** again to confirm. Supernotify is in the Marketplace's catalog, so there's no custom repository to add. If Home Assistant needs a restart, a repair under **Settings → System → Repairs** offers to do it. See the [Marketplace documentation](https://www.home-assistant.io/integrations/marketplace) for more.
+
 ## Install from HACS
 
-First, make sure you have **HACS** installed.
+Before Home Assistant 2026.11, the Marketplace was the separate **HACS** integration, so first make sure you have **HACS** installed.
 
 If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required.
 

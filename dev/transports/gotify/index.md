@@ -2,9 +2,9 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
-| Transport ID | Source                                                                                                                 | Requirements                                                                                | Optional |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------- |
-| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration | -        |
+| Transport ID | Source                                                                                                                 | Requirements                                                                                  | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration | -        |
 
 ## Motivation
 
@@ -76,14 +76,14 @@ data:
 
 ## Discovery
 
-**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the HACS integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
+**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the custom integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
 
 ## Notes
 
-- The HACS integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
+- The custom integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
 - Without a title, the integration uses "Home Assistant".
 
 ## References
 
-- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration
 - [Gotify message extras](https://gotify.net/docs/msgextras)

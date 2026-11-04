@@ -47,4 +47,4 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) custom integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.

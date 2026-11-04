@@ -2,7 +2,9 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/
 
-From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+Go to **Settings → Marketplace**, open **Supernotify**, and choose **Uninstall** from the three dots menu. It can't be uninstalled while it's still set up, so either remove it from **Settings → Devices & Services** first, or choose **Delete and uninstall**, which also deletes its devices and entities.
+
+Before Home Assistant 2026.11, from the HACS menu, select `Supernotify` and choose `Remove` from the `...` menu.
 
 ### Cleaning Up Config
 

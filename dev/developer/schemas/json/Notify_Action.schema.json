@@ -378,6 +378,40 @@
             "person_id": {
               "type": "array",
               "items": {}
+            },
+            "exclude": {
+              "type": "object",
+              "properties": {
+                "entity_id": {
+                  "type": "array",
+                  "items": {}
+                },
+                "device_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "area_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "floor_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "label_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": {
