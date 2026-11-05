@@ -27,13 +27,13 @@ Is dat niet zo, bekijk dan de [HACS-instructies](https://hacs.xyz/docs/use/). Su
 
 Kies op de HACS-pagina in Home Assistant **Supernotify** in de lijst met beschikbare integraties, download het en herstart Home Assistant.
 
-![Selectie in Marketplace](../../assets/images/marketplace_select.png){width=400}
+![Selectie in Marketplace](../../assets/images/marketplace_select.png){width=600}
 
 ## De integratie toevoegen { #add-the-integration }
 
 Ga naar **Instellingen → Apparaten & diensten → Integratie toevoegen** en zoek naar **Supernotify**. Accepteer de standaardwaarden.
 
-![Integratie toevoegen](../../assets/images/new_integration.png)
+![Integratie toevoegen](../../assets/images/new_integration.png){width=600}
 
 ## Detectie en standaardwaarden { #discovery-and-defaults }
 

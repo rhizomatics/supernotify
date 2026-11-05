@@ -27,13 +27,13 @@ If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify i
 
 From the HACS page on Home Assistant, select **Supernotify** in the list of available integrations, download it, and restart Home Assistant.
 
-![Marketplace Selection](../assets/images/marketplace_select.png){width=400}
+![Marketplace Selection](../assets/images/marketplace_select.png){width=600}
 
 ## Add the Integration
 
 Go to **Settings → Devices & Services → Add Integration** and search for **Supernotify**. Accept the defaults.
 
-![Adding Integration](../assets/images/new_integration.png)
+![Adding Integration](../assets/images/new_integration.png){width=600}
 
 ## Discovery and Defaults
 

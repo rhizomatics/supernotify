@@ -27,13 +27,13 @@ Home Assistant 2026.11 より前は、Marketplace は独立した **HACS** 統�
 
 Home Assistant の HACS ページで、利用可能な統合の一覧から **Supernotify** を選んでダウンロードし、Home Assistant を再起動します。
 
-![HACS での選択](../../assets/images/marketplace_select.png){width=400}
+![HACS での選択](../../assets/images/marketplace_select.png){width=600}
 
 ## 統合を追加する { #add-the-integration }
 
 **設定 → デバイスとサービス → 統合を追加** を開き、**Supernotify** を検索します。既定値のまま進めてください。
 
-![統合の追加](../../assets/images/new_integration.png)
+![統合の追加](../../assets/images/new_integration.png){width=600}
 
 ## 自動検出と既定値 { #discovery-and-defaults }
 
