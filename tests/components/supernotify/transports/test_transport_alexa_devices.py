@@ -94,7 +94,7 @@ async def test_notify_alexa_title_ignored_before_2026_11(hass: HomeAssistant) ->
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {})
     echo = PreTitleAlexaNotifyEntity()
     await hass.data[NOTIFY_DOMAIN].async_add_entities([echo])
-    context = TestingContext(homeassistant=hass, transport_types=[AlexaDevicesTransport])
+    context = TestingContext(homeassistant=hass, deliveries=DELIVERY, viable_transport_types=[AlexaDevicesTransport])
     await context.test_initialize()
     uut = context.transport(TRANSPORT_ALEXA)
 
