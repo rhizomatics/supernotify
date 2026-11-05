@@ -10,7 +10,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
      # Run the linter.
       - id: ruff-check
@@ -65,7 +65,7 @@ repos:
         language: system
         files: ^docs/developer/diagrams/.+\.html$
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.97
+    rev: v0.0.98
     hooks:
       - id: ty
         args: [--isolated, --no-python-downloads]

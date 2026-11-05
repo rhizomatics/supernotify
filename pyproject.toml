@@ -50,6 +50,7 @@ dev=[
     "ruff>=0.16.10",
     "codespell",
     "mypy",
+    "ty",
     "genbadge[all]",
     # generic transport testing
     "notify-events",
