@@ -33,7 +33,7 @@ This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain,
 
 ## Distribution
 
-Supernotify is a custom component available via the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) integration. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+Supernotify is a custom component available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace), or the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) before Home Assistant 2026.11. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Documentation
 
@@ -128,7 +128,7 @@ An alternative `supernotify.notify` action is now available that is much easier 
 
 ## Rhizomatics Open Source for Home Assistant
 
-### HACS
+### Home Assistant Marketplace
 
 - [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk) - Live activities on your phone for dishwashers, robot vacuums, power monitors etc with no config, no YAML, no blueprints, no automations.
 - [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more. Integrates with Frigate profiles.
@@ -160,9 +160,15 @@ If you don't end up liking it, then use the [removal](https://supernotify.rhizom
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/
 
-## Install from HACS
+## Install from the Marketplace
 
-First, make sure you have **HACS** installed.
+From Home Assistant 2026.11, go to **Settings → Marketplace**, search for **Supernotify** and open it, or go straight there with this button:
+
+Select **Install**, and **Install** again to confirm. Supernotify is in the Marketplace's catalog, so there's no custom repository to add. See the [Marketplace documentation](https://www.home-assistant.io/integrations/marketplace) for more information.
+
+## Install from HACS (Home Assistant 2026.10 and earlier)
+
+Before Home Assistant 2026.11, the Marketplace was the separate **HACS** integration, so first make sure you have **HACS** installed.
 
 If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required.
 
@@ -458,7 +464,9 @@ See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer
 
 Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/
 
-From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+Go to **Settings → Marketplace**, open **Supernotify**, and choose **Uninstall** from the three dots menu. It can't be uninstalled while it's still set up, so either remove it from **Settings → Devices & Services** first, or choose **Delete and uninstall**, which also deletes its devices and entities.
+
+Before Home Assistant 2026.11, from the HACS menu, select `Supernotify` and choose `Remove` from the `...` menu.
 
 ### Cleaning Up Config
 
@@ -1441,6 +1449,22 @@ Supernotify resolves them to entities itself, using the same core logic as Home 
 
 An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
 
+### Excluding Targets
+
+Entities, devices, areas, floors and labels can be left out of a target with an `exclude` block, as **Exclude target** in the Home Assistant 2026.11 action editor gives, for example the ground floor but not the kitchen:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            floor_id: ground_floor
+            exclude:
+              area_id: kitchen
+```
+
+The exclusion is applied after areas, floors, labels and groups are resolved to entities, so a member of a group can be left out, and excluding a `person` entity leaves out that recipient and their phones, e-mail and other targets. It applies to everything the notification would go to, including the default recipients when `exclude` is the only thing in the target, and scenario targets - the one exception is a delivery's own default target, used when the notification has no targets left for it. It works on any version of Home Assistant Supernotify supports, although the action editor only offers it from 2026.11.
+
 ## Simple Targeting
 
 Simple targeting is a single value, or a big mixed list, that Supernotify sorts out itself. Anything in an *Auto* category is recognized from its format, and everything else gets a category prefix.
@@ -1816,7 +1840,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
 | `PARTIAL_DELIVERY`  | Some deliveries made, others missed                                         |
 | `FALLBACK_DELIVERY` | A fallback delivery made, after an error or with no other delivery applying |
 | `ERROR`             | At least one delivery error                                                 |
-| `DUPE`              | Suppressed as a duplicate                                                   |
+| `DUPE`              | Nothing delivered, since it was a duplicate of one recently sent            |
 | `ALL`               | Every notification, whatever the outcome                                    |
 
 Selecting none means no notification - no events, or no full diagnostics.
@@ -2472,25 +2496,47 @@ Three duplicate detection policies are available:
 
 1. `dupe_policy_message_title_same_or_lower_priority`
    - Suppress messages with the same message and title that appear within the time to live period, unless the newer message has a higher priority.
-   - This is the default, including if there is no `dupe_check` section configured
+   - This is the default, including if duplicate detection has never been configured
 1. `dupe_policy_message_title_same`
    - Suppress messages with the same message and title that appear within the time to live period. Ignore priority.
 1. `dupe_policy_none`
    - Don't suppress duplicate messages at all.
 
-Messages and titles are stripped of digits and punctuation before being compared, so two messages with different counts, timestamps etc will be detected as duplicates.
+## What Counts as a Duplicate
+
+Duplicates are checked for each delivery and its resolved targets, so the same message is only suppressed if it would go to the same people or devices, by the same delivery, as one already sent. The same message sent by email and by mobile push isn't a duplicate, and nor is the same message sent to someone it wasn't sent to before.
+
+Two notifications are the same if they have:
+
+- The same message and title, after digits and punctuation are removed. For a spoken transport, such as `tts` or `alexa_devices`, it's the spoken message that's compared, if there is one.
+- The same delivery and the same resolved targets
+- The same camera, and the same `clip_url`, if there's media attached. The `snapshot_url` isn't compared, since Frigate and other NVRs create a new one for each detection, even for the same ongoing scene.
+
+Removing digits and punctuation means two messages that only differ in a count, a time or a date are duplicates, for example `Washing machine finished at 14:02` and `Washing machine finished at 14:05`. It also means `Door 1 open` and `Door 2 open` are duplicates, so put what makes a message different in words, like `Front door open` and `Back door open`, or use [`force_resend`](#overriding).
+
+Only what was actually sent is remembered. If a delivery fails, sending it again straight away isn't suppressed.
 
 ## Configuration
 
-The hashed message and title is cached, with a limit to both cache size and time the data is held. The `ttl` not only affects how much data is held in memory, it also controls after how long the same message can be repeated without being suppressed as a duplicate.
+Duplicate detection is set in the integration's options, from **Configure** on the integration in **Settings → Devices & Services**.
+
+| Option        | Default                                            | Description                                                                |
+| ------------- | -------------------------------------------------- | -------------------------------------------------------------------------- |
+| `ttl`         | 120                                                | Seconds before the same message can be sent again without being suppressed |
+| `size`        | 100                                                | How many recently sent messages are remembered, the oldest forgotten first |
+| `dupe_policy` | `dupe_policy_message_title_same_or_lower_priority` | One of the policies above                                                  |
+
+A `dupe_check:` section in the top-level `supernotify:` YAML is ignored, with a repair raised to say so. A `dupe_check:` in the old `notify: - platform: supernotify` YAML is only used to fill in the options once, when migrating from Supernotify v1.
+
+Recently sent messages are only remembered in memory, so they're forgotten when Home Assistant restarts, or when Supernotify is reloaded, which includes changing any of its options.
 
 ## Overriding
 
-Set `force_resend: true` on the top level of the notification action data to override any dupe detection, just for that message.
+Set `force_resend: true` on the top level of the notification action data to override any dupe detection, just for that message. It can also be set in a delivery's `data`, to always send that delivery even when it's a duplicate.
 
-## Internals
+## Outcome
 
-The cache is implemented using [cachetools TTLCache](https://cachetools.readthedocs.io/en/stable/#cachetools.TTLCache)
+A notification where nothing was sent because everything was a duplicate has the `dupe` outcome, which can be used to choose what is [archived](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md), and shows in the logbook. If some of a notification was sent, and the rest was a duplicate, the outcome is for what was sent. A delivery skipped as a duplicate has `DUPE` as its [`last_skip_reason`](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md).
 
 # Configuration Levels
 
@@ -3516,7 +3562,7 @@ Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-ho
 
 ## Other Email Options
 
-- [ha-smtp](https://github.com/manjotsc/ha-smtp) - HACS integration for SMTP that doesn't need YAML config
+- [ha-smtp](https://github.com/manjotsc/ha-smtp) - custom integration for SMTP that doesn't need YAML config
 - [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration
 - [MS365 Mail for Home Assistant](https://rogerselwyn.github.io/MS365-Mail/) - Microsoft based e-mail sending
 - Self Hosting
@@ -4023,6 +4069,8 @@ Example Notification
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
 
+From Home Assistant 2026.11, the title is shown on the screen of an Echo with one, for an `_announce` entity. The `_speak` entities don't take a title.
+
 *Note* Home Assistant recommend sending multiple notifications to an [Alexa Device Group](https://www.amazon.co.uk/gp/help/customer/display.html?nodeId=GS8URL9U6PW8SPTA), rather than an explicit list of Alexa devices, to minimize the likelihood of Amazon rate-limiting API calls. Home Assistant managed groups work for announcements, but not speaking, and don't have the API efficiency of Alexa's own groups.
 
 When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html) is available, for example:
@@ -4071,7 +4119,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_pla
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
 | `alexa_media_player` | [`alexa_media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_media_player.py) | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player) | -        |
 
-Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
+Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available from the [Home Assistant Marketplace](https://www.home-assistant.io/integrations/marketplace).
 
 ## Example
 
@@ -4187,7 +4235,7 @@ ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
+**Delivery (explicit selection).** If the `alexa_media` custom integration's `notify.alexa_media*` service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player` delivery is generated automatically — but since a target has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
 
 ## References
 
@@ -4507,6 +4555,8 @@ Provides a native SuperNotify transport for [Discord](https://discord.com/) thro
 The `discord` integration is set up in Home Assistant with a bot token. The bot must be invited to the server with the *Send Messages* permission. The action name depends on the config entry (`notify.discord`, `notify.discord_2`, …), so any `notify.*` action is accepted.
 
 Targets are numeric Discord channel or user IDs (Developer Mode → *Copy ID*). A target is required: non-numeric entries are dropped and a delivery with no valid target is skipped.
+
+From Home Assistant 2026.11, a channel or user can also be added to the integration, which creates a `notify` entity for it. Targeting that entity selects this delivery ahead of the generic Notify Entity one, and the title is composed into the message as above, since the entity ignores a title. The entity only takes text, so the embed, images and urls only go to targets given as IDs.
 
 ```yaml
 delivery:
@@ -5060,9 +5110,9 @@ Generic is a catch-all for user-defined actions, so there's nothing for Supernot
 
 Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
 
-| Transport ID | Source                                                                                                                 | Requirements                                                                                | Optional |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------- |
-| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration | -        |
+| Transport ID | Source                                                                                                                 | Requirements                                                                                  | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| `gotify`     | [`gotify.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/gotify.py) | [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration | -        |
 
 ## Motivation
 
@@ -5134,16 +5184,16 @@ data:
 
 ## Discovery
 
-**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the HACS integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
+**Delivery (explicit selection).** SuperNotify looks for a `notify` action from the custom integration. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically. Gotify has no target to recognise, so it's only used when named in `delivery`, a scenario or a recipient, or if you set `inclusion: default` on your own delivery to send every notification there.
 
 ## Notes
 
-- The HACS integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
+- The custom integration logs a failure to reach the Gotify server rather than raising an error, so a notification is recorded as delivered even if Gotify didn't receive it. Check the Home Assistant log if messages go missing.
 - Without a title, the integration uses "Home Assistant".
 
 ## References
 
-- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) HACS integration
+- [homeassistant-gotify](https://github.com/1RandomDev/homeassistant-gotify) custom integration
 - [Gotify message extras](https://gotify.net/docs/msgextras)
 
 # HTML5 Browser Push Transport Adaptor
@@ -6260,7 +6310,7 @@ Example Notification
 
 ## Discovery
 
-**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the [Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) custom integration (Twilio preferred if both are present). If no `sms` delivery is defined, a `sms` delivery is generated automatically and is used for any notification with a phone number, either as a target or from a recipient's `phone_number` — same as with `email`. Any other SMS integration still needs a manually configured `action`.
 
 # Telegram Transport Adaptor
 
@@ -7085,7 +7135,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_ac
 
 Tip
 
-There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances.
+There's a new much easier way to set this up, which also provides a live progress bar using [Appliance AutoNotify](https://appliance-autonotify.rhizomatics.org.uk/) auto discovering supported appliances, including dishwashers, ovens, robot vacuums and more.
 
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 
@@ -7241,6 +7291,10 @@ scenarios:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/
 
+Info
+
+There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints and automations, and automatically configures all the Frigate cameras it finds.
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI.
@@ -7336,6 +7390,10 @@ This will work identically for any transport, there's nothing generic specific i
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/
 
+Info
+
+There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints and automations, and automatically configures all the Frigate cameras it finds.
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI. You need to have this also as email for family members without mobile push available.
@@ -7382,7 +7440,7 @@ Hints and suggestions for configuring non-SuperNotify notification in HomeAssist
 
 If you have a Mikrotik 4G router for broadband or fallback, then you can probably send SMS notifications through it, using *Mikrotik SMS* custom component.
 
-Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repo in HACS.
+Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repository in the Marketplace, with **Add from link**, or in HACS before Home Assistant 2026.11.
 
 ## Configuring an MQTT Siren with Zigbee2MQTT
 
@@ -7606,7 +7664,7 @@ See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/arch
 
 ### 2. Configure Remote Logger
 
-Install the HACS component [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
+Install the custom integration [Remote Logger](https://remote-logger.rhizomatics.org.uk) and set up OTLP with your log aggregator as the destination.
 
 In the Home Assistant integration dialog, select custom event generation, and add `supernotification`.
 
@@ -8011,7 +8069,7 @@ Send mobile push notifications without any configuration.
 
 All you need is:
 
-1. Install Supernotify from HACS ([Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md))
+1. Install Supernotify from the Marketplace ([Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md))
    - By default, the configuration will have *Mobile Device Discovery* and *Person Discovery* switched on
 1. If they don't already have it, set up the [Home Assistant Companion App](https://companion.home-assistant.io) for each person/device to be notified
    - This needs a *username* and *password* for each user, see [Adding a Person to Home Assistant](https://www.home-assistant.io/integrations/person/#adding-a-person-to-home-assistant)
@@ -8396,7 +8454,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 
 | Transport                                                                                                  | Rank  | Target Required | Inclusion | Features                                                       |
 | ---------------------------------------------------------------------------------------------------------- | ----- | --------------- | --------- | -------------------------------------------------------------- |
-| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | FIRST | always          | default   | MESSAGE, SPOKEN                                                |
+| [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | FIRST | always          | default   | MESSAGE, TITLE, SPOKEN                                         |
 | [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
 | [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | ANY   | optional        | explicit  | SOUND                                                          |
 | [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
@@ -8427,7 +8485,7 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | entity_id (domain=notify, platform=alexa_devices), entity_id (domain=group) | -                         | -                                                                                 |
 | [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | -                                                                           | -                         | entity_id (domain=media_player, platform=alexa_media)                             |
 | [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | -                                                                           | -                         | entity_id (domain=switch/script/group/rest_command/siren/media_player), device_id |
-| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | discord_channel                                                             | -                         | -                                                                                 |
+| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | discord_channel, entity_id (domain=notify, platform=discord)                | -                         | -                                                                                 |
 | [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | email                                                                       | -                         | -                                                                                 |
 | [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | -                                                                           | -                         | -                                                                                 |
 | [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | -                                                                           | -                         | -                                                                                 |

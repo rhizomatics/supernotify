@@ -9,7 +9,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 
 - [Supernotify](https://supernotify.rhizomatics.org.uk/latest/index.md): Overview of what Supernotify does
 - [Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md): Quick Start overview
-- [Installation](https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/index.md): Install from HACS and set up from the UI, with no YAML
+- [Installation](https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/index.md): Install from the Marketplace and set up from the UI, with no YAML
 - [Send Your First Notification](https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/index.md): Send a first notification, to everyone, one person or the speakers
 - [What to Do Next](https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/index.md): What to do next - automations, a dashboard, switches, targets and recipes
 - [Basic Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md): Basic concepts - targets, recipients, deliveries and priority
