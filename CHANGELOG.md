@@ -15,11 +15,12 @@
 - *Voice*: an entity can be named by its full name, as Home Assistant 2026.11 composes it from its device's, as well as by its friendly name
 - *Targets*: an `exclude` block leaves entities, devices, areas, floors, labels or people out of a `supernotify.notify` target, as **Exclude target** in the Home Assistant 2026.11 action editor gives. Previously the exclusion was rejected, or with 2026.11 ignored. See [Excluding Targets](https://supernotify.rhizomatics.org.uk/usage/targets/#excluding-targets)
 ## 🐛 Bug fixes
-- *Dupe Detection*: a delivery that failed is no longer remembered as sent, so sending it again straight away isn't suppressed as a duplicate
-- *Dupe Detection*: a notification is only given the `dupe` outcome when nothing was sent. One that was partly sent, with the rest a duplicate, has the outcome for what was sent, rather than being archived and shown in the logbook as skipped
+### Dupe Detection
+- A delivery that failed is no longer remembered as sent, so sending it again straight away isn't suppressed as a duplicate
+- A notification is only given the `dupe` outcome when nothing was sent. One that was partly sent, with the rest a duplicate, has the outcome for what was sent, rather than being archived and shown in the logbook as skipped
 ## 📝 Other changes
 - *Logbook*: the description of each notification is in Home Assistant's configured language
-- *Dupe Detection*: no longer needs the `cachetools` library
+- Dependency on the `cachetools` library removed
 ## 📚 Documentation
 - *Dupe Detection*: what makes two notifications the same, the defaults, and that `force_resend` can be set on a delivery
 - Update references to HACS to use the new Home Assistant Marketplace, which takes over from HACS in Home Assistant 2026.11, with HACS kept for earlier versions. The badges and **Open in the Home Assistant Marketplace** buttons now use the Marketplace
