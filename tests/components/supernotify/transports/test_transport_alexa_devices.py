@@ -1,5 +1,10 @@
+from typing import Any
+
+from homeassistant.components.notify import NotifyEntity
+from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import CONF_ACTION
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA
@@ -8,6 +13,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
+from tests.components.supernotify.hass_setup_lib import TestingContext
 from tests.components.supernotify.transports.schema_usage import SchemaCase, assert_schema_usage, sizes
 
 DELIVERY = {
@@ -68,6 +74,40 @@ async def test_notify_alexa_with_title(mock_hass, unmocked_config) -> None:  # t
         debug=False,
         context=None,
     )
+
+
+async def test_notify_alexa_title_ignored_before_2026_11(hass: HomeAssistant) -> None:
+    """Before Home Assistant 2026.11, an alexa_devices notify entity has no title feature and
+    drops a title, so sending one must still deliver the message rather than fail"""
+
+    class PreTitleAlexaNotifyEntity(NotifyEntity):
+        # as alexa_devices' AmazonNotifyEntity was in Home Assistant 2026.10
+        _attr_name = "Bedroom Echo Announce"
+        _attr_unique_id = "bedroom_echo_announce"
+
+        def __init__(self) -> None:
+            self.sent: list[str] = []
+
+        async def async_send_message(self, message: str, title: str | None = None, **kwargs: Any) -> None:
+            self.sent.append(message)
+
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {})
+    echo = PreTitleAlexaNotifyEntity()
+    await hass.data[NOTIFY_DOMAIN].async_add_entities([echo])
+    context = TestingContext(homeassistant=hass, transport_types=[AlexaDevicesTransport])
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_ALEXA)
+
+    assert await uut.deliver(
+        Envelope(
+            Delivery("default", {}, uut),
+            Notification(context, message="hello there", title="Dinner"),
+            target=Target(["notify.bedroom_echo_announce"]),
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert echo.sent == ["hello there"]
 
 
 async def test_notify_alexa_no_targets(mock_hass, unmocked_config) -> None:
