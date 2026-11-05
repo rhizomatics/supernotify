@@ -27,7 +27,7 @@ Sinon, consultez les [instructions HACS](https://hacs.xyz/docs/use/). Supernotif
 
 Dans la page HACS de Home Assistant, sélectionnez **Supernotify** dans la liste des intégrations disponibles, téléchargez-le et redémarrez Home Assistant.
 
-![Sélection dans HACS](../../assets/images/hacs_select.png){width=400}
+![Sélection dans le Marketplace](../../assets/images/marketplace_select.png){width=400}
 
 ## Ajouter l'intégration { #add-the-integration }
 

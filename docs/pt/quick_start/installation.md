@@ -27,7 +27,7 @@ Se não estiver, consulte as [instruções do HACS](https://hacs.xyz/docs/use/).
 
 Na página do HACS no Home Assistant, selecione **Supernotify** na lista de integrações disponíveis, baixe-o e reinicie o Home Assistant.
 
-![Seleção no HACS](../../assets/images/hacs_select.png){width=400}
+![Seleção no Marketplace](../../assets/images/marketplace_select.png){width=400}
 
 ## Adicionar a integração { #add-the-integration }
 

@@ -27,7 +27,7 @@ Home Assistant 2026.11 से पहले, Marketplace अलग **HACS** इ�
 
 Home Assistant के HACS पेज पर, उपलब्ध इंटीग्रेशन की सूची में **Supernotify** चुनें, उसे डाउनलोड करें और Home Assistant को रीस्टार्ट करें।
 
-![HACS में चयन](../../assets/images/hacs_select.png){width=400}
+![Marketplace में चयन](../../assets/images/marketplace_select.png){width=400}
 
 ## इंटीग्रेशन जोड़ें { #add-the-integration }
 

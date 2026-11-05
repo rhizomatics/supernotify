@@ -27,7 +27,7 @@ description: 通过 Marketplace（2026.11 之前通过 HACS）安装适用于 Ho
 
 在 Home Assistant 的 HACS 页面中，从可用集成列表里选择 **Supernotify**，下载它，然后重启 Home Assistant。
 
-![在 HACS 中选择](../../assets/images/hacs_select.png){width=400}
+![在 Marketplace 中选择](../../assets/images/marketplace_select.png){width=400}
 
 ## 添加集成 { #add-the-integration }
 
