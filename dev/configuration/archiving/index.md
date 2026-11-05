@@ -84,7 +84,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
 | `PARTIAL_DELIVERY`  | Some deliveries made, others missed                                         |
 | `FALLBACK_DELIVERY` | A fallback delivery made, after an error or with no other delivery applying |
 | `ERROR`             | At least one delivery error                                                 |
-| `DUPE`              | Suppressed as a duplicate                                                   |
+| `DUPE`              | Nothing delivered, since it was a duplicate of one recently sent            |
 | `ALL`               | Every notification, whatever the outcome                                    |
 
 Selecting none means no notification - no events, or no full diagnostics.
