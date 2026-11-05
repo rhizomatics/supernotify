@@ -6,7 +6,15 @@
         "action_url_title": "Cliquer pour l'action",
         "email_heading": "Notification Home Assistant",
         "email_snapshot_desc": "Instantané",
-        "default_title": "Notification"
+        "default_title": "Notification",
+        "logbook_success": "a envoyé « {summary} »",
+        "logbook_partial_delivery": "a envoyé partiellement « {summary} »",
+        "logbook_fallback_delivery": "a envoyé « {summary} » en secours",
+        "logbook_no_delivery": "n'a pas envoyé « {summary} »",
+        "logbook_dupe": "a ignoré le doublon « {summary} »",
+        "logbook_error": "n'a pas pu envoyer « {summary} »",
+        "logbook_notified": "a notifié « {summary} »",
+        "logbook_via": "{message} par {deliveries}"
     },
     "entity": {
         "binary_sensor": {

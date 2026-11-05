@@ -47,8 +47,9 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.exceptions import UncategorizedTargetError
 from custom_components.supernotify.model import TargetRequired
+from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SuperNotificationService
-from custom_components.supernotify.schema import DELIVERY_SCHEMA
+from custom_components.supernotify.schema import DELIVERY_SCHEMA, DeliveryOutcome
 from tests.components.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {
@@ -547,6 +548,43 @@ async def test_force_resend_bypasses_dupe_check(mock_hass: HomeAssistant) -> Non
 
     await uut.async_send_message(message="door still open!", data={"delivery": "dummy", ATTR_FORCE_RESEND: True})
     assert len(dummy.service.calls) == 4  # force_resend bypasses dupe check
+
+
+async def test_dupe_check_allows_retry_after_failed_send(mock_hass: HomeAssistant) -> None:
+    """A send that failed isn't remembered, so retrying it straight away isn't a dupe"""
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    dummy = DummyTransport(uut.context, transport_exception=RuntimeError("service down"))
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 0
+
+    dummy.transport_exception = None
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 2
+
+
+async def test_dupe_outcome_only_when_nothing_sent(mock_hass: HomeAssistant) -> None:
+    """A notification partly suppressed as a dupe is still a success for what it did send"""
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    async def notify(target: list[str] | None = None) -> Notification:
+        notification = Notification(uut.context, message="door open", action_data={"delivery": "dummy"}, target=target)
+        await notification.initialize()
+        await notification.deliver()
+        return notification
+
+    assert (await notify()).outcome() == DeliveryOutcome.SUCCESS
+    # the owner's envelope was just sent, the new phone's wasn't
+    partly = await notify(["mobile_app.extra_phone", "person.new_home_owner"])
+    assert partly.delivered == 1
+    assert partly.dupe
+    assert partly.outcome() == DeliveryOutcome.SUCCESS
+    assert (await notify()).outcome() == DeliveryOutcome.DUPE
 
 
 async def test_send_message_with_conditions(hass: HomeAssistant) -> None:

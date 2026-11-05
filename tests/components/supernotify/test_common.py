@@ -1,7 +1,6 @@
 import datetime as dt
 from unittest.mock import Mock
 
-from cachetools import TTLCache
 from pytest import fixture
 
 from custom_components.supernotify.common import (
@@ -84,45 +83,53 @@ def delivery() -> Delivery:
     return d
 
 
+def send(uut: DupeChecker, envelope: Envelope, dry_run: bool = False) -> bool:
+    """Check as a delivery does, recording what wasn't a dupe as successfully sent"""
+    dupe: bool = uut.check(envelope, dry_run=dry_run)
+    if not dupe:
+        uut.record(envelope, dry_run=dry_run)
+    return dupe
+
+
 def test_dupe_check_suppresses_same_priority_and_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e2) is True
+    assert send(uut, e2) is True
 
 
 def test_dupe_check_allows_higher_priority_and_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
-    assert uut.check(e2) is False
+    assert send(uut, e2) is False
 
 
 def test_dupe_policy_mt_suppresses_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e2) is True
+    assert send(uut, e2) is True
 
 
 def test_dupe_policy_mt_suppresses_higher_priority_same_message(delivery: Delivery) -> None:
     """Unlike MTSLP, MT suppresses even when priority escalates."""
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
-    assert uut.check(e2) is True
+    assert send(uut, e2) is True
 
 
 def test_dupe_policy_mt_allows_different_message(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "different message", "title here"))
-    assert uut.check(e2) is False
+    assert send(uut, e2) is False
 
 
 def test_dupe_check_allows_different_camera_entity_same_message(delivery: Delivery) -> None:
@@ -130,11 +137,11 @@ def test_dupe_check_allows_different_camera_entity_same_message(delivery: Delive
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
     )
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.b"}})
     )
-    assert uut.check(e2) is False
+    assert send(uut, e2) is False
 
 
 def test_dupe_check_suppresses_same_camera_entity_and_message(delivery: Delivery) -> None:
@@ -142,11 +149,11 @@ def test_dupe_check_suppresses_same_camera_entity_and_message(delivery: Delivery
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
     )
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
     )
-    assert uut.check(e2) is True
+    assert send(uut, e2) is True
 
 
 def test_dupe_check_allows_different_clip_url_same_message(delivery: Delivery) -> None:
@@ -154,11 +161,11 @@ def test_dupe_check_allows_different_clip_url_same_message(delivery: Delivery) -
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/1.mp4"}})
     )
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/2.mp4"}})
     )
-    assert uut.check(e2) is False
+    assert send(uut, e2) is False
 
 
 def test_dupe_check_suppresses_different_snapshot_url_same_message(delivery: Delivery) -> None:
@@ -168,62 +175,78 @@ def test_dupe_check_suppresses_different_snapshot_url_same_message(delivery: Del
         delivery,
         Notification(Mock(), "message here", "title here", action_data={"media": {"snapshot_url": "http://cam/1.jpg"}}),
     )
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(
         delivery,
         Notification(Mock(), "message here", "title here", action_data={"media": {"snapshot_url": "http://cam/2.jpg"}}),
     )
-    assert uut.check(e2) is True
+    assert send(uut, e2) is True
 
 
 def test_dupe_check_suppressed_dupes_do_not_extend_ttl(delivery: Delivery) -> None:
     """Repeated triggers inside the TTL must not keep the original alive indefinitely"""
     now = [0.0]
-    uut = DupeChecker({})
-    uut.cache = TTLCache(maxsize=100, ttl=120, timer=lambda: now[0])
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    uut = DupeChecker({}, timer=lambda: now[0])
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
     for t in (60, 110):
         now[0] = t
-        assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is True
+        assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is True
     now[0] = 130
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
 
 
 def test_dupe_check_dry_run_does_not_suppress_live(delivery: Delivery) -> None:
     uut = DupeChecker({})
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
     assert len(uut.cache) == 1
     assert len(uut.dry_run_cache) == 1
 
 
 def test_dupe_check_dry_run_sees_live_cache(delivery: Delivery) -> None:
     uut = DupeChecker({})
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
     assert len(uut.dry_run_cache) == 0
 
 
 def test_dupe_check_dry_run_sees_dry_run_cache(delivery: Delivery) -> None:
     uut = DupeChecker({})
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
     assert len(uut.cache) == 0
 
 
 def test_dupe_check_dry_run_respects_priority_policy(delivery: Delivery) -> None:
     uut = DupeChecker({})
-    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
-    assert uut.check(e2, dry_run=True) is False
+    assert send(uut, e2, dry_run=True) is False
 
 
 def test_dupe_policy_none_never_suppresses(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e1) is False
+    assert send(uut, e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
-    assert uut.check(e2) is False
+    assert send(uut, e2) is False
+
+
+def test_dupe_check_does_not_record_until_sent(delivery: Delivery) -> None:
+    """A failed send isn't recorded, so a retry isn't suppressed as a dupe of it"""
+    uut = DupeChecker({})
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert len(uut.cache) == 0
+
+
+def test_dupe_check_evicts_oldest_when_full(delivery: Delivery) -> None:
+    uut = DupeChecker({"size": 2})
+    for message in ("first", "second", "third"):
+        assert send(uut, Envelope(delivery, Notification(Mock(), message))) is False
+    assert len(uut.cache) == 2
+    assert send(uut, Envelope(delivery, Notification(Mock(), "first"))) is False
+    assert send(uut, Envelope(delivery, Notification(Mock(), "third"))) is True
 
 
 class TestBoolify:

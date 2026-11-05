@@ -10,19 +10,11 @@ from homeassistant.components.logbook import (
     LazyEventPartialState,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.translation import async_get_cached_translations
 
 from . import DOMAIN
 from .const import EVENT_NOTIFICATION
 from .schema import DeliveryOutcome
-
-OUTCOME_VERBS: dict[str, str] = {
-    DeliveryOutcome.SUCCESS: "sent",
-    DeliveryOutcome.PARTIAL_DELIVERY: "partly sent",
-    DeliveryOutcome.FALLBACK_DELIVERY: "sent by fallback",
-    DeliveryOutcome.NO_DELIVERY: "did not send",
-    DeliveryOutcome.DUPE: "skipped duplicate",
-    DeliveryOutcome.ERROR: "failed to send",
-}
 
 
 @callback
@@ -32,12 +24,22 @@ def async_describe_events(
 ) -> None:
     """Describe logbook events."""
 
+    def text(key: str, **placeholders: str) -> str:
+        # translations were cached when the integration was set up, in the configured language
+        full_key: str = f"component.{DOMAIN}.common.{key}"
+        template: str | None = async_get_cached_translations(hass, hass.config.language, "common", DOMAIN).get(
+            full_key
+        ) or async_get_cached_translations(hass, "en", "common", DOMAIN).get(full_key)
+        return template.format(**placeholders) if template else key
+
     @callback
     def async_describe_notification(event: LazyEventPartialState) -> dict[str, Any]:
         data = event.data
-        message: str = f"{OUTCOME_VERBS.get(data.get('outcome', ''), 'notified')} '{data.get('summary', '')}'"
+        outcome: str = data.get("outcome", "")
+        key: str = f"logbook_{outcome}" if outcome in DeliveryOutcome else "logbook_notified"
+        message: str = text(key, summary=data.get("summary", ""))
         if data.get("deliveries"):
-            message += f" via {', '.join(data['deliveries'])}"
+            message = text("logbook_via", message=message, deliveries=", ".join(data["deliveries"]))
         return {LOGBOOK_ENTRY_NAME: "Supernotify", LOGBOOK_ENTRY_MESSAGE: message, LOGBOOK_ENTRY_ICON: "mdi:bell-ring-outline"}
 
     async_describe_event(DOMAIN, EVENT_NOTIFICATION, async_describe_notification)

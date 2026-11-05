@@ -6,7 +6,15 @@
         "action_url_title": "कार्रवाई के लिए क्लिक करें",
         "email_heading": "Home Assistant सूचना",
         "email_snapshot_desc": "स्नैपशॉट छवि",
-        "default_title": "सूचना"
+        "default_title": "सूचना",
+        "logbook_success": "\"{summary}\" भेजा",
+        "logbook_partial_delivery": "\"{summary}\" आंशिक रूप से भेजा",
+        "logbook_fallback_delivery": "\"{summary}\" फ़ॉलबैक से भेजा",
+        "logbook_no_delivery": "\"{summary}\" नहीं भेजा",
+        "logbook_dupe": "डुप्लिकेट \"{summary}\" छोड़ा",
+        "logbook_error": "\"{summary}\" भेजने में विफल",
+        "logbook_notified": "\"{summary}\" की सूचना दी",
+        "logbook_via": "{message} ({deliveries} द्वारा)"
     },
     "entity": {
         "binary_sensor": {

@@ -43,8 +43,7 @@
     "quality_scale": "silver",
     "requirements": [
         "bs4",
-        "aiofiles",
-        "cachetools"
+        "aiofiles"
     ],
     "single_config_entry": true,
     "version": "2.17.0"

@@ -6,7 +6,15 @@
         "action_url_title": "Für Aktion klicken",
         "email_heading": "Home Assistant Benachrichtigung",
         "email_snapshot_desc": "Schnappschuss",
-        "default_title": "Benachrichtigung"
+        "default_title": "Benachrichtigung",
+        "logbook_success": "hat \"{summary}\" gesendet",
+        "logbook_partial_delivery": "hat \"{summary}\" teilweise gesendet",
+        "logbook_fallback_delivery": "hat \"{summary}\" per Fallback gesendet",
+        "logbook_no_delivery": "hat \"{summary}\" nicht gesendet",
+        "logbook_dupe": "hat das Duplikat \"{summary}\" übersprungen",
+        "logbook_error": "konnte \"{summary}\" nicht senden",
+        "logbook_notified": "hat über \"{summary}\" benachrichtigt",
+        "logbook_via": "{message} (über {deliveries})"
     },
     "entity": {
         "binary_sensor": {

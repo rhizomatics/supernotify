@@ -6,7 +6,15 @@
         "action_url_title": "Kliknij, aby wykonać akcję",
         "email_heading": "Powiadomienie Home Assistant",
         "email_snapshot_desc": "Zrzut obrazu",
-        "default_title": "Powiadomienie"
+        "default_title": "Powiadomienie",
+        "logbook_success": "wysłano \"{summary}\"",
+        "logbook_partial_delivery": "częściowo wysłano \"{summary}\"",
+        "logbook_fallback_delivery": "wysłano \"{summary}\" dostawą zapasową",
+        "logbook_no_delivery": "nie wysłano \"{summary}\"",
+        "logbook_dupe": "pominięto duplikat \"{summary}\"",
+        "logbook_error": "nie udało się wysłać \"{summary}\"",
+        "logbook_notified": "powiadomiono \"{summary}\"",
+        "logbook_via": "{message} przez {deliveries}"
     },
     "entity": {
         "binary_sensor": {

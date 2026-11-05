@@ -41,7 +41,15 @@
         "voice_why_transport_disabled": "perché il transport è disattivato",
         "voice_why_no_target": "perché non c'era nessuno a cui inviarla",
         "voice_help": "L'aiuto per Supernotify è online su {url}",
-        "voice_unknown_command": "Supernotify non conosce il comando {command}"
+        "voice_unknown_command": "Supernotify non conosce il comando {command}",
+        "logbook_success": "ha inviato \"{summary}\"",
+        "logbook_partial_delivery": "ha inviato in parte \"{summary}\"",
+        "logbook_fallback_delivery": "ha inviato \"{summary}\" tramite fallback",
+        "logbook_no_delivery": "non ha inviato \"{summary}\"",
+        "logbook_dupe": "ha saltato il duplicato \"{summary}\"",
+        "logbook_error": "non è riuscito a inviare \"{summary}\"",
+        "logbook_notified": "ha notificato \"{summary}\"",
+        "logbook_via": "{message} tramite {deliveries}"
     },
     "entity": {
         "binary_sensor": {

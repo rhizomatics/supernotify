@@ -6,7 +6,15 @@
         "action_url_title": "クリックしてアクション",
         "email_heading": "Home Assistant 通知",
         "email_snapshot_desc": "スナップショット画像",
-        "default_title": "通知"
+        "default_title": "通知",
+        "logbook_success": "「{summary}」を送信しました",
+        "logbook_partial_delivery": "「{summary}」を一部送信しました",
+        "logbook_fallback_delivery": "「{summary}」をフォールバックで送信しました",
+        "logbook_no_delivery": "「{summary}」を送信しませんでした",
+        "logbook_dupe": "重複した「{summary}」をスキップしました",
+        "logbook_error": "「{summary}」の送信に失敗しました",
+        "logbook_notified": "「{summary}」を通知しました",
+        "logbook_via": "{message}（{deliveries} 経由）"
     },
     "entity": {
         "binary_sensor": {

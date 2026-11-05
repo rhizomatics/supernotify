@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import time
 from abc import abstractmethod
-from collections.abc import KeysView
+from collections.abc import Callable, KeysView
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
-
-from cachetools import TTLCache
 
 from .const import (
     ATTR_DUPE_POLICY_MT,
@@ -152,20 +151,21 @@ class DupeCheckable:
 class DupeChecker:
     """Apply the duplicate checking policy to duplicate candidates"""
 
-    def __init__(self, dupe_check_config: ConfigType) -> None:
+    def __init__(self, dupe_check_config: ConfigType, timer: Callable[[], float] = time.monotonic) -> None:
         self.policy = dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
-        size: int = dupe_check_config.get(CONF_SIZE, 100)
-        ttl: int = dupe_check_config.get(CONF_TTL, 120)
-        # dupe check cache for live sends, key is (priority, message hash)
-        self.cache: TTLCache[tuple[int, int], str] = TTLCache(maxsize=size, ttl=ttl)
+        self.size: int = dupe_check_config.get(CONF_SIZE, 100)
+        self.ttl: int = dupe_check_config.get(CONF_TTL, 120)
+        self.timer = timer
+        # when each live send expires, key is (message hash, priority), oldest first
+        self.cache: dict[tuple[int, int], float] = {}
         # separate cache for dry runs, so a dry run never suppresses the live send that follows it
-        self.dry_run_cache: TTLCache[tuple[int, int], str] = TTLCache(maxsize=size, ttl=ttl)
+        self.dry_run_cache: dict[tuple[int, int], float] = {}
 
     def check(self, dupe_candidate: DupeCheckable, dry_run: bool = False) -> bool:
-        """Return True if the candidate is a dupe, otherwise record it.
+        """Return True if the candidate is a dupe of one recorded within the TTL.
 
-        A live send checks and records only in the live cache. A dry run checks both caches,
-        so it reports a dupe a live send would suppress, but records only in the dry run cache.
+        A live send checks only the live cache. A dry run checks both caches, so it
+        reports a dupe a live send would suppress.
         """
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
@@ -175,12 +175,31 @@ class DupeChecker:
         dupe: bool = any(self._matches(cache, hashed, ranked_priority) for cache in caches)
         if dupe:
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
-        else:
-            # only cache what was delivered, so suppressed dupes don't keep resetting the TTL
-            (self.dry_run_cache if dry_run else self.cache)[hashed, ranked_priority] = dupe_candidate.id
         return dupe
 
-    def _matches(self, cache: TTLCache[tuple[int, int], str], hashed: int, ranked_priority: int) -> bool:
+    def record(self, dupe_candidate: DupeCheckable, dry_run: bool = False) -> None:
+        """Remember a candidate that was sent, so a repeat within the TTL is a dupe.
+
+        Only what was delivered is recorded, so a failed send can be retried, and a
+        suppressed dupe doesn't keep resetting the TTL.
+        """
+        if self.policy == ATTR_DUPE_POLICY_NONE:
+            return
+        cache = self.dry_run_cache if dry_run else self.cache
+        self._expire(cache)
+        key = (dupe_candidate.hash(), PRIORITY_VALUES.get(dupe_candidate.priority, 3))
+        cache.pop(key, None)
+        while len(cache) >= self.size:
+            del cache[next(iter(cache))]
+        cache[key] = self.timer() + self.ttl
+
+    def _expire(self, cache: dict[tuple[int, int], float]) -> None:
+        now: float = self.timer()
+        for key in [k for k, expires in cache.items() if expires <= now]:
+            del cache[key]
+
+    def _matches(self, cache: dict[tuple[int, int], float], hashed: int, ranked_priority: int) -> bool:
+        self._expire(cache)
         if self.policy == ATTR_DUPE_POLICY_MTSLP:
             return any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in cache)
         if self.policy == ATTR_DUPE_POLICY_MT:

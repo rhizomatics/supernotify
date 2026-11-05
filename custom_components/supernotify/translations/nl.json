@@ -6,7 +6,15 @@
         "action_url_title": "Klik voor actie",
         "email_heading": "Home Assistant-melding",
         "email_snapshot_desc": "Momentopname",
-        "default_title": "Melding"
+        "default_title": "Melding",
+        "logbook_success": "heeft \"{summary}\" verzonden",
+        "logbook_partial_delivery": "heeft \"{summary}\" gedeeltelijk verzonden",
+        "logbook_fallback_delivery": "heeft \"{summary}\" via fallback verzonden",
+        "logbook_no_delivery": "heeft \"{summary}\" niet verzonden",
+        "logbook_dupe": "heeft duplicaat \"{summary}\" overgeslagen",
+        "logbook_error": "kon \"{summary}\" niet verzenden",
+        "logbook_notified": "heeft \"{summary}\" gemeld",
+        "logbook_via": "{message} (via {deliveries})"
     },
     "entity": {
         "binary_sensor": {

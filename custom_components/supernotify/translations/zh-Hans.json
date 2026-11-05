@@ -6,7 +6,15 @@
         "action_url_title": "点击执行操作",
         "email_heading": "Home Assistant 通知",
         "email_snapshot_desc": "快照图像",
-        "default_title": "通知"
+        "default_title": "通知",
+        "logbook_success": "已发送“{summary}”",
+        "logbook_partial_delivery": "已部分发送“{summary}”",
+        "logbook_fallback_delivery": "已通过备用方式发送“{summary}”",
+        "logbook_no_delivery": "未发送“{summary}”",
+        "logbook_dupe": "已跳过重复的“{summary}”",
+        "logbook_error": "发送“{summary}”失败",
+        "logbook_notified": "已通知“{summary}”",
+        "logbook_via": "{message}（通过 {deliveries}）"
     },
     "entity": {
         "binary_sensor": {

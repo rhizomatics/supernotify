@@ -487,10 +487,9 @@ class Notification(ArchivableObject):
     def outcome(self) -> DeliveryOutcome:
         if self.error_count > 0:
             return DeliveryOutcome.ERROR
-        if self.dupe:
-            return DeliveryOutcome.DUPE
         if not self.delivered:
-            return DeliveryOutcome.NO_DELIVERY
+            # only a dupe if nothing was sent, otherwise what was sent is the outcome
+            return DeliveryOutcome.DUPE if self.dupe else DeliveryOutcome.NO_DELIVERY
         if self.fallback:
             return DeliveryOutcome.FALLBACK_DELIVERY
         if self.missed:
@@ -1007,6 +1006,7 @@ class Notification(ArchivableObject):
                     else:
                         delivered = await transport.deliver(envelope, debug_trace=self.debug_trace)
                     if delivered:
+                        self.context.dupe_checker.record(envelope, dry_run=self.dry_run == DRY_RUN_SIMULATE)
                         self.record_result(delivery, envelope)
                     else:
                         _LOGGER.info("SUPERNOTIFY No delivery for %s (id: %s)", delivery.name, envelope.notification_id)
