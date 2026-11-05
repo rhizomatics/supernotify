@@ -5,6 +5,9 @@
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
 # v2.17.0
+
+*New features in Home Assistant 2026.11 are supported, such as target exclusion and titles on Alexa devices, while previous versions back to 2026.5 remain supported.*
+
 ## 🚨 Breaking changes
 - Home Assistant 2026.5 is now the minimum version, 2026.11 added to automated testing
 
