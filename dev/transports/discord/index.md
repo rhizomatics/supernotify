@@ -40,7 +40,7 @@ For camera snapshots (`discord_attach_image`) the `discord` integration checks l
 ```yaml
 homeassistant:
   allowlist_external_dirs:
-    - /config/supernotify/media
+    - /config/media/supernotify
 ```
 
 For `discord_image_urls` every URL must be covered by `allowlist_external_urls`; the integration downloads at most 8MB per attachment.

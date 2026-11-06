@@ -42,7 +42,7 @@ Home Assistant Configuration
 ```yaml
 homeassistant:
   allowlist_external_dirs:
-    - /config/supernotify/media
+    - /config/media/supernotify
 ```
 
 ### Add Pushover to Supernotify

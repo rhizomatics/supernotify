@@ -1175,7 +1175,7 @@
       "default": "supernotify/templates"
     },
     "media_path": {
-      "default": "supernotify/media"
+      "default": "media/supernotify"
     },
     "media_url_prefix": {
       "type": "string",
