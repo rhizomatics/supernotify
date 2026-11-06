@@ -18,6 +18,7 @@ from homeassistant.exceptions import ServiceValidationError
 from PIL import Image, ImageChops
 
 from conftest import IMAGE_PATH, TestImage
+from custom_components.supernotify import MEDIA_DIR
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_PATH,
     CONF_CAMERA,
@@ -934,6 +935,13 @@ async def test_media_storage_initialize_creates_path(mock_hass_api: HomeAssistan
     await uut.initialize(mock_hass_api)
     assert uut.media_path is not None
     assert await anyio.Path(new_path).exists()
+
+
+async def test_media_storage_default_path_under_config_media(hass: HomeAssistant) -> None:
+    """The default media_path is /config/media/supernotify, as the docs' allowlist and media_dirs examples give"""
+    uut = MediaStorage(MEDIA_DIR)
+    await uut.initialize(HomeAssistantAPI(hass))
+    assert uut.media_path == Path(hass.config.config_dir) / "media" / "supernotify"
 
 
 async def test_media_storage_initialize_mkdir_fails(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:

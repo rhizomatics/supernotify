@@ -56,7 +56,7 @@ or the integration refuses the attachment:
 ```yaml title="Home Assistant Configuration"
 homeassistant:
   allowlist_external_dirs:
-    - /config/supernotify/media
+    - /config/media/supernotify
 ```
 
 ### Add Pushover to Supernotify

@@ -58,7 +58,7 @@ with `is_allowed_path`, so the SuperNotify media path must be listed:
 ```yaml
 homeassistant:
   allowlist_external_dirs:
-    - /config/supernotify/media
+    - /config/media/supernotify
 ```
 
 For `discord_image_urls` every URL must be covered by `allowlist_external_urls`; the

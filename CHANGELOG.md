@@ -4,6 +4,11 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.17.1
+
+## 🐛 Bug fixes
+- *Media*: the default `media_path` is now `media/supernotify`, i.e. `/config/media/supernotify`, as the documentation's `allowlist_external_dirs` and `media_dirs` examples have always given. It was `supernotify/media`, so following the docs left snapshots outside the allowed and media source folders, and email attachments were dropped. Existing setups keep the `media_path` already saved in their config entry; a left-over `/config/supernotify/media` folder can be deleted
+
 # v2.17.0
 
 *New features in Home Assistant 2026.11 are supported, such as target exclusion and titles on Alexa devices, while retaining backward compatibility to 2026.5*

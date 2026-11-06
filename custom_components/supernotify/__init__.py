@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 DOMAIN = "supernotify"
 
 TEMPLATE_DIR: str = "supernotify/templates"
-MEDIA_DIR: str = "supernotify/media"
+MEDIA_DIR: str = "media/supernotify"
 ARCHIVE_DIR: str = "supernotify/archive"
 
 _LOGGER = logging.getLogger(__name__)

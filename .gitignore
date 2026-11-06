@@ -18,6 +18,7 @@ examples/mine.yaml
 node_modules/
 package-lock.json
 supernotify/media
+media/supernotify
 .devcontainer/.venv
 
 
