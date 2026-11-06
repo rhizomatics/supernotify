@@ -18,6 +18,9 @@ description: Use a combination of Home Assistant, Supernotify, Frigate, Alexa De
 ---
 # Recipe - Voice Described CCTV with GenAI
 
+!!! info
+    There is now a much easier way of setting this up, with no configuration needed, using v0.4.0 or later of [Camera AutoNotify](https://github.com/rhizomatics/camera_autonotify) which will automatically detect and setup GenAI notifications when Frigate has them configured.
+
 ## Purpose
 
 A voice assistant will announce a description of events discovered on CCTV camera, with an evaluation of risk.
