@@ -51,7 +51,7 @@ class AlexaDevicesTransport(Transport):
     """Notify via Home Assistant's built-in Alexa Devices integration
 
     options:
-        message_usage: standard | use_title | combine_title
+        message_usage: standard | use_title | combine_title | message_only
 
     """
 

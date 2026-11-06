@@ -52,7 +52,7 @@ class TTSTransport(Transport):
     """Notify via Home Assistant's built-in tts.speak action
 
     options:
-        message_usage: standard | use_title | combine_title
+        message_usage: standard | use_title | combine_title | message_only
 
     """
 

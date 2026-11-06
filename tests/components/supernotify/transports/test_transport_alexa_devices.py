@@ -76,6 +76,33 @@ async def test_notify_alexa_with_title(mock_hass, unmocked_config) -> None:  # t
     )
 
 
+async def test_notify_alexa_title_spoken_without_message(mock_hass, unmocked_config) -> None:  # type: ignore
+    context = unmocked_config
+
+    uut = AlexaDevicesTransport(context)
+    context.configure_for_tests([uut])
+    await context.initialize()
+    await uut.initialize()
+
+    await uut.deliver(
+        Envelope(
+            Delivery("default", {}, uut),
+            Notification(context, message="", title="Dinner"),
+            target=Target(["notify.bedroom_echo_speak"]),
+        )
+    )
+    unmocked_config.hass_api.call_service.assert_called_with(
+        "notify",
+        "send_message",
+        service_data={"message": "Dinner", "title": "Dinner"},
+        target={
+            "entity_id": ["notify.bedroom_echo_speak"],
+        },
+        debug=False,
+        context=None,
+    )
+
+
 async def test_notify_alexa_title_ignored_before_2026_11(hass: HomeAssistant) -> None:
     """Before Home Assistant 2026.11, an alexa_devices notify entity has no title feature and
     drops a title, so sending one must still deliver the message rather than fail"""

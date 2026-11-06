@@ -45,7 +45,7 @@ class SMSTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.MESSAGE | TransportFeature.TITLE
+        return TransportFeature.MESSAGE
 
     @property
     def default_config(self) -> TransportConfig:

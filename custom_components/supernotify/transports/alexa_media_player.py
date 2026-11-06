@@ -153,7 +153,7 @@ class AlexaMediaPlayerTransport(Transport):
     """Notify via Amazon Alexa announcements with full volume management.
 
     options:
-        message_usage: standard | use_title | combine_title
+        message_usage: standard | use_title | combine_title | message_only
         media_auto_pause: bool, sets the default for pausing music/restoring volume
     """
 

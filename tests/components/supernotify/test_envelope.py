@@ -384,3 +384,35 @@ async def test_content_key_is_a_short_digest_of_the_content() -> None:
     # same content gives the same key, even from a different notification; different content doesn't
     assert key("Hello Test") == key("Hello Test")
     assert key("Hello Test") != key("Hello Other")
+
+
+async def test_message_usage_title_fallback_only_for_message_only_transport() -> None:
+    ctx = TestingContext(deliveries={"push": {CONF_TRANSPORT: "notify_entity"}, "speak": {CONF_TRANSPORT: "tts"}})
+    await ctx.test_initialize()
+
+    # a transport with its own title keeps an empty message, as email would have a title and empty body
+    uut = Envelope(ctx.delivery("push"), Notification(ctx, "", title="the big title"))
+    assert not uut._compute_message()
+    assert uut._compute_title() == "the big title"
+
+    # a message-only transport falls back to the title
+    uut = Envelope(ctx.delivery("speak"), Notification(ctx, "", title="the big title"))
+    assert uut._compute_message() == "the big title"
+
+    uut = Envelope(ctx.delivery("speak"), Notification(ctx, "testing 123", title="the big title"))
+    assert uut._compute_message() == "testing 123"
+
+    ctx.delivery("speak").options["message_usage"] = MessageOnlyPolicy.MESSAGE_ONLY
+    uut = Envelope(ctx.delivery("speak"), Notification(ctx, "", title="the big title"))
+    assert not uut._compute_message()
+
+
+async def test_message_usage_combine_title_without_message() -> None:
+    ctx = TestingContext(deliveries={"push": {CONF_TRANSPORT: "notify_entity"}})
+    await ctx.test_initialize()
+    delivery = ctx.delivery("push")
+    delivery.options["message_usage"] = MessageOnlyPolicy.COMBINE_TITLE
+
+    uut = Envelope(delivery, Notification(ctx, title="Dinner"))
+    assert uut._compute_message() == "Dinner"
+    assert uut._compute_title() is None

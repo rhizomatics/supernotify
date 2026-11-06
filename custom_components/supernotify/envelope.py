@@ -322,6 +322,11 @@ class Envelope(DupeCheckable):
         """Alternative message only for spoken voice transports"""
         return self.spoken_message if self.spoken_message is not None else msg
 
+    def _message_carries_title(self) -> bool:
+        """The message is all that's seen or heard - no title field, or spoken where any title is only on a screen"""
+        features = self.delivery.transport.supported_features
+        return not features & TransportFeature.TITLE or bool(features & TransportFeature.SPOKEN)
+
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
 
@@ -346,7 +351,9 @@ class Envelope(DupeCheckable):
         elif message_usage.upper() == MessageOnlyPolicy.COMBINE_TITLE:
             title = self._compute_title(ignore_usage=True)
             if title:
-                msg = f"{title} {msg}"
+                msg = f"{title} {msg}" if msg else title
+        elif not msg and message_usage.upper() != MessageOnlyPolicy.MESSAGE_ONLY and self._message_carries_title():
+            msg = self._compute_title(ignore_usage=True)
 
         msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:

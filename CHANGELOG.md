@@ -6,7 +6,11 @@
 
 # v2.17.1
 
+## ✨ Enhancements
+- *Voice*: a notification with a title but no message speaks the title, on a transport that has no title of its own or is spoken, such as Alexa, TTS, SMS or MQTT. A transport with a title, like email, still sends the title with an empty body. Set `message_usage: message_only` to never fall back to the title
+
 ## 🐛 Bug fixes
+- *Message usage*: `combine_title` with a title and no message sends just the title, rather than the title followed by `None`
 - *Media*: the default `media_path` is now `media/supernotify`, i.e. `/config/media/supernotify`, as the documentation's `allowlist_external_dirs` and `media_dirs` examples have always given. It was `supernotify/media`, so following the docs left snapshots outside the allowed and media source folders, and email attachments were dropped. Existing setups keep the `media_path` already saved in their config entry; a left-over `/config/supernotify/media` folder can be deleted
 
 # v2.17.0

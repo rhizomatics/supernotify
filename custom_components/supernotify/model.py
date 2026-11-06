@@ -507,7 +507,8 @@ class CommandType(StrEnum):
 
 
 class MessageOnlyPolicy(StrEnum):
-    STANDARD = "STANDARD"  # independent title and message
+    STANDARD = "STANDARD"  # independent title and message, title used as message if no message on a message-only transport
+    MESSAGE_ONLY = "MESSAGE_ONLY"  # independent title and message, never falls back to title
     USE_TITLE = "USE_TITLE"  # use title in place of message, no title
     # use combined title and message as message, no title
     COMBINE_TITLE = "COMBINE_TITLE"

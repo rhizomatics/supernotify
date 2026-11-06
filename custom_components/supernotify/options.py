@@ -64,7 +64,11 @@ COMMON_OPTIONS: list[DeliveryOption] = [
         value_type=cv.boolean,
     ),
     DeliveryOption(OPTION_STRIP_URLS, "Remove URLs from message and title", value_type=cv.boolean),
-    DeliveryOption(OPTION_MESSAGE_USAGE, "Combine message and title, default title", examples=["combine_title", "use_title"]),
+    DeliveryOption(
+        OPTION_MESSAGE_USAGE,
+        "Combine message and title, default title",
+        examples=["combine_title", "use_title", "message_only"],
+    ),
     DeliveryOption(
         OPTION_TARGET_SELECT,
         "Only use targets fully matching these regular expressions, group members expanded first",
