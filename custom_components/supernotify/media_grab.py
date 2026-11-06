@@ -484,13 +484,7 @@ def _reprocess_bitmap(
     if reprocess == ReprocessOption.ALWAYS:
         # rewrite to remove metadata, incl custom CCTV comments that confuse python MIMEImage
         clean_image: Image.Image = Image.new(image.mode, image.size)
-        # Pillow API changed in 12.1.0 and the original call will be removed in 2027
-        # https://pillow.readthedocs.io/en/stable/releasenotes/12.1.0.html#image-getdata
-        if hasattr(image, "get_flattened_data"):
-            clean_image.putdata(image.get_flattened_data())  # added in jan 2026  # ty:ignore[call-non-callable]
-        else:
-            clean_image.putdata(image.getdata())  # being removed in 2027
-
+        clean_image.putdata(image.get_flattened_data())
         image = clean_image
 
     img_args: dict[str, Any] = {}

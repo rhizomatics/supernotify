@@ -646,18 +646,8 @@ async def test_write_image_from_bitmap_exception(mock_hass_api: HomeAssistantAPI
     assert result is None
 
 
-async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_data_missing(
-    mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Older Pillow releases (still pinned for some supported Python versions) don't have
-    get_flattened_data yet; reprocessing must fall back to the older getdata() method instead
-    of failing the whole snapshot.
-
-    get_flattened_data is removed via monkeypatch (rather than relying on the installed
-    Pillow's actual capabilities) so this test doesn't depend on which Pillow version happens
-    to be resolved for the running Python version.
-    """
-    monkeypatch.delattr(Image.Image, "get_flattened_data", raising=False)
+async def test_write_image_from_bitmap_reprocess_always(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    """Reprocessing rewrites the image pixel data into a clean image and saves it as JPEG."""
     image = Image.new("RGB", (10, 10))
     buf = BytesIO()
     image.save(buf, "jpeg")

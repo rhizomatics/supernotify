@@ -48,7 +48,6 @@ repos:
           - pytest
           - types-cachetools
           - types-requests
-          - types-Pillow
           - types-PyYAML
           - types-aiofiles
           - types-beautifulsoup4

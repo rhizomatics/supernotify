@@ -4,6 +4,10 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.17.2
+## 🚨 Breaking changes
+- Support for old versions of `Pillow` library removed, in line with minimum HA 2026.5 version. Attachments will fail to reprocess on old versions of HA - either upgrade HA or don't upgrade Supernotify.
+
 # v2.17.1
 
 ## ✨ Enhancements
