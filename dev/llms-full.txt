@@ -4067,7 +4067,7 @@ Example Notification
     message: "Motion detected at the front door"
 ```
 
-The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+By default (`standard`) the message is spoken, or the title if there's no message. Set the `message_usage` option to `combine_title` to speak the title then the message, `use_title` to speak only the title, or `message_only` to never fall back to the title.
 
 From Home Assistant 2026.11, the title is shown on the screen of an Echo with one, for an `_announce` entity. The `_speak` entities don't take a title.
 
@@ -4135,7 +4135,7 @@ Example Notification
                 - media_player.kitchen_echo
 ```
 
-The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+By default (`standard`) the message is spoken, or the title if there's no message. Set the `message_usage` option to `combine_title` to speak the title then the message, `use_title` to speak only the title, or `message_only` to never fall back to the title.
 
 ## Voice specific message
 
@@ -6273,7 +6273,7 @@ Send text messages using any SMS integration that follows Home Assistant Notific
 
 Uses the `phone_number` of a [recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), or a phone number given as a target, and cuts the message to 158 characters to fit in a single SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour: `standard` for the message alone, or the title if there's no message, `message_only` for the message alone, or `use_title` for the title in place of the message.
 
 Emoji and other pictographic symbols are removed, but currency signs, brackets and the like are kept. Set `simplify_text: false` in `options` to keep emoji too, though a message with emoji in it is longer than one SMS can carry, so it's sent as several, if the SMS service allows.
 
@@ -6502,7 +6502,7 @@ This integration automatically sets the action to `tts.speak` and limits the `da
 
 The action can be overridden to an older platform-specific action, like `tts.cloud_say`. These target the `media_player` entities directly, with no `tts` entity.
 
-The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+By default (`standard`) the message is spoken, or the title if there's no message. Set the `message_usage` option to `combine_title` to speak the title then the message, `use_title` to speak only the title, or `message_only` to never fall back to the title.
 
 ### Choosing the TTS Provider
 
@@ -8472,7 +8472,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | FIRST | optional        | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |
 | [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
-| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE, TITLE                                                 |
+| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE                                                        |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
 

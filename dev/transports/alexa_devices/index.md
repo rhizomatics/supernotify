@@ -18,7 +18,7 @@ Example Notification
     message: "Motion detected at the front door"
 ```
 
-The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+By default (`standard`) the message is spoken, or the title if there's no message. Set the `message_usage` option to `combine_title` to speak the title then the message, `use_title` to speak only the title, or `message_only` to never fall back to the title.
 
 From Home Assistant 2026.11, the title is shown on the screen of an Echo with one, for an `_announce` entity. The `_speak` entities don't take a title.
 

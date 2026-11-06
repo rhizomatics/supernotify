@@ -26,7 +26,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | FIRST | optional        | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |
 | [pushover](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)                     | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
-| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE, TITLE                                                 |
+| [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE                                                        |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
 

@@ -10,7 +10,7 @@ Send text messages using any SMS integration that follows Home Assistant Notific
 
 Uses the `phone_number` of a [recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), or a phone number given as a target, and cuts the message to 158 characters to fit in a single SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to cutting. Use `message_usage` in an `options` section to change the behaviour: `standard` for the message alone, or the title if there's no message, `message_only` for the message alone, or `use_title` for the title in place of the message.
 
 Emoji and other pictographic symbols are removed, but currency signs, brackets and the like are kept. Set `simplify_text: false` in `options` to keep emoji too, though a message with emoji in it is longer than one SMS can carry, so it's sent as several, if the SMS service allows.
 
