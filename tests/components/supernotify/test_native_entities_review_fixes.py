@@ -498,7 +498,7 @@ async def test_delivery_entities_belong_to_the_config_entry(hass: HomeAssistant)
         assert reg_entry.config_subentry_id == transport.subentry_id
         device = dr.async_get(hass).async_get(reg_entry.device_id)  # type: ignore[arg-type]
         assert device is not None
-        assert device.name == "generic"
+        assert device.name == "Generic"
         assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 

@@ -18,7 +18,7 @@ from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
-from custom_components.supernotify.const import SUBENTRY_TYPE_TRANSPORT
+from custom_components.supernotify.const import SUBENTRY_TYPE_TRANSPORT, transport_display_name
 from custom_components.supernotify.repairs import YAML_TRANSPORTS_ISSUE_ID
 from custom_components.supernotify.schema import TRANSPORT_SCHEMA, as_raw_config
 
@@ -91,16 +91,17 @@ async def test_transports_in_use_listed(hass: HomeAssistant) -> None:
     transports = _transports(entry)
     assert {"generic", "persistent"} <= set(transports)
     assert dict(transports["generic"].data) == {}
-    assert transports["generic"].title == "generic"
+    # titled, and its device named, with its name as shown
+    assert transports["generic"].title == "Generic"
     # the transport's switch is on its own service device, in its subentry, as SMTP's mail server is
     registry_entry = er.async_get(hass).async_get("switch.supernotify_transport_generic")
     assert registry_entry is not None
     assert registry_entry.config_subentry_id == transports["generic"].subentry_id
     device = dr.async_get(hass).async_get(registry_entry.device_id)  # type: ignore[arg-type]
     assert device is not None
-    assert device.name == "generic"
+    assert device.name == "Generic"
     assert device.entry_type == dr.DeviceEntryType.SERVICE
-    assert hass.states.get("switch.supernotify_transport_generic").name == "generic Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_transport_generic").name == "Generic Enabled"  # type: ignore[union-attr]
 
     # already listed, so not added again on a reload
     assert await hass.config_entries.async_reload(entry.entry_id)
@@ -207,7 +208,6 @@ async def test_reconfigure_transport(hass: HomeAssistant) -> None:
         {
             "enabled": False,
             "advanced": {"load": True},
-            "alias": "Chat",
             "delivery_defaults": {"action": "notify.send_message", "priority": ["high"]},
             "delivery_defaults_targets": {"target_usage": "fixed"},
             "delivery_defaults_advanced": {"other_delivery_defaults": other},
@@ -217,11 +217,10 @@ async def test_reconfigure_transport(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    assert subentry.title == "Chat"
+    assert subentry.title == "Generic"
     assert dict(subentry.data) == {
         **GENERIC,
         "enabled": False,
-        "alias": "Chat",
         "delivery_defaults": {**GENERIC["delivery_defaults"], "target_usage": "fixed"},  # type: ignore
     }
     assert entry.runtime_data.context.delivery_registry.transports["generic"].enabled is False
@@ -492,3 +491,37 @@ async def test_form_shows_what_is_stored(hass: HomeAssistant) -> None:
     assert shown["delivery_defaults_advanced"]["options"] == {"sender": "hass@example.com"}
     assert shown["delivery_defaults_targets"]["target_usage"] == "fixed"
     assert shown["delivery_defaults_targets"]["target"] == {"entity_id": ["media_player.kitchen", "media_player.studio"]}
+
+
+async def test_alias_names_device_and_is_kept(hass: HomeAssistant) -> None:
+    """An alias, imported from YAML, has no field, but names the transport's device, is kept on
+    saving, and doesn't title the subentry - one titled by it before is retitled"""
+    data = {"alias": "Chat Room", "delivery_defaults": {"action": "notify.send_message"}}
+    entry = await _entry(
+        hass,
+        subentries_data=[
+            ConfigSubentryData(data=data, subentry_type=SUBENTRY_TYPE_TRANSPORT, title="Chat Room", unique_id="generic")
+        ],
+    )
+    subentry = _transports(entry)["generic"]
+    assert subentry.title == "Generic"
+    registry_entry = er.async_get(hass).async_get("switch.supernotify_transport_generic")
+    device = dr.async_get(hass).async_get(registry_entry.device_id)  # type: ignore[union-attr,arg-type]
+    assert device is not None
+    assert device.name == "Chat Room"
+
+    result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=subentry.subentry_id)
+    assert "alias" not in result["data_schema"].schema
+    result = await _configure(
+        hass,
+        result,
+        {"enabled": True, "advanced": {"load": True}, "delivery_defaults": {"action": "notify.send_message"}},
+    )
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data["alias"] == "Chat Room"
+
+
+def test_transport_display_name() -> None:
+    assert transport_display_name("alexa_media_player") == "Alexa Media Player"
+    assert transport_display_name("tts") == "TTS"
+    assert transport_display_name("html5") == "HTML5"

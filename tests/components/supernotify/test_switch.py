@@ -292,17 +292,17 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
         assert reg_entry.config_subentry_id == transport.subentry_id
         device = dr.async_get(hass).async_get(reg_entry.device_id)  # type: ignore[arg-type]
         assert device is not None
-        assert device.name == "generic"
+        assert device.name == "Generic"
         assert device.entry_type == dr.DeviceEntryType.SERVICE
 
     state = hass.states.get("switch.supernotify_delivery_chat_room")
     assert state is not None
     # named after the transport's device
-    assert state.name == "generic Delivery Chat Room Enabled"
+    assert state.name == "Generic Delivery Chat Room Enabled"
     assert state.attributes["transport"] == "generic"
     state = hass.states.get("switch.supernotify_transport_generic")
     assert state is not None
-    assert state.name == "generic Enabled"
+    assert state.name == "Generic Enabled"
 
 
 async def test_delivery_names_slugified_alike_get_distinct_switches(hass: HomeAssistant) -> None:
