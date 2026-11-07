@@ -51,12 +51,20 @@ from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import MockCameraEntity, MockImageEntity
-from tests.components.supernotify.ha_testing import (
-    INSTANCES,
-    HASocketBlockedError,
-    get_test_config_dir,
-    long_repr_strings,
-)
+from tests.components.supernotify.ha_testing import get_test_config_dir
+
+try:
+    from pytest_homeassistant.plugins import (  # type: ignore[import-not-found,unused-ignore]
+        INSTANCES,
+        HASocketBlockedError,
+        long_repr_strings,
+    )
+except ImportError:  # before 2026.11, see tests/components/supernotify/ha_testing.py
+    from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped,unused-ignore]
+        INSTANCES,
+        HASocketBlockedError,
+        long_repr_strings,
+    )
 from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant, english_translations
 
 if TYPE_CHECKING:

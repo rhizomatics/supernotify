@@ -10,7 +10,13 @@ except ImportError:
 from dataclasses import replace
 
 import pytest
-from homeassistant.components.script import SCRIPT_TURN_ONOFF_SCHEMA
+
+try:
+    from homeassistant.components.script import SCRIPT_TURN_ONOFF_SCHEMA  # type: ignore[attr-defined,unused-ignore]
+except ImportError:  # moved to services in 2026.11
+    from homeassistant.components.script.services import (  # type: ignore[import-not-found,no-redef,unused-ignore]
+        SCRIPT_TURN_ONOFF_SCHEMA,
+    )
 from homeassistant.components.siren import TURN_ON_SCHEMA
 from homeassistant.const import CONF_ACTION
 from homeassistant.core import HomeAssistant
