@@ -8,8 +8,14 @@ try:
         MockConfigEntry,
         async_fire_time_changed,
         async_mock_service,
+        get_test_config_dir,
         mock_restore_cache,
         mock_restore_cache_with_extra_data,
+    )
+    from pytest_homeassistant.plugins import (  # type: ignore[import-not-found,unused-ignore]
+        INSTANCES,
+        HASocketBlockedError,
+        long_repr_strings,
     )
     from pytest_homeassistant.test_util.aiohttp import (  # type: ignore[import-not-found,unused-ignore]
         AiohttpClientMocker,
@@ -20,8 +26,14 @@ except ImportError:
         MockConfigEntry,
         async_fire_time_changed,
         async_mock_service,
+        get_test_config_dir,
         mock_restore_cache,
         mock_restore_cache_with_extra_data,
+    )
+    from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped,unused-ignore]
+        INSTANCES,
+        HASocketBlockedError,
+        long_repr_strings,
     )
     from pytest_homeassistant_custom_component.test_util.aiohttp import (  # type: ignore[import-untyped,unused-ignore]
         AiohttpClientMocker,
@@ -31,11 +43,15 @@ except ImportError:
     )
 
 __all__ = [
+    "INSTANCES",
     "AiohttpClientMocker",
+    "HASocketBlockedError",
     "MockConfigEntry",
     "WebSocketGenerator",
     "async_fire_time_changed",
     "async_mock_service",
+    "get_test_config_dir",
+    "long_repr_strings",
     "mock_restore_cache",
     "mock_restore_cache_with_extra_data",
 ]

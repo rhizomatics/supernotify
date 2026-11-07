@@ -34,12 +34,6 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import get_scheduled_timer_handles
-from pytest_homeassistant_custom_component.common import get_test_config_dir
-from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
-    INSTANCES,
-    HASocketBlockedError,
-    long_repr_strings,
-)
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify.archive import NotificationArchive
@@ -57,6 +51,12 @@ from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import MockCameraEntity, MockImageEntity
+from tests.components.supernotify.ha_testing import (
+    INSTANCES,
+    HASocketBlockedError,
+    get_test_config_dir,
+    long_repr_strings,
+)
 from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant, english_translations
 
 if TYPE_CHECKING:
