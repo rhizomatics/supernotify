@@ -151,6 +151,12 @@ Chime has a related problem one level down: it currently matches `switch`/`media
 
 Consider also typed dict, or classes, for the deliveries mapping carried around inside Notification so easier to verify by type the interactions across functions.
 
+### Registered Custom Target Categories
+
+A `category:value` custom target is only recognised by `Target` when the category is one of `TARGET_CATEGORY_VALUES`. The recipient form (`target_from_fields` in `config_flow.py`) checks the value of a listed category, such as `email:` needing an e-mail address. Any other slug prefix, such as `slack:C123`, is accepted as a custom category, because the generic transport relies on them and a recipient may already have one stored. So a typo like `telegram_chatid:12345` is saved as a custom category that nothing will ever claim.
+
+Let a generic delivery register the custom categories it accepts, building on its existing `target_categories` option, so the known categories are `TARGET_CATEGORY_VALUES` plus those registered by the running deliveries. That enables a strict mode, where the recipient form, and later the `supernotify.notify` action, reject a prefix nobody claims, and list the registered ones alongside the built-in ones. Strict mode needs a migration path for recipients already holding an unregistered category, such as a repair naming them, rather than failing the form when they are next edited.
+
 ### Delivery Sequence
 
 Might be scope for having 'real time' deliveries sequenced ahead of async ones, albeit email is as fast as mobile push for people and notifies similarly, and delivery times only really impacted by camera snapshots (although lacking metrics for some of the more obscure integrations).

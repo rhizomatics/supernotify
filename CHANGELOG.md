@@ -12,8 +12,8 @@ This release continues the move of configuration from YAML into the configuratio
 - *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
 
 ## ✨ Enhancements
-- *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery enabled, targets and extra data. No YAML needed for default e-mail targets
-- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. From Home Assistant 2026.9, each recipient's notify entity and switch are on a device of their own, under the Supernotify device - entity ids are unchanged
+- *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery overrides of enabled, targets and data. No YAML needed for default e-mail targets
+- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. Each recipient's notify entity and switch are listed under their recipient, rather than on the Supernotify device - entity ids are unchanged
 
 ## 📝 Other changes
 ### Development

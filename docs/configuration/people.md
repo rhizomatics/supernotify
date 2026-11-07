@@ -48,11 +48,11 @@ When adding or changing a recipient:
     - **Mobile Device Discovery**, to pick up devices newly registered for them
     - **Targets** and **Custom targets**, more places to notify them, chosen just as in the `supernotify.notify`
       action - entities, devices, areas, floors and labels from the selector, and anything else as text, one per
-      line: an e-mail address, a phone number, or `category:value`, such as `telegram_chat_id:12345`
-2. Optionally pick one of the deliveries under **Change a delivery**, to set how it treats them, coming back
-   to the form afterwards - see
+      line: an e-mail address, a phone number, or `category:value`, such as `telegram_chat_id:12345`. The form
+      lists the known categories, and checks the value of one of those, so `email:` has to be followed by an
+      e-mail address
+2. Optionally, under **Advanced - Delivery Overrides**, set how individual deliveries treat them - see
    [Enabling, Disabling and Overriding Targets per Delivery](#enabling-disabling-and-overriding-targets-per-delivery).
-   Submit with it left empty to save.
 
 !!! note "Recipients from YAML"
     Recipients used to be set under `recipients:` in YAML. From version `2.18.0` those are imported into the
@@ -140,7 +140,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-From Home Assistant 2026.9, each recipient has a device of their own, under the Supernotify device, with their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+Each recipient has, listed under them in the integration, their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
 This lasts across restarts and reloads, until the recipient's **Enabled** setting is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](deliveries.md#overrides).
 
 !!! warning "Deprecated"
@@ -184,13 +184,23 @@ Notify Entities get updated on every notification by Supernotify for that person
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 
-**Change a delivery**, on the form for adding or changing a recipient, picks one of the deliveries - every Supernotify has some, even with no configuration - and sets how it treats that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else:
+**Deliveries**, in the **Advanced - Delivery Overrides** section of the form for adding or changing a recipient, sets how individual deliveries treat that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else. Every Supernotify has some deliveries, even with no configuration, and the form lists them.
 
-- **Enabled** switches the delivery on or off just for that recipient, or leaves it as the delivery is set
-- **Targets** and **Custom targets** add targets used only for that recipient on that delivery
-- **Extra data** adds to the data the delivery sends for that recipient
+It's YAML, keyed by delivery name, with any of these for each:
 
-Leaving all of these unset removes the change.
+- `enabled`, `true` or `false`, switches the delivery on or off just for that recipient - leave it out to leave it as the delivery is set
+- `target` adds targets used only for that recipient on that delivery
+- `data` adds to the data the delivery sends for that recipient
+
+```yaml
+html_email:
+  target: assistant@myhome.net
+slack:
+  enabled: true
+  target: slack_channel:A20H2AN55DX
+```
+
+A delivery left out isn't changed for the recipient, and emptying the field removes all the changes.
 
 ### Enabling a Delivery Just for One Recipient
 
@@ -209,7 +219,15 @@ delivery:
 
 ```
 
-Then change Jane's recipient, choose **Change a delivery**, pick `slack`, set **Enabled** (leave it as the delivery is set if the slack delivery is usually enabled for everyone), and add `slack_channel:A20H2AN55DX` under **Custom targets**.
+Then change Jane's recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+slack:
+  enabled: true
+  target: slack_channel:A20H2AN55DX
+```
+
+leaving out `enabled` if the slack delivery is usually enabled for everyone.
 
 Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane, and only because it was explicitly enabled for her.
 
@@ -224,15 +242,20 @@ delivery:
     template: default.html.j2
 ```
 
-Change `person.grumpy_teenager`'s recipient, choose **Change a delivery**, pick `html_email`, and set **Disabled**.
+Change `person.grumpy_teenager`'s recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+html_email:
+  enabled: false
+```
 
 Everyone else still gets `html_email`; `person.grumpy_teenager` is left out of just that delivery, while still receiving anything else that applies to them (mobile push, other deliveries, and so on).
 
 ### Adding a Target for One Recipient
 
-The same delivery change can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery, by adding `assistant@myhome.net` under **Custom targets** for `html_email`.
+The same delivery change can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery, with `target: assistant@myhome.net` for `html_email`.
 
-**Enabled**, targets and **Extra data** can be combined as needed - **Disabled** always wins over any targets or data set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
+`enabled`, `target` and `data` can be combined as needed - `enabled: false` always wins over any targets or data set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
 
 ## Devices Kept Out of Occupancy
 
