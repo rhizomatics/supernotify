@@ -49,4 +49,10 @@ run = [
 
 [tasks.refresh]
 description = "Refresh tools and dependencies"
-run = "./refresh-deps.sh"
+run = [
+    "mise upgrade --local",
+    "git pull",
+    "uv lock --upgrade",
+    "uv sync --dev --group docs",
+    "pre-commit autoupdate"
+]
