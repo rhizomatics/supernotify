@@ -22,7 +22,7 @@ This release continues the move of configuration from YAML into the configuratio
 ## 📝 Other changes
 ### Development
 - *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
-- *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tools` to see the list.
+- *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tasks` to see the list.
 
 # v2.17.2
 ## 🚨 Breaking changes
