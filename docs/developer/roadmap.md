@@ -78,6 +78,15 @@ The plan is to make this a documented, supported setting, and decide which of th
 
 Randomization for greetings and sounds. Sleigh bells are nice on first notification, annoying after that if every announcement has same one.
 
+### LLM Scenarios
+
+A scenario whose delivery and target configuration is generated for each notification by Home Assistant's own LLM integration, rather than written in YAML. It's selected the same as any other scenario - by its conditions, always on, or named in `apply_scenarios` - and then, given the notification's message, title, priority and data, and what's available to it (the deliveries and their transports, the recipients and their occupancy, the targets), asks the model what deliveries to use, enable or disable, and with what targets and data, in place of the scenario's fixed `delivery:` block.
+
+- Use the `ai_task` integration's structured data generation, so the answer comes back in the shape of a scenario's delivery customization, validated against the same schema as YAML before it's applied - anything invalid, or no answer in time, falls back to the scenario's own configuration, or to applying nothing
+- The scenario says which AI Task entity to use, with instructions of its own, for example "anything about the doors goes to whoever is home, by voice if it's late"
+- Latency and cost: a model call per notification is slow next to the rest of delivery, so it suits scenarios that are selected occasionally, not every notification, and needs a timeout
+- The prompt, the answer and what was applied go in the archive and the delivery explanations, so a surprising choice can be traced, and `dry_run` shows what would be done without sending
+
 ### Other Features
 
 - Transport overrides for scenarios
