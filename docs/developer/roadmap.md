@@ -184,6 +184,19 @@ Also raised there and still open, and more pressing once deliveries are edited i
 - `delivery:` as a map defaults to implicit selection, as a list to explicit, so the same key behaves differently by YAML shape. Expose the selection mode explicitly in the delivery form and decouple the default from the shape
 - When two active scenarios disagree on a delivery's `enabled`, `false` wins silently. Document the rule, or let a scenario say it should win
 
+### Deliveries Under Their Transport
+
+Config subentries are one level deep, so a delivery can't be a subentry of its transport, and the integration page has no tree. Since v2.18.0 each delivery's switch is in its transport's subentry, so a transport's card lists its deliveries, which is as close to nesting as the page allows. The next step is editing a transport's deliveries from its own form, a step listing them, to add, change or remove one. Where those are stored follows the Extended UI Configuration decision above: written back to the YAML file by the round-trip editor, with YAML staying the store, rather than kept in the transport's subentry, which would be simpler but lose having many deliveries in one file to manage and compare. So this waits for the round-trip editor.
+
+### Managing Many Subentries
+
+Recipients and transports are subentries, and every one discovered or in use is listed, so a house with many people, and many transports in use, has a long, flat list on the integration page, with no grouping, filtering or search. Ways to keep it manageable:
+
+- An overview panel, built with the sidebar panel planned under Archive Viewer and Logbook Linkage below - deliveries grouped by transport, recipients, what's disabled or overridden at runtime - linking to each subentry's form, since the integration page isn't made for dozens of entries. This is the real answer at scale
+- Listing a discovered recipient only once it's changed, with the rest summarised, at the cost of every recipient being visible on the integration page, which was chosen deliberately for v2.18.0
+- Titles that keep each kind together, if Home Assistant orders subentries by title - to check in the preview once there are more of them
+- Keeping deliveries and scenarios as YAML, which bounds how many subentries there can be
+
 ### Respond to Dynamic Home Assistant Changes
 
 Listen out for changes to users, persons, integrations and change integrations
