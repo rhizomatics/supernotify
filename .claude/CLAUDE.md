@@ -77,9 +77,10 @@ blueprint, transport, delivery, scenario and recipient should all stay in Englis
 
 Common commands:
 - `uv run pytest` - run tests
-- `uv run ruff check --fix` - lint and auto-fix
-- `uv run ruff format` - format code
+- `ruff check --fix` - lint and auto-fix
+- `ruff format` - format code
 - `uv run mypy custom_components/supernotify` - type check
+- `ty check` - type check with ty
 - `uv run codespell` - spell check
 - `pre-commit run` - check all staged files
 - `properdocs build` - build the documentation without starting a server

@@ -45,12 +45,10 @@ dev=[
     "pytest-icdiff",
     "icdiff",
     "types-aiofiles",
-    "pre-commit",
+    # ruff, ty and pre-commit come from mise.toml, not here
     "pytest-httpserver",
-    "ruff>=0.16.10",
     "codespell",
     "mypy",
-    "ty",
     "genbadge[all]",
     # generic transport testing
     "notify-events",
@@ -106,7 +104,7 @@ environments = [
 ]
 
 exclude-newer = "5 days"
-exclude-newer-package = { certifi=false, homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant=false,pytest-homeassistant-custom-component="2 days",aiohttp=false,uv=false }
+exclude-newer-package = { certifi=false, homeassistant_repl=false,homeassistant=false,homeassistant-stubs=false,pytest-homeassistant=false,pytest-homeassistant-custom-component="2 days",aiohttp=false,uv=false }
 add-bounds = "major"
 # Home Assistant pins uv exactly, and under `uv run` the venv's uv comes first on PATH,
 # shadowing the mise-managed one. Floor at the latest uv security fix (GHSA-hq85-5cpj-mr62).

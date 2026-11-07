@@ -23,6 +23,10 @@ Pillow >=12.1 - switch to get_flattened_data
 
 Switch from `voluptuous` to `probatio`
 
+### 2026.10
+
+Test only with Home Assistant's own `pytest-home-assistant` package, which replaces `pytest-homeassistant-custom-component` from 2026.11 and is only published for 2026.11 on: drop the old package from the development dependencies, and `tests/components/supernotify/ha_testing.py` and the matching fallback in `conftest.py`, importing from `pytest_homeassistant` directly, and the CI matrix's `ha-test-package` switch. The `serialize_form` test helper can then use `probatio` alone, and `conftest.py`'s `hass_config_dir` no longer needs to allow for a packaged `testing_config`
+
 ## Other Migration Cleanup
 
 ### v1.9.0

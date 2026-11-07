@@ -70,18 +70,15 @@ jobs:
         category: "integration"
     - name: HACS Hassfest
       uses: "home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361"
-    - name: Install uv
-      uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v7
-      with:
-        python-version: ${{ matrix.python-version }}
+    # mise.toml is the one source of the tools - ruff, ty, pre-commit, uv and Python
+    - name: Install tools
+      uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
     - name: Install dependencies
       run: |
         sudo apt-get install -y pngquant libturbojpeg0
         uv sync
     - name: Ruff
-      uses:  astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89
+      run: ruff check --output-format=github
     - name: Test with pytest
       run: |
         uv run pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.supernotify --cov-report=xml --cov-report=html

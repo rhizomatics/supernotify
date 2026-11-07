@@ -5,8 +5,11 @@
 - uv
 - python3.14
 - pre-commit
+- ruff
+- ty
 
-A `mise.toml` is provided for these.
+A `mise.toml` is provided for these, and is where they come from - they aren't Python dependencies
+of the project, so CI and the pre-commit hooks use the same versions as `mise install` gives you.
 
 For documentation build:
 
