@@ -106,7 +106,10 @@ def hass_config_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
     to it by default, leave nothing behind in the shared testing_config - apart from the test's
     own tmp_path, which tests use for media and archive directories of their own"""
     config_dir: pathlib.Path = tmp_path_factory.mktemp("hass_config")
-    copytree(get_test_config_dir(), config_dir, symlinks=True, dirs_exist_ok=True)
+    # pytest-homeassistant-custom-component ships a testing_config, while pytest-home-assistant
+    # looks for one in the project's own tests, which this doesn't need
+    if pathlib.Path(source := get_test_config_dir()).is_dir():
+        copytree(source, config_dir, symlinks=True, dirs_exist_ok=True)
     return str(config_dir)
 
 
