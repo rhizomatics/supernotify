@@ -932,6 +932,27 @@
                         "alias": "Name used for this transport in place of its own"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Connection",
+                            "data": {
+                                "host": "Host",
+                                "port": "Port",
+                                "encryption": "Encryption",
+                                "username": "Username",
+                                "password": "Password",
+                                "timeout": "Timeout",
+                                "verify_ssl": "Verify SSL certificate"
+                            },
+                            "data_description": {
+                                "host": "The mail server, when not using a Home Assistant SMTP integration",
+                                "port": "Usually 587 for STARTTLS, or 465 for TLS",
+                                "encryption": "How the connection is secured",
+                                "username": "The account to log in with",
+                                "password": "Left empty, the password set already is kept",
+                                "timeout": "Seconds to wait for the server",
+                                "verify_ssl": "Check the server's certificate - only turn off for a server you trust"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Delivery Defaults",
                             "data": {
@@ -957,27 +978,6 @@
                                 "inclusion": "When its deliveries are used - by default, only when asked for, by scenario, or as a fallback",
                                 "priority": "The priorities its deliveries are used for",
                                 "other_delivery_defaults": "Any other delivery defaults, as written in YAML under delivery_defaults, such as conditions, template or title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Connection",
-                            "data": {
-                                "host": "Host",
-                                "port": "Port",
-                                "encryption": "Encryption",
-                                "username": "Username",
-                                "password": "Password",
-                                "timeout": "Timeout",
-                                "verify_ssl": "Verify SSL certificate"
-                            },
-                            "data_description": {
-                                "host": "The mail server, when not using a Home Assistant SMTP integration",
-                                "port": "Usually 587 for STARTTLS, or 465 for TLS",
-                                "encryption": "How the connection is secured",
-                                "username": "The account to log in with",
-                                "password": "Left empty, the password set already is kept",
-                                "timeout": "Seconds to wait for the server",
-                                "verify_ssl": "Check the server's certificate - only turn off for a server you trust"
                             }
                         },
                         "advanced": {

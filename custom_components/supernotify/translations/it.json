@@ -932,6 +932,27 @@
                         "alias": "Nome usato per questo transport al posto del suo"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Connessione",
+                            "data": {
+                                "host": "Server",
+                                "port": "Porta",
+                                "encryption": "Crittografia",
+                                "username": "Nome utente",
+                                "password": "Password",
+                                "timeout": "Timeout",
+                                "verify_ssl": "Verifica certificato SSL"
+                            },
+                            "data_description": {
+                                "host": "Il server di posta, quando non si usa un'integrazione SMTP di Home Assistant",
+                                "port": "Di solito 587 per STARTTLS, o 465 per TLS",
+                                "encryption": "Come è protetta la connessione",
+                                "username": "L'account con cui accedere",
+                                "password": "Se lasciata vuota, resta la password già impostata",
+                                "timeout": "Secondi di attesa del server",
+                                "verify_ssl": "Controlla il certificato del server - disattivalo solo per un server affidabile"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Valori predefiniti delle delivery",
                             "data": {
@@ -957,27 +978,6 @@
                                 "inclusion": "Quando sono usate le sue delivery - per impostazione predefinita, solo su richiesta, per scenario o come ripiego",
                                 "priority": "Le priorità per cui sono usate le sue delivery",
                                 "other_delivery_defaults": "Qualsiasi altro valore predefinito delle delivery, come scritto in YAML sotto delivery_defaults, come conditions, template o title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Connessione",
-                            "data": {
-                                "host": "Server",
-                                "port": "Porta",
-                                "encryption": "Crittografia",
-                                "username": "Nome utente",
-                                "password": "Password",
-                                "timeout": "Timeout",
-                                "verify_ssl": "Verifica certificato SSL"
-                            },
-                            "data_description": {
-                                "host": "Il server di posta, quando non si usa un'integrazione SMTP di Home Assistant",
-                                "port": "Di solito 587 per STARTTLS, o 465 per TLS",
-                                "encryption": "Come è protetta la connessione",
-                                "username": "L'account con cui accedere",
-                                "password": "Se lasciata vuota, resta la password già impostata",
-                                "timeout": "Secondi di attesa del server",
-                                "verify_ssl": "Controlla il certificato del server - disattivalo solo per un server affidabile"
                             }
                         },
                         "advanced": {

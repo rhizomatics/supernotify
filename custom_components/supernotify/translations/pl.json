@@ -897,6 +897,27 @@
                         "alias": "Nazwa używana dla tego transportu zamiast jego własnej"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Połączenie",
+                            "data": {
+                                "host": "Serwer",
+                                "port": "Port",
+                                "encryption": "Szyfrowanie",
+                                "username": "Nazwa użytkownika",
+                                "password": "Hasło",
+                                "timeout": "Limit czasu",
+                                "verify_ssl": "Weryfikuj certyfikat SSL"
+                            },
+                            "data_description": {
+                                "host": "Serwer pocztowy, gdy nie jest używana integracja SMTP Home Assistant",
+                                "port": "Zwykle 587 dla STARTTLS lub 465 dla TLS",
+                                "encryption": "Jak zabezpieczone jest połączenie",
+                                "username": "Konto do logowania",
+                                "password": "Pozostawione puste zachowuje już ustawione hasło",
+                                "timeout": "Sekundy oczekiwania na serwer",
+                                "verify_ssl": "Sprawdzaj certyfikat serwera - wyłącz tylko dla zaufanego serwera"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Domyślne ustawienia dostarczeń",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "Kiedy używane są jego dostarczenia - domyślnie, tylko na żądanie, przez scenariusz lub awaryjnie",
                                 "priority": "Priorytety, dla których używane są jego dostarczenia",
                                 "other_delivery_defaults": "Wszelkie inne domyślne ustawienia dostarczeń, zapisane jak w YAML pod delivery_defaults, np. conditions, template lub title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Połączenie",
-                            "data": {
-                                "host": "Serwer",
-                                "port": "Port",
-                                "encryption": "Szyfrowanie",
-                                "username": "Nazwa użytkownika",
-                                "password": "Hasło",
-                                "timeout": "Limit czasu",
-                                "verify_ssl": "Weryfikuj certyfikat SSL"
-                            },
-                            "data_description": {
-                                "host": "Serwer pocztowy, gdy nie jest używana integracja SMTP Home Assistant",
-                                "port": "Zwykle 587 dla STARTTLS lub 465 dla TLS",
-                                "encryption": "Jak zabezpieczone jest połączenie",
-                                "username": "Konto do logowania",
-                                "password": "Pozostawione puste zachowuje już ustawione hasło",
-                                "timeout": "Sekundy oczekiwania na serwer",
-                                "verify_ssl": "Sprawdzaj certyfikat serwera - wyłącz tylko dla zaufanego serwera"
                             }
                         },
                         "advanced": {

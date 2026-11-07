@@ -11,8 +11,7 @@ description: Automatically notify only who is currently home, and to everyone if
 
 ## Purpose
 
-Send a notification only to the people currently home, each on their own device(s) - and if
-nobody's home, send it to everyone instead, so it still reaches someone. Make the config as easy as possible, don't make list everybody and their devices every time.
+Send a notification only to the people currently home, each on their own device(s) - and if nobody's home, send it to everyone instead, so it still reaches someone. Make the config as easy as possible, don't make list everybody and their devices every time.
 
 ## Implementation
 
@@ -30,11 +29,10 @@ Note that `inclusion: fallback` plays no part in this - see the warning below.
 
 ## Example Configuration
 
+In this example, there are at least two [Person](https://www.home-assistant.io/integrations/person/) entries added in Home Assistant.
+
 ```yaml
 supernotify:
-  recipients:
-    - person: person.alex
-    - person: person.sam
   delivery:
     notify_home:
       transport: mobile_push
@@ -62,6 +60,8 @@ Add a third recipient and both deliveries pick it up automatically - nothing els
 
 `occupancy: only_in` narrows *which recipients* a delivery reaches, not which of a person's own registered devices get notified - if someone has two phones, both get the notification. To pin a delivery to one named device per person instead, drop the shared `notify_home` delivery and give each person their own, with `target_usage: fixed` and a bare `mobile_app_id` target (see [Explicit Targets](../transports/mobile_push.md#explicit-targets)):
 
+In this example there's a *Person* in Home Assistant named `alex`
+
 ```yaml
   delivery:
     notify_alex:
@@ -77,15 +77,7 @@ Add a third recipient and both deliveries pick it up automatically - nothing els
         state: home
 ```
 
-This doesn't scale the way the `occupancy`-only version does - a new recipient needs their own
-delivery block - but it's the only way to express "this one device, not that one".
+This doesn't scale the way the `occupancy`-only version does - a new recipient needs their own delivery block - but it's the only way to express "this one device, not that one".
 
 !!! warning "`inclusion: fallback` would do nothing here - don't add it"
-    It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its
-    role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate
-    mechanism that fires when *nothing at all* delivered for the whole notification, and only
-    adds a delivery that isn't *already* selected some other way. `notify_everyone` is already
-    named directly in the scenario's own `delivery:` map, so it's always selected via plain
-    `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's
-    nothing left for it to add. All the actual gating here is `occupancy: all_out`; strip that
-    out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](../configuration/deliveries.md#delivery-inclusion) for the full explanation.
+    It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual control here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](../configuration/deliveries.md#delivery-inclusion) for the full explanation.

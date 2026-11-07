@@ -897,6 +897,27 @@
                         "alias": "Name, der für diesen Transport anstelle seines eigenen verwendet wird"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Verbindung",
+                            "data": {
+                                "host": "Server",
+                                "port": "Port",
+                                "encryption": "Verschlüsselung",
+                                "username": "Benutzername",
+                                "password": "Passwort",
+                                "timeout": "Zeitlimit",
+                                "verify_ssl": "SSL-Zertifikat prüfen"
+                            },
+                            "data_description": {
+                                "host": "Der Mailserver, wenn keine SMTP-Integration von Home Assistant verwendet wird",
+                                "port": "Meist 587 für STARTTLS oder 465 für TLS",
+                                "encryption": "Wie die Verbindung gesichert wird",
+                                "username": "Das Konto für die Anmeldung",
+                                "password": "Leer gelassen, bleibt das bereits gesetzte Passwort",
+                                "timeout": "Sekunden, die auf den Server gewartet wird",
+                                "verify_ssl": "Das Zertifikat des Servers prüfen - nur für einen vertrauenswürdigen Server ausschalten"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Lieferungsstandardwerte",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "Wann seine Lieferungen verwendet werden - standardmäßig, nur auf Anfrage, per Szenario oder als Ausweichlösung",
                                 "priority": "Die Prioritäten, für die seine Lieferungen verwendet werden",
                                 "other_delivery_defaults": "Weitere Lieferungsstandardwerte, wie in YAML unter delivery_defaults geschrieben, etwa conditions, template oder title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Verbindung",
-                            "data": {
-                                "host": "Server",
-                                "port": "Port",
-                                "encryption": "Verschlüsselung",
-                                "username": "Benutzername",
-                                "password": "Passwort",
-                                "timeout": "Zeitlimit",
-                                "verify_ssl": "SSL-Zertifikat prüfen"
-                            },
-                            "data_description": {
-                                "host": "Der Mailserver, wenn keine SMTP-Integration von Home Assistant verwendet wird",
-                                "port": "Meist 587 für STARTTLS oder 465 für TLS",
-                                "encryption": "Wie die Verbindung gesichert wird",
-                                "username": "Das Konto für die Anmeldung",
-                                "password": "Leer gelassen, bleibt das bereits gesetzte Passwort",
-                                "timeout": "Sekunden, die auf den Server gewartet wird",
-                                "verify_ssl": "Das Zertifikat des Servers prüfen - nur für einen vertrauenswürdigen Server ausschalten"
                             }
                         },
                         "advanced": {

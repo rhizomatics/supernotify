@@ -897,6 +897,27 @@
                         "alias": "このトランスポートの名前の代わりに使う名前"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "接続",
+                            "data": {
+                                "host": "ホスト",
+                                "port": "ポート",
+                                "encryption": "暗号化",
+                                "username": "ユーザー名",
+                                "password": "パスワード",
+                                "timeout": "タイムアウト",
+                                "verify_ssl": "SSL 証明書を検証"
+                            },
+                            "data_description": {
+                                "host": "Home Assistant の SMTP 統合を使わない場合のメールサーバー",
+                                "port": "通常 STARTTLS は 587、TLS は 465",
+                                "encryption": "接続の保護方法",
+                                "username": "ログインに使うアカウント",
+                                "password": "空のままにすると、設定済みのパスワードが保持されます",
+                                "timeout": "サーバーを待つ秒数",
+                                "verify_ssl": "サーバーの証明書を確認 - 信頼できるサーバーの場合のみオフにしてください"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "配信のデフォルト",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "配信が使われるとき - デフォルト、要求時のみ、シナリオ、またはフォールバック",
                                 "priority": "配信が使われる優先度",
                                 "other_delivery_defaults": "その他の配信デフォルト。YAML の delivery_defaults と同じ書き方で、conditions、template、title など"
-                            }
-                        },
-                        "connection": {
-                            "name": "接続",
-                            "data": {
-                                "host": "ホスト",
-                                "port": "ポート",
-                                "encryption": "暗号化",
-                                "username": "ユーザー名",
-                                "password": "パスワード",
-                                "timeout": "タイムアウト",
-                                "verify_ssl": "SSL 証明書を検証"
-                            },
-                            "data_description": {
-                                "host": "Home Assistant の SMTP 統合を使わない場合のメールサーバー",
-                                "port": "通常 STARTTLS は 587、TLS は 465",
-                                "encryption": "接続の保護方法",
-                                "username": "ログインに使うアカウント",
-                                "password": "空のままにすると、設定済みのパスワードが保持されます",
-                                "timeout": "サーバーを待つ秒数",
-                                "verify_ssl": "サーバーの証明書を確認 - 信頼できるサーバーの場合のみオフにしてください"
                             }
                         },
                         "advanced": {

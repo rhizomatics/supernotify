@@ -893,11 +893,7 @@ class TransportSubentryFlow(ConfigSubentryFlow):
             ),
             vol.Optional(ATTR_OTHER_DELIVERY_DEFAULTS): ObjectSelector(),
         })
-        fields[vol.Optional(CONF_DELIVERY_DEFAULTS, default=dict)] = section(vol.Schema(default_fields), {"collapsed": False})
-        load = self._transport.get(CONF_LOAD, True)
-        fields[vol.Optional(SECTION_ADVANCED, default=dict)] = section(
-            vol.Schema({vol.Optional(CONF_LOAD, default=True): cv.boolean}), {"collapsed": bool(load)}
-        )
+        # the connection first, where there is one, as nothing works without it
         connection: dict[str, Any] = dict(self._transport.get(CONF_CONNECTION) or {})
         if transport_class is not None and transport_class.uses_connection:
             fields[vol.Optional(CONF_CONNECTION, default=dict)] = section(
@@ -917,6 +913,11 @@ class TransportSubentryFlow(ConfigSubentryFlow):
                 }),
                 {"collapsed": not connection},
             )
+        fields[vol.Optional(CONF_DELIVERY_DEFAULTS, default=dict)] = section(vol.Schema(default_fields), {"collapsed": False})
+        load = self._transport.get(CONF_LOAD, True)
+        fields[vol.Optional(SECTION_ADVANCED, default=dict)] = section(
+            vol.Schema({vol.Optional(CONF_LOAD, default=True): cv.boolean}), {"collapsed": bool(load)}
+        )
         suggested = {
             CONF_ENABLED: self._transport.get(CONF_ENABLED, True),
             SECTION_ADVANCED: {CONF_LOAD: load},

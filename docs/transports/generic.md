@@ -84,13 +84,9 @@ delivery:
 
 If it's not a standard target type, then make one up. In this example, for personal Slack channels, which in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could have separate categories for "slack_group_dm", "slack_user" etc)
 
+![Personal Slack Target](../assets/images/recipient_custom_slack_target.png)
+
 ```yaml title="Config Snippets"
-recipients:
-  - person: person.my_user
-    delivery:
-      slack:
-        target:
-           slack_channel: A20H2AN55DX
 delivery:
   slack:
       transport: generic

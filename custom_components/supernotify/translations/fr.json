@@ -897,6 +897,27 @@
                         "alias": "Nom utilisé pour ce transport à la place du sien"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Connexion",
+                            "data": {
+                                "host": "Serveur",
+                                "port": "Port",
+                                "encryption": "Chiffrement",
+                                "username": "Nom d'utilisateur",
+                                "password": "Mot de passe",
+                                "timeout": "Délai d'attente",
+                                "verify_ssl": "Vérifier le certificat SSL"
+                            },
+                            "data_description": {
+                                "host": "Le serveur de messagerie, sans intégration SMTP de Home Assistant",
+                                "port": "En général 587 pour STARTTLS, ou 465 pour TLS",
+                                "encryption": "Comment la connexion est sécurisée",
+                                "username": "Le compte avec lequel se connecter",
+                                "password": "Laissé vide, le mot de passe déjà défini est conservé",
+                                "timeout": "Secondes d'attente du serveur",
+                                "verify_ssl": "Vérifier le certificat du serveur - à désactiver seulement pour un serveur de confiance"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Valeurs par défaut de livraison",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "Quand ses livraisons sont utilisées - par défaut, seulement sur demande, par scénario ou en repli",
                                 "priority": "Les priorités pour lesquelles ses livraisons sont utilisées",
                                 "other_delivery_defaults": "Toute autre valeur par défaut de livraison, comme écrite en YAML sous delivery_defaults, comme conditions, template ou title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Connexion",
-                            "data": {
-                                "host": "Serveur",
-                                "port": "Port",
-                                "encryption": "Chiffrement",
-                                "username": "Nom d'utilisateur",
-                                "password": "Mot de passe",
-                                "timeout": "Délai d'attente",
-                                "verify_ssl": "Vérifier le certificat SSL"
-                            },
-                            "data_description": {
-                                "host": "Le serveur de messagerie, sans intégration SMTP de Home Assistant",
-                                "port": "En général 587 pour STARTTLS, ou 465 pour TLS",
-                                "encryption": "Comment la connexion est sécurisée",
-                                "username": "Le compte avec lequel se connecter",
-                                "password": "Laissé vide, le mot de passe déjà défini est conservé",
-                                "timeout": "Secondes d'attente du serveur",
-                                "verify_ssl": "Vérifier le certificat du serveur - à désactiver seulement pour un serveur de confiance"
                             }
                         },
                         "advanced": {

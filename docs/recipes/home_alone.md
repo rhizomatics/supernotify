@@ -16,18 +16,11 @@ Vary how and which notifications are made if someone is home on their own.
 
 ## Implementation
 
-Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery
-when `recipients` are defined in the config. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
+Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when the *Person* integration is used in Home Assistant and automatically discovered in Supernotify. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
 
 ## Example Configuration
 
 ```yaml
-recipients:
-    - person: person.joe_mcphee
-      email: joe.mcphee@home.mail.net
-      phone_number: "+3294924848"
-    - person: person.jabilee_sokata
-      email: jab@sokata.family.net
 scenarios:
     lone_night:
         alias: only one person home at night
@@ -49,6 +42,7 @@ scenarios:
 
 ## Variations
 
+- Add email addresses, phone numbers, telegram IDs etc to Recipients in the Supernotify configuration screen to give more ways to contact people
 - Determine night time using the `sun` entity, or a daylight sensor device, rather than alarm status.
 - Check for 2 or more people at home
     ```yaml

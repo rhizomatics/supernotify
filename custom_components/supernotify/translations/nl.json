@@ -897,6 +897,27 @@
                         "alias": "Naam die voor dit transport wordt gebruikt in plaats van zijn eigen naam"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "Verbinding",
+                            "data": {
+                                "host": "Server",
+                                "port": "Poort",
+                                "encryption": "Versleuteling",
+                                "username": "Gebruikersnaam",
+                                "password": "Wachtwoord",
+                                "timeout": "Time-out",
+                                "verify_ssl": "SSL-certificaat controleren"
+                            },
+                            "data_description": {
+                                "host": "De mailserver, als er geen SMTP-integratie van Home Assistant wordt gebruikt",
+                                "port": "Meestal 587 voor STARTTLS, of 465 voor TLS",
+                                "encryption": "Hoe de verbinding is beveiligd",
+                                "username": "Het account om mee in te loggen",
+                                "password": "Leeg gelaten blijft het al ingestelde wachtwoord",
+                                "timeout": "Seconden wachten op de server",
+                                "verify_ssl": "Het certificaat van de server controleren - alleen uitzetten voor een vertrouwde server"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "Standaardwaarden voor leveringen",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "Wanneer zijn leveringen worden gebruikt - standaard, alleen op verzoek, per scenario, of als terugval",
                                 "priority": "De prioriteiten waarvoor zijn leveringen worden gebruikt",
                                 "other_delivery_defaults": "Alle overige standaardwaarden voor leveringen, zoals geschreven in YAML onder delivery_defaults, zoals conditions, template of title"
-                            }
-                        },
-                        "connection": {
-                            "name": "Verbinding",
-                            "data": {
-                                "host": "Server",
-                                "port": "Poort",
-                                "encryption": "Versleuteling",
-                                "username": "Gebruikersnaam",
-                                "password": "Wachtwoord",
-                                "timeout": "Time-out",
-                                "verify_ssl": "SSL-certificaat controleren"
-                            },
-                            "data_description": {
-                                "host": "De mailserver, als er geen SMTP-integratie van Home Assistant wordt gebruikt",
-                                "port": "Meestal 587 voor STARTTLS, of 465 voor TLS",
-                                "encryption": "Hoe de verbinding is beveiligd",
-                                "username": "Het account om mee in te loggen",
-                                "password": "Leeg gelaten blijft het al ingestelde wachtwoord",
-                                "timeout": "Seconden wachten op de server",
-                                "verify_ssl": "Het certificaat van de server controleren - alleen uitzetten voor een vertrouwde server"
                             }
                         },
                         "advanced": {

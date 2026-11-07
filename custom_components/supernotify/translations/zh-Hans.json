@@ -897,6 +897,27 @@
                         "alias": "代替此传输自身名称使用的名称"
                     },
                     "sections": {
+                        "connection": {
+                            "name": "连接",
+                            "data": {
+                                "host": "主机",
+                                "port": "端口",
+                                "encryption": "加密",
+                                "username": "用户名",
+                                "password": "密码",
+                                "timeout": "超时",
+                                "verify_ssl": "验证 SSL 证书"
+                            },
+                            "data_description": {
+                                "host": "不使用 Home Assistant SMTP 集成时的邮件服务器",
+                                "port": "STARTTLS 通常为 587，TLS 为 465",
+                                "encryption": "连接的保护方式",
+                                "username": "用于登录的账户",
+                                "password": "留空则保留已设置的密码",
+                                "timeout": "等待服务器的秒数",
+                                "verify_ssl": "检查服务器证书 - 仅对可信服务器关闭"
+                            }
+                        },
                         "delivery_defaults": {
                             "name": "投递默认值",
                             "data": {
@@ -922,27 +943,6 @@
                                 "inclusion": "何时使用其投递 - 默认、仅在请求时、按场景，或作为后备",
                                 "priority": "使用其投递的优先级",
                                 "other_delivery_defaults": "任何其他投递默认值，写法同 YAML 中 delivery_defaults 下，例如 conditions、template 或 title"
-                            }
-                        },
-                        "connection": {
-                            "name": "连接",
-                            "data": {
-                                "host": "主机",
-                                "port": "端口",
-                                "encryption": "加密",
-                                "username": "用户名",
-                                "password": "密码",
-                                "timeout": "超时",
-                                "verify_ssl": "验证 SSL 证书"
-                            },
-                            "data_description": {
-                                "host": "不使用 Home Assistant SMTP 集成时的邮件服务器",
-                                "port": "STARTTLS 通常为 587，TLS 为 465",
-                                "encryption": "连接的保护方式",
-                                "username": "用于登录的账户",
-                                "password": "留空则保留已设置的密码",
-                                "timeout": "等待服务器的秒数",
-                                "verify_ssl": "检查服务器证书 - 仅对可信服务器关闭"
                             }
                         },
                         "advanced": {

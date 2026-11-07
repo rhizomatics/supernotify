@@ -249,6 +249,12 @@ async def test_connection(hass: HomeAssistant) -> None:
 
     result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=subentry.subentry_id)
     connection = _section(result, "connection")
+    # first, where there is one
+    assert [str(k) for k in result["data_schema"].schema if str(k) in ("connection", "delivery_defaults", "advanced")] == [
+        "connection",
+        "delivery_defaults",
+        "advanced",
+    ]
     assert not connection.options["collapsed"]
     suggested = _section_suggested(connection)
     assert suggested["host"] == "smtp.example.com"
