@@ -8,11 +8,35 @@ These are the notification transport adaptors built into Supernotify:
 
 ## Customizing Transports
 
+Transports are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, where every transport in use is listed already, to change it, or switch it off with **Enabled**. **Add transport** sets up one that needs configuring before it can be used, such as [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) with its action, or [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) with its aliases - it lists those not in use yet whose Home Assistant integration is installed.
+
+A transport's form has:
+
+- **Enabled**, to switch it off without removing it, and **Alias**
+- **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
+  - **Debug**, to wait for the result of each action its deliveries call, and record it
+  - **Action**, for a transport whose action is configured rather than fixed or found, such as generic
+  - **Target usage**, how the targets below are used alongside a notification's own - see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets)
+  - **Targets** and **Custom targets**, chosen as in the `supernotify.notify` action
+  - **Options**, the transport's own options, and **Extra Data**, both as YAML
+  - **Inclusion** and **Priority**
+  - **Other delivery defaults**, as YAML, for anything else, such as `occupancy`, `conditions`, `template` or `title`
+- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
+- **Advanced**, with **Load**, which leaves the transport out altogether when off, with no deliveries or switch. If disabled, the transport will have to be re-added with **Add transport** if needed in future
+
+So a YAML example elsewhere in this documentation, under `transports:`, is entered on that transport's form - its `delivery_defaults` `options` under **Options**, and so on.
+
+Deprecated settings, such as `device_domain` directly on a transport rather than in its options, raise a repair naming them. Saving the transport's form moves them to their replacements.
+
+Transports from YAML
+
+Transports used to be set under `transports:` in YAML. From version `2.18.0` those are imported into the integration when it starts, and a repair asks for them to be removed from the YAML, where they are ignored from then on.
+
 ### Options
 
 Most transport adaptors support an additional set of options, some common ones for handling titles or suppressing URLs, and some specific to a transport.
 
-In this example, image attachments for emails get tuned ( since these are commonly needed, the email delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
+In this example, entered as the email transport's **Action** and **Options**, image attachments for emails get tuned ( since these are commonly needed, the email delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
 
 ```yaml
 transports:
@@ -30,7 +54,7 @@ transports:
 
 ## Entities
 
-Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
+Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, listed under its transport in the integration, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
 
 ### Table of Options
 
