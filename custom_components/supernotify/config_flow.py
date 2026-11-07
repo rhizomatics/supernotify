@@ -132,6 +132,7 @@ from .const import (
     TARGET_CATEGORY_VALUES,
     TARGET_USAGE_VALUES,
     TRANSPORT_GENERIC,
+    transport_display_name,
 )
 from .hass_api import HomeAssistantAPI
 from .options import (
@@ -719,7 +720,7 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_MOBILE_DEVICES): SelectSelector(SelectSelectorConfig(options=devices, multiple=True)),
             vol.Optional(CONF_TARGET): TargetSelector(),
             vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
-            vol.Optional(SECTION_DELIVERY_OVERRIDES, default=dict): section(
+            vol.Optional(SECTION_DELIVERY_OVERRIDES): section(
                 vol.Schema({vol.Optional(CONF_DELIVERY): ObjectSelector()}),
                 {"collapsed": not (self._recipient.get(CONF_DELIVERY) or errors.get("base"))},
             ),
@@ -863,12 +864,12 @@ class TransportSubentryFlow(ConfigSubentryFlow):
                 transport = {
                     k: v
                     for k, v in _migrate_deprecated(self._transport).items()
-                    if k not in (CONF_ALIAS, CONF_ENABLED, CONF_LOAD, CONF_DELIVERY_DEFAULTS, CONF_CONNECTION)
+                    # an alias, from YAML, has no field, but is kept, as the transport device's name
+                    if k not in (CONF_ENABLED, CONF_LOAD, CONF_DELIVERY_DEFAULTS, CONF_CONNECTION)
                 }
                 transport[CONF_ENABLED] = user_input[CONF_ENABLED]
                 transport[CONF_LOAD] = user_input.get(SECTION_ADVANCED, {}).get(CONF_LOAD, True)
                 for key, value in (
-                    (CONF_ALIAS, user_input.get(CONF_ALIAS)),
                     (CONF_DELIVERY_DEFAULTS, defaults),
                     (CONF_CONNECTION, self._connection(user_input.get(CONF_CONNECTION))),
                 ):
@@ -887,7 +888,6 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         transport_class = self._transport_class()
         fields: dict[Any, Any] = {
             vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-            vol.Optional(CONF_ALIAS): TextSelector(),
         }
         main_fields: dict[Any, Any] = {vol.Optional(CONF_DEBUG): cv.boolean}
         if self._takes_action():
@@ -915,7 +915,7 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         # the connection first, where there is one, as nothing works without it
         connection: dict[str, Any] = dict(self._transport.get(CONF_CONNECTION) or {})
         if transport_class is not None and transport_class.uses_connection:
-            fields[vol.Optional(CONF_CONNECTION, default=dict)] = section(
+            fields[vol.Optional(CONF_CONNECTION)] = section(
                 vol.Schema({
                     vol.Optional(CONF_HOST): TextSelector(),
                     vol.Optional(CONF_PORT): NumberSelector(
@@ -951,15 +951,14 @@ class TransportSubentryFlow(ConfigSubentryFlow):
             (SECTION_DELIVERY_DEFAULTS_TARGETS, target_fields, not (any(suggested_targets.values()) or errors)),
             (SECTION_DELIVERY_DEFAULTS_ADVANCED, yaml_fields, not (any(suggested_yaml.values()) or errors)),
         ):
-            fields[vol.Optional(name, default=dict)] = section(vol.Schema(section_fields), {"collapsed": collapsed})
+            fields[vol.Optional(name)] = section(vol.Schema(section_fields), {"collapsed": collapsed})
         load = self._transport.get(CONF_LOAD, True)
-        fields[vol.Optional(SECTION_ADVANCED, default=dict)] = section(
+        fields[vol.Optional(SECTION_ADVANCED)] = section(
             vol.Schema({vol.Optional(CONF_LOAD, default=True): cv.boolean}), {"collapsed": bool(load)}
         )
         suggested = {
             CONF_ENABLED: self._transport.get(CONF_ENABLED, True),
             SECTION_ADVANCED: {CONF_LOAD: load},
-            CONF_ALIAS: self._transport.get(CONF_ALIAS),
             CONF_DELIVERY_DEFAULTS: {
                 CONF_DEBUG: defaults.get(CONF_DEBUG, False),
                 CONF_ACTION: defaults.get(CONF_ACTION),
@@ -998,7 +997,7 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         return self.async_create_entry(title=self._title(), data=self._transport, unique_id=self._name)
 
     def _title(self) -> str:
-        return str(self._transport.get(CONF_ALIAS) or self._name)
+        return transport_display_name(self._name)
 
     def _transport_class(self) -> type[Transport] | None:
         from .static_config import TRANSPORTS

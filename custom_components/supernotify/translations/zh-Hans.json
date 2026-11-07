@@ -891,12 +891,10 @@
                     "title": "{transport}",
                     "description": "是否使用 {transport}，以及其投递的默认值。\n\n[了解有关 {transport} 的更多信息]({learn_more_url})",
                     "data": {
-                        "enabled": "已启用",
-                        "alias": "别名"
+                        "enabled": "已启用"
                     },
                     "data_description": {
-                        "enabled": "是否使用此传输 - 关闭时，其所有投递都不使用",
-                        "alias": "代替此传输自身名称使用的名称"
+                        "enabled": "是否使用此传输 - 关闭时，其所有投递都不使用"
                     },
                     "sections": {
                         "connection": {

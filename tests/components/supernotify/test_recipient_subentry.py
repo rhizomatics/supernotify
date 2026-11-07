@@ -385,3 +385,29 @@ async def test_user_recipient_merged_into_persons_already_listed(hass: HomeAssis
         "enabled": False,
     }
     assert list(entry.runtime_data.context.people_registry.people) == ["person.bob"]
+
+
+async def test_form_shows_stored_delivery_overrides(hass: HomeAssistant) -> None:
+    """Regression: the delivery overrides section had a default, which the frontend filled it with,
+    empty, rather than the overrides stored"""
+    import probatio
+    from homeassistant.helpers import config_validation as cv
+
+    overrides = {"testing": {"enabled": False}}
+    entry = await _entry(
+        hass,
+        subentries_data=[
+            ConfigSubentryData(
+                data={"person": "person.bob", "delivery": overrides},
+                subentry_type=SUBENTRY_TYPE_RECIPIENT,
+                title="Bob",
+                unique_id="person.bob",
+            )
+        ],
+    )
+    result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=_recipients(entry)[0].subentry_id)
+    fields = probatio.to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
+    section = next(f for f in fields if f["name"] == "delivery_overrides")
+    # no default, so the frontend fills it from what's inside
+    assert "default" not in section
+    assert section["schema"][0]["description"]["suggested_value"] == overrides

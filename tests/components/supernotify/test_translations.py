@@ -116,13 +116,6 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("pl", "config_subentries.transport.entry_type"),  # "Transport" is the word in these languages too
     ("pl", "config_subentries.transport.step.user.title"),  # "Transport" is the word in these languages too
     ("pl", "config_subentries.transport.step.user.data.transport"),  # "Transport" is the word in these languages too
-    ("de", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("es", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("fr", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("it", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("nl", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("pl", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
-    ("pt", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
     (
         "fr",
         "config_subentries.transport.step.details.sections.delivery_defaults.data.action",

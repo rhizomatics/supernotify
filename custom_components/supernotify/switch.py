@@ -41,6 +41,7 @@ from .const import (
     OVERRIDE_KIND_TRANSPORT,
     SUBENTRY_TYPE_TRANSPORT,
     TRANSPORT_UNRECORDED_ATTRIBUTES,
+    transport_display_name,
 )
 from .hass_api import ha_device_info, ha_transport_device_info
 
@@ -87,7 +88,10 @@ async def async_setup_entry(
         s.unique_id: s.subentry_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT
     }
     for transport in delivery_registry.transports.values():
-        transport_device = ha_transport_device_info(entry.entry_id, transport.name, transport.alias or transport.name)
+        # named by its alias, imported from YAML, else its name - and renamed in the UI as any device is
+        transport_device = ha_transport_device_info(
+            entry.entry_id, transport.name, transport.alias or transport_display_name(transport.name)
+        )
         transport_entities: list[SwitchEntity] = [
             SupernotifyTransportSwitch(transport, delivery_registry, transport_device, switches)
         ]

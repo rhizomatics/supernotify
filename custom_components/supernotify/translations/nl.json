@@ -891,12 +891,10 @@
                     "title": "{transport}",
                     "description": "Of {transport} wordt gebruikt, en de standaardwaarden voor zijn leveringen.\n\n[Meer informatie over {transport}]({learn_more_url})",
                     "data": {
-                        "enabled": "Ingeschakeld",
-                        "alias": "Alias"
+                        "enabled": "Ingeschakeld"
                     },
                     "data_description": {
-                        "enabled": "Of dit transport überhaupt wordt gebruikt - uit betekent dat geen van zijn leveringen wordt gebruikt",
-                        "alias": "Naam die voor dit transport wordt gebruikt in plaats van zijn eigen naam"
+                        "enabled": "Of dit transport überhaupt wordt gebruikt - uit betekent dat geen van zijn leveringen wordt gebruikt"
                     },
                     "sections": {
                         "connection": {

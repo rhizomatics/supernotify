@@ -891,12 +891,10 @@
                     "title": "{transport}",
                     "description": "{transport} を使うかどうかと、その配信のデフォルト。\n\n[{transport} の詳細]({learn_more_url})",
                     "data": {
-                        "enabled": "有効",
-                        "alias": "エイリアス"
+                        "enabled": "有効"
                     },
                     "data_description": {
-                        "enabled": "このトランスポートを使うかどうか - オフのときはどの配信も使われません",
-                        "alias": "このトランスポートの名前の代わりに使う名前"
+                        "enabled": "このトランスポートを使うかどうか - オフのときはどの配信も使われません"
                     },
                     "sections": {
                         "connection": {

@@ -447,3 +447,48 @@ async def test_running_engine_leaves_subentry_data_alone(hass: HomeAssistant) ->
     )
     assert entry.runtime_data.context.delivery_registry.transports["generic"].delivery_defaults.options["raw"] is False
     assert dict(_transports(entry)["generic"].data) == data
+
+
+def _frontend_initial_data(serialized: list[dict[str, Any]]) -> dict[str, Any]:
+    """What the frontend fills a form with (computeInitialHaFormData): a field's suggested value,
+    else its default, else for a section, what's inside it"""
+    data: dict[str, Any] = {}
+    for field in serialized:
+        suggested = (field.get("description") or {}).get("suggested_value")
+        if suggested is not None:
+            data[field["name"]] = suggested
+        elif "default" in field:
+            data[field["name"]] = field["default"]
+        elif field.get("type") == "expandable" and (inner := _frontend_initial_data(field["schema"])):
+            data[field["name"]] = inner
+    return data
+
+
+async def test_form_shows_what_is_stored(hass: HomeAssistant) -> None:
+    """Regression: a section with a default had the frontend fill it with that default, empty,
+    rather than what's stored, so an imported connection, options and targets looked to be missing"""
+    import probatio
+    from homeassistant.helpers import config_validation as cv
+
+    email = ConfigSubentryData(
+        data={
+            "connection": {"host": "smtp.example.com", "port": 587, "password": "secret"},
+            "delivery_defaults": {
+                "options": {"sender": "hass@example.com"},
+                "target_usage": "fixed",
+                # as YAML often has it, a plain list
+                "target": ["media_player.kitchen", "media_player.studio"],
+            },
+        },
+        subentry_type=SUBENTRY_TYPE_TRANSPORT,
+        title="email",
+        unique_id="email",
+    )
+    entry = await _entry(hass, subentries_data=[email])
+    result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=_transports(entry)["email"].subentry_id)
+
+    shown = _frontend_initial_data(probatio.to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer))
+    assert shown["connection"] == {"host": "smtp.example.com", "port": 587}
+    assert shown["delivery_defaults_advanced"]["options"] == {"sender": "hass@example.com"}
+    assert shown["delivery_defaults_targets"]["target_usage"] == "fixed"
+    assert shown["delivery_defaults_targets"]["target"] == {"entity_id": ["media_player.kitchen", "media_player.studio"]}

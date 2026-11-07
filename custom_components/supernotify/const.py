@@ -407,3 +407,12 @@ CONF_VOLUME: Final[str] = "volume"
 CONF_DURATION: Final[str] = "duration"
 
 OPTIONS_CHIME_DOMAINS = ["media_player", "switch", "script", "rest_command", "siren", "alexa_devices"]
+
+
+# transport names that are acronyms, shown in capitals
+_TRANSPORT_ACRONYMS: Final[dict[str, str]] = {"tts": "TTS", "sms": "SMS", "mqtt": "MQTT", "html5": "HTML5"}
+
+
+def transport_display_name(name: str) -> str:
+    """A transport's name to show, such as "Alexa Media Player" for alexa_media_player"""
+    return " ".join(_TRANSPORT_ACRONYMS.get(word, word.capitalize()) for word in name.split("_"))

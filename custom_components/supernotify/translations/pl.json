@@ -891,12 +891,10 @@
                     "title": "{transport}",
                     "description": "Czy {transport} jest używany, oraz domyślne ustawienia jego dostarczeń.\n\n[Dowiedz się więcej o {transport}]({learn_more_url})",
                     "data": {
-                        "enabled": "Włączony",
-                        "alias": "Alias"
+                        "enabled": "Włączony"
                     },
                     "data_description": {
-                        "enabled": "Czy ten transport jest w ogóle używany - gdy wyłączony, żadne z jego dostarczeń nie jest",
-                        "alias": "Nazwa używana dla tego transportu zamiast jego własnej"
+                        "enabled": "Czy ten transport jest w ogóle używany - gdy wyłączony, żadne z jego dostarczeń nie jest"
                     },
                     "sections": {
                         "connection": {

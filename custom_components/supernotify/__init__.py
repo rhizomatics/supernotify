@@ -173,15 +173,19 @@ def async_add_transport_subentries(
     hass: HomeAssistant, entry: SupernotifyConfigEntry, transports: dict[str, dict[str, Any]]
 ) -> None:
     """Add a transport subentry for each of these transports, by name, that has none yet, its
-    configuration as it would be written in YAML, and titled by its alias, else its name"""
+    configuration as it would be written in YAML, and titled with its name, as shown"""
     from types import MappingProxyType
 
     from homeassistant.config_entries import ConfigSubentry
-    from homeassistant.const import CONF_ALIAS
 
-    from .const import SUBENTRY_TYPE_TRANSPORT
+    from .const import SUBENTRY_TYPE_TRANSPORT, transport_display_name
 
-    existing = {s.unique_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT}
+    existing = set()
+    for subentry in [s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT]:
+        existing.add(subentry.unique_id)
+        # titled by an alias before 2.18.0 was released, which is now the transport device's name
+        if subentry.unique_id and subentry.title != (title := transport_display_name(subentry.unique_id)):
+            hass.config_entries.async_update_subentry(entry, subentry, title=title)
     for name, transport in transports.items():
         if name in existing:
             continue
@@ -191,7 +195,7 @@ def async_add_transport_subentries(
             ConfigSubentry(
                 data=MappingProxyType(dict(transport)),
                 subentry_type=SUBENTRY_TYPE_TRANSPORT,
-                title=str(transport.get(CONF_ALIAS) or name),
+                title=transport_display_name(name),
                 unique_id=name,
             ),
         )

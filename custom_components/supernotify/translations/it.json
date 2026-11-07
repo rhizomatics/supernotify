@@ -926,12 +926,10 @@
                     "title": "{transport}",
                     "description": "Se {transport} è usato, e i valori predefiniti delle sue delivery.\n\n[Scopri di più su {transport}]({learn_more_url})",
                     "data": {
-                        "enabled": "Abilitato",
-                        "alias": "Alias"
+                        "enabled": "Abilitato"
                     },
                     "data_description": {
-                        "enabled": "Se questo transport è usato - se disattivato, nessuna delle sue delivery lo è",
-                        "alias": "Nome usato per questo transport al posto del suo"
+                        "enabled": "Se questo transport è usato - se disattivato, nessuna delle sue delivery lo è"
                     },
                     "sections": {
                         "connection": {

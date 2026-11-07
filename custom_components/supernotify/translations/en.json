@@ -926,12 +926,10 @@
                     "title": "{transport}",
                     "description": "Whether {transport} is used, and the defaults for its deliveries.\n\n[Learn more about {transport}]({learn_more_url})",
                     "data": {
-                        "enabled": "Enabled",
-                        "alias": "Alias"
+                        "enabled": "Enabled"
                     },
                     "data_description": {
-                        "enabled": "Whether this transport is used at all - when off, none of its deliveries are",
-                        "alias": "Name used for this transport in place of its own"
+                        "enabled": "Whether this transport is used at all - when off, none of its deliveries are"
                     },
                     "sections": {
                         "connection": {
