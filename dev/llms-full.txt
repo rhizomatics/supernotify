@@ -3953,11 +3953,13 @@ A transport's form has:
 - **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
   - **Debug**, to wait for the result of each action its deliveries call, and record it
   - **Action**, for a transport whose action is configured rather than fixed or found, such as generic
+  - **Inclusion** and **Priority**
+- **Delivery Defaults - Targets**:
   - **Target usage**, how the targets below are used alongside a notification's own - see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets)
   - **Targets** and **Custom targets**, chosen as in the `supernotify.notify` action
-  - **Options**, the transport's own options, and **Extra Data**, both as YAML
-  - **Inclusion** and **Priority**
-  - **Other delivery defaults**, as YAML, for anything else, such as `occupancy`, `conditions`, `template` or `title`
+- **Delivery Defaults - Advanced**, all as YAML:
+  - **Options**, the transport's own options, and **Extra Data**
+  - **Other delivery defaults**, for anything else, such as `occupancy`, `conditions`, `template` or `title`
 - **Advanced**, with **Load**, which leaves the transport out altogether when off, with no deliveries or switch. If disabled, the transport will have to be re-added with **Add transport** if needed in future
 
 So a YAML example elsewhere in this documentation, under `transports:`, is entered on that transport's form - its `delivery_defaults` `options` under **Options**, and so on.
