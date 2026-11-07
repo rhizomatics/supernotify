@@ -127,11 +127,9 @@ async def test_add_transport(hass: HomeAssistant) -> None:
         {
             "enabled": True,
             "advanced": {"load": True},
-            "delivery_defaults": {
-                "action": "notify.send_message",
-                "target": {"entity_id": ["notify.testy"]},
-                "data": {"priority": "high"},
-            },
+            "delivery_defaults": {"action": "notify.send_message"},
+            "delivery_defaults_targets": {"target": {"entity_id": ["notify.testy"]}},
+            "delivery_defaults_advanced": {"data": {"priority": "high"}},
         },
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY, result.get("errors")
@@ -185,12 +183,18 @@ async def test_reconfigure_transport(hass: HomeAssistant) -> None:
     assert suggested["action"] == "notify.send_message"
     assert suggested["priority"] == ["high"]
     assert suggested["debug"] is False
-    # debug first, and target usage just above the targets it's about
-    fields = [str(k) for k in defaults.schema.schema]
-    assert fields[0] == "debug"
-    assert fields.index("target_usage") == fields.index("target") - 1
-    # what has no field of its own is in the other delivery defaults
-    assert suggested["other_delivery_defaults"] == {"conditions": GENERIC["delivery_defaults"]["conditions"]}
+    assert [str(k) for k in defaults.schema.schema] == ["debug", "action", "inclusion", "priority"]
+    # target usage above the targets it's about, collapsed as none are set
+    targets = _section(result, "delivery_defaults_targets")
+    assert [str(k) for k in targets.schema.schema] == ["target_usage", "target", "custom_target"]
+    assert targets.options["collapsed"]
+    # the YAML last, open as there's some set - what has no field of its own is in the other delivery defaults
+    yaml_section = _section(result, "delivery_defaults_advanced")
+    assert not yaml_section.options["collapsed"]
+    other = _section_suggested(yaml_section)["other_delivery_defaults"]
+    assert other == {"conditions": GENERIC["delivery_defaults"]["conditions"]}
+    sections = [str(k) for k in result["data_schema"].schema if str(k).startswith(("delivery", "advanced"))]
+    assert sections == ["delivery_defaults", "delivery_defaults_targets", "delivery_defaults_advanced", "advanced"]
 
     result = await _configure(
         hass,
@@ -199,12 +203,9 @@ async def test_reconfigure_transport(hass: HomeAssistant) -> None:
             "enabled": False,
             "advanced": {"load": True},
             "alias": "Chat",
-            "delivery_defaults": {
-                "action": "notify.send_message",
-                "target_usage": "fixed",
-                "priority": ["high"],
-                "other_delivery_defaults": suggested["other_delivery_defaults"],
-            },
+            "delivery_defaults": {"action": "notify.send_message", "priority": ["high"]},
+            "delivery_defaults_targets": {"target_usage": "fixed"},
+            "delivery_defaults_advanced": {"other_delivery_defaults": other},
         },
     )
     assert result["type"] == FlowResultType.ABORT
@@ -294,7 +295,11 @@ async def test_invalid_transport(hass: HomeAssistant) -> None:
     result = await _configure(
         hass,
         result,
-        {"enabled": True, "advanced": {"load": True}, "delivery_defaults": {"other_delivery_defaults": {"colour": "red"}}},
+        {
+            "enabled": True,
+            "advanced": {"load": True},
+            "delivery_defaults_advanced": {"other_delivery_defaults": {"colour": "red"}},
+        },
     )
     assert result["errors"] == {"base": "invalid_transport"}
     assert "colour" in result["description_placeholders"]["error"]
@@ -307,7 +312,7 @@ async def test_invalid_transport(hass: HomeAssistant) -> None:
     result = await _configure(
         hass,
         result,
-        {"enabled": True, "advanced": {"load": True}, "delivery_defaults": {"custom_target": ["email:not-an-address"]}},
+        {"enabled": True, "advanced": {"load": True}, "delivery_defaults_targets": {"custom_target": ["email:not-an-address"]}},
     )
     assert result["errors"] == {"base": "invalid_custom_target"}
 
@@ -383,16 +388,18 @@ async def test_deprecated_settings_raise_repair_cleared_by_saving(hass: HomeAssi
     subentry = _transports(entry)["generic"]
     result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=subentry.subentry_id)
     # shown as their replacements
-    suggested = _section_suggested(_section(result, "delivery_defaults"))
-    assert suggested["inclusion"] == ["explicit"]
-    assert suggested["options"]["device_domain"] == ["alexa_devices"]
+    inclusion = _section_suggested(_section(result, "delivery_defaults"))["inclusion"]
+    options = _section_suggested(_section(result, "delivery_defaults_advanced"))["options"]
+    assert inclusion == ["explicit"]
+    assert options["device_domain"] == ["alexa_devices"]
     result = await _configure(
         hass,
         result,
         {
             "enabled": True,
             "advanced": {"load": True},
-            "delivery_defaults": {"inclusion": suggested["inclusion"], "options": suggested["options"]},
+            "delivery_defaults": {"inclusion": inclusion},
+            "delivery_defaults_advanced": {"options": options},
         },
     )
     assert result["reason"] == "reconfigure_successful"

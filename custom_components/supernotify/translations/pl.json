@@ -923,25 +923,39 @@
                             "data": {
                                 "debug": "Debugowanie",
                                 "action": "Akcja",
-                                "target_usage": "Użycie celów",
-                                "target": "Cele",
-                                "custom_target": "Własne cele",
-                                "options": "Opcje",
-                                "data": "Dodatkowe dane",
                                 "inclusion": "Uwzględnianie",
-                                "priority": "Priorytet",
-                                "other_delivery_defaults": "Inne domyślne ustawienia dostarczeń"
+                                "priority": "Priorytet"
                             },
                             "data_description": {
                                 "debug": "Czekaj na wynik każdej akcji wywoływanej przez jego dostarczenia i zapisuj go, aby błędy były widoczne w archiwum i atrybutach dostarczenia",
                                 "action": "Akcja wywoływana przez jego dostarczenia, np. notify.my_service",
+                                "inclusion": "Kiedy używane są jego dostarczenia - domyślnie, tylko na żądanie, przez scenariusz lub awaryjnie",
+                                "priority": "Priorytety, dla których używane są jego dostarczenia"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "Domyślne ustawienia dostarczeń - Cele",
+                            "data": {
+                                "target_usage": "Użycie celów",
+                                "target": "Cele",
+                                "custom_target": "Własne cele"
+                            },
+                            "data_description": {
                                 "target_usage": "Jak cele poniżej są używane razem z celami powiadomienia",
                                 "target": "Encje, urządzenia, obszary, piętra lub etykiety powiadamiane przez jego dostarczenia, jak w akcji supernotify.notify",
-                                "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345. Kategorie to: {categories}",
+                                "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345. Kategorie to: {categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "Domyślne ustawienia dostarczeń - Zaawansowane",
+                            "data": {
+                                "options": "Opcje",
+                                "data": "Dodatkowe dane",
+                                "other_delivery_defaults": "Inne domyślne ustawienia dostarczeń"
+                            },
+                            "data_description": {
                                 "options": "Własne opcje tego transportu, opisane na jego stronie, np. chime_aliases dla chime",
                                 "data": "Dane dodawane do tego, co wysyłają jego dostarczenia",
-                                "inclusion": "Kiedy używane są jego dostarczenia - domyślnie, tylko na żądanie, przez scenariusz lub awaryjnie",
-                                "priority": "Priorytety, dla których używane są jego dostarczenia",
                                 "other_delivery_defaults": "Wszelkie inne domyślne ustawienia dostarczeń, zapisane jak w YAML pod delivery_defaults, np. conditions, template lub title"
                             }
                         },

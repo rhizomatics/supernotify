@@ -923,25 +923,39 @@
                             "data": {
                                 "debug": "Debug",
                                 "action": "Aktion",
-                                "target_usage": "Zielverwendung",
-                                "target": "Ziele",
-                                "custom_target": "Benutzerdefinierte Ziele",
-                                "options": "Optionen",
-                                "data": "Zusätzliche Daten",
                                 "inclusion": "Einbeziehung",
-                                "priority": "Priorität",
-                                "other_delivery_defaults": "Weitere Lieferungsstandardwerte"
+                                "priority": "Priorität"
                             },
                             "data_description": {
                                 "debug": "Auf das Ergebnis jeder Aktion warten, die seine Lieferungen aufrufen, und es festhalten, damit Fehler im Archiv und in den Lieferungsattributen sichtbar sind",
                                 "action": "Die Aktion, die seine Lieferungen aufrufen, etwa notify.my_service",
+                                "inclusion": "Wann seine Lieferungen verwendet werden - standardmäßig, nur auf Anfrage, per Szenario oder als Ausweichlösung",
+                                "priority": "Die Prioritäten, für die seine Lieferungen verwendet werden"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "Lieferungsstandardwerte - Ziele",
+                            "data": {
+                                "target_usage": "Zielverwendung",
+                                "target": "Ziele",
+                                "custom_target": "Benutzerdefinierte Ziele"
+                            },
+                            "data_description": {
                                 "target_usage": "Wie die Ziele unten zusammen mit denen der Benachrichtigung verwendet werden",
                                 "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die seine Lieferungen benachrichtigen, wie bei der Aktion supernotify.notify",
-                                "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345. Die Kategorien sind: {categories}",
+                                "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345. Die Kategorien sind: {categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "Lieferungsstandardwerte - Erweitert",
+                            "data": {
+                                "options": "Optionen",
+                                "data": "Zusätzliche Daten",
+                                "other_delivery_defaults": "Weitere Lieferungsstandardwerte"
+                            },
+                            "data_description": {
                                 "options": "Die eigenen Optionen dieses Transports, wie auf seiner Seite beschrieben, etwa chime_aliases für chime",
                                 "data": "Daten, die zu dem hinzugefügt werden, was seine Lieferungen senden",
-                                "inclusion": "Wann seine Lieferungen verwendet werden - standardmäßig, nur auf Anfrage, per Szenario oder als Ausweichlösung",
-                                "priority": "Die Prioritäten, für die seine Lieferungen verwendet werden",
                                 "other_delivery_defaults": "Weitere Lieferungsstandardwerte, wie in YAML unter delivery_defaults geschrieben, etwa conditions, template oder title"
                             }
                         },

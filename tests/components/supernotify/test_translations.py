@@ -129,7 +129,7 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ),  # "Action" is also the French word
     (
         "fr",
-        "config_subentries.transport.step.details.sections.delivery_defaults.data.options",
+        "config_subentries.transport.step.details.sections.delivery_defaults_advanced.data.options",
     ),  # "Options" is also the French word
     (
         "fr",

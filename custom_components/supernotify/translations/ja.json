@@ -923,25 +923,39 @@
                             "data": {
                                 "debug": "デバッグ",
                                 "action": "アクション",
-                                "target_usage": "ターゲットの使い方",
-                                "target": "ターゲット",
-                                "custom_target": "カスタムターゲット",
-                                "options": "オプション",
-                                "data": "追加データ",
                                 "inclusion": "含める条件",
-                                "priority": "優先度",
-                                "other_delivery_defaults": "その他の配信デフォルト"
+                                "priority": "優先度"
                             },
                             "data_description": {
                                 "debug": "配信が呼び出す各アクションの結果を待って記録し、エラーをアーカイブと配信の属性で確認できるようにします",
                                 "action": "配信が呼び出すアクション、例: notify.my_service",
+                                "inclusion": "配信が使われるとき - デフォルト、要求時のみ、シナリオ、またはフォールバック",
+                                "priority": "配信が使われる優先度"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "配信のデフォルト - ターゲット",
+                            "data": {
+                                "target_usage": "ターゲットの使い方",
+                                "target": "ターゲット",
+                                "custom_target": "カスタムターゲット"
+                            },
+                            "data_description": {
                                 "target_usage": "下のターゲットを通知のターゲットとどう組み合わせるか",
                                 "target": "配信が通知するエンティティ、デバイス、エリア、フロア、ラベル (supernotify.notify アクションと同様)",
-                                "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値。カテゴリ: {categories}",
+                                "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値。カテゴリ: {categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "配信のデフォルト - 詳細設定",
+                            "data": {
+                                "options": "オプション",
+                                "data": "追加データ",
+                                "other_delivery_defaults": "その他の配信デフォルト"
+                            },
+                            "data_description": {
                                 "options": "このトランスポート固有のオプション (ページに記載)、例: chime の chime_aliases",
                                 "data": "配信が送る内容に追加するデータ",
-                                "inclusion": "配信が使われるとき - デフォルト、要求時のみ、シナリオ、またはフォールバック",
-                                "priority": "配信が使われる優先度",
                                 "other_delivery_defaults": "その他の配信デフォルト。YAML の delivery_defaults と同じ書き方で、conditions、template、title など"
                             }
                         },

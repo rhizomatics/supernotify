@@ -172,8 +172,12 @@ _TYPED_DELIVERY_DEFAULTS = (
     CONF_INCLUSION,
     CONF_PRIORITY,
 )
-# the transport form's section for settings seldom changed
+# the transport form's section for settings seldom changed, and the sections its delivery
+# defaults are split into
 SECTION_ADVANCED = "advanced"
+SECTION_DELIVERY_DEFAULTS_TARGETS = "delivery_defaults_targets"
+SECTION_DELIVERY_DEFAULTS_ADVANCED = "delivery_defaults_advanced"
+_DELIVERY_DEFAULTS_SECTIONS = (CONF_DELIVERY_DEFAULTS, SECTION_DELIVERY_DEFAULTS_TARGETS, SECTION_DELIVERY_DEFAULTS_ADVANCED)
 
 # The Delivery Control choices meaning "not set", which leave deliveries with their transport's own
 # default - never stored, the option is left out instead
@@ -828,7 +832,10 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         # deprecated settings are shown, and saved, as their replacements
         defaults: dict[str, Any] = dict(_migrate_deprecated(self._transport).get(CONF_DELIVERY_DEFAULTS) or {})
         if user_input is not None:
-            given: dict[str, Any] = user_input.get(CONF_DELIVERY_DEFAULTS, {})
+            # the delivery defaults, from the three sections they're split into
+            given: dict[str, Any] = {
+                k: v for name in _DELIVERY_DEFAULTS_SECTIONS for k, v in (user_input.get(name) or {}).items()
+            }
             other = given.get(ATTR_OTHER_DELIVERY_DEFAULTS) or {}
             try:
                 target = target_from_fields(given.get(CONF_TARGET), given.get(ATTR_CUSTOM_TARGET))
@@ -874,25 +881,29 @@ class TransportSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_ENABLED, default=True): cv.boolean,
             vol.Optional(CONF_ALIAS): TextSelector(),
         }
-        default_fields: dict[Any, Any] = {vol.Optional(CONF_DEBUG): cv.boolean}
+        main_fields: dict[Any, Any] = {vol.Optional(CONF_DEBUG): cv.boolean}
         if self._takes_action():
-            default_fields[vol.Optional(CONF_ACTION)] = TextSelector()
-        default_fields.update({
+            main_fields[vol.Optional(CONF_ACTION)] = TextSelector()
+        main_fields.update({
+            vol.Optional(CONF_INCLUSION): SelectSelector(SelectSelectorConfig(options=INCLUSION_VALUES, multiple=True)),
+            # custom values, as YAML can give a priority as a number
+            vol.Optional(CONF_PRIORITY): SelectSelector(
+                SelectSelectorConfig(options=list(PRIORITY_VALUES), multiple=True, custom_value=True)
+            ),
+        })
+        target_fields: dict[Any, Any] = {
             # above the targets, as it says how they're used
             vol.Optional(CONF_TARGET_USAGE): SelectSelector(
                 SelectSelectorConfig(options=TARGET_USAGE_VALUES, translation_key=CONF_TARGET_USAGE)
             ),
             vol.Optional(CONF_TARGET): TargetSelector(),
             vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
+        }
+        yaml_fields: dict[Any, Any] = {
             vol.Optional(CONF_OPTIONS): ObjectSelector(),
             vol.Optional(CONF_DATA): ObjectSelector(),
-            vol.Optional(CONF_INCLUSION): SelectSelector(SelectSelectorConfig(options=INCLUSION_VALUES, multiple=True)),
-            # custom values, as YAML can give a priority as a number
-            vol.Optional(CONF_PRIORITY): SelectSelector(
-                SelectSelectorConfig(options=list(PRIORITY_VALUES), multiple=True, custom_value=True)
-            ),
             vol.Optional(ATTR_OTHER_DELIVERY_DEFAULTS): ObjectSelector(),
-        })
+        }
         # the connection first, where there is one, as nothing works without it
         connection: dict[str, Any] = dict(self._transport.get(CONF_CONNECTION) or {})
         if transport_class is not None and transport_class.uses_connection:
@@ -913,7 +924,26 @@ class TransportSubentryFlow(ConfigSubentryFlow):
                 }),
                 {"collapsed": not connection},
             )
-        fields[vol.Optional(CONF_DELIVERY_DEFAULTS, default=dict)] = section(vol.Schema(default_fields), {"collapsed": False})
+        suggested_targets = {
+            CONF_TARGET_USAGE: defaults.get(CONF_TARGET_USAGE),
+            CONF_TARGET: selected_target or None,
+            ATTR_CUSTOM_TARGET: custom_target or None,
+        }
+        suggested_yaml = {
+            CONF_OPTIONS: defaults.get(CONF_OPTIONS),
+            CONF_DATA: defaults.get(CONF_DATA),
+            ATTR_OTHER_DELIVERY_DEFAULTS: {
+                k: v for k, v in defaults.items() if k not in (*_TYPED_DELIVERY_DEFAULTS, CONF_TARGET)
+            }
+            or None,
+        }
+        # the targets and the YAML opened only when there's something set in them, or a problem
+        for name, section_fields, collapsed in (
+            (CONF_DELIVERY_DEFAULTS, main_fields, False),
+            (SECTION_DELIVERY_DEFAULTS_TARGETS, target_fields, not (any(suggested_targets.values()) or errors)),
+            (SECTION_DELIVERY_DEFAULTS_ADVANCED, yaml_fields, not (any(suggested_yaml.values()) or errors)),
+        ):
+            fields[vol.Optional(name, default=dict)] = section(vol.Schema(section_fields), {"collapsed": collapsed})
         load = self._transport.get(CONF_LOAD, True)
         fields[vol.Optional(SECTION_ADVANCED, default=dict)] = section(
             vol.Schema({vol.Optional(CONF_LOAD, default=True): cv.boolean}), {"collapsed": bool(load)}
@@ -923,20 +953,13 @@ class TransportSubentryFlow(ConfigSubentryFlow):
             SECTION_ADVANCED: {CONF_LOAD: load},
             CONF_ALIAS: self._transport.get(CONF_ALIAS),
             CONF_DELIVERY_DEFAULTS: {
+                CONF_DEBUG: defaults.get(CONF_DEBUG, False),
                 CONF_ACTION: defaults.get(CONF_ACTION),
-                CONF_TARGET: selected_target or None,
-                ATTR_CUSTOM_TARGET: custom_target or None,
-                CONF_OPTIONS: defaults.get(CONF_OPTIONS),
-                CONF_DATA: defaults.get(CONF_DATA),
                 CONF_INCLUSION: cv.ensure_list(defaults.get(CONF_INCLUSION)) or None,
                 CONF_PRIORITY: [str(p) for p in cv.ensure_list(defaults.get(CONF_PRIORITY))] or None,
-                CONF_DEBUG: defaults.get(CONF_DEBUG, False),
-                CONF_TARGET_USAGE: defaults.get(CONF_TARGET_USAGE),
-                ATTR_OTHER_DELIVERY_DEFAULTS: {
-                    k: v for k, v in defaults.items() if k not in (*_TYPED_DELIVERY_DEFAULTS, CONF_TARGET)
-                }
-                or None,
             },
+            SECTION_DELIVERY_DEFAULTS_TARGETS: suggested_targets,
+            SECTION_DELIVERY_DEFAULTS_ADVANCED: suggested_yaml,
             CONF_CONNECTION: {k: v for k, v in connection.items() if k != CONF_PASSWORD},
         }
         return self.async_show_form(

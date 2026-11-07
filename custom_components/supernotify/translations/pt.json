@@ -923,25 +923,39 @@
                             "data": {
                                 "debug": "Depuração",
                                 "action": "Ação",
-                                "target_usage": "Utilização dos destinos",
-                                "target": "Destinos",
-                                "custom_target": "Destinos personalizados",
-                                "options": "Opções",
-                                "data": "Dados extra",
                                 "inclusion": "Inclusão",
-                                "priority": "Prioridade",
-                                "other_delivery_defaults": "Outras predefinições de entrega"
+                                "priority": "Prioridade"
                             },
                             "data_description": {
                                 "debug": "Esperar pelo resultado de cada ação chamada pelas suas entregas, e registá-lo, para ver os erros no arquivo e nos atributos da entrega",
                                 "action": "A ação chamada pelas suas entregas, como notify.my_service",
+                                "inclusion": "Quando as suas entregas são usadas - por predefinição, só quando pedidas, por cenário, ou como alternativa",
+                                "priority": "As prioridades para as quais as suas entregas são usadas"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "Predefinições de entrega - Destinos",
+                            "data": {
+                                "target_usage": "Utilização dos destinos",
+                                "target": "Destinos",
+                                "custom_target": "Destinos personalizados"
+                            },
+                            "data_description": {
                                 "target_usage": "Como os destinos abaixo são usados com os da notificação",
                                 "target": "Entidades, dispositivos, áreas, pisos ou etiquetas notificados pelas suas entregas, como na ação supernotify.notify",
-                                "custom_target": "Destinos que o seletor não oferece, um por linha - um endereço de e-mail, um número de telefone ou categoria:valor, como telegram_chat_id:12345. As categorias são: {categories}",
+                                "custom_target": "Destinos que o seletor não oferece, um por linha - um endereço de e-mail, um número de telefone ou categoria:valor, como telegram_chat_id:12345. As categorias são: {categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "Predefinições de entrega - Avançado",
+                            "data": {
+                                "options": "Opções",
+                                "data": "Dados extra",
+                                "other_delivery_defaults": "Outras predefinições de entrega"
+                            },
+                            "data_description": {
                                 "options": "As opções próprias deste transporte, descritas na sua página, como chime_aliases para chime",
                                 "data": "Dados acrescentados ao que as suas entregas enviam",
-                                "inclusion": "Quando as suas entregas são usadas - por predefinição, só quando pedidas, por cenário, ou como alternativa",
-                                "priority": "As prioridades para as quais as suas entregas são usadas",
                                 "other_delivery_defaults": "Quaisquer outras predefinições de entrega, escritas como em YAML em delivery_defaults, como conditions, template ou title"
                             }
                         },

@@ -923,25 +923,39 @@
                             "data": {
                                 "debug": "调试",
                                 "action": "动作",
-                                "target_usage": "目标用法",
-                                "target": "目标",
-                                "custom_target": "自定义目标",
-                                "options": "选项",
-                                "data": "额外数据",
                                 "inclusion": "纳入方式",
-                                "priority": "优先级",
-                                "other_delivery_defaults": "其他投递默认值"
+                                "priority": "优先级"
                             },
                             "data_description": {
                                 "debug": "等待其投递调用的每个动作的结果并记录，以便在存档和投递属性中看到错误",
                                 "action": "其投递调用的动作，例如 notify.my_service",
+                                "inclusion": "何时使用其投递 - 默认、仅在请求时、按场景，或作为后备",
+                                "priority": "使用其投递的优先级"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "投递默认值：目标",
+                            "data": {
+                                "target_usage": "目标用法",
+                                "target": "目标",
+                                "custom_target": "自定义目标"
+                            },
+                            "data_description": {
                                 "target_usage": "下方目标如何与通知的目标一起使用",
                                 "target": "其投递通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作相同",
-                                "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345。类别有：{categories}",
+                                "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345。类别有：{categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "投递默认值：高级",
+                            "data": {
+                                "options": "选项",
+                                "data": "额外数据",
+                                "other_delivery_defaults": "其他投递默认值"
+                            },
+                            "data_description": {
                                 "options": "此传输自身的选项，见其页面说明，例如 chime 的 chime_aliases",
                                 "data": "添加到其投递所发送内容中的数据",
-                                "inclusion": "何时使用其投递 - 默认、仅在请求时、按场景，或作为后备",
-                                "priority": "使用其投递的优先级",
                                 "other_delivery_defaults": "任何其他投递默认值，写法同 YAML 中 delivery_defaults 下，例如 conditions、template 或 title"
                             }
                         },

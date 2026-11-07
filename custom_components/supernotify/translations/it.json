@@ -958,25 +958,39 @@
                             "data": {
                                 "debug": "Debug",
                                 "action": "Azione",
-                                "target_usage": "Uso delle destinazioni",
-                                "target": "Destinazioni",
-                                "custom_target": "Destinazioni personalizzate",
-                                "options": "Opzioni",
-                                "data": "Dati aggiuntivi",
                                 "inclusion": "Inclusione",
-                                "priority": "Priorità",
-                                "other_delivery_defaults": "Altri valori predefiniti delle delivery"
+                                "priority": "Priorità"
                             },
                             "data_description": {
                                 "debug": "Attende il risultato di ogni azione chiamata dalle sue delivery e lo registra, così gli errori si vedono nell'archivio e negli attributi della delivery",
                                 "action": "L'azione chiamata dalle sue delivery, come notify.my_service",
+                                "inclusion": "Quando sono usate le sue delivery - per impostazione predefinita, solo su richiesta, per scenario o come ripiego",
+                                "priority": "Le priorità per cui sono usate le sue delivery"
+                            }
+                        },
+                        "delivery_defaults_targets": {
+                            "name": "Valori predefiniti delle delivery - Destinazioni",
+                            "data": {
+                                "target_usage": "Uso delle destinazioni",
+                                "target": "Destinazioni",
+                                "custom_target": "Destinazioni personalizzate"
+                            },
+                            "data_description": {
                                 "target_usage": "Come le destinazioni qui sotto sono usate insieme a quelle della notifica",
                                 "target": "Entità, dispositivi, aree, piani o etichette notificati dalle sue delivery, come nell'azione supernotify.notify",
-                                "custom_target": "Destinazioni che il selettore non offre, una per riga - un indirizzo e-mail, un numero di telefono o categoria:valore, come telegram_chat_id:12345. Le categorie sono: {categories}",
+                                "custom_target": "Destinazioni che il selettore non offre, una per riga - un indirizzo e-mail, un numero di telefono o categoria:valore, come telegram_chat_id:12345. Le categorie sono: {categories}"
+                            }
+                        },
+                        "delivery_defaults_advanced": {
+                            "name": "Valori predefiniti delle delivery - Avanzate",
+                            "data": {
+                                "options": "Opzioni",
+                                "data": "Dati aggiuntivi",
+                                "other_delivery_defaults": "Altri valori predefiniti delle delivery"
+                            },
+                            "data_description": {
                                 "options": "Le opzioni proprie di questo transport, descritte nella sua pagina, come chime_aliases per chime",
                                 "data": "Dati aggiunti a ciò che inviano le sue delivery",
-                                "inclusion": "Quando sono usate le sue delivery - per impostazione predefinita, solo su richiesta, per scenario o come ripiego",
-                                "priority": "Le priorità per cui sono usate le sue delivery",
                                 "other_delivery_defaults": "Qualsiasi altro valore predefinito delle delivery, come scritto in YAML sotto delivery_defaults, come conditions, template o title"
                             }
                         },
