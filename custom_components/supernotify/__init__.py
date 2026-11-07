@@ -126,30 +126,59 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
 
 def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfigEntry, recipients: list[dict]) -> None:
     """Add a recipient subentry for each of these validated recipients that has none yet,
-    keyed by its person or user_id"""
+    keyed by recipient_key(), and titled by its alias, else its person's name"""
     from types import MappingProxyType
 
     from homeassistant.config_entries import ConfigSubentry
     from homeassistant.const import CONF_ALIAS
 
-    from .const import CONF_PERSON, CONF_USER_ID, SUBENTRY_TYPE_RECIPIENT
+    from .const import CONF_PERSON, SUBENTRY_TYPE_RECIPIENT
+    from .people import recipient_key
 
     existing = {s.unique_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT}
     for recipient in recipients:
-        key = recipient.get(CONF_PERSON) or recipient.get(CONF_USER_ID)
-        if key in existing:
+        key = recipient_key(recipient)
+        if key is None or key in existing:
             continue
-        _LOGGER.info("SUPERNOTIFY Importing YAML recipient %s", key)
+        person = hass.states.get(recipient[CONF_PERSON]) if recipient.get(CONF_PERSON) else None
+        _LOGGER.info("SUPERNOTIFY Adding recipient %s", key)
         hass.config_entries.async_add_subentry(
             entry,
             ConfigSubentry(
                 data=MappingProxyType(dict(recipient)),
                 subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                title=str(recipient.get(CONF_ALIAS) or key),
+                title=str(recipient.get(CONF_ALIAS) or (person.name if person else key)),
                 unique_id=key,
             ),
         )
         existing.add(key)
+
+
+def _async_merge_user_recipients(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> None:
+    """A recipient discovered as a user, before the user was given a Person, becomes that Person's
+    recipient, keeping what was set on it - or is merged into the Person's recipient, if that has
+    been added since, so no one is listed twice"""
+    from .const import CONF_PERSON, CONF_USER_ID, SUBENTRY_TYPE_RECIPIENT
+
+    person_for_user = {
+        state.attributes[CONF_USER_ID]: state.entity_id
+        for state in hass.states.async_all("person")
+        if isinstance(state.attributes.get(CONF_USER_ID), str)
+    }
+    recipients = {s.unique_id: s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT}
+    for subentry in list(recipients.values()):
+        user_id = subentry.data.get(CONF_USER_ID)
+        if CONF_PERSON in subentry.data or (person := person_for_user.get(user_id)) is None:
+            continue
+        if existing := recipients.get(person):
+            _LOGGER.info("SUPERNOTIFY Merging recipient for user %s into %s", user_id, person)
+            hass.config_entries.async_update_subentry(entry, existing, data={**subentry.data, **existing.data})
+            hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+        else:
+            _LOGGER.info("SUPERNOTIFY Recipient for user %s is now %s", user_id, person)
+            hass.config_entries.async_update_subentry(
+                entry, subentry, data={**subentry.data, CONF_PERSON: person}, unique_id=person
+            )
 
 
 def _async_import_yaml_recipients(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> None:
@@ -200,6 +229,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     integration: Integration = await async_get_integration(hass, DOMAIN)
     set_version(str(integration.version) if integration.version else "unknown")
 
+    _async_merge_user_recipients(hass, entry)
     _async_import_yaml_recipients(hass, entry)
     full_config = _entry_full_config(hass, entry)
     engine: SupernotifyEngine = build_supernotify_engine(hass, full_config)
@@ -212,6 +242,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
         ) from err
 
     entry.runtime_data = engine
+    # every recipient discovered gets a subentry, so all are listed and can be changed, and
+    # switched off with `enabled` - before the update listener, as the engine has them already
+    async_add_recipient_subentries(hass, entry, list(engine.context.people_registry.discovered.values()))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Add NotifyEntities via notify.py, plus the scenario/recipient entities and notification/

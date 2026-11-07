@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, ConfigSubentryData, SubentryFlowResult
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
@@ -29,8 +31,11 @@ TABLET_APP = "mobile_app_bobs_tablet"
 DELIVERY = {"testing": {"transport": "generic", "action": "notify.send_message", "target": ["notify.testy"]}}
 
 
-async def _entry(hass: HomeAssistant, yaml_config: dict[str, Any] | None = None, **kwargs: Any) -> MockConfigEntry:
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, **kwargs)
+async def _entry(
+    hass: HomeAssistant, yaml_config: dict[str, Any] | None = None, discovery: bool = False, **kwargs: Any
+) -> MockConfigEntry:
+    """Recipient discovery is off unless asked for, so only the recipients a test adds are there"""
+    entry = MockConfigEntry(domain=DOMAIN, data={"recipients_discovery": discovery}, options={}, **kwargs)
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_config or {"delivery": DELIVERY}})
     await hass.async_block_till_done()
@@ -91,26 +96,22 @@ async def test_add_recipient(hass: HomeAssistant) -> None:
     assert result["step_id"] == "details"
     assert {o["value"] for o in result["data_schema"].schema["mobile_devices"].config["options"]} == {PHONE_APP, TABLET_APP}
 
-    result = await _configure(
-        hass,
-        result,
-        {
-            "email": "bob@example.com",
-            "enabled": True,
-            "mobile_discovery": True,
-            "mobile_devices": [PHONE_APP],
-            "custom_target": ["telegram_chat_id:12345"],
-        },
+    details = {
+        "email": "bob@example.com",
+        "enabled": True,
+        "mobile_discovery": True,
+        "mobile_devices": [PHONE_APP],
+        "custom_target": ["telegram_chat_id:12345"],
+    }
+    assert result["data_schema"].schema["delivery"].config["options"] == sorted(
+        entry.runtime_data.context.delivery_registry.deliveries
     )
-    assert result["type"] == FlowResultType.MENU
-    assert result["menu_options"] == ["delivery", "save"]
-
-    result = await _configure(hass, result, {"next_step_id": "delivery"})
-    result = await _configure(hass, result, {"delivery": "testing"})
+    # picking a delivery changes it for this recipient, then comes back to the details
+    result = await _configure(hass, result, {**details, "delivery": "testing"})
     assert result["step_id"] == "delivery_override"
     result = await _configure(hass, result, {"enabled": "disabled", "extra_data": {"priority": "high"}})
-    assert result["type"] == FlowResultType.MENU
-    result = await _configure(hass, result, {"next_step_id": "save"})
+    assert result["step_id"] == "details"
+    result = await _configure(hass, result, details)
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
@@ -118,6 +119,8 @@ async def test_add_recipient(hass: HomeAssistant) -> None:
     assert subentry.unique_id == "person.bob"
     assert dict(subentry.data) == {
         "person": "person.bob",
+        # the person's own user, filled in from the person
+        "user_id": hass.states.get("person.bob").attributes["user_id"],  # type: ignore[union-attr]
         "email": "bob@example.com",
         "enabled": True,
         "mobile_discovery": True,
@@ -143,7 +146,6 @@ async def test_add_user_only_recipient(hass: HomeAssistant) -> None:
     assert {o["value"] for o in result["data_schema"].schema["user_id"].config["options"]} == {user.id}
     result = await _configure(hass, result, {"user_id": user.id})
     result = await _configure(hass, result, {"alias": "Alice", "enabled": True, "mobile_discovery": True})
-    result = await _configure(hass, result, {"next_step_id": "save"})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Alice"
     await hass.async_block_till_done()
@@ -177,9 +179,7 @@ async def test_invalid_custom_target_and_extra_data(hass: HomeAssistant) -> None
     result = await _configure(hass, result, {"enabled": True, "mobile_discovery": True, "custom_target": ["nonsense"]})
     assert result["errors"] == {"custom_target": "invalid_custom_target"}
 
-    result = await _configure(hass, result, {"enabled": True, "mobile_discovery": True})
-    result = await _configure(hass, result, {"next_step_id": "delivery"})
-    result = await _configure(hass, result, {"delivery": "testing"})
+    result = await _configure(hass, result, {"enabled": True, "mobile_discovery": True, "delivery": "testing"})
     result = await _configure(hass, result, {"enabled": "default", "extra_data": {"action": "notify.other"}})
     assert result["errors"] == {"extra_data": "invalid_extra_data"}
 
@@ -210,17 +210,14 @@ async def test_reconfigure_recipient(hass: HomeAssistant) -> None:
     assert suggested["target"] == {"entity_id": ["notify.kitchen"]}
     assert suggested["custom_target"] == ["telegram_chat_id:12345"]
 
-    result = await _configure(
-        hass, result, {"alias": "Bobby", "enabled": True, "mobile_discovery": False, "target": {"entity_id": "notify.kitchen"}}
-    )
+    details = {"alias": "Bobby", "enabled": True, "mobile_discovery": False, "target": {"entity_id": "notify.kitchen"}}
     # emptying a delivery override removes it
-    result = await _configure(hass, result, {"next_step_id": "delivery"})
-    result = await _configure(hass, result, {"delivery": "testing"})
+    result = await _configure(hass, result, {**details, "delivery": "testing"})
     suggested = {str(k): k.description["suggested_value"] for k in result["data_schema"].schema if k.description}
     assert suggested["enabled"] == "disabled"
     assert suggested["extra_data"] == {"priority": "high"}
     result = await _configure(hass, result, {"enabled": "default"})
-    result = await _configure(hass, result, {"next_step_id": "save"})
+    result = await _configure(hass, result, details)
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
@@ -265,3 +262,106 @@ async def test_no_repair_without_yaml_recipients(hass: HomeAssistant) -> None:
     entry = await _entry(hass)
     assert not _recipients(entry)
     assert ir.async_get(hass).async_get_issue(DOMAIN, YAML_RECIPIENTS_ISSUE_ID) is None
+
+
+async def test_discovered_recipients_listed(hass: HomeAssistant) -> None:
+    """Every discovered person gets a subentry, to change or switch off, while one already there is kept"""
+    hass.states.async_set("person.alice", "home", {"friendly_name": "Alice"})
+    hass.states.async_set("person.bob", "home", {"friendly_name": "Bob"})
+    entry = await _entry(
+        hass,
+        discovery=True,
+        subentries_data=[
+            ConfigSubentryData(
+                data={"person": "person.bob", "enabled": False},
+                subentry_type=SUBENTRY_TYPE_RECIPIENT,
+                title="Bobby",
+                unique_id="person.bob",
+            )
+        ],
+    )
+
+    by_key = {s.unique_id: s for s in _recipients(entry)}
+    assert by_key["person.alice"].title == "Alice"
+    assert dict(by_key["person.alice"].data) == {"person": "person.alice"}
+    assert dict(by_key["person.bob"].data) == {"person": "person.bob", "enabled": False}
+    assert not entry.runtime_data.context.people_registry.people["person.bob"].enabled
+
+    # each recipient's entities are on their own device, under their subentry
+    entity_registry = er.async_get(hass)
+    for entity_id in ("switch.supernotify_recipient_alice", "notify.recipient_alice"):
+        registry_entry = entity_registry.async_get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.config_subentry_id == by_key["person.alice"].subentry_id
+        device = dr.async_get(hass).async_get(registry_entry.device_id)
+        assert device is not None
+        assert device.name == "Alice"
+    assert hass.states.get("switch.supernotify_recipient_alice").name == "Alice Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("notify.recipient_alice").name == "Alice"  # type: ignore[union-attr]
+
+    # already listed, so not added again on a reload
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len([s for s in _recipients(entry) if s.unique_id == "person.alice"]) == 1
+
+
+async def test_add_recipient_who_isnt_a_user(hass: HomeAssistant) -> None:
+    entry = await _entry(hass)
+
+    result = await _configure(hass, await _start(hass, entry), {"alias": "Granny Smith"})
+    assert result["step_id"] == "details"
+    assert result["data_schema"].schema["mobile_devices"].config["options"] == []
+    result = await _configure(hass, result, {"email": "granny@example.com", "enabled": True, "mobile_discovery": False})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Granny Smith"
+    await hass.async_block_till_done()
+
+    (subentry,) = _recipients(entry)
+    assert subentry.unique_id == "user.granny_smith"
+    recipient = entry.runtime_data.context.people_registry.people["user.granny_smith"]
+    assert recipient.email == "granny@example.com"
+    assert recipient.target("email").email == ["granny@example.com"]
+
+    # the same name again is the same recipient
+    result = await _configure(hass, await _start(hass, entry), {"alias": "Granny Smith"})
+    assert result["reason"] == "already_configured"
+
+
+def _user_recipient(user_id: str, **data: Any) -> ConfigSubentryData:
+    return ConfigSubentryData(
+        data={"user_id": user_id, "alias": "bob", **data}, subentry_type=SUBENTRY_TYPE_RECIPIENT, title="bob", unique_id=user_id
+    )
+
+
+async def test_user_recipient_becomes_their_persons(hass: HomeAssistant) -> None:
+    """Found as a user before being given a Person, then the Person's recipient, keeping what was set"""
+    hass.states.async_set("person.bob", "home", {"user_id": "bob-user"})
+    entry = await _entry(hass, subentries_data=[_user_recipient("bob-user", email="bob@example.com")])
+
+    (subentry,) = _recipients(entry)
+    assert subentry.unique_id == "person.bob"
+    assert dict(subentry.data) == {"user_id": "bob-user", "alias": "bob", "email": "bob@example.com", "person": "person.bob"}
+    assert list(entry.runtime_data.context.people_registry.people) == ["person.bob"]
+
+
+async def test_user_recipient_merged_into_persons_already_listed(hass: HomeAssistant) -> None:
+    hass.states.async_set("person.bob", "home", {"user_id": "bob-user"})
+    person_recipient = ConfigSubentryData(
+        data={"person": "person.bob", "enabled": False},
+        subentry_type=SUBENTRY_TYPE_RECIPIENT,
+        title="Bob",
+        unique_id="person.bob",
+    )
+    entry = await _entry(hass, subentries_data=[_user_recipient("bob-user", email="bob@example.com"), person_recipient])
+
+    (subentry,) = _recipients(entry)
+    assert subentry.unique_id == "person.bob"
+    # what was set on the Person's recipient wins
+    assert dict(subentry.data) == {
+        "user_id": "bob-user",
+        "alias": "bob",
+        "email": "bob@example.com",
+        "person": "person.bob",
+        "enabled": False,
+    }
+    assert list(entry.runtime_data.context.people_registry.people) == ["person.bob"]

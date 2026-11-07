@@ -372,7 +372,7 @@ async def test_fix_flow_stops_when_legacy_recipient_is_invalid(hass: HomeAssista
     hass.config.config_dir = str(tmp_path)
     (tmp_path / "configuration.yaml").write_text("homeassistant:\n")
 
-    flow = _flow(hass, {**LEGACY_CONFIG, "recipients": [{"alias": "nobody"}]})
+    flow = _flow(hass, {**LEGACY_CONFIG, "recipients": [{"email": "nobody@example.com"}]})
     await flow.async_step_init()
     result = await flow.async_step_confirm({})
     assert result["errors"] == {"base": "migrated_config_invalid"}

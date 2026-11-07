@@ -47,7 +47,7 @@
                 "name": "Scenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Ontvanger {recipient} ingeschakeld"
+                "name": "Ingeschakeld"
             },
             "delivery_enabled": {
                 "name": "Bezorging {delivery} ingeschakeld"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "Ontvanger",
-                    "description": "De persoon, of voor iemand zonder persoon de gebruiker, die deze ontvanger is. Wat hier is ingesteld vult aan of vervangt wat voor hen wordt ontdekt.",
+                    "description": "Iedereen die is ontdekt is al ontvanger. Voeg iemand anders toe, meestal op naam iemand die geen Home Assistant gebruiker is. Kies een persoon of gebruiker alleen als ontvangerdetectie uit staat.\n\n[Meer informatie]({learn_more_url})",
                     "data": {
                         "person": "Persoon",
-                        "user_id": "Gebruiker"
+                        "user_id": "Gebruiker",
+                        "alias": "Naam"
                     },
                     "data_description": {
-                        "person": "De Home Assistant persoon",
-                        "user_id": "De Home Assistant gebruiker, voor iemand zonder persoon"
+                        "person": "Een Home Assistant persoon - hun aanwezigheid telt mee voor de bezetting, en de mobiele-app-apparaten van hun gebruiker worden gevonden",
+                        "user_id": "De inlog-gebruikersnaam als er in Home Assistant geen Persoon is aangemaakt - hun mobiele-app-apparaten worden gevonden, maar zonder Persoon is er geen aanwezigheid, dus tellen ze nooit mee voor de bezetting",
+                        "alias": "Voor iemand die geen Home Assistant gebruiker is - alleen bereikbaar via e-mail, telefoon of andere doelen, zonder mobiele-app-apparaten of aanwezigheid"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "Hoe {recipient} te bereiken.",
+                    "description": "Hoe {recipient} te bereiken.\n\n[Meer informatie]({learn_more_url})",
                     "data": {
                         "alias": "Alias",
                         "email": "E-mailadres",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "Detectie van mobiele apparaten",
                         "mobile_devices": "Mobiele apparaten",
                         "target": "Doelen",
-                        "custom_target": "Aangepaste doelen"
+                        "custom_target": "Aangepaste doelen",
+                        "delivery": "Een bezorging wijzigen"
                     },
                     "data_description": {
                         "alias": "Naam voor deze ontvanger in plaats van die van de persoon",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "Mobiele-app-apparaten gebruiken die nieuw voor deze ontvanger zijn geregistreerd",
                         "mobile_devices": "De mobiele-app-apparaten om te melden - niet aangevinkte worden overgeslagen",
                         "target": "Entiteiten, apparaten, ruimtes, verdiepingen of labels om als deze ontvanger te melden, zoals in de actie supernotify.notify",
-                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "Wijzig hoe een bezorging {recipient} behandelt, of sla op.",
-                    "menu_options": {
-                        "delivery": "Een bezorging wijzigen",
-                        "save": "Opslaan"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "De bezorging om voor deze ontvanger te wijzigen.",
-                    "data": {
-                        "delivery": "Bezorging"
+                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345",
+                        "delivery": "Kies er een om in te stellen of deze voor deze ontvanger wordt gebruikt, extra doelen en gegevens, en kom dan hier terug. Leeg laten om op te slaan"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "Kies een persoon of een gebruiker",
+                "person_or_user_required": "Kies een persoon of een gebruiker, of geef een naam",
                 "invalid_custom_target": "Een aangepast doel is geen e-mailadres, telefoonnummer of categorie:waarde",
                 "invalid_extra_data": "Extra gegevens kunnen geen door Supernotify gereserveerde sleutel gebruiken"
             },

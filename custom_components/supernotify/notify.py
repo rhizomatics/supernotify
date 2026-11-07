@@ -248,8 +248,12 @@ async def async_setup_entry(
         hass, entry.entry_id, engine, reserved=slugify(entry.data.get(CONF_NAME) or NOTIFY_SERVICE_NAME)
     )
     async_add_entities(exposed)
-    engine.context.people_registry.expose_notify_entities(
-        entry.entry_id, async_add_entities, cast(NotifyEntityPlatform, engine)
+    people_registry = engine.context.people_registry
+    people_registry.expose_notify_entities(
+        entry.entry_id,
+        async_add_entities,
+        cast(NotifyEntityPlatform, engine),
+        people_registry.subentry_ids(entry.subentries),
     )
     async_register_entity_actions(
         hass,

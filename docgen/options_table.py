@@ -26,7 +26,7 @@ def esc(v: Any) -> str:  # ruff: ignore[any-type]
 
 def type_label(option: DeliveryOption) -> str:
     if isinstance(option.value_type, vol.In):
-        return ", ".join(f"`{value}`: {meaning}" for value, meaning in option.value_type.container.items())
+        return ", ".join(f"`{value}`: {meaning}" for value, meaning in option.value_type.container.items())  # type: ignore
     return TYPE_LABELS.get(option.value_type, getattr(option.value_type, "__name__", str(option.value_type)))
 
 

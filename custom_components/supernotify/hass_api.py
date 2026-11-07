@@ -154,6 +154,14 @@ def ha_device_info(entry_id: str) -> dr.DeviceInfo:
     return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="Supernotify", manufacturer="Supernotify")
 
 
+def ha_recipient_device_info(entry_id: str, name: str, title: str) -> dr.DeviceInfo:
+    """Home Assistant device-registry DeviceInfo for one recipient, holding its switch and notify
+    entity, so they're listed under the recipient's subentry"""
+    return dr.DeviceInfo(
+        identifiers={(DOMAIN, f"{entry_id}_recipient_{name}")}, name=title, manufacturer="Supernotify", model="Recipient"
+    )
+
+
 def _describe_unsubscribe(unsub: Callable[[], Any]) -> str:
     """A short, cheap label for an unsubscribe callable, for logging.
 

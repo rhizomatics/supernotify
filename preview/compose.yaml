@@ -1,0 +1,66 @@
+# Home Assistant with this checkout's Supernotify, for UI testing and previews, and ha_repl_server
+# for agent access to the running instance with ha-repl - see docs/developer/preview.md.
+#
+#   docker compose -f preview/compose.yaml up -d     # then http://localhost:9123, as alice/preview
+#   docker compose -f preview/compose.yaml down
+#
+# The component is mounted read-only, so a restart of the container picks up code changes.
+# HA_VERSION picks the Home Assistant image tag, e.g. HA_VERSION=2026.5 for the oldest supported.
+# HA_REPL_VERSION must match the ha-repl client, homeassistant_repl in uv.lock.
+name: supernotify-preview
+
+x-homeassistant-image: &homeassistant-image ghcr.io/home-assistant/home-assistant:${HA_VERSION:-stable}
+
+services:
+  # installs the ha_repl_server release into the preview config before Home Assistant starts, and
+  # an empty supernotify.yaml for configuration.yaml to include
+  ha-repl-server:
+    image: *homeassistant-image
+    restart: "no"
+    environment:
+      HA_REPL_VERSION: ${HA_REPL_VERSION:-0.14.1}
+    volumes:
+      - ./homeassistant:/config
+    entrypoint: ["python3", "-c"]
+    command:
+      - |
+        import io, os, shutil, urllib.request, zipfile
+        if not os.path.exists("/config/supernotify.yaml"):
+            open("/config/supernotify.yaml", "w").write("{}\n")
+        version = os.environ["HA_REPL_VERSION"]
+        target = "/config/custom_components/ha_repl_server"
+        marker = os.path.join(target, ".version")
+        if os.path.exists(marker) and open(marker).read() == version:
+            raise SystemExit(0)
+        url = f"https://github.com/rhizomatics/homeassistant-repl/releases/download/v{version}/ha_repl_server.zip"
+        archive = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(url).read()))
+        shutil.rmtree(target, ignore_errors=True)
+        archive.extractall(target)
+        open(marker, "w").write(version)
+        print("Installed ha_repl_server", version)
+
+  homeassistant:
+    image: *homeassistant-image
+    restart: "no"
+    depends_on:
+      ha-repl-server:
+        condition: service_completed_successfully
+    ports:
+      - "${HA_PORT:-9123}:8123"
+    environment:
+      TZ: ${TZ:-Europe/London}
+    volumes:
+      - ./homeassistant:/config
+      - ../custom_components/supernotify:/config/custom_components/supernotify:ro
+
+  # sets a fresh preview up as the preview house, see seed.py - nothing once it has been
+  seed:
+    image: *homeassistant-image
+    restart: "no"
+    depends_on:
+      - homeassistant
+    volumes:
+      - ./seed.py:/preview/seed.py:ro
+      - ./homeassistant:/preview/homeassistant
+      - ../tests/components/supernotify/integration/houses.py:/tests/components/supernotify/integration/houses.py:ro
+    entrypoint: ["python3", "/preview/seed.py", "--url", "http://homeassistant:8123"]

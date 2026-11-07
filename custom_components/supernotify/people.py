@@ -49,10 +49,15 @@ from .const import (
     OCCUPANCY_NONE,
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
+    SUBENTRY_TYPE_RECIPIENT,
 )
+from .hass_api import ha_recipient_device_info
 from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigSubentry
     from homeassistant.core import Context, State
 
     from .binary_sensor import SupernotifyRecipientBinarySensor
@@ -84,7 +89,8 @@ class RecipientNotifyEntity(NotifyEntity):
     ) -> None:
         """Initialize the recipient notify entity."""
         self._attr_unique_id = unique_id
-        self._attr_name = recipient.alias or recipient.name
+        # the recipient's own device is named after them, and this is its main entity
+        self._attr_name = None
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self._recipient = recipient
         self._engine = engine
@@ -161,6 +167,18 @@ class RecipientNotifyEntity(NotifyEntity):
         )
 
 
+def recipient_key(config: dict[str, Any]) -> str | None:
+    """What identifies a recipient's configuration - its person, else its user, else for
+    someone who isn't a Home Assistant user, the synthetic `user.` id its alias gives it"""
+    if person := config.get(CONF_PERSON):
+        return str(person)
+    if user_id := config.get(CONF_USER_ID):
+        return str(user_id)
+    if alias := config.get(CONF_ALIAS):
+        return f"user.{slugify(alias)}"
+    return None
+
+
 class Recipient:
     """Recipient to distinguish from the native HA Person.
 
@@ -186,6 +204,8 @@ class Recipient:
         # already handle gracefully, e.g. PeopleRegistry person_attributes()/
         # _fetch_person_entity_state() returning None for an unknown entity_id.
         self.entity_id: str = config.get(CONF_PERSON) or ""
+        # what identifies its configuration, and so its subentry, see recipient_key()
+        self.key: str | None = recipient_key(config)
         # Without a Person there's no presence, so the recipient is left out of occupancy
         self.has_person: bool = bool(self.entity_id)
         if self.entity_id:
@@ -249,7 +269,8 @@ class Recipient:
         """The configured mobile devices plus those discovered now - again whenever one is re-paired or renamed"""
         previous: list[str] = list(self.mobile_devices)
         self.mobile_devices = {k: dict(v) for k, v in self._configured_mobile_devices.items()}
-        if self.mobile_discovery:
+        # someone who isn't a Home Assistant user has no mobile app devices to discover
+        if self.mobile_discovery and (self.user_id or self.has_person):
             # a known user_id (explicitly configured, or already backfilled below from a prior
             # initialize()) resolves devices directly, without needing a Person entity at all
             discovered_devices: list[TrackedDeviceDetails] = (
@@ -391,6 +412,9 @@ class PeopleRegistry:
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.mobile_discovery = mobile_discovery
         self.discover = discover
+        # the configuration of each recipient discovered, by recipient_key(), before any configured
+        # recipient is merged over it
+        self.discovered: dict[str, dict[str, Any]] = {}
         # Populated by binary_sensor.py's async_setup_entry once the platform is loaded - see
         # register_entity/unregister_entity. Empty (and harmless to look up against) before
         # then, and in tests that build PeopleRegistry directly without a config entry.
@@ -418,13 +442,14 @@ class PeopleRegistry:
             if user_only_ids:
                 recipients.update({uid: {CONF_USER_ID: uid, CONF_ALIAS: name} for uid, name in user_only_ids.items()})
                 _LOGGER.info("SUPERNOTIFY Auto-discovered user-only accounts: %s", list(user_only_ids.values()))
+            self.discovered = {k: dict(v) for k, v in recipients.items()}
 
         for r in self._recipients:
             # merge/dedupe key only - the recipient's real identity (entity_id) is derived by
             # Recipient itself, below, from whichever of these was given
-            key = r.get(CONF_PERSON) or r.get(CONF_USER_ID)
+            key = recipient_key(r)
             if not key:
-                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with neither 'person' nor 'user_id' key:%s", r)
+                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with no 'person', 'user_id' or 'alias':%s", r)
                 continue
             if key in recipients:
                 _LOGGER.debug("SUPERNOTIFY Overriding %s entity defaults from recipient config", key)
@@ -465,12 +490,25 @@ class PeopleRegistry:
             entity.async_write_ha_state()
 
     def expose_notify_entities(
-        self, entry_id: str, async_add_entities: AddConfigEntryEntitiesCallback, service: NotifyEntityPlatform
+        self,
+        entry_id: str,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+        service: NotifyEntityPlatform,
+        subentry_ids: dict[str, str] | None = None,
     ) -> None:
-        async_add_entities(
-            RecipientNotifyEntity(f"{entry_id}_recipient_{recipient.name}", recipient, service)
-            for recipient in self.people.values()
-        )
+        """A notify entity for each recipient, on its own device, under its subentry where it has one"""
+        for recipient in self.people.values():
+            entity = RecipientNotifyEntity(f"{entry_id}_recipient_{recipient.name}", recipient, service)
+            entity._attr_device_info = ha_recipient_device_info(entry_id, recipient.name, recipient.alias or recipient.name)
+            async_add_entities([entity], config_subentry_id=(subentry_ids or {}).get(recipient.key or ""))
+
+    def subentry_ids(self, subentries: Mapping[str, ConfigSubentry]) -> dict[str, str]:
+        """The id of each recipient subentry, by recipient_key() of its configuration"""
+        return {
+            key: subentry.subentry_id
+            for subentry in subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_RECIPIENT and (key := recipient_key(dict(subentry.data)))
+        }
 
     def person_attributes(self, entity_id: str) -> dict[str, Any] | None:
         state: State | None = self.hass_api.get_state(entity_id)

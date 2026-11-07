@@ -19,6 +19,10 @@ The [ha-repl](https://homeassistant-repl.rhizomatics.org.uk) developer shell has
 
 ![scenarios access](../assets/images/ha-repl_scenarios.png)
 
+## Preview Environment
+
+A Docker Home Assistant running the checkout's Supernotify, seeded as the same house the integration tests use, with `ha_repl_server` for agent access. See [Preview Environment](preview.md).
+
 ## More Developer Help
 
 See also transport and options tables in the [Reference](../reference/index.md) section.

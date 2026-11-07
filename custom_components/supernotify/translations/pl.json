@@ -47,7 +47,7 @@
                 "name": "Scenariusz {scenario}"
             },
             "recipient_enabled": {
-                "name": "Odbiorca {recipient} włączony"
+                "name": "Włączone"
             },
             "delivery_enabled": {
                 "name": "Dostarczenie {delivery} włączone"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "Odbiorca",
-                    "description": "Osoba lub, dla kogoś bez osoby, użytkownik, którym jest ten odbiorca. To, co ustawisz tutaj, uzupełnia lub zastępuje to, co zostało dla nich wykryte.",
+                    "description": "Wszyscy wykryci są już odbiorcami. Dodaj kogoś innego, zwykle z nazwy kogoś, kto nie jest użytkownikiem Home Assistant. Osobę lub użytkownika wybieraj tylko przy wyłączonym wykrywaniu odbiorców.\n\n[Dowiedz się więcej]({learn_more_url})",
                     "data": {
                         "person": "Osoba",
-                        "user_id": "Użytkownik"
+                        "user_id": "Użytkownik",
+                        "alias": "Nazwa"
                     },
                     "data_description": {
-                        "person": "Osoba w Home Assistant",
-                        "user_id": "Użytkownik Home Assistant, dla kogoś bez osoby"
+                        "person": "Osoba w Home Assistant - jej obecność liczy się do zajętości, a urządzenia aplikacji mobilnej jej użytkownika są wykrywane",
+                        "user_id": "Nazwa użytkownika do logowania, jeśli w Home Assistant nie utworzono rekordu Osoby - jego urządzenia aplikacji mobilnej są wykrywane, ale bez Osoby nie ma obecności, więc nigdy nie liczy się do zajętości",
+                        "alias": "Dla kogoś, kto nie jest użytkownikiem Home Assistant - powiadamiany tylko e-mailem, telefonicznie lub przez inne cele, bez urządzeń aplikacji mobilnej i obecności"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "Jak dotrzeć do {recipient}.",
+                    "description": "Jak dotrzeć do {recipient}.\n\n[Dowiedz się więcej]({learn_more_url})",
                     "data": {
                         "alias": "Alias",
                         "email": "Adres e-mail",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                         "mobile_devices": "Urządzenia mobilne",
                         "target": "Cele",
-                        "custom_target": "Własne cele"
+                        "custom_target": "Własne cele",
+                        "delivery": "Zmień dostarczenie"
                     },
                     "data_description": {
                         "alias": "Nazwa używana dla tego odbiorcy zamiast nazwy osoby",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "Używaj urządzeń aplikacji mobilnej nowo zarejestrowanych dla tego odbiorcy",
                         "mobile_devices": "Urządzenia aplikacji mobilnej do powiadamiania - niezaznaczone są pomijane",
                         "target": "Encje, urządzenia, obszary, piętra lub etykiety powiadamiane jako ten odbiorca, jak w akcji supernotify.notify",
-                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "Zmień, jak dostarczenie traktuje {recipient}, lub zapisz.",
-                    "menu_options": {
-                        "delivery": "Zmień dostarczenie",
-                        "save": "Zapisz"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "Dostarczenie do zmiany dla tego odbiorcy.",
-                    "data": {
-                        "delivery": "Dostarczenie"
+                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345",
+                        "delivery": "Wybierz jedno, aby ustawić, czy jest używane dla tego odbiorcy, dodatkowe cele i dane, a potem wróć tutaj. Zostaw puste, aby zapisać"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "Wybierz osobę lub użytkownika",
+                "person_or_user_required": "Wybierz osobę lub użytkownika albo podaj nazwę",
                 "invalid_custom_target": "Własny cel nie jest adresem e-mail, numerem telefonu ani kategorią:wartością",
                 "invalid_extra_data": "Dodatkowe dane nie mogą używać klucza zarezerwowanego przez Supernotify"
             },

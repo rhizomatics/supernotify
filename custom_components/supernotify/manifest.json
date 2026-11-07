@@ -16,6 +16,7 @@
         "mqtt",
         "ntfy",
         "persistent",
+        "person",
         "pushover",
         "smtp",
         "telegram_bot",

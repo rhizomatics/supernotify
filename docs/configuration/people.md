@@ -27,12 +27,19 @@ With the `recipient` definition you can:
 
 ## Adding or Changing a Recipient
 
-Recipients are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, and
-choose **Add recipient**, or the cog by an existing recipient to change it.
+Recipients are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, where
+everyone [discovered](#automatic-recipient-discovery) is already listed as a recipient, and choose the cog by one
+to change it. Anything set there adds to, or overrides, what Supernotify discovers for them, so you only need to
+set what discovery can't find.
 
-1. Pick the **Person**, or for someone with no Person, the **User**. A recipient adds to, or overrides, what
-   Supernotify discovers for them, so you only need to set what discovery can't find.
-2. Fill in how to reach them:
+**Add recipient** is for someone who isn't discovered, usually someone who isn't a Home Assistant user at all,
+like a relative to be e-mailed. Give their **Name**, or pick a **Person** or **User** when
+[discovery](#automatic-recipient-discovery) is switched off. Someone with only a name has no mobile devices, and
+never counts towards occupancy.
+
+When adding or changing a recipient:
+
+1. Fill in how to reach them:
     - **E-mail address** and **Phone number**, used by e-mail and SMS deliveries
     - **Alias**, a name to use in place of the Person's
     - **Enabled**, to switch the recipient off without removing them
@@ -42,8 +49,10 @@ choose **Add recipient**, or the cog by an existing recipient to change it.
     - **Targets** and **Custom targets**, more places to notify them, chosen just as in the `supernotify.notify`
       action - entities, devices, areas, floors and labels from the selector, and anything else as text, one per
       line: an e-mail address, a phone number, or `category:value`, such as `telegram_chat_id:12345`
-3. Then either **Save**, or **Change a delivery** to set how one delivery treats them - see
+2. Optionally pick one of the deliveries under **Change a delivery**, to set how it treats them, coming back
+   to the form afterwards - see
    [Enabling, Disabling and Overriding Targets per Delivery](#enabling-disabling-and-overriding-targets-per-delivery).
+   Submit with it left empty to save.
 
 !!! note "Recipients from YAML"
     Recipients used to be set under `recipients:` in YAML. From version `2.18.0` those are imported into the
@@ -55,7 +64,8 @@ choose **Add recipient**, or the cog by an existing recipient to change it.
 
 The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch off **Recipient Discovery** in the integration's settings. And since each *Recipient* is automatically populated with all their mobile devices, there's a lot done without any configuration.
 
-To leave out one of the people discovered, add them as a recipient, and untick **Enabled**.
+Everyone discovered is listed as a recipient in the integration. To leave one out, change their recipient, and
+untick **Enabled** - deleting a discovered recipient only has them listed again at the next restart.
 
 ## Automatic Mobile App Discovery
 
@@ -89,7 +99,7 @@ From version `2.9.0`, Supernotify will also discover users and mobile app device
 ### Disabling Auto Discovered Devices
 
 Its usually easier to let Supernotify automatically find devices, and only intervene when there's one you
-don't want, or isn't working. Add the person as a recipient, and untick the device under **Mobile devices**
+don't want, or isn't working. Change the person's recipient, and untick the device under **Mobile devices**
 to stop it being used for notifications.
 
 ### Missing Mobile Apps
@@ -130,7 +140,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+Each recipient has a device of their own, listed under their recipient in the integration, with their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
 This lasts across restarts and reloads, until the recipient's **Enabled** setting is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](deliveries.md#overrides).
 
 !!! warning "Deprecated"
@@ -174,7 +184,7 @@ Notify Entities get updated on every notification by Supernotify for that person
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 
-**Change a delivery**, when adding or changing a recipient, picks one delivery, and sets how it treats that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else:
+**Change a delivery**, on the form for adding or changing a recipient, picks one of the deliveries - every Supernotify has some, even with no configuration - and sets how it treats that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else:
 
 - **Enabled** switches the delivery on or off just for that recipient, or leaves it as the delivery is set
 - **Targets** and **Custom targets** add targets used only for that recipient on that delivery
@@ -199,7 +209,7 @@ delivery:
 
 ```
 
-Then add Jane as a recipient, choose **Change a delivery**, pick `slack`, set **Enabled** (leave it as the delivery is set if the slack delivery is usually enabled for everyone), and add `slack_channel:A20H2AN55DX` under **Custom targets**.
+Then change Jane's recipient, choose **Change a delivery**, pick `slack`, set **Enabled** (leave it as the delivery is set if the slack delivery is usually enabled for everyone), and add `slack_channel:A20H2AN55DX` under **Custom targets**.
 
 Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane, and only because it was explicitly enabled for her.
 
@@ -214,7 +224,7 @@ delivery:
     template: default.html.j2
 ```
 
-With `person.grumpy_teenager` added as a recipient, **Change a delivery**, pick `html_email`, and set **Disabled**.
+Change `person.grumpy_teenager`'s recipient, choose **Change a delivery**, pick `html_email`, and set **Disabled**.
 
 Everyone else still gets `html_email`; `person.grumpy_teenager` is left out of just that delivery, while still receiving anything else that applies to them (mobile push, other deliveries, and so on).
 

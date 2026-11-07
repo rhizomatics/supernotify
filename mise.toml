@@ -4,3 +4,44 @@ python = "3.14"
 ruff = "latest"
 ty = "latest"
 uv = "latest"
+
+[tasks.preview-start]
+description = "Start the Docker preview, seeding it as the preview house the first time"
+run = "preview/compose.sh up -d"
+
+[tasks.preview-stop]
+description = "Stop the Docker preview, keeping its Home Assistant state"
+run = "preview/compose.sh down"
+
+[tasks.preview-refresh]
+description = "Pull the latest Home Assistant image and recreate the preview, keeping its state, with the checkout's Supernotify and ha_repl_server matching uv.lock"
+run = ["preview/compose.sh pull", "preview/compose.sh up -d --force-recreate"]
+
+[tasks.preview-rebuild]
+description = "Remove the preview, pull the latest Home Assistant image, and start a freshly seeded preview house"
+depends = ["clean"]
+run = ["preview/compose.sh pull", "preview/compose.sh up -d"]
+
+[tasks.clean]
+description = "Remove the Docker preview environment - its containers and Home Assistant state"
+run = [
+    "preview/compose.sh down --remove-orphans",
+    "find preview/homeassistant -mindepth 1 -maxdepth 1 ! -name configuration.yaml -exec rm -rf {} +",
+    "rm -fr site",
+    "rm -fr .mypy_cache",
+    "rm -fr config",
+    "rm -fr .pytest_cache",
+    "rm -fr .ropeproject",
+    "rm -fr .ruff_cache",
+    "rm -fr .pyre",
+    "rm -fr __pycache__",
+    "rm -fr .cache",
+    "rm -fr htmlcov",
+    "rm -f .coverage",
+    "rm -f cov.xml",
+    "uv venv .venv --clear"
+]
+
+[tasks.refresh]
+description = "Refresh tools and dependencies"
+run = "./refresh-deps.sh"

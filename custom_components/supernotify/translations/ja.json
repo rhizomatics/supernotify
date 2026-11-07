@@ -47,7 +47,7 @@
                 "name": "シナリオ {scenario}"
             },
             "recipient_enabled": {
-                "name": "受信者 {recipient} 有効"
+                "name": "有効"
             },
             "delivery_enabled": {
                 "name": "配信 {delivery} 有効"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "受信者",
-                    "description": "この受信者である人物、または人物がいない場合はユーザー。ここで設定した内容は、その人について検出された内容に追加されるか、上書きします。",
+                    "description": "検出された人はすでに受信者です。他の人を追加します。通常は名前で、Home Assistant ユーザーではない人です。人物やユーザーは受信者の検出がオフのときだけ選択してください。\n\n[詳細]({learn_more_url})",
                     "data": {
                         "person": "人物",
-                        "user_id": "ユーザー"
+                        "user_id": "ユーザー",
+                        "alias": "名前"
                     },
                     "data_description": {
-                        "person": "Home Assistant の人物",
-                        "user_id": "人物がいない場合の Home Assistant ユーザー"
+                        "person": "Home Assistant の人物 - その在宅状況が在宅判定に使われ、そのユーザーのモバイルアプリのデバイスが見つかります",
+                        "user_id": "Home Assistant に人物の記録が作成されていない場合のログインユーザー名 - モバイルアプリのデバイスは見つかりますが、人物がないと在宅状況がないため、在宅判定には使われません",
+                        "alias": "Home Assistant ユーザーではない人 - メール、電話、その他のターゲットでのみ連絡し、モバイルアプリのデバイスや在宅状況はありません"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "{recipient} への連絡方法。",
+                    "description": "{recipient} への連絡方法。\n\n[詳細]({learn_more_url})",
                     "data": {
                         "alias": "別名",
                         "email": "メールアドレス",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "モバイルデバイスの検出",
                         "mobile_devices": "モバイルデバイス",
                         "target": "ターゲット",
-                        "custom_target": "カスタムターゲット"
+                        "custom_target": "カスタムターゲット",
+                        "delivery": "配信を変更"
                     },
                     "data_description": {
                         "alias": "人物の名前の代わりにこの受信者に使う名前",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "この受信者に新たに登録されたモバイルアプリのデバイスを使用する",
                         "mobile_devices": "通知するモバイルアプリのデバイス - チェックのないものは除外されます",
                         "target": "この受信者として通知するエンティティ、デバイス、エリア、フロア、ラベル (supernotify.notify アクションと同様)",
-                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "配信での {recipient} の扱いを変更するか、保存します。",
-                    "menu_options": {
-                        "delivery": "配信を変更",
-                        "save": "保存"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "この受信者について変更する配信。",
-                    "data": {
-                        "delivery": "配信"
+                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値",
+                        "delivery": "1 つ選んで、この受信者に使うかどうか、追加のターゲットとデータを設定し、ここに戻ります。保存するには空のままにします"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "人物またはユーザーを選択してください",
+                "person_or_user_required": "人物またはユーザーを選択するか、名前を入力してください",
                 "invalid_custom_target": "カスタムターゲットがメールアドレス、電話番号、カテゴリ:値 のいずれでもありません",
                 "invalid_extra_data": "追加データには Supernotify が予約しているキーは使えません"
             },

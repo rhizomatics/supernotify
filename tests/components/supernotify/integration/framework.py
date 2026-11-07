@@ -41,11 +41,17 @@ class House:
         pirs: dict[str, str | None] | None = None,
         config: str | None = None,
         stub_actions: list[str] | None = None,
+        demo: bool = False,
+        alexa_per_area: bool = True,
     ) -> None:
         # Supernotify YAML config, or None for a zero-YAML install
         self.config: str | None = config
         # actions the config calls beyond notify, e.g. `switch.turn_on`, recorded rather than run
         self.stub_actions: list[str] = stub_actions or []
+        # the demo integration's entities, as the Docker preview has them (see preview/seed.py)
+        self.demo: bool = demo
+        # an Alexa echo notify entity in every area
+        self.alexa_per_area: bool = alexa_per_area
         self._floors: list[str] = floors or []
         self._areas: dict[str, str | None] = areas or {}
 
@@ -72,7 +78,13 @@ class House:
     async def setup(self, hass: HomeAssistant) -> None:
 
         self._hass = hass
-        MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+        if self.alexa_per_area:
+            MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+        if self.demo:
+            # demo needs conversation only for its own sentences, whose libraries the tests don't have
+            hass.config.components.add("conversation")
+            assert await async_setup_component(hass, "demo", {"demo": {}})
+            await hass.async_block_till_done()
 
         floor_registry = fr.async_get(hass)
         area_registry = ar.async_get(hass)
@@ -81,15 +93,16 @@ class House:
             self.floors[floor_name] = floor_registry.async_create(floor_name)
 
         for area, optional_floor_name in self._areas.items():
-            if optional_floor_name is not None and optional_floor_name in self.floors:
-                floor_id = self.floors[optional_floor_name].floor_id
-                area_entry = area_registry.async_create(area, floor_id=floor_id)
+            floor_id = self.floors[optional_floor_name].floor_id if optional_floor_name in self.floors else None
+            # the demo integration makes some areas of its own, like the kitchen
+            if existing := area_registry.async_get_area_by_name(area):
+                area_entry = area_registry.async_update(existing.id, floor_id=floor_id)
             else:
-                area_entry = area_registry.async_create(area)
+                area_entry = area_registry.async_create(area, floor_id=floor_id)
             self.areas[area] = area_entry
 
         entity_registry: EntityRegistry = er.async_get(hass)
-        for name, area_entry in self.areas.items():
+        for name, area_entry in self.areas.items() if self.alexa_per_area else ():
             entry: RegistryEntry = entity_registry.async_get_or_create(
                 "notify", "alexa_devices", f"{name}_id", suggested_object_id=name
             )
@@ -132,7 +145,7 @@ class House:
             # back on now rather than racing to set it first
             if person_slug is not None:
                 person_id = f"person.{person_slug}"
-                existing = hass.states.get(person_id)
+                existing = hass.states.get(person_id)  # type: ignore
                 attributes = dict(existing.attributes) if existing else {}
                 attributes["friendly_name"] = account_name
                 hass.states.async_set(person_id, existing.state if existing else "home", attributes)

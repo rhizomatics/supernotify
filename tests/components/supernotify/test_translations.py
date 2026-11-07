@@ -42,8 +42,6 @@ EXPECTED_IDENTICAL_IN_EVERY_LANGUAGE = {
     "options.step.archive.sections.mqtt.name",
     # titles that are only the recipient's name
     "config_subentries.recipient.step.details.title",
-    "config_subentries.recipient.step.menu.title",
-    "config_subentries.recipient.step.delivery.title",
 }
 
 # (translation file stem, dot-separated key) pairs where a specific language's word for
@@ -89,6 +87,7 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("nl", "selector.override_kind.options.transport"),  # "Transport" is also the Dutch word for transport
     ("pl", "selector.override_kind.options.transport"),  # "Transport" is also the Polish word for transport
     ("de", "config_subentries.recipient.step.user.data.person"),  # "Person" is also the German word for person
+    ("de", "config_subentries.recipient.step.user.data.alias"),  # "Name" is also the German word for name
     ("de", "config_subentries.recipient.step.details.data.alias"),  # "Alias" is the word in these languages too
     ("es", "config_subentries.recipient.step.details.data.alias"),
     ("fr", "config_subentries.recipient.step.details.data.alias"),
@@ -97,7 +96,6 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("pl", "config_subentries.recipient.step.details.data.alias"),
     ("it", "config_subentries.recipient.entry_type"),  # "recipient" stays English in Italian, see CLAUDE.md
     ("it", "config_subentries.recipient.step.user.title"),  # "recipient" stays English in Italian, see CLAUDE.md
-    ("it", "config_subentries.recipient.step.delivery.data.delivery"),  # "delivery" stays English in Italian, see CLAUDE.md
 }
 
 

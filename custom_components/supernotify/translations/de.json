@@ -47,7 +47,7 @@
                 "name": "Szenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Empfänger {recipient} aktiviert"
+                "name": "Aktiviert"
             },
             "delivery_enabled": {
                 "name": "Lieferung {delivery} aktiviert"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "Empfänger",
-                    "description": "Die Person, oder für jemanden ohne Person der Benutzer, die dieser Empfänger ist. Alles hier Festgelegte ergänzt oder ersetzt, was für sie erkannt wird.",
+                    "description": "Alle Erkannten sind bereits Empfänger. Füge jemand anderen hinzu, meist mit Namen jemanden, der kein Home Assistant Benutzer ist. Wähle eine Person oder einen Benutzer nur bei ausgeschalteter Empfänger-Erkennung.\n\n[Mehr erfahren]({learn_more_url})",
                     "data": {
                         "person": "Person",
-                        "user_id": "Benutzer"
+                        "user_id": "Benutzer",
+                        "alias": "Name"
                     },
                     "data_description": {
-                        "person": "Die Home Assistant Person",
-                        "user_id": "Der Home Assistant Benutzer, für jemanden ohne Person"
+                        "person": "Eine Home Assistant Person - ihre Anwesenheit zählt zur Belegung, und die Mobile-App-Geräte ihres Benutzers werden gefunden",
+                        "user_id": "Der Anmelde-Benutzername, wenn in Home Assistant kein Personen-Eintrag angelegt ist - die Mobile-App-Geräte werden gefunden, aber ohne Person gibt es keine Anwesenheit, daher zählt er nie zur Belegung",
+                        "alias": "Für jemanden, der kein Home Assistant Benutzer ist - nur per E-Mail, Telefon oder andere Ziele erreichbar, ohne Mobile-App-Geräte oder Anwesenheit"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "Wie {recipient} erreicht wird.",
+                    "description": "Wie {recipient} erreicht wird.\n\n[Mehr erfahren]({learn_more_url})",
                     "data": {
                         "alias": "Alias",
                         "email": "E-Mail-Adresse",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "Mobilgeräte-Erkennung",
                         "mobile_devices": "Mobilgeräte",
                         "target": "Ziele",
-                        "custom_target": "Benutzerdefinierte Ziele"
+                        "custom_target": "Benutzerdefinierte Ziele",
+                        "delivery": "Eine Zustellung ändern"
                     },
                     "data_description": {
                         "alias": "Name, der für diesen Empfänger statt dem der Person verwendet wird",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "Neu für diesen Empfänger registrierte Mobile-App-Geräte verwenden",
                         "mobile_devices": "Die zu benachrichtigenden Mobile-App-Geräte - nicht angehakte werden ausgelassen",
                         "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die als dieser Empfänger benachrichtigt werden, wie in der Aktion supernotify.notify",
-                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "Ändern, wie eine Zustellung {recipient} behandelt, oder speichern.",
-                    "menu_options": {
-                        "delivery": "Eine Zustellung ändern",
-                        "save": "Speichern"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "Die Zustellung, die für diesen Empfänger geändert werden soll.",
-                    "data": {
-                        "delivery": "Zustellung"
+                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345",
+                        "delivery": "Eine wählen, um festzulegen, ob sie für diesen Empfänger verwendet wird, zusätzliche Ziele und Daten, dann hierher zurück. Leer lassen zum Speichern"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "Eine Person oder einen Benutzer wählen",
+                "person_or_user_required": "Eine Person oder einen Benutzer wählen, oder einen Namen angeben",
                 "invalid_custom_target": "Ein benutzerdefiniertes Ziel ist weder eine E-Mail-Adresse, eine Telefonnummer noch Kategorie:Wert",
                 "invalid_extra_data": "Zusätzliche Daten dürfen keinen von Supernotify reservierten Schlüssel verwenden"
             },

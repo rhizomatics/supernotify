@@ -74,9 +74,13 @@ def test_recipient_schema_accepts_person_without_user_id() -> None:
     assert validated[CONF_PERSON] == "person.alice"
 
 
-def test_recipient_schema_rejects_recipient_with_neither_person_nor_user_id() -> None:
+def test_recipient_schema_rejects_recipient_with_no_person_user_id_or_alias() -> None:
     with pytest.raises(vol.Invalid):
-        RECIPIENT_SCHEMA({"alias": "Nobody"})
+        RECIPIENT_SCHEMA({"email": "nobody@example.com"})
+
+
+def test_recipient_schema_accepts_alias_alone_for_someone_not_a_user() -> None:
+    assert RECIPIENT_SCHEMA({"alias": "Granny", "email": "granny@example.com"})["alias"] == "Granny"
 
 
 def test_target_exclude_only_accepted_by_notify_action() -> None:

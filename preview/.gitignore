@@ -1,0 +1,3 @@
+# Home Assistant's own state for the preview - only the seed configuration is committed
+homeassistant/*
+!homeassistant/configuration.yaml

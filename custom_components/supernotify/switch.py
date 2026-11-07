@@ -41,7 +41,7 @@ from .const import (
     OVERRIDE_KIND_TRANSPORT,
     TRANSPORT_UNRECORDED_ATTRIBUTES,
 )
-from .hass_api import ha_device_info
+from .hass_api import ha_device_info, ha_recipient_device_info
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -74,10 +74,6 @@ async def async_setup_entry(
         SupernotifyScenarioSwitch(scenario, context.scenario_registry, device_info, switches)
         for scenario in context.scenario_registry.scenarios.values()
     ]
-    entities.extend(
-        SupernotifyRecipientSwitch(recipient, context.people_registry, device_info, switches)
-        for recipient in context.people_registry.people.values()
-    )
     # Only for what is loaded. The switch of a transport that isn't loaded this time, and of its
     # deliveries, is left in the entity registry rather than removed: a transport can be missing
     # just while what it depends on is still starting up
@@ -91,6 +87,14 @@ async def async_setup_entry(
         for delivery in delivery_registry.deliveries.values()
     )
     async_add_entities(entities)
+    # each recipient's on its own device, under its subentry where it has one
+    subentry_ids = context.people_registry.subentry_ids(entry.subentries)
+    for recipient in context.people_registry.people.values():
+        recipient_device = ha_recipient_device_info(entry.entry_id, recipient.name, recipient.alias or recipient.name)
+        async_add_entities(
+            [SupernotifyRecipientSwitch(recipient, context.people_registry, recipient_device, switches)],
+            config_subentry_id=subentry_ids.get(recipient.key or ""),
+        )
 
 
 class Overridable(Protocol):
@@ -247,7 +251,6 @@ class SupernotifyRecipientSwitch(SupernotifyOverridableSwitch):
         super().__init__(OVERRIDE_KIND_RECIPIENT, recipient, device_info, switches)
         self._recipient = recipient
         self._registry = registry
-        self._attr_translation_placeholders = {"recipient": recipient.alias or recipient.name}
         # Setting entity_id directly is not preferred Home Assistant practice - see
         # SupernotifyScenarioSwitch for why it's done anyway, and why it can't change the
         # entity_id of an existing install.

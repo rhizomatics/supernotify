@@ -18,6 +18,17 @@ For documentation build:
 ./refresh-deps.sh
 ```
 
+## Preview Environment
+
+A Docker Home Assistant running this checkout's Supernotify, for UI testing and previews - see
+[Preview Environment](docs/developer/preview.md).
+
+```bash
+docker compose -f preview/compose.yaml up -d
+```
+
+`mise run clean` removes it, and `mise run refresh` runs `refresh-deps.sh`.
+
 ## Editing Releases
 
 GitHub CLI can move a published release back to draft:

@@ -47,7 +47,7 @@
                 "name": "场景 {scenario}"
             },
             "recipient_enabled": {
-                "name": "接收人 {recipient} 已启用"
+                "name": "已启用"
             },
             "delivery_enabled": {
                 "name": "推送 {delivery} 已启用"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "接收者",
-                    "description": "此接收者对应的人员，或对于没有人员的人，对应的用户。此处设置的内容会补充或覆盖为其发现的内容。",
+                    "description": "所有已发现的人都已是接收者。添加其他人，通常是按名称添加不是 Home Assistant 用户的人。仅在接收者发现关闭时选择人员或用户。\n\n[了解更多]({learn_more_url})",
                     "data": {
                         "person": "人员",
-                        "user_id": "用户"
+                        "user_id": "用户",
+                        "alias": "名称"
                     },
                     "data_description": {
-                        "person": "Home Assistant 人员",
-                        "user_id": "Home Assistant 用户，用于没有人员的人"
+                        "person": "Home Assistant 人员 - 其在家状态计入占用情况，并会找到其用户的移动应用设备",
+                        "user_id": "如果 Home Assistant 中没有创建人员记录，则为登录用户名 - 会找到其移动应用设备，但没有人员就没有在家状态，因此从不计入占用情况",
+                        "alias": "用于不是 Home Assistant 用户的人 - 只能通过电子邮件、电话或其他目标联系，没有移动应用设备或在家状态"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "如何联系 {recipient}。",
+                    "description": "如何联系 {recipient}。\n\n[了解更多]({learn_more_url})",
                     "data": {
                         "alias": "别名",
                         "email": "电子邮件地址",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "移动设备发现",
                         "mobile_devices": "移动设备",
                         "target": "目标",
-                        "custom_target": "自定义目标"
+                        "custom_target": "自定义目标",
+                        "delivery": "更改投递"
                     },
                     "data_description": {
                         "alias": "用于此接收者、代替人员名称的名称",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "使用为此接收者新注册的移动应用设备",
                         "mobile_devices": "要通知的移动应用设备 - 未勾选的会被排除",
                         "target": "作为此接收者通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作中相同",
-                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "更改某个投递如何对待 {recipient}，或保存。",
-                    "menu_options": {
-                        "delivery": "更改投递",
-                        "save": "保存"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "要为此接收者更改的投递。",
-                    "data": {
-                        "delivery": "投递"
+                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345",
+                        "delivery": "选择一个，设置是否用于此接收者、额外目标和额外数据，然后返回此处。留空即保存"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "请选择人员或用户",
+                "person_or_user_required": "请选择人员或用户，或填写名称",
                 "invalid_custom_target": "自定义目标既不是电子邮件地址、电话号码，也不是 类别:值",
                 "invalid_extra_data": "附加数据不能使用 Supernotify 保留的键"
             },

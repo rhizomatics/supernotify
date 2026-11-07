@@ -47,7 +47,7 @@
                 "name": "Escenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Destinatario {recipient} habilitado"
+                "name": "Activado"
             },
             "delivery_enabled": {
                 "name": "Entrega {delivery} habilitada"
@@ -795,19 +795,21 @@
             "step": {
                 "user": {
                     "title": "Destinatario",
-                    "description": "La persona, o para alguien sin persona, el usuario, que es este destinatario. Lo que se defina aquí se suma a lo descubierto para ellos, o lo sustituye.",
+                    "description": "Todos los descubiertos ya son destinatarios. Añade a otra persona, normalmente por nombre a alguien que no es usuario de Home Assistant. Elige una persona o un usuario solo con el descubrimiento de destinatarios desactivado.\n\n[Más información]({learn_more_url})",
                     "data": {
                         "person": "Persona",
-                        "user_id": "Usuario"
+                        "user_id": "Usuario",
+                        "alias": "Nombre"
                     },
                     "data_description": {
-                        "person": "La persona de Home Assistant",
-                        "user_id": "El usuario de Home Assistant, para alguien sin persona"
+                        "person": "Una persona de Home Assistant - su presencia cuenta para la ocupación, y se encuentran los dispositivos de la app móvil de su usuario",
+                        "user_id": "El nombre de usuario de inicio de sesión si no hay un registro de Persona creado en Home Assistant - se encuentran sus dispositivos de la app móvil, pero sin Persona no hay presencia, así que nunca cuenta para la ocupación",
+                        "alias": "Para alguien que no es usuario de Home Assistant - solo se le contacta por correo electrónico, teléfono u otros destinos, sin dispositivos de la app móvil ni presencia"
                     }
                 },
                 "details": {
                     "title": "{recipient}",
-                    "description": "Cómo contactar con {recipient}.",
+                    "description": "Cómo contactar con {recipient}.\n\n[Más información]({learn_more_url})",
                     "data": {
                         "alias": "Alias",
                         "email": "Correo electrónico",
@@ -816,7 +818,8 @@
                         "mobile_discovery": "Descubrimiento de dispositivos móviles",
                         "mobile_devices": "Dispositivos móviles",
                         "target": "Destinos",
-                        "custom_target": "Destinos personalizados"
+                        "custom_target": "Destinos personalizados",
+                        "delivery": "Cambiar un envío"
                     },
                     "data_description": {
                         "alias": "Nombre usado para este destinatario en lugar del de la persona",
@@ -826,22 +829,8 @@
                         "mobile_discovery": "Usar los dispositivos de la app móvil registrados nuevamente para este destinatario",
                         "mobile_devices": "Los dispositivos de la app móvil a notificar - los no marcados se omiten",
                         "target": "Entidades, dispositivos, áreas, plantas o etiquetas a notificar como este destinatario, como en la acción supernotify.notify",
-                        "custom_target": "Destinos que el selector no ofrece, uno por línea - un correo electrónico, un número de teléfono o categoría:valor, como telegram_chat_id:12345"
-                    }
-                },
-                "menu": {
-                    "title": "{recipient}",
-                    "description": "Cambia cómo trata un envío a {recipient}, o guarda.",
-                    "menu_options": {
-                        "delivery": "Cambiar un envío",
-                        "save": "Guardar"
-                    }
-                },
-                "delivery": {
-                    "title": "{recipient}",
-                    "description": "El envío a cambiar para este destinatario.",
-                    "data": {
-                        "delivery": "Envío"
+                        "custom_target": "Destinos que el selector no ofrece, uno por línea - un correo electrónico, un número de teléfono o categoría:valor, como telegram_chat_id:12345",
+                        "delivery": "Elige uno para indicar si se usa para este destinatario, destinos y datos adicionales, y vuelve aquí. Déjalo vacío para guardar"
                     }
                 },
                 "delivery_override": {
@@ -862,7 +851,7 @@
                 }
             },
             "error": {
-                "person_or_user_required": "Elige una persona o un usuario",
+                "person_or_user_required": "Elige una persona o un usuario, o indica un nombre",
                 "invalid_custom_target": "Un destino personalizado no es un correo electrónico, un número de teléfono ni categoría:valor",
                 "invalid_extra_data": "Los datos adicionales no pueden usar una clave reservada por Supernotify"
             },

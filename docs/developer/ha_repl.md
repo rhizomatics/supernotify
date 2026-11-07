@@ -39,6 +39,8 @@ The whole of it is also available as a single Markdown file for AI agents, at [l
 3. For live and exec modes, install the `ha_repl_server` custom component on the Home Assistant instance, at the same version as the `ha-repl` client. API mode works without it.
 4. Run `ha-repl trust` in the repository root.
 
+For a development instance with `ha_repl_server` already installed, start the [Preview Environment](preview.md).
+
 The last step is needed because the plugin is code that runs at the start of every session, so `ha-repl` ignores a repository's `.ha-repl` directory until it has been approved. The approval is for the files as they were at the time, so it has to be given again whenever the plugin changes, including after pulling a change to it. Until then `ha-repl` starts with a warning and without the Supernotify variables.
 
 ## What the Plugin Offers

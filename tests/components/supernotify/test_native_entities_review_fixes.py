@@ -360,7 +360,7 @@ async def test_recipient_entities_have_config_entry_device_and_names(hass: HomeA
         assert reg_entry.device_id is not None
         assert reg_entry.unique_id == "recipient_joe"
 
-    assert hass.states.get("switch.supernotify_recipient_joe").name == "Supernotify Recipient Joe Bloggs Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_recipient_joe").name == "Joe Bloggs Enabled"  # type: ignore[union-attr]
     assert hass.states.get("binary_sensor.supernotify_recipient_joe").name == "Supernotify Recipient Joe Bloggs"  # type: ignore[union-attr]
 
 

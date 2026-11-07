@@ -5,11 +5,18 @@
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
 # v2.18.0
+
+This release continues the move of configuration from YAML into the configuration web page - now for *Recipients*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users.
+
 ## 🚨 Breaking changes
 - *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
 
 ## ✨ Enhancements
 - *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery enabled, targets and extra data. No YAML needed for default e-mail targets
+- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. Each recipient's notify entity and switch are on a device of their own, under their recipient, rather than the Supernotify device - entity ids are unchanged
+
+## 📝 Other changes
+- *Development*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
 
 # v2.17.2
 ## 🚨 Breaking changes

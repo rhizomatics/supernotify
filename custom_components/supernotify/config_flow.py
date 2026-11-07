@@ -103,7 +103,7 @@ from .const import (
     SUBENTRY_TYPE_RECIPIENT,
 )
 from .hass_api import HomeAssistantAPI
-from .people import PeopleRegistry
+from .people import PeopleRegistry, recipient_key
 from .schema import DATA_SCHEMA, RECIPIENT_SCHEMA, OutcomeSelection
 from .target import Target
 
@@ -115,6 +115,7 @@ _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_
 # link to the manifest's one documentation URL
 ARCHIVE_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/"
 DUPE_CHECK_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/"
+PEOPLE_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/people/"
 
 # The Delivery Control choices meaning "not set", which leave deliveries with their transport's own
 # default - never stored, the option is left out instead
@@ -564,19 +565,30 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         self._recipient: dict[str, Any] = {}
         # the delivery picked in async_step_delivery, for async_step_delivery_override
         self._delivery: str = ""
+        # the new recipient's subentry unique_id, from recipient_key()
+        self._key: str | None = None
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        """Who the recipient is - a person, or a user with no person"""
+        """Who the recipient is - a person, a user with no person, or by name, someone who isn't a
+        Home Assistant user. Those discovered are recipients already, so this is mostly for the last"""
         errors: dict[str, str] = {}
         if user_input is not None:
-            key = user_input.get(CONF_PERSON) or user_input.get(CONF_USER_ID)
+            key = recipient_key(user_input)
             if not key:
                 errors["base"] = "person_or_user_required"
             elif any(s.unique_id == key for s in self._get_entry().subentries.values()):
                 return self.async_abort(reason="already_configured")
             else:
+                self._key = key
                 self._recipient = {k: v for k, v in user_input.items() if v}
-                self._recipient[CONF_MOBILE_DISCOVERY] = self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True)
+                # a person's own user, which Home Assistant keeps on the person
+                if (person := self._recipient.get(CONF_PERSON)) and CONF_USER_ID not in self._recipient:
+                    state = self.hass.states.get(person)
+                    if state and isinstance(user_id := state.attributes.get(CONF_USER_ID), str):
+                        self._recipient[CONF_USER_ID] = user_id
+                # only a Home Assistant user has mobile app devices
+                has_user = CONF_PERSON in self._recipient or CONF_USER_ID in self._recipient
+                self._recipient[CONF_MOBILE_DISCOVERY] = has_user and self._mobile_discovery_default()
                 return await self.async_step_details()
         users = await HomeAssistantAPI(self.hass).async_real_user_ids()
         schema = vol.Schema({
@@ -584,8 +596,11 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_USER_ID): SelectSelector(
                 SelectSelectorConfig(options=[SelectOptionDict(value=k, label=v) for k, v in users.items()])
             ),
+            vol.Optional(CONF_ALIAS): TextSelector(),
         })
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=schema, errors=errors, description_placeholders={"learn_more_url": PEOPLE_DOCS_URL}
+        )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         self._recipient = dict(self._get_reconfigure_subentry().data)
@@ -601,10 +616,12 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             except vol.Invalid:
                 errors[ATTR_CUSTOM_TARGET] = "invalid_custom_target"
             else:
+                # the alias is who someone that isn't a Home Assistant user is, so can't be left blank
+                has_user = CONF_PERSON in self._recipient or CONF_USER_ID in self._recipient
                 for key in (CONF_ALIAS, CONF_EMAIL, CONF_PHONE_NUMBER):
                     if user_input.get(key):
                         self._recipient[key] = user_input[key]
-                    else:
+                    elif key != CONF_ALIAS or has_user:
                         self._recipient.pop(key, None)
                 self._recipient[CONF_ENABLED] = user_input[CONF_ENABLED]
                 self._recipient[CONF_MOBILE_DISCOVERY] = user_input[CONF_MOBILE_DISCOVERY]
@@ -616,7 +633,11 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                 self._recipient[CONF_MOBILE_DEVICES] = [
                     {CONF_MOBILE_APP_ID: d["value"], CONF_ENABLED: d["value"] in selected} for d in devices
                 ]
-                return await self.async_step_menu()
+                # a delivery picked to change for this recipient comes back here once done
+                if delivery := user_input.get(CONF_DELIVERY):
+                    self._delivery = delivery
+                    return await self.async_step_delivery_override()
+                return await self.async_step_save()
 
         selected_target, custom_target = target_to_fields(self._recipient.get(CONF_TARGET))
         disabled = {
@@ -632,12 +653,14 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_TARGET): TargetSelector(),
             vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
         })
+        if delivery_names := self._delivery_names():
+            schema = schema.extend({vol.Optional(CONF_DELIVERY): SelectSelector(SelectSelectorConfig(options=delivery_names))})
         suggested = {
             CONF_ALIAS: self._recipient.get(CONF_ALIAS),
             CONF_EMAIL: self._recipient.get(CONF_EMAIL),
             CONF_PHONE_NUMBER: self._recipient.get(CONF_PHONE_NUMBER),
             CONF_ENABLED: self._recipient.get(CONF_ENABLED, True),
-            CONF_MOBILE_DISCOVERY: self._recipient.get(CONF_MOBILE_DISCOVERY, True),
+            CONF_MOBILE_DISCOVERY: self._recipient.get(CONF_MOBILE_DISCOVERY, self._mobile_discovery_default()),
             CONF_MOBILE_DEVICES: [d["value"] for d in devices if d["value"] not in disabled],
             CONF_TARGET: selected_target or None,
             ATTR_CUSTOM_TARGET: custom_target or None,
@@ -646,20 +669,8 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             step_id="details",
             data_schema=self.add_suggested_values_to_schema(schema, suggested),
             errors=errors,
-            description_placeholders={"recipient": self._title()},
+            description_placeholders={"recipient": self._title(), "learn_more_url": PEOPLE_DOCS_URL},
         )
-
-    async def async_step_menu(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        options = ["delivery", "save"] if self._delivery_names() else ["save"]
-        return self.async_show_menu(step_id="menu", menu_options=options, description_placeholders={"recipient": self._title()})
-
-    async def async_step_delivery(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        """Pick a delivery to change for this recipient"""
-        if user_input is not None:
-            self._delivery = user_input[CONF_DELIVERY]
-            return await self.async_step_delivery_override()
-        schema = vol.Schema({vol.Required(CONF_DELIVERY): SelectSelector(SelectSelectorConfig(options=self._delivery_names()))})
-        return self.async_show_form(step_id="delivery", data_schema=schema)
 
     async def async_step_delivery_override(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         """Whether the delivery is used for this recipient, extra targets, and extra data for it"""
@@ -687,7 +698,7 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                 else:
                     overrides.pop(self._delivery, None)
                 self._recipient[CONF_DELIVERY] = overrides
-                return await self.async_step_menu()
+                return await self.async_step_details()
 
         selected_target, custom_target = target_to_fields(current.get(CONF_TARGET))
         enabled = current.get(CONF_ENABLED)
@@ -723,8 +734,12 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         return self.async_create_entry(
             title=self._title(),
             data=self._recipient,
-            unique_id=self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID),
+            unique_id=self._key,
         )
+
+    def _mobile_discovery_default(self) -> bool:
+        """The integration's own setting, which a recipient without one of their own follows"""
+        return bool(self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True))
 
     def _title(self) -> str:
         """The alias, else the person's name, else the user's"""
@@ -741,11 +756,13 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         hass_api.build_mobile_app_cache()
         registry = PeopleRegistry([], hass_api)
         user_id = self._recipient.get(CONF_USER_ID)
-        discovered = (
-            registry.mobile_devices_for_user(user_id)
-            if user_id
-            else registry.mobile_devices_for_person(self._recipient.get(CONF_PERSON, ""))
-        )
+        person = self._recipient.get(CONF_PERSON)
+        if user_id:
+            discovered = registry.mobile_devices_for_user(user_id)
+        elif person:
+            discovered = registry.mobile_devices_for_person(person)
+        else:
+            discovered = []
         options = {
             d.mobile_app_id: SelectOptionDict(value=d.mobile_app_id, label=d.device_name or d.mobile_app_id)
             for d in discovered

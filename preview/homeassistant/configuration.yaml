@@ -1,0 +1,19 @@
+# Preview Home Assistant - everything else in this folder is created by Home Assistant and not
+# committed. Supernotify itself is added from Settings -> Devices & services, as a user would, or
+# by seed.py along with the rest of the preview house, see docs/developer/preview.md.
+default_config:
+
+# entities to notify and target - notify, media players, cameras, sirens etc, as in the
+# integration tests' preview_house
+demo:
+
+# Supernotify YAML, empty to start with
+supernotify: !include supernotify.yaml
+
+# live and exec modes of ha-repl, installed by compose.yaml's ha-repl-server service
+ha_repl_server:
+
+logger:
+  default: warning
+  logs:
+    custom_components.supernotify: debug
