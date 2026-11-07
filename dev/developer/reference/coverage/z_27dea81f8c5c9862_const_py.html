@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">245 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">245<span class="text"> run</span></button>
+            <span class="text">248 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">248<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 16:12 +0000
+            created at 2026-11-07 16:35 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -489,6 +489,15 @@
     <p class="run"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t"><span class="nam">CONF_DURATION</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;duration&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t"><span class="nam">OPTIONS_CHIME_DOMAINS</span> <span class="op">=</span> <span class="op">[</span><span class="str">&quot;media_player&quot;</span><span class="op">,</span> <span class="str">&quot;switch&quot;</span><span class="op">,</span> <span class="str">&quot;script&quot;</span><span class="op">,</span> <span class="str">&quot;rest_command&quot;</span><span class="op">,</span> <span class="str">&quot;siren&quot;</span><span class="op">,</span> <span class="str">&quot;alexa_devices&quot;</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t410" href="#t410">410</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t411" href="#t411">411</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t412" href="#t412">412</a></span><span class="t"><span class="com"># transport names that are acronyms, shown in capitals</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t413" href="#t413">413</a></span><span class="t"><span class="nam">_TRANSPORT_ACRONYMS</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">str</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="str">&quot;tts&quot;</span><span class="op">:</span> <span class="str">&quot;TTS&quot;</span><span class="op">,</span> <span class="str">&quot;sms&quot;</span><span class="op">:</span> <span class="str">&quot;SMS&quot;</span><span class="op">,</span> <span class="str">&quot;mqtt&quot;</span><span class="op">:</span> <span class="str">&quot;MQTT&quot;</span><span class="op">,</span> <span class="str">&quot;html5&quot;</span><span class="op">:</span> <span class="str">&quot;HTML5&quot;</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t414" href="#t414">414</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t415" href="#t415">415</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t416" href="#t416">416</a></span><span class="t"><span class="key">def</span> <span class="nam">transport_display_name</span><span class="op">(</span><span class="nam">name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t417" href="#t417">417</a></span><span class="t">    <span class="str">&quot;&quot;&quot;A transport&#x27;s name to show, such as &quot;Alexa Media Player&quot; for alexa_media_player&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t418" href="#t418">418</a></span><span class="t">    <span class="key">return</span> <span class="str">&quot; &quot;</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">_TRANSPORT_ACRONYMS</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">word</span><span class="op">,</span> <span class="nam">word</span><span class="op">.</span><span class="nam">capitalize</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="key">for</span> <span class="nam">word</span> <span class="key">in</span> <span class="nam">name</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">&quot;_&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -498,7 +507,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 16:12 +0000
+            created at 2026-11-07 16:35 +0000
         </p>
     </div>
 </footer>

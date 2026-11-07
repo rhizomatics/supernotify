@@ -12,7 +12,7 @@ Transports are set up in the integration, not YAML. Go to *Settings → Devices 
 
 A transport's form has:
 
-- **Enabled**, to switch it off without removing it, and **Alias**
+- **Enabled**, to switch it off without removing it
 - **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
 - **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
   - **Debug**, to wait for the result of each action its deliveries call, and record it
@@ -56,7 +56,7 @@ transports:
 
 ## Entities
 
-Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, on a service device of its own, listed under its transport in the integration along with its deliveries' switches, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
+Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, on a service device of its own, named after the transport, or by its `alias` if it had one in YAML, and renamed like any other device, listed under its transport in the integration along with its deliveries' switches, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
 
 ### Table of Options
 
