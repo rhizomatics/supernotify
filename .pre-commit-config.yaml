@@ -39,7 +39,7 @@ repos:
           - --explicit-package-bases
           - --show-error-codes
           - --show-error-context
-        exclude: docgen/.*\.py
+        exclude: ^(docgen|preview)/.*\.py$
         additional_dependencies:
           - homeassistant-stubs>=2026.10.0
           - pytest-homeassistant-custom-component>=0.13.356

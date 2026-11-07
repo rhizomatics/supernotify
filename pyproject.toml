@@ -148,6 +148,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
+    "preview",
 ]
 
 [tool.ruff.lint]
