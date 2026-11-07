@@ -56,7 +56,7 @@ transports:
 
 ## Entities
 
-Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, listed under its transport in the integration, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
+Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, on a service device of its own, listed under its transport in the integration along with its deliveries' switches, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
 
 ### Table of Options
 
