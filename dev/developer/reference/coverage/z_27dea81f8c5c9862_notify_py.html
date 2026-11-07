@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">99 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">96<span class="text"> run</span></button>
+            <span class="text">100 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">97<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">3<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">4<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_options_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 09:10 +0000
+            created at 2026-11-07 10:29 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -330,16 +330,20 @@
     <p class="run run2"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">        <span class="nam">hass</span><span class="op">,</span> <span class="nam">entry</span><span class="op">.</span><span class="nam">entry_id</span><span class="op">,</span> <span class="nam">engine</span><span class="op">,</span> <span class="nam">reserved</span><span class="op">=</span><span class="nam">slugify</span><span class="op">(</span><span class="nam">entry</span><span class="op">.</span><span class="nam">data</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">CONF_NAME</span><span class="op">)</span> <span class="key">or</span> <span class="nam">NOTIFY_SERVICE_NAME</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="nam">async_add_entities</span><span class="op">(</span><span class="nam">exposed</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">    <span class="nam">engine</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">people_registry</span><span class="op">.</span><span class="nam">expose_notify_entities</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">        <span class="nam">entry</span><span class="op">.</span><span class="nam">entry_id</span><span class="op">,</span> <span class="nam">async_add_entities</span><span class="op">,</span> <span class="nam">cast</span><span class="op">(</span><span class="nam">NotifyEntityPlatform</span><span class="op">,</span> <span class="nam">engine</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t254" href="#t254">254</a></span><span class="t">    <span class="nam">async_register_entity_actions</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t255" href="#t255">255</a></span><span class="t">        <span class="nam">hass</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">        <span class="nam">entry</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t">        <span class="nam">engine</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t">        <span class="op">{</span><span class="fst">f&quot;</span><span class="fst">recipient_</span><span class="op">{</span><span class="nam">r</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">:</span> <span class="nam">r</span><span class="op">.</span><span class="nam">entity_id</span> <span class="key">for</span> <span class="nam">r</span> <span class="key">in</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">people_registry</span><span class="op">.</span><span class="nam">people</span><span class="op">.</span><span class="nam">values</span><span class="op">(</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">        <span class="op">|</span> <span class="op">{</span><span class="nam">e</span><span class="op">.</span><span class="nam">entity_id</span><span class="op">.</span><span class="nam">partition</span><span class="op">(</span><span class="str">&quot;.&quot;</span><span class="op">)</span><span class="op">[</span><span class="num">2</span><span class="op">]</span><span class="op">:</span> <span class="nam">e</span><span class="op">.</span><span class="nam">entity_id</span> <span class="key">for</span> <span class="nam">e</span> <span class="key">in</span> <span class="nam">exposed</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t260" href="#t260">260</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">    <span class="nam">people_registry</span> <span class="op">=</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">people_registry</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">    <span class="nam">people_registry</span><span class="op">.</span><span class="nam">expose_notify_entities</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">        <span class="nam">entry</span><span class="op">.</span><span class="nam">entry_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t254" href="#t254">254</a></span><span class="t">        <span class="nam">async_add_entities</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t255" href="#t255">255</a></span><span class="t">        <span class="nam">cast</span><span class="op">(</span><span class="nam">NotifyEntityPlatform</span><span class="op">,</span> <span class="nam">engine</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">        <span class="nam">people_registry</span><span class="op">.</span><span class="nam">subentry_ids</span><span class="op">(</span><span class="nam">entry</span><span class="op">.</span><span class="nam">subentries</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t">    <span class="nam">async_register_entity_actions</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">        <span class="nam">hass</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t260" href="#t260">260</a></span><span class="t">        <span class="nam">entry</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t261" href="#t261">261</a></span><span class="t">        <span class="nam">engine</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t262" href="#t262">262</a></span><span class="t">        <span class="op">{</span><span class="fst">f&quot;</span><span class="fst">recipient_</span><span class="op">{</span><span class="nam">r</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">:</span> <span class="nam">r</span><span class="op">.</span><span class="nam">entity_id</span> <span class="key">for</span> <span class="nam">r</span> <span class="key">in</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">people_registry</span><span class="op">.</span><span class="nam">people</span><span class="op">.</span><span class="nam">values</span><span class="op">(</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t263" href="#t263">263</a></span><span class="t">        <span class="op">|</span> <span class="op">{</span><span class="nam">e</span><span class="op">.</span><span class="nam">entity_id</span><span class="op">.</span><span class="nam">partition</span><span class="op">(</span><span class="str">&quot;.&quot;</span><span class="op">)</span><span class="op">[</span><span class="num">2</span><span class="op">]</span><span class="op">:</span> <span class="nam">e</span><span class="op">.</span><span class="nam">entity_id</span> <span class="key">for</span> <span class="nam">e</span> <span class="key">in</span> <span class="nam">exposed</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t264" href="#t264">264</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -349,7 +353,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_options_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 09:10 +0000
+            created at 2026-11-07 10:29 +0000
         </p>
     </div>
 </footer>
