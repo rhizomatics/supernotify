@@ -47,7 +47,7 @@
                 "name": "Scenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Ingeschakeld"
+                "name": "Ontvanger {recipient} ingeschakeld"
             },
             "delivery_enabled": {
                 "name": "Bezorging {delivery} ingeschakeld"
@@ -777,13 +777,6 @@
                 "delivery": "Bezorging",
                 "transport": "Transport"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "Zoals de bezorging is ingesteld",
-                "enabled": "Ingeschakeld",
-                "disabled": "Uitgeschakeld"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "Detectie van mobiele apparaten",
                         "mobile_devices": "Mobiele apparaten",
                         "target": "Doelen",
-                        "custom_target": "Aangepaste doelen",
-                        "delivery": "Een bezorging wijzigen"
+                        "custom_target": "Aangepaste doelen"
                     },
                     "data_description": {
                         "alias": "Naam voor deze ontvanger in plaats van die van de persoon",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "Mobiele-app-apparaten gebruiken die nieuw voor deze ontvanger zijn geregistreerd",
                         "mobile_devices": "De mobiele-app-apparaten om te melden - niet aangevinkte worden overgeslagen",
                         "target": "Entiteiten, apparaten, ruimtes, verdiepingen of labels om als deze ontvanger te melden, zoals in de actie supernotify.notify",
-                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345",
-                        "delivery": "Kies er een om in te stellen of deze voor deze ontvanger wordt gebruikt, extra doelen en gegevens, en kom dan hier terug. Leeg laten om op te slaan"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{delivery} voor {recipient}",
-                    "description": "Hoe {delivery} {recipient} behandelt. Laat alles leeg om de wijziging te verwijderen.",
-                    "data": {
-                        "enabled": "Ingeschakeld",
-                        "target": "Doelen",
-                        "custom_target": "Aangepaste doelen",
-                        "extra_data": "Extra gegevens"
+                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345. De categorieën zijn: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "Of deze bezorging voor deze ontvanger wordt gebruikt, of aan de bezorging wordt overgelaten",
-                        "target": "Doelen die alleen deze bezorging voor deze ontvanger gebruikt",
-                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345",
-                        "extra_data": "Gegevens toegevoegd aan wat deze bezorging voor deze ontvanger verstuurt"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "Geavanceerd - Leveringsaanpassingen",
+                            "data": {
+                                "delivery": "Leveringen"
+                            },
+                            "data_description": {
+                                "delivery": "Hoe elke levering deze ontvanger behandelt, per leveringsnaam, met enabled, target en data. De leveringen zijn: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "Kies een persoon of een gebruiker, of geef een naam",
-                "invalid_custom_target": "Een aangepast doel is geen e-mailadres, telefoonnummer of categorie:waarde",
-                "invalid_extra_data": "Extra gegevens kunnen geen door Supernotify gereserveerde sleutel gebruiken"
+                "invalid_custom_target": "Een aangepast doel is geen e-mailadres, telefoonnummer of categorie:waarde met een geldige waarde voor de categorie",
+                "invalid_delivery": "Elke wijziging heeft een leveringsnaam nodig, en alleen enabled, target en data, waarbij data geen door Supernotify gereserveerde sleutel mag gebruiken"
             },
             "abort": {
                 "already_configured": "Deze persoon of gebruiker is al een ontvanger"

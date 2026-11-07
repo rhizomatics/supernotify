@@ -421,6 +421,8 @@ TRANSPORT_SCHEMA = vol.All(
 # OPTION_OCCUPANCY_EXCLUDE="exclude"
 
 
+# how each delivery, by name, treats one recipient
+RECIPIENT_DELIVERY_SCHEMA = vol.Schema({cv.string: DELIVERY_CUSTOMIZE_SCHEMA})
 RECIPIENT_SCHEMA = vol.All(
     vol.Schema({
         vol.Optional(CONF_PERSON): cv.entity_id,
@@ -433,7 +435,7 @@ RECIPIENT_SCHEMA = vol.All(
         vol.Optional(CONF_PHONE_NUMBER): cv.string,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
-        vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_CUSTOMIZE_SCHEMA},
+        vol.Optional(CONF_DELIVERY, default=dict): RECIPIENT_DELIVERY_SCHEMA,
     }),
     # an alias alone is someone who isn't a Home Assistant user, reached by e-mail, phone or targets
     cv.has_at_least_one_key(CONF_PERSON, CONF_USER_ID, CONF_ALIAS),

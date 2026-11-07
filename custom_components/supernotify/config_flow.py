@@ -61,7 +61,6 @@ from .const import (
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     ATTR_EMAIL,
-    ATTR_EXTRA_DATA,
     ATTR_PHONE,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
@@ -72,7 +71,6 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
-    CONF_DATA,
     CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
@@ -101,13 +99,17 @@ from .const import (
     DEFAULT_INCLUSION_VALUES,
     OCCUPANCY_VALUES,
     SUBENTRY_TYPE_RECIPIENT,
+    TARGET_CATEGORY_VALUES,
 )
 from .hass_api import HomeAssistantAPI
 from .people import PeopleRegistry, recipient_key
-from .schema import DATA_SCHEMA, RECIPIENT_SCHEMA, OutcomeSelection
+from .schema import RECIPIENT_DELIVERY_SCHEMA, RECIPIENT_SCHEMA, OutcomeSelection
 from .target import Target
 
 _LOGGER = logging.getLogger(__name__)
+
+# the recipient form's collapsible section holding its delivery overrides
+SECTION_DELIVERY_OVERRIDES = "delivery_overrides"
 
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
 
@@ -506,17 +508,12 @@ _SELECTOR_TARGET_CATEGORIES = (ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_AREA_ID, ATT
 # Custom targets recognised without a "category:" prefix
 _PLAIN_CUSTOM_CATEGORIES = (ATTR_EMAIL, ATTR_PHONE)
 
-# Choices for a delivery override's enabled, "default" leaving it to the delivery
-OVERRIDE_DEFAULT = "default"
-OVERRIDE_ENABLED = "enabled"
-OVERRIDE_DISABLED = "disabled"
-_OVERRIDE_ENABLED_VALUES = {OVERRIDE_ENABLED: True, OVERRIDE_DISABLED: False}
-
 
 def target_from_fields(selected: dict[str, Any] | None, custom: list[str] | None) -> dict[str, list[str]]:
     """Build a recipient target from the target selector and custom target fields, the same
-    pair supernotify.notify offers. A custom target is a "category:value", or an e-mail address
-    or phone number on its own. Raises vol.Invalid for one that is neither."""
+    pair supernotify.notify offers. A custom target is a "category:value", whose value passes the
+    category's own check where it's one of TARGET_CATEGORY_VALUES, or an e-mail address or phone
+    number on its own. Raises vol.Invalid for one that is neither."""
     target: dict[str, list[str]] = {}
     for category, values in (selected or {}).items():
         if found := [str(v) for v in cv.ensure_list(values) if v]:
@@ -528,6 +525,9 @@ def target_from_fields(selected: dict[str, Any] | None, custom: list[str] | None
         prefix, sep, rest = value.partition(":")
         if sep and rest and not rest.startswith("/") and prefix == slugify(prefix):
             category, value = prefix, rest
+            # a custom category, for a generic transport, is left as it is
+            if category in TARGET_CATEGORY_VALUES and (check := getattr(Target, f"is_{category}", None)) and not check(value):
+                raise vol.Invalid(f"not a valid {category}: {value}")
         else:
             category = next(iter(Target([value]).targets))
             if category not in _PLAIN_CUSTOM_CATEGORIES:
@@ -563,8 +563,6 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         self._recipient: dict[str, Any] = {}
-        # the delivery picked in async_step_delivery, for async_step_delivery_override
-        self._delivery: str = ""
         # the new recipient's subentry unique_id, from recipient_key()
         self._key: str | None = None
 
@@ -615,7 +613,11 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                 target = target_from_fields(user_input.get(CONF_TARGET), user_input.get(ATTR_CUSTOM_TARGET))
             except vol.Invalid:
                 errors[ATTR_CUSTOM_TARGET] = "invalid_custom_target"
-            else:
+            try:
+                delivery = RECIPIENT_DELIVERY_SCHEMA(user_input.get(SECTION_DELIVERY_OVERRIDES, {}).get(CONF_DELIVERY) or {})
+            except vol.Invalid:
+                errors["base"] = "invalid_delivery"
+            if not errors:
                 # the alias is who someone that isn't a Home Assistant user is, so can't be left blank
                 has_user = CONF_PERSON in self._recipient or CONF_USER_ID in self._recipient
                 for key in (CONF_ALIAS, CONF_EMAIL, CONF_PHONE_NUMBER):
@@ -625,18 +627,15 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                         self._recipient.pop(key, None)
                 self._recipient[CONF_ENABLED] = user_input[CONF_ENABLED]
                 self._recipient[CONF_MOBILE_DISCOVERY] = user_input[CONF_MOBILE_DISCOVERY]
-                if target:
-                    self._recipient[CONF_TARGET] = target
-                else:
-                    self._recipient.pop(CONF_TARGET, None)
+                for key, value in ((CONF_TARGET, target), (CONF_DELIVERY, delivery)):
+                    if value:
+                        self._recipient[key] = value
+                    else:
+                        self._recipient.pop(key, None)
                 selected = user_input.get(CONF_MOBILE_DEVICES, [])
                 self._recipient[CONF_MOBILE_DEVICES] = [
                     {CONF_MOBILE_APP_ID: d["value"], CONF_ENABLED: d["value"] in selected} for d in devices
                 ]
-                # a delivery picked to change for this recipient comes back here once done
-                if delivery := user_input.get(CONF_DELIVERY):
-                    self._delivery = delivery
-                    return await self.async_step_delivery_override()
                 return await self.async_step_save()
 
         selected_target, custom_target = target_to_fields(self._recipient.get(CONF_TARGET))
@@ -652,9 +651,11 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_MOBILE_DEVICES): SelectSelector(SelectSelectorConfig(options=devices, multiple=True)),
             vol.Optional(CONF_TARGET): TargetSelector(),
             vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
+            vol.Optional(SECTION_DELIVERY_OVERRIDES, default=dict): section(
+                vol.Schema({vol.Optional(CONF_DELIVERY): ObjectSelector()}),
+                {"collapsed": not (self._recipient.get(CONF_DELIVERY) or errors.get("base"))},
+            ),
         })
-        if delivery_names := self._delivery_names():
-            schema = schema.extend({vol.Optional(CONF_DELIVERY): SelectSelector(SelectSelectorConfig(options=delivery_names))})
         suggested = {
             CONF_ALIAS: self._recipient.get(CONF_ALIAS),
             CONF_EMAIL: self._recipient.get(CONF_EMAIL),
@@ -664,65 +665,18 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             CONF_MOBILE_DEVICES: [d["value"] for d in devices if d["value"] not in disabled],
             CONF_TARGET: selected_target or None,
             ATTR_CUSTOM_TARGET: custom_target or None,
+            SECTION_DELIVERY_OVERRIDES: {CONF_DELIVERY: self._recipient.get(CONF_DELIVERY) or None},
         }
         return self.async_show_form(
             step_id="details",
             data_schema=self.add_suggested_values_to_schema(schema, suggested),
             errors=errors,
-            description_placeholders={"recipient": self._title(), "learn_more_url": PEOPLE_DOCS_URL},
-        )
-
-    async def async_step_delivery_override(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        """Whether the delivery is used for this recipient, extra targets, and extra data for it"""
-        overrides: dict[str, dict[str, Any]] = dict(self._recipient.get(CONF_DELIVERY) or {})
-        current: dict[str, Any] = overrides.get(self._delivery) or {}
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            override: dict[str, Any] = {}
-            if user_input[CONF_ENABLED] in _OVERRIDE_ENABLED_VALUES:
-                override[CONF_ENABLED] = _OVERRIDE_ENABLED_VALUES[user_input[CONF_ENABLED]]
-            try:
-                if target := target_from_fields(user_input.get(CONF_TARGET), user_input.get(ATTR_CUSTOM_TARGET)):
-                    override[CONF_TARGET] = target
-            except vol.Invalid:
-                errors[ATTR_CUSTOM_TARGET] = "invalid_custom_target"
-            try:
-                if extra_data := user_input.get(ATTR_EXTRA_DATA):
-                    override[CONF_DATA] = DATA_SCHEMA(extra_data)
-            except vol.Invalid:
-                errors[ATTR_EXTRA_DATA] = "invalid_extra_data"
-            if not errors:
-                # an override left with nothing set is removed
-                if override:
-                    overrides[self._delivery] = override
-                else:
-                    overrides.pop(self._delivery, None)
-                self._recipient[CONF_DELIVERY] = overrides
-                return await self.async_step_details()
-
-        selected_target, custom_target = target_to_fields(current.get(CONF_TARGET))
-        enabled = current.get(CONF_ENABLED)
-        schema = vol.Schema({
-            vol.Optional(CONF_ENABLED, default=OVERRIDE_DEFAULT): SelectSelector(
-                SelectSelectorConfig(
-                    options=[OVERRIDE_DEFAULT, OVERRIDE_ENABLED, OVERRIDE_DISABLED], translation_key="delivery_override_enabled"
-                )
-            ),
-            vol.Optional(CONF_TARGET): TargetSelector(),
-            vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
-            vol.Optional(ATTR_EXTRA_DATA): ObjectSelector(),
-        })
-        suggested = {
-            CONF_ENABLED: OVERRIDE_DEFAULT if enabled is None else (OVERRIDE_ENABLED if enabled else OVERRIDE_DISABLED),
-            CONF_TARGET: selected_target or None,
-            ATTR_CUSTOM_TARGET: custom_target or None,
-            ATTR_EXTRA_DATA: current.get(CONF_DATA),
-        }
-        return self.async_show_form(
-            step_id="delivery_override",
-            data_schema=self.add_suggested_values_to_schema(schema, suggested),
-            errors=errors,
-            description_placeholders={"recipient": self._title(), "delivery": self._delivery},
+            description_placeholders={
+                "recipient": self._title(),
+                "learn_more_url": PEOPLE_DOCS_URL,
+                "deliveries": ", ".join(self._delivery_names()) or "-",
+                "categories": ", ".join(TARGET_CATEGORY_VALUES),
+            },
         )
 
     async def async_step_save(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -775,7 +729,6 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         return list(options.values())
 
     def _delivery_names(self) -> list[str]:
-        """The running deliveries, and any this recipient already overrides"""
+        """The running deliveries, to list for the delivery field"""
         engine = getattr(self._get_entry(), "runtime_data", None)
-        names = set(engine.context.delivery_registry.deliveries) if engine is not None else set()
-        return sorted(names | set(self._recipient.get(CONF_DELIVERY) or {}))
+        return sorted(engine.context.delivery_registry.deliveries) if engine is not None else []

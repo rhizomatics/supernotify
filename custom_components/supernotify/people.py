@@ -51,7 +51,6 @@ from .const import (
     OCCUPANCY_ONLY_OUT,
     SUBENTRY_TYPE_RECIPIENT,
 )
-from .hass_api import ha_recipient_device_info
 from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 
 if TYPE_CHECKING:
@@ -89,8 +88,7 @@ class RecipientNotifyEntity(NotifyEntity):
     ) -> None:
         """Initialize the recipient notify entity."""
         self._attr_unique_id = unique_id
-        # the recipient's own device is named after them, and this is its main entity
-        self._attr_name = None
+        self._attr_name = recipient.alias or recipient.name
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self._recipient = recipient
         self._engine = engine
@@ -494,13 +492,13 @@ class PeopleRegistry:
         entry_id: str,
         async_add_entities: AddConfigEntryEntitiesCallback,
         service: NotifyEntityPlatform,
-        subentry_ids: dict[str, str] | None = None,
+        subentry_ids: dict[str, str],
     ) -> None:
-        """A notify entity for each recipient, on its own device, under its subentry where it has one"""
+        """A notify entity for each recipient, in its subentry where it has one, with no device, so
+        a recipient is only listed once in the integration, as its subentry"""
         for recipient in self.people.values():
             entity = RecipientNotifyEntity(f"{entry_id}_recipient_{recipient.name}", recipient, service)
-            entity._attr_device_info = ha_recipient_device_info(entry_id, recipient.name, recipient.alias or recipient.name)
-            async_add_entities([entity], config_subentry_id=(subentry_ids or {}).get(recipient.key or ""))
+            async_add_entities([entity], config_subentry_id=subentry_ids.get(recipient.key or ""))
 
     def subentry_ids(self, subentries: Mapping[str, ConfigSubentry]) -> dict[str, str]:
         """The id of each recipient subentry, by recipient_key() of its configuration"""

@@ -13,10 +13,12 @@ This release continues the move of configuration from YAML into the configuratio
 
 ## ✨ Enhancements
 - *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery enabled, targets and extra data. No YAML needed for default e-mail targets
-- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. Each recipient's notify entity and switch are on a device of their own, under their recipient, rather than the Supernotify device - entity ids are unchanged
+- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. From Home Assistant 2026.9, each recipient's notify entity and switch are on a device of their own, under the Supernotify device - entity ids are unchanged
 
 ## 📝 Other changes
-- *Development*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
+### Development
+- *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
+- *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tools` to see the list.
 
 # v2.17.2
 ## 🚨 Breaking changes

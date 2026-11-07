@@ -47,7 +47,7 @@
                 "name": "Scenariusz {scenario}"
             },
             "recipient_enabled": {
-                "name": "Włączone"
+                "name": "Odbiorca {recipient} włączony"
             },
             "delivery_enabled": {
                 "name": "Dostarczenie {delivery} włączone"
@@ -777,13 +777,6 @@
                 "delivery": "Dostarczenie",
                 "transport": "Transport"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "Tak jak ustawiono w dostarczeniu",
-                "enabled": "Włączone",
-                "disabled": "Wyłączone"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                         "mobile_devices": "Urządzenia mobilne",
                         "target": "Cele",
-                        "custom_target": "Własne cele",
-                        "delivery": "Zmień dostarczenie"
+                        "custom_target": "Własne cele"
                     },
                     "data_description": {
                         "alias": "Nazwa używana dla tego odbiorcy zamiast nazwy osoby",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "Używaj urządzeń aplikacji mobilnej nowo zarejestrowanych dla tego odbiorcy",
                         "mobile_devices": "Urządzenia aplikacji mobilnej do powiadamiania - niezaznaczone są pomijane",
                         "target": "Encje, urządzenia, obszary, piętra lub etykiety powiadamiane jako ten odbiorca, jak w akcji supernotify.notify",
-                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345",
-                        "delivery": "Wybierz jedno, aby ustawić, czy jest używane dla tego odbiorcy, dodatkowe cele i dane, a potem wróć tutaj. Zostaw puste, aby zapisać"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{delivery} dla {recipient}",
-                    "description": "Jak {delivery} traktuje {recipient}. Pozostaw wszystko puste, aby usunąć zmianę.",
-                    "data": {
-                        "enabled": "Włączony",
-                        "target": "Cele",
-                        "custom_target": "Własne cele",
-                        "extra_data": "Dodatkowe dane"
+                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345. Kategorie to: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "Czy to dostarczenie jest używane dla tego odbiorcy, czy pozostawione dostarczeniu",
-                        "target": "Cele używane dla tego odbiorcy tylko przez to dostarczenie",
-                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345",
-                        "extra_data": "Dane dodawane do tego, co to dostarczenie wysyła dla tego odbiorcy"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "Zaawansowane - Zmiany dostarczeń",
+                            "data": {
+                                "delivery": "Dostarczenia"
+                            },
+                            "data_description": {
+                                "delivery": "Jak każde dostarczenie traktuje tego odbiorcę, według nazwy dostarczenia, z enabled, target i data. Dostarczenia to: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "Wybierz osobę lub użytkownika albo podaj nazwę",
-                "invalid_custom_target": "Własny cel nie jest adresem e-mail, numerem telefonu ani kategorią:wartością",
-                "invalid_extra_data": "Dodatkowe dane nie mogą używać klucza zarezerwowanego przez Supernotify"
+                "invalid_custom_target": "Własny cel nie jest adresem e-mail, numerem telefonu ani kategorią:wartością z poprawną dla kategorii wartością",
+                "invalid_delivery": "Każda zmiana wymaga nazwy dostarczenia i tylko enabled, target i data, przy czym data nie może używać klucza zarezerwowanego przez Supernotify"
             },
             "abort": {
                 "already_configured": "Ta osoba lub użytkownik jest już odbiorcą"

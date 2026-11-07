@@ -47,7 +47,7 @@
                 "name": "Escenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Activado"
+                "name": "Destinatario {recipient} habilitado"
             },
             "delivery_enabled": {
                 "name": "Entrega {delivery} habilitada"
@@ -777,13 +777,6 @@
                 "delivery": "Entrega",
                 "transport": "Transporte"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "Según esté configurado el envío",
-                "enabled": "Activado",
-                "disabled": "Desactivado"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "Descubrimiento de dispositivos móviles",
                         "mobile_devices": "Dispositivos móviles",
                         "target": "Destinos",
-                        "custom_target": "Destinos personalizados",
-                        "delivery": "Cambiar un envío"
+                        "custom_target": "Destinos personalizados"
                     },
                     "data_description": {
                         "alias": "Nombre usado para este destinatario en lugar del de la persona",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "Usar los dispositivos de la app móvil registrados nuevamente para este destinatario",
                         "mobile_devices": "Los dispositivos de la app móvil a notificar - los no marcados se omiten",
                         "target": "Entidades, dispositivos, áreas, plantas o etiquetas a notificar como este destinatario, como en la acción supernotify.notify",
-                        "custom_target": "Destinos que el selector no ofrece, uno por línea - un correo electrónico, un número de teléfono o categoría:valor, como telegram_chat_id:12345",
-                        "delivery": "Elige uno para indicar si se usa para este destinatario, destinos y datos adicionales, y vuelve aquí. Déjalo vacío para guardar"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{delivery} para {recipient}",
-                    "description": "Cómo trata {delivery} a {recipient}. Deja todo sin definir para quitar el cambio.",
-                    "data": {
-                        "enabled": "Activado",
-                        "target": "Destinos",
-                        "custom_target": "Destinos personalizados",
-                        "extra_data": "Datos adicionales"
+                        "custom_target": "Destinos que el selector no ofrece, uno por línea - un correo electrónico, un número de teléfono o categoría:valor, como telegram_chat_id:12345. Las categorías son: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "Si este envío se usa para este destinatario, o se deja al envío",
-                        "target": "Destinos usados para este destinatario solo por este envío",
-                        "custom_target": "Destinos que el selector no ofrece, uno por línea - un correo electrónico, un número de teléfono o categoría:valor, como telegram_chat_id:12345",
-                        "extra_data": "Datos añadidos a lo que este envío manda para este destinatario"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "Avanzado - Cambios de entrega",
+                            "data": {
+                                "delivery": "Entregas"
+                            },
+                            "data_description": {
+                                "delivery": "Cómo trata cada entrega a este destinatario, por nombre de entrega, con enabled, target y data. Las entregas son: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "Elige una persona o un usuario, o indica un nombre",
-                "invalid_custom_target": "Un destino personalizado no es un correo electrónico, un número de teléfono ni categoría:valor",
-                "invalid_extra_data": "Los datos adicionales no pueden usar una clave reservada por Supernotify"
+                "invalid_custom_target": "Un destino personalizado no es un correo electrónico, un número de teléfono ni categoría:valor con un valor válido para su categoría",
+                "invalid_delivery": "Cada cambio necesita un nombre de entrega y solo enabled, target y data, y data no puede usar una clave reservada por Supernotify"
             },
             "abort": {
                 "already_configured": "Esta persona o usuario ya es un destinatario"

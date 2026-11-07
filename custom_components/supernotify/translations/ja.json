@@ -47,7 +47,7 @@
                 "name": "シナリオ {scenario}"
             },
             "recipient_enabled": {
-                "name": "有効"
+                "name": "受信者 {recipient} 有効"
             },
             "delivery_enabled": {
                 "name": "配信 {delivery} 有効"
@@ -777,13 +777,6 @@
                 "delivery": "配信",
                 "transport": "トランスポート"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "配信の設定どおり",
-                "enabled": "有効",
-                "disabled": "無効"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "モバイルデバイスの検出",
                         "mobile_devices": "モバイルデバイス",
                         "target": "ターゲット",
-                        "custom_target": "カスタムターゲット",
-                        "delivery": "配信を変更"
+                        "custom_target": "カスタムターゲット"
                     },
                     "data_description": {
                         "alias": "人物の名前の代わりにこの受信者に使う名前",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "この受信者に新たに登録されたモバイルアプリのデバイスを使用する",
                         "mobile_devices": "通知するモバイルアプリのデバイス - チェックのないものは除外されます",
                         "target": "この受信者として通知するエンティティ、デバイス、エリア、フロア、ラベル (supernotify.notify アクションと同様)",
-                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値",
-                        "delivery": "1 つ選んで、この受信者に使うかどうか、追加のターゲットとデータを設定し、ここに戻ります。保存するには空のままにします"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{recipient} の {delivery}",
-                    "description": "{delivery} での {recipient} の扱い。変更を取り消すには、すべて未設定のままにします。",
-                    "data": {
-                        "enabled": "有効",
-                        "target": "ターゲット",
-                        "custom_target": "カスタムターゲット",
-                        "extra_data": "追加データ"
+                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値。カテゴリ: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "この受信者にこの配信を使うか、配信の設定に任せるか",
-                        "target": "この配信でのみこの受信者に使うターゲット",
-                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値",
-                        "extra_data": "この配信がこの受信者に送る内容に追加するデータ"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "詳細 - 配信の上書き",
+                            "data": {
+                                "delivery": "配信"
+                            },
+                            "data_description": {
+                                "delivery": "各配信がこの受信者をどう扱うか、配信名ごとに enabled、target、data で指定します。配信: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "人物またはユーザーを選択するか、名前を入力してください",
-                "invalid_custom_target": "カスタムターゲットがメールアドレス、電話番号、カテゴリ:値 のいずれでもありません",
-                "invalid_extra_data": "追加データには Supernotify が予約しているキーは使えません"
+                "invalid_custom_target": "カスタムターゲットがメールアドレス、電話番号、またはカテゴリに有効な値を持つ カテゴリ:値 のいずれでもありません",
+                "invalid_delivery": "各変更には配信名が必要で、enabled、target、data のみ使用できます。data には Supernotify の予約キーは使えません"
             },
             "abort": {
                 "already_configured": "この人物またはユーザーはすでに受信者です"

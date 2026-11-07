@@ -41,7 +41,7 @@ from .const import (
     OVERRIDE_KIND_TRANSPORT,
     TRANSPORT_UNRECORDED_ATTRIBUTES,
 )
-from .hass_api import ha_device_info, ha_recipient_device_info
+from .hass_api import ha_device_info
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -87,12 +87,12 @@ async def async_setup_entry(
         for delivery in delivery_registry.deliveries.values()
     )
     async_add_entities(entities)
-    # each recipient's on its own device, under its subentry where it has one
+    # each recipient's in its subentry where it has one, with no device, so a recipient is only
+    # listed once in the integration, as its subentry
     subentry_ids = context.people_registry.subentry_ids(entry.subentries)
     for recipient in context.people_registry.people.values():
-        recipient_device = ha_recipient_device_info(entry.entry_id, recipient.name, recipient.alias or recipient.name)
         async_add_entities(
-            [SupernotifyRecipientSwitch(recipient, context.people_registry, recipient_device, switches)],
+            [SupernotifyRecipientSwitch(recipient, context.people_registry, switches)],
             config_subentry_id=subentry_ids.get(recipient.key or ""),
         )
 
@@ -134,7 +134,11 @@ class SupernotifyOverridableSwitch(SwitchEntity, RestoreEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, kind: str, target: Overridable, device_info: DeviceInfo, switches: dict[str, SupernotifyOverridableSwitch]
+        self,
+        kind: str,
+        target: Overridable,
+        device_info: DeviceInfo | None,
+        switches: dict[str, SupernotifyOverridableSwitch],
     ) -> None:
         self._target = target
         self._switches = switches
@@ -245,10 +249,10 @@ class SupernotifyRecipientSwitch(SupernotifyOverridableSwitch):
         self,
         recipient: Recipient,
         registry: PeopleRegistry,
-        device_info: DeviceInfo,
         switches: dict[str, SupernotifyOverridableSwitch],
     ) -> None:
-        super().__init__(OVERRIDE_KIND_RECIPIENT, recipient, device_info, switches)
+        super().__init__(OVERRIDE_KIND_RECIPIENT, recipient, None, switches)
+        self._attr_translation_placeholders = {"recipient": recipient.alias or recipient.name}
         self._recipient = recipient
         self._registry = registry
         # Setting entity_id directly is not preferred Home Assistant practice - see

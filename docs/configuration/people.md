@@ -140,7 +140,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-Each recipient has a device of their own, listed under their recipient in the integration, with their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+From Home Assistant 2026.9, each recipient has a device of their own, under the Supernotify device, with their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
 This lasts across restarts and reloads, until the recipient's **Enabled** setting is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](deliveries.md#overrides).
 
 !!! warning "Deprecated"

@@ -47,7 +47,7 @@
                 "name": "场景 {scenario}"
             },
             "recipient_enabled": {
-                "name": "已启用"
+                "name": "接收人 {recipient} 已启用"
             },
             "delivery_enabled": {
                 "name": "推送 {delivery} 已启用"
@@ -777,13 +777,6 @@
                 "delivery": "推送",
                 "transport": "传输"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "按投递的设置",
-                "enabled": "已启用",
-                "disabled": "已禁用"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "移动设备发现",
                         "mobile_devices": "移动设备",
                         "target": "目标",
-                        "custom_target": "自定义目标",
-                        "delivery": "更改投递"
+                        "custom_target": "自定义目标"
                     },
                     "data_description": {
                         "alias": "用于此接收者、代替人员名称的名称",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "使用为此接收者新注册的移动应用设备",
                         "mobile_devices": "要通知的移动应用设备 - 未勾选的会被排除",
                         "target": "作为此接收者通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作中相同",
-                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345",
-                        "delivery": "选择一个，设置是否用于此接收者、额外目标和额外数据，然后返回此处。留空即保存"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{recipient} 的 {delivery}",
-                    "description": "{delivery} 如何对待 {recipient}。全部留空即可移除此更改。",
-                    "data": {
-                        "enabled": "已启用",
-                        "target": "目标",
-                        "custom_target": "自定义目标",
-                        "extra_data": "附加数据"
+                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345。类别有：{categories}"
                     },
-                    "data_description": {
-                        "enabled": "此投递是否用于此接收者，或交由投递决定",
-                        "target": "仅此投递为此接收者使用的目标",
-                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345",
-                        "extra_data": "添加到此投递为此接收者发送内容中的数据"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "高级 - 投递覆盖",
+                            "data": {
+                                "delivery": "投递"
+                            },
+                            "data_description": {
+                                "delivery": "每个投递如何对待此接收人，按投递名称，使用 enabled、target 和 data。投递有：{deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "请选择人员或用户，或填写名称",
-                "invalid_custom_target": "自定义目标既不是电子邮件地址、电话号码，也不是 类别:值",
-                "invalid_extra_data": "附加数据不能使用 Supernotify 保留的键"
+                "invalid_custom_target": "自定义目标既不是电子邮件地址、电话号码，也不是值对其类别有效的 类别:值",
+                "invalid_delivery": "每项更改都需要投递名称，且只能有 enabled、target 和 data，data 不能使用 Supernotify 保留的键"
             },
             "abort": {
                 "already_configured": "此人员或用户已是接收者"

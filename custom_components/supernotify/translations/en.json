@@ -82,7 +82,7 @@
                 "name": "Scenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Enabled"
+                "name": "Recipient {recipient} Enabled"
             },
             "delivery_enabled": {
                 "name": "Delivery {delivery} Enabled"
@@ -812,13 +812,6 @@
                 "delivery": "Delivery",
                 "transport": "Transport"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "As the delivery is set",
-                "enabled": "Enabled",
-                "disabled": "Disabled"
-            }
         }
     },
     "config_subentries": {
@@ -853,8 +846,7 @@
                         "mobile_discovery": "Mobile Device Discovery",
                         "mobile_devices": "Mobile devices",
                         "target": "Targets",
-                        "custom_target": "Custom targets",
-                        "delivery": "Change a delivery"
+                        "custom_target": "Custom targets"
                     },
                     "data_description": {
                         "alias": "Name used for this recipient in place of the person's",
@@ -864,31 +856,25 @@
                         "mobile_discovery": "Use mobile app devices newly registered to this recipient",
                         "mobile_devices": "The mobile app devices to notify - unticked ones are left out",
                         "target": "Entities, devices, areas, floors or labels to notify as this recipient, as in the supernotify.notify action",
-                        "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345",
-                        "delivery": "Pick one to set whether it's used for this recipient, extra targets and extra data, then come back here. Leave empty to save"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{delivery} for {recipient}",
-                    "description": "How {delivery} treats {recipient}. Leave everything unset to remove the change.",
-                    "data": {
-                        "enabled": "Enabled",
-                        "target": "Targets",
-                        "custom_target": "Custom targets",
-                        "extra_data": "Extra data"
+                        "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345. The categories are: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "Whether this delivery is used for this recipient, or left to the delivery",
-                        "target": "Targets used for this recipient by this delivery only",
-                        "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345",
-                        "extra_data": "Data added to what this delivery sends for this recipient"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "Advanced - Delivery Overrides",
+                            "data": {
+                                "delivery": "Deliveries"
+                            },
+                            "data_description": {
+                                "delivery": "How each delivery treats this recipient, by delivery name, with any of enabled, target and data. The deliveries are: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "Choose a person or a user, or give a name",
-                "invalid_custom_target": "A custom target isn't an e-mail address, a phone number or category:value",
-                "invalid_extra_data": "Extra data can't use a key Supernotify reserves"
+                "invalid_custom_target": "A custom target isn't an e-mail address, a phone number, or category:value with a valid value for its category",
+                "invalid_delivery": "Each change needs a delivery name, and only enabled, target and data, where data can't use a key Supernotify reserves"
             },
             "abort": {
                 "already_configured": "This person or user is already a recipient"

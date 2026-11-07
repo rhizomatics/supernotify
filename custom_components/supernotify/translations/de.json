@@ -47,7 +47,7 @@
                 "name": "Szenario {scenario}"
             },
             "recipient_enabled": {
-                "name": "Aktiviert"
+                "name": "Empfänger {recipient} aktiviert"
             },
             "delivery_enabled": {
                 "name": "Lieferung {delivery} aktiviert"
@@ -777,13 +777,6 @@
                 "delivery": "Zustellung",
                 "transport": "Transport"
             }
-        },
-        "delivery_override_enabled": {
-            "options": {
-                "default": "Wie bei der Zustellung eingestellt",
-                "enabled": "Aktiviert",
-                "disabled": "Deaktiviert"
-            }
         }
     },
     "config_subentries": {
@@ -818,8 +811,7 @@
                         "mobile_discovery": "Mobilgeräte-Erkennung",
                         "mobile_devices": "Mobilgeräte",
                         "target": "Ziele",
-                        "custom_target": "Benutzerdefinierte Ziele",
-                        "delivery": "Eine Zustellung ändern"
+                        "custom_target": "Benutzerdefinierte Ziele"
                     },
                     "data_description": {
                         "alias": "Name, der für diesen Empfänger statt dem der Person verwendet wird",
@@ -829,31 +821,25 @@
                         "mobile_discovery": "Neu für diesen Empfänger registrierte Mobile-App-Geräte verwenden",
                         "mobile_devices": "Die zu benachrichtigenden Mobile-App-Geräte - nicht angehakte werden ausgelassen",
                         "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die als dieser Empfänger benachrichtigt werden, wie in der Aktion supernotify.notify",
-                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345",
-                        "delivery": "Eine wählen, um festzulegen, ob sie für diesen Empfänger verwendet wird, zusätzliche Ziele und Daten, dann hierher zurück. Leer lassen zum Speichern"
-                    }
-                },
-                "delivery_override": {
-                    "title": "{delivery} für {recipient}",
-                    "description": "Wie {delivery} {recipient} behandelt. Alles leer lassen, um die Änderung zu entfernen.",
-                    "data": {
-                        "enabled": "Aktiviert",
-                        "target": "Ziele",
-                        "custom_target": "Benutzerdefinierte Ziele",
-                        "extra_data": "Zusätzliche Daten"
+                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345. Die Kategorien sind: {categories}"
                     },
-                    "data_description": {
-                        "enabled": "Ob diese Zustellung für diesen Empfänger verwendet wird, oder der Zustellung überlassen",
-                        "target": "Ziele, die nur diese Zustellung für diesen Empfänger verwendet",
-                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345",
-                        "extra_data": "Daten, die dem hinzugefügt werden, was diese Zustellung für diesen Empfänger sendet"
+                    "sections": {
+                        "delivery_overrides": {
+                            "name": "Erweitert - Lieferungsänderungen",
+                            "data": {
+                                "delivery": "Lieferungen"
+                            },
+                            "data_description": {
+                                "delivery": "Wie jede Lieferung diesen Empfänger behandelt, nach Lieferungsname, mit enabled, target und data. Die Lieferungen sind: {deliveries}"
+                            }
+                        }
                     }
                 }
             },
             "error": {
                 "person_or_user_required": "Eine Person oder einen Benutzer wählen, oder einen Namen angeben",
-                "invalid_custom_target": "Ein benutzerdefiniertes Ziel ist weder eine E-Mail-Adresse, eine Telefonnummer noch Kategorie:Wert",
-                "invalid_extra_data": "Zusätzliche Daten dürfen keinen von Supernotify reservierten Schlüssel verwenden"
+                "invalid_custom_target": "Ein benutzerdefiniertes Ziel ist weder eine E-Mail-Adresse, eine Telefonnummer noch Kategorie:Wert mit einem für die Kategorie gültigen Wert",
+                "invalid_delivery": "Jede Änderung braucht einen Lieferungsnamen und nur enabled, target und data, wobei data keinen von Supernotify reservierten Schlüssel verwenden darf"
             },
             "abort": {
                 "already_configured": "Diese Person oder dieser Benutzer ist bereits ein Empfänger"

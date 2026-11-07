@@ -357,10 +357,13 @@ async def test_recipient_entities_have_config_entry_device_and_names(hass: HomeA
         reg_entry = registry.async_get(entity_id)
         assert reg_entry is not None
         assert reg_entry.config_entry_id == entry.entry_id
-        assert reg_entry.device_id is not None
         assert reg_entry.unique_id == "recipient_joe"
+    # the switch is in the recipient's subentry with no device, the deprecated binary_sensor
+    # stays on the Supernotify device
+    assert registry.async_get("switch.supernotify_recipient_joe").device_id is None  # type: ignore[union-attr]
+    assert registry.async_get("binary_sensor.supernotify_recipient_joe").device_id is not None  # type: ignore[union-attr]
 
-    assert hass.states.get("switch.supernotify_recipient_joe").name == "Joe Bloggs Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_recipient_joe").name == "Recipient Joe Bloggs Enabled"  # type: ignore[union-attr]
     assert hass.states.get("binary_sensor.supernotify_recipient_joe").name == "Supernotify Recipient Joe Bloggs"  # type: ignore[union-attr]
 
 
