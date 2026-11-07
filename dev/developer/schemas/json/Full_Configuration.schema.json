@@ -1242,6 +1242,10 @@
           "type": "integer",
           "minimum": 0,
           "default": 7
+        },
+        "deprecated_entities": {
+          "type": "boolean",
+          "default": true
         }
       },
       "additionalProperties": false,
