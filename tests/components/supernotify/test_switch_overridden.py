@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 import pytest
 from homeassistant.const import STATE_OFF
 from homeassistant.core import State
-from pytest_homeassistant_custom_component.common import mock_restore_cache_with_extra_data
 
 from custom_components.supernotify import DOMAIN
+from tests.components.supernotify.ha_testing import mock_restore_cache_with_extra_data
 
 from .test_switch import SWITCHES, _config, _setup, _turn
 

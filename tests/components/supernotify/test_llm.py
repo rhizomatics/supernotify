@@ -22,11 +22,10 @@ pytest.importorskip("homeassistant.components.llm")
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from pytest_homeassistant_custom_component.test_util.aiohttp import (  # type: ignore[import-untyped,unused-ignore]
+    from custom_components.supernotify.engine import SupernotifyEngine
+    from tests.components.supernotify.ha_testing import (
         AiohttpClientMocker,
     )
-
-    from custom_components.supernotify.engine import SupernotifyEngine
 
 ALICE_USER_ID = "alice-user-id"
 ACTION_TOOLS = {"supernotify__notify", "supernotify__snooze"}

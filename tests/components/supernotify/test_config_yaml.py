@@ -11,12 +11,12 @@ from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import FULL_CONFIG_SCHEMA, EnvelopeOutcome
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .hass_setup_lib import assert_clean_notification, assert_json_round_trip, setup_supernotify
 

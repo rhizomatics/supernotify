@@ -13,16 +13,16 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import (
-    async_mock_service,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
 
 from custom_components.supernotify import CONFIG_SCHEMA, DOMAIN, KEY_YAML_CONFIG
 from custom_components.supernotify.repairs import DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID
 from custom_components.supernotify.schema import as_raw_config
 from custom_components.supernotify.switch import OverrideStoredData
+from tests.components.supernotify.ha_testing import (
+    async_mock_service,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

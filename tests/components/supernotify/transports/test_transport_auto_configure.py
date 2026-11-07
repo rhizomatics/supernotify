@@ -43,7 +43,6 @@ from typing import TYPE_CHECKING
 import pytest
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -77,6 +76,7 @@ from custom_components.supernotify.transports.alexa_devices import (
 from custom_components.supernotify.transports.chime import OPTION_CHIME_ALIASES, STANDARD_DELIVERY_SIREN_ALL
 from custom_components.supernotify.transports.discord import DiscordTransport
 from custom_components.supernotify.transports.kodi import KodiTransport
+from tests.components.supernotify.ha_testing import MockConfigEntry
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:

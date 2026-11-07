@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from homeassistant.core import Event, SupportsResponse
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.compat import vol
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     import pathlib

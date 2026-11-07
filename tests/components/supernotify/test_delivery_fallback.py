@@ -10,9 +10,9 @@ import pytest
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.supernotify import DOMAIN
+from tests.components.supernotify.ha_testing import async_mock_service
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

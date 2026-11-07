@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     import pathlib
 
     from homeassistant.core import HomeAssistant, ServiceCall
-    from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
     from conftest import TestImage
+    from tests.components.supernotify.ha_testing import WebSocketGenerator
 
 
 async def test_notification_fires_from_event_triggered_automation(

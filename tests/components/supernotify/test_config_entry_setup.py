@@ -13,13 +13,13 @@ from homeassistant.core import Context, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.actions import lift_legacy_nested_data
 from custom_components.supernotify.const import CONF_MEDIA_PATH, EVENT_NOTIFICATION
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from pathlib import Path

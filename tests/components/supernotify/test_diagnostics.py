@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
-
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_NONE,
@@ -17,6 +15,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.diagnostics import async_get_config_entry_diagnostics
 from custom_components.supernotify.engine import SupernotifyEngine
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from unittest.mock import Mock

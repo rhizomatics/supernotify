@@ -11,7 +11,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.config_flow import target_from_fields, target_to_fields
@@ -19,6 +18,7 @@ from custom_components.supernotify.const import SUBENTRY_TYPE_RECIPIENT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.repairs import YAML_RECIPIENTS_ISSUE_ID
 from custom_components.supernotify.schema import vol
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .hass_setup_lib import register_mobile_app, serialize_form
 

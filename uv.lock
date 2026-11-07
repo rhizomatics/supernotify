@@ -18,7 +18,8 @@ certifi = false
 homeassistant = false
 homeassistant-repl = false
 homeassistant-stubs = false
-pytest-homeassistant-custom-component = false
+pytest-homeassistant = false
+pytest-homeassistant-custom-component = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 uv = false
 

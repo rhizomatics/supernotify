@@ -20,7 +20,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import (
@@ -36,6 +35,7 @@ from custom_components.supernotify.hass_api import (
 from custom_components.supernotify.model import ConditionVariables, SelectionRule
 from custom_components.supernotify.target import Target
 from custom_components.supernotify.transports.media_player import MediaPlayerTransport
+from tests.components.supernotify.ha_testing import async_fire_time_changed
 from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
 
 from .hass_setup_lib import register_device, register_mobile_app
@@ -997,7 +997,8 @@ async def test_translations_in_configured_language(hass: HomeAssistant) -> None:
 def test_smtp_recipients_maps_addresses_to_notify_entities(hass: HomeAssistant) -> None:
     from homeassistant.config_entries import ConfigSubentryData
     from homeassistant.helpers import entity_registry as er
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from tests.components.supernotify.ha_testing import MockConfigEntry
 
     entry = MockConfigEntry(
         domain="smtp",

@@ -106,7 +106,7 @@ environments = [
 ]
 
 exclude-newer = "5 days"
-exclude-newer-package = { certifi=false, homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant-custom-component=false,aiohttp=false,uv=false }
+exclude-newer-package = { certifi=false, homeassistant_repl=false,ruff="2 days",homeassistant=false,homeassistant-stubs=false,pytest-homeassistant=false,pytest-homeassistant-custom-component="2 days",aiohttp=false,uv=false }
 add-bounds = "major"
 # Home Assistant pins uv exactly, and under `uv run` the venv's uv comes first on PATH,
 # shadowing the mise-managed one. Floor at the latest uv security fix (GHSA-hq85-5cpj-mr62).
@@ -208,6 +208,13 @@ invalid-argument-type = "ignore"
 not-subscriptable = "ignore"
 unresolved-attribute = "ignore"
 
+# only one of the two test helper packages is installed at a time
+[[tool.ty.overrides]]
+include = ["tests/components/supernotify/ha_testing.py"]
+
+[tool.ty.overrides.rules]
+import-not-found = "ignore"
+
 [tool.codespell]
 ignore-words-list = "HASS,hass,wee,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,alle,comando,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
 # Skip binary/data files, build artifacts, and non-English markdown (locale-named files and locale dirs)
@@ -234,6 +241,8 @@ addopts = [
     "--cov-fail-under=80",
     "--verbosity=2",
     "--allow-hosts=127.0.0.1,127.0.1.1,localhost,::1",
+    # pytest-home-assistant installs respx, whose pytest plugin it asks to be switched off
+    "-p no:respx",
 ]
 
 [[tool.mypy.overrides]]

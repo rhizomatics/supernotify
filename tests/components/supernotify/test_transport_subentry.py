@@ -15,12 +15,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import SUBENTRY_TYPE_TRANSPORT, transport_display_name
 from custom_components.supernotify.repairs import YAML_TRANSPORTS_ISSUE_ID
 from custom_components.supernotify.schema import TRANSPORT_SCHEMA, as_raw_config
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .hass_setup_lib import serialize_form
 

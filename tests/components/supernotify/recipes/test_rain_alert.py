@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.supernotify import DOMAIN
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall

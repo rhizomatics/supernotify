@@ -33,7 +33,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.supernotify import DOMAIN as SUPERNOTIFY_DOMAIN
 from custom_components.supernotify.archive import NotificationArchive
@@ -67,6 +66,7 @@ from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.schema import ENTRY_OWNED_KEYS, FULL_CONFIG_SCHEMA, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snoozer
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .doubles_lib import DummyService
 

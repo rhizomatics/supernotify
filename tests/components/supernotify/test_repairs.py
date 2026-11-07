@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, patch
 import yaml
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.notify import async_get_service
@@ -20,6 +19,7 @@ from custom_components.supernotify.repairs import (
     async_check_python_version,
     async_create_fix_flow,
 )
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from pathlib import Path

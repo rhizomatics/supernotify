@@ -8,7 +8,6 @@ import pytest
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_CONDITIONS, CONF_OPTIONS
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
@@ -38,6 +37,7 @@ from custom_components.supernotify.transports.media_player import MediaPlayerTra
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from custom_components.supernotify.transports.persistent import PersistentTransport
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .hass_setup_lib import MockGroup, TestingContext
 

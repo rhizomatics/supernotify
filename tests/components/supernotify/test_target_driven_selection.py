@@ -15,7 +15,6 @@ from itertools import combinations
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -32,6 +31,7 @@ from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transports.chime import OPTION_CHIME_ALIASES
+from tests.components.supernotify.ha_testing import MockConfigEntry
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:

@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import DELIVERY_UNRECORDED_ATTRIBUTES
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from tests.components.supernotify.ha_testing import async_mock_service
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

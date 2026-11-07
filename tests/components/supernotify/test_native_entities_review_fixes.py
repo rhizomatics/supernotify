@@ -19,12 +19,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import mock_restore_cache_with_extra_data
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.repairs import RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID
 from custom_components.supernotify.scenario import ScenarioRegistry
+from tests.components.supernotify.ha_testing import mock_restore_cache_with_extra_data
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

@@ -8,7 +8,8 @@ from unittest.mock import AsyncMock
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from .framework import House
 

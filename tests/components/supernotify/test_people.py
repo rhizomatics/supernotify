@@ -360,7 +360,8 @@ async def test_recipient_notify_entity_restores_last_notified_on_added_to_hass(h
 
 async def test_repair_raised_for_mobile_device_with_no_notify_action(hass: HomeAssistant) -> None:
     from homeassistant.helpers import issue_registry as ir
-    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    from tests.components.supernotify.ha_testing import async_mock_service
 
     async_mock_service(hass, "notify", "mobile_app_ipad11")
     ctx = TestingContext(

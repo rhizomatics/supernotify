@@ -1192,7 +1192,7 @@ async def _sent_by_smtp_send_message(
     # smtp.send_message only exists in newer HA versions
     services = pytest.importorskip("homeassistant.components.smtp.services")
     SERVICE_SEND_MESSAGE_SCHEMA = services.SERVICE_SEND_MESSAGE_SCHEMA
-    from pytest_homeassistant_custom_component.common import async_mock_service
+    from tests.components.supernotify.ha_testing import async_mock_service
 
     calls: list[ServiceCall] = async_mock_service(hass, "smtp", "send_message", schema=SERVICE_SEND_MESSAGE_SCHEMA)
     ctx = TestingContext(

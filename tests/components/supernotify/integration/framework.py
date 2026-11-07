@@ -13,11 +13,11 @@ from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN as SUPERNOTIFY_DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from tests.components.supernotify.doubles_lib import MockCameraEntity
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 from ..hass_setup_lib import register_mobile_app
 

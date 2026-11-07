@@ -13,7 +13,6 @@ from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
@@ -32,6 +31,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.repairs import ISSUE_ID
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

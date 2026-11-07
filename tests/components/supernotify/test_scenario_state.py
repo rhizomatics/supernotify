@@ -25,13 +25,13 @@ from unittest.mock import MagicMock, Mock
 
 from homeassistant.const import CONF_ALIAS, CONF_CONDITIONS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.supernotify.const import SCENARIO_STATE_REFRESH_DEFAULT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.schema import SCENARIO_SCHEMA
+from tests.components.supernotify.ha_testing import async_fire_time_changed
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

@@ -900,7 +900,7 @@ async def test_android_tts_waits_once_for_all_devices_and_can_go_straight_away(u
 
 
 async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> None:
-    from pytest_homeassistant_custom_component.common import async_mock_service
+    from tests.components.supernotify.ha_testing import async_mock_service
 
     calls = async_mock_service(hass, "notify", "mobile_app_iphone")
     ctx = TestingContext(
