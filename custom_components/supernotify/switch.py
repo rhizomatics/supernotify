@@ -79,21 +79,21 @@ async def async_setup_entry(
     # deliveries, is left in the entity registry rather than removed: a transport can be missing
     # just while what it depends on is still starting up
     delivery_registry = context.delivery_registry
-    entities.extend(
-        SupernotifyDeliverySwitch(delivery, delivery_registry, device_info, switches)
-        for delivery in delivery_registry.deliveries.values()
-    )
     async_add_entities(entities)
     # each transport's in its subentry, with no device, so a transport is only listed once in the
-    # integration, as its subentry - and likewise each recipient's, where it has one
+    # integration, as its subentry, along with its deliveries' - and likewise each recipient's,
+    # where it has one
     transport_subentries = {
         s.unique_id: s.subentry_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT
     }
     for transport in delivery_registry.transports.values():
-        async_add_entities(
-            [SupernotifyTransportSwitch(transport, delivery_registry, None, switches)],
-            config_subentry_id=transport_subentries.get(transport.name),
+        transport_entities: list[SwitchEntity] = [SupernotifyTransportSwitch(transport, delivery_registry, None, switches)]
+        transport_entities.extend(
+            SupernotifyDeliverySwitch(delivery, delivery_registry, None, switches)
+            for delivery in delivery_registry.deliveries.values()
+            if delivery.transport.name == transport.name
         )
+        async_add_entities(transport_entities, config_subentry_id=transport_subentries.get(transport.name))
     subentry_ids = context.people_registry.subentry_ids(entry.subentries)
     for recipient in context.people_registry.people.values():
         async_add_entities(
@@ -284,7 +284,7 @@ class SupernotifyDeliverySwitch(SupernotifyOverridableSwitch):
         self,
         delivery: Delivery,
         registry: DeliveryRegistry,
-        device_info: DeviceInfo,
+        device_info: DeviceInfo | None,
         switches: dict[str, SupernotifyOverridableSwitch],
     ) -> None:
         super().__init__(OVERRIDE_KIND_DELIVERY, delivery, device_info, switches)
