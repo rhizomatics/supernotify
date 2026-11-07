@@ -2,7 +2,7 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/
 
-By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
+By default, advanced configuration - `delivery`, `transports`, `scenarios`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, the action name, and [recipients](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#adding-or-changing-a-recipient)) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
 
 Those settings are ignored if they're in the `supernotify` YAML section, and a single repair lists the ones found, so they can be set in the integration's options instead and removed from the YAML.
 
@@ -34,6 +34,6 @@ notify:
       ...
 ```
 
-That form is no longer read. If Home Assistant still finds one, a repair appears in **Settings → System → Repairs** offering to migrate it automatically: it writes a `supernotify.yaml` file with your delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze settings and adds the `supernotify: !include supernotify.yaml` line above to `configuration.yaml` for you, reloading immediately (no restart needed). A `name:` in the old block is preserved as the Integration's configured name automatically, independent of whether you run this repair.
+That form is no longer read. If Home Assistant still finds one, a repair appears in **Settings → System → Repairs** offering to migrate it automatically: it writes a `supernotify.yaml` file with your delivery/transports/scenarios/cameras/action_groups/links/snooze settings, imports your recipients into the integration, and adds the `supernotify: !include supernotify.yaml` line above to `configuration.yaml` for you, reloading immediately (no restart needed). A `name:` in the old block is preserved as the Integration's configured name automatically, independent of whether you run this repair.
 
 You can just as easily do this move by hand instead of using the repair - either way works. Either way, the old `notify:` block itself is left in place and simply ignored; delete it yourself once you're happy the new configuration works. The repair keeps reappearing (and the old block stays harmless either way) until you do - once it's gone, the repair clears itself automatically on the next restart.
