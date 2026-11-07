@@ -34,12 +34,12 @@ run = [
     "rm -fr .ropeproject",
     "rm -fr .ruff_cache",
     "rm -fr .pyre",
-    "rm -fr __pycache__",
     "rm -fr .cache",
     "rm -fr htmlcov",
     "rm -f .coverage",
     "rm -f cov.xml",
-    "uv venv .venv --clear"
+    "find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete",
+    "uv venv .venv --clear",
 ]
 
 [tasks.refresh]
