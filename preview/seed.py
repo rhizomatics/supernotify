@@ -145,7 +145,7 @@ async def seed(url: str) -> None:
 
         # Supernotify set itself up when Home Assistant started, before any of the house existed
         await preview.post("/api/services/supernotify/reload")
-        print(f"Seeded {url} - log in as {', '.join(users)}, with password {PASSWORD!r}")
+        print(f"Seeded {url} - log in as {', '.join(users)}")
 
 
 def main() -> None:
