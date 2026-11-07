@@ -20,7 +20,7 @@ from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.repairs import YAML_RECIPIENTS_ISSUE_ID
 from custom_components.supernotify.schema import vol
 
-from .hass_setup_lib import register_mobile_app
+from .hass_setup_lib import register_mobile_app, serialize_form
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -390,9 +390,6 @@ async def test_user_recipient_merged_into_persons_already_listed(hass: HomeAssis
 async def test_form_shows_stored_delivery_overrides(hass: HomeAssistant) -> None:
     """Regression: the delivery overrides section had a default, which the frontend filled it with,
     empty, rather than the overrides stored"""
-    import probatio
-    from homeassistant.helpers import config_validation as cv
-
     overrides = {"testing": {"enabled": False}}
     entry = await _entry(
         hass,
@@ -406,7 +403,7 @@ async def test_form_shows_stored_delivery_overrides(hass: HomeAssistant) -> None
         ],
     )
     result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=_recipients(entry)[0].subentry_id)
-    fields = probatio.to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
+    fields = serialize_form(result["data_schema"])
     section = next(f for f in fields if f["name"] == "delivery_overrides")
     # no default, so the frontend fills it from what's inside
     assert "default" not in section

@@ -22,6 +22,8 @@ from custom_components.supernotify.const import SUBENTRY_TYPE_TRANSPORT, transpo
 from custom_components.supernotify.repairs import YAML_TRANSPORTS_ISSUE_ID
 from custom_components.supernotify.schema import TRANSPORT_SCHEMA, as_raw_config
 
+from .hass_setup_lib import serialize_form
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
@@ -466,9 +468,6 @@ def _frontend_initial_data(serialized: list[dict[str, Any]]) -> dict[str, Any]:
 async def test_form_shows_what_is_stored(hass: HomeAssistant) -> None:
     """Regression: a section with a default had the frontend fill it with that default, empty,
     rather than what's stored, so an imported connection, options and targets looked to be missing"""
-    import probatio
-    from homeassistant.helpers import config_validation as cv
-
     email = ConfigSubentryData(
         data={
             "connection": {"host": "smtp.example.com", "port": 587, "password": "secret"},
@@ -486,7 +485,7 @@ async def test_form_shows_what_is_stored(hass: HomeAssistant) -> None:
     entry = await _entry(hass, subentries_data=[email])
     result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=_transports(entry)["email"].subentry_id)
 
-    shown = _frontend_initial_data(probatio.to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer))
+    shown = _frontend_initial_data(serialize_form(result["data_schema"]))
     assert shown["connection"] == {"host": "smtp.example.com", "port": 587}
     assert shown["delivery_defaults_advanced"]["options"] == {"sender": "hass@example.com"}
     assert shown["delivery_defaults_targets"]["target_usage"] == "fixed"

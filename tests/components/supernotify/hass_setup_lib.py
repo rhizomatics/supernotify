@@ -670,3 +670,19 @@ def register_device(
             identifiers=identifiers or {(domain, f"{domain_id}")},
         )
     return device_entry
+
+
+def serialize_form(schema: Any) -> list[dict[str, Any]]:  # ruff: ignore[any-type]
+    """A form's schema as Home Assistant sends it to the frontend - with probatio where Home
+    Assistant uses it (2026.10 on), and voluptuous_serialize before that"""
+    import importlib
+
+    from homeassistant.helpers import config_validation as cv
+    from homeassistant.helpers import data_entry_flow
+
+    serializer = (
+        importlib.import_module("probatio").to_field_list
+        if hasattr(data_entry_flow, "probatio")
+        else importlib.import_module("voluptuous_serialize").convert
+    )
+    return cast("list[dict[str, Any]]", serializer(schema, custom_serializer=cv.custom_serializer))
