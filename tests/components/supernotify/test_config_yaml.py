@@ -147,19 +147,20 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "persistent" in uut.context.delivery_registry.deliveries
     assert "persistent" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    # +6 vs explicit deliveries: "chime", "email", "persistent", "notify_entity",
-    # "alexa_devices" and "media" are all auto-configured alongside the fixture's own
-    # explicitly-named deliveries for those same transports (e.g. "chime" alongside
-    # play_chimes/doorbell_chime_alexa/sleigh_bells, "email" alongside
-    # html_email/backup_mail/direct_mail) - every loadable, viable transport gets its own
-    # auto-configured delivery regardless of what else is explicitly configured for it.
-    # "mobile_push" doesn't add one of its own on top: its explicit delivery is itself
-    # named "mobile_push" (same as the transport), so the auto-config merges into it instead
+    # +5 vs explicit deliveries: "chime", "persistent", "notify_entity", "alexa_devices" and
+    # "media" are all auto-configured alongside the fixture's own explicitly-named deliveries
+    # for those same transports (e.g. "chime" alongside play_chimes/doorbell_chime_alexa/
+    # sleigh_bells) - every loadable, viable transport gets its own auto-configured delivery
+    # regardless of what else is explicitly configured for it. "mobile_push" doesn't add one of
+    # its own on top: its explicit delivery is itself named "mobile_push" (same as the
+    # transport), so the auto-config merges into it instead. Nor does "email": SIMPLE_CONFIG's
+    # plain_email delivery had the email transport listed already, before FIXTURE, so FIXTURE's
+    # `transports: email:`, with the action an auto-configured delivery needs, isn't imported -
+    # YAML transports are only imported once, as transports are changed in the integration
     assert list(uut.context.delivery_registry.deliveries.keys()) == unordered([
         "html_email",
         "backup_mail",
         "direct_mail",
-        "email",
         "text_message",
         "sms",
         "alexa_announce",

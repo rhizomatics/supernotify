@@ -134,6 +134,8 @@ class Transport:
     # a transport sending only through an action the configuration names, with no way of finding one itself,
     # whose standard delivery is the transport's own when its `delivery_defaults` has an action
     action_configured: ClassVar[bool] = False
+    # whether it makes its own network connection, set up by its `connection` configuration
+    uses_connection: ClassVar[bool] = False
 
     @abstractmethod
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:

@@ -42,6 +42,11 @@ EXPECTED_IDENTICAL_IN_EVERY_LANGUAGE = {
     "options.step.archive.sections.mqtt.name",
     # titles that are only the recipient's name
     "config_subentries.recipient.step.details.title",
+    # and only the transport's name
+    "config_subentries.transport.step.details.title",
+    # protocol names
+    "selector.connection_encryption.options.tls",
+    "selector.connection_encryption.options.starttls",
 }
 
 # (translation file stem, dot-separated key) pairs where a specific language's word for
@@ -96,6 +101,72 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("pl", "config_subentries.recipient.step.details.data.alias"),
     ("it", "config_subentries.recipient.entry_type"),  # "recipient" stays English in Italian, see CLAUDE.md
     ("it", "config_subentries.recipient.step.user.title"),  # "recipient" stays English in Italian, see CLAUDE.md
+    ("de", "config_subentries.transport.entry_type"),  # "Transport" is the word in these languages too
+    ("de", "config_subentries.transport.step.user.title"),  # "Transport" is the word in these languages too
+    ("de", "config_subentries.transport.step.user.data.transport"),  # "Transport" is the word in these languages too
+    ("fr", "config_subentries.transport.entry_type"),  # "Transport" is the word in these languages too
+    ("fr", "config_subentries.transport.step.user.title"),  # "Transport" is the word in these languages too
+    ("fr", "config_subentries.transport.step.user.data.transport"),  # "Transport" is the word in these languages too
+    ("it", "config_subentries.transport.entry_type"),  # "transport" stays English in Italian, see CLAUDE.md
+    ("it", "config_subentries.transport.step.user.title"),  # "transport" stays English in Italian, see CLAUDE.md
+    ("it", "config_subentries.transport.step.user.data.transport"),  # "transport" stays English in Italian, see CLAUDE.md
+    ("nl", "config_subentries.transport.entry_type"),  # "Transport" is the word in these languages too
+    ("nl", "config_subentries.transport.step.user.title"),  # "Transport" is the word in these languages too
+    ("nl", "config_subentries.transport.step.user.data.transport"),  # "Transport" is the word in these languages too
+    ("pl", "config_subentries.transport.entry_type"),  # "Transport" is the word in these languages too
+    ("pl", "config_subentries.transport.step.user.title"),  # "Transport" is the word in these languages too
+    ("pl", "config_subentries.transport.step.user.data.transport"),  # "Transport" is the word in these languages too
+    ("de", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("es", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("fr", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("it", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("nl", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("pl", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    ("pt", "config_subentries.transport.step.details.data.alias"),  # "Alias" is the word in these languages too
+    (
+        "fr",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.action",
+    ),  # "Action" is also the French word
+    (
+        "fr",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.options",
+    ),  # "Options" is also the French word
+    (
+        "fr",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.inclusion",
+    ),  # "Inclusion" is also the French word
+    (
+        "de",
+        "config_subentries.transport.step.details.sections.connection.data.port",
+    ),  # "Port" is the word in these languages too
+    (
+        "fr",
+        "config_subentries.transport.step.details.sections.connection.data.port",
+    ),  # "Port" is the word in these languages too
+    (
+        "pl",
+        "config_subentries.transport.step.details.sections.connection.data.port",
+    ),  # "Port" is the word in these languages too
+    (
+        "it",
+        "config_subentries.transport.step.details.sections.connection.data.password",
+    ),  # "Password" is a standard Italian loanword
+    (
+        "it",
+        "config_subentries.transport.step.details.sections.connection.data.timeout",
+    ),  # "Timeout" is a standard Italian loanword
+    (
+        "de",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.debug",
+    ),  # "Debug" is a standard tech loanword
+    (
+        "it",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.debug",
+    ),  # "Debug" is a standard tech loanword
+    (
+        "nl",
+        "config_subentries.transport.step.details.sections.delivery_defaults.data.debug",
+    ),  # "Debug" is a standard tech loanword
 }
 
 

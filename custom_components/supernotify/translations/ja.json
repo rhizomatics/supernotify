@@ -533,6 +533,14 @@
         "yaml_recipients_imported": {
             "title": "YAML の Supernotify 受信者は無視されます",
             "description": "受信者は現在 Supernotify 統合の **設定 → デバイスとサービス → Supernotify** で管理され、トップレベルの `supernotify:` YAML の受信者はそこにインポートされたため、YAML では無視されます。\n\nこの警告を消すには YAML から `recipients:` を削除してください。それまでは、統合で削除した受信者は次回の再起動時に再びインポートされます。"
+        },
+        "yaml_transports_imported": {
+            "title": "YAML の Supernotify トランスポートは無視されます",
+            "description": "トランスポートは Supernotify 統合の **設定 → デバイスとサービス → Supernotify** で管理されるようになりました。トップレベルの `supernotify:` YAML にあったものはそこへインポート済みのため、YAML では無視されます。\n\nこの警告を消すには YAML から `transports:` を削除してください。"
+        },
+        "transport_deprecated_config": {
+            "title": "Supernotify の {transport} トランスポートが非推奨の設定を使っています",
+            "description": "{transport} トランスポートには非推奨の {keys} があります。今のところはまだ動作します。\n\n**設定 → デバイスとサービス → Supernotify** でトランスポートを開いて保存すると、代わりの設定に移されます: `device_domain`、`device_discovery`、`device_model_include`、`device_model_exclude` はオプションへ、`selection` は `inclusion` へ。"
         }
     },
     "exceptions": {
@@ -777,6 +785,22 @@
                 "delivery": "配信",
                 "transport": "トランスポート"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "なし"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "通知にターゲットがない場合のみ",
+                "no_delivery": "通知にこの配信向けのターゲットがない場合のみ",
+                "merge_delivery": "通知にこの配信向けのターゲットがある場合、それに追加",
+                "merge_always": "常に通知のターゲットに追加",
+                "fixed": "これらのみ、通知のターゲットは無視"
+            }
         }
     },
     "config_subentries": {
@@ -843,6 +867,102 @@
             },
             "abort": {
                 "already_configured": "この人物またはユーザーはすでに受信者です"
+            }
+        },
+        "transport": {
+            "entry_type": "トランスポート",
+            "initiate_flow": {
+                "user": "トランスポートを追加"
+            },
+            "step": {
+                "user": {
+                    "title": "トランスポート",
+                    "description": "使用中のトランスポートはすべて一覧にあります。使う前に設定が必要なもの、たとえばアクション付きの generic や、エイリアス付きの chime を追加します。\n\n[詳細]({learn_more_url})",
+                    "data": {
+                        "transport": "トランスポート"
+                    },
+                    "data_description": {
+                        "transport": "まだ一覧にないトランスポートで、必要な場合は Home Assistant の統合がインストールされているもの"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "{transport} を使うかどうかと、その配信のデフォルト。\n\n[{transport} の詳細]({learn_more_url})",
+                    "data": {
+                        "enabled": "有効",
+                        "alias": "エイリアス"
+                    },
+                    "data_description": {
+                        "enabled": "このトランスポートを使うかどうか - オフのときはどの配信も使われません",
+                        "alias": "このトランスポートの名前の代わりに使う名前"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "配信のデフォルト",
+                            "data": {
+                                "debug": "デバッグ",
+                                "action": "アクション",
+                                "target_usage": "ターゲットの使い方",
+                                "target": "ターゲット",
+                                "custom_target": "カスタムターゲット",
+                                "options": "オプション",
+                                "data": "追加データ",
+                                "inclusion": "含める条件",
+                                "priority": "優先度",
+                                "other_delivery_defaults": "その他の配信デフォルト"
+                            },
+                            "data_description": {
+                                "debug": "配信が呼び出す各アクションの結果を待って記録し、エラーをアーカイブと配信の属性で確認できるようにします",
+                                "action": "配信が呼び出すアクション、例: notify.my_service",
+                                "target_usage": "下のターゲットを通知のターゲットとどう組み合わせるか",
+                                "target": "配信が通知するエンティティ、デバイス、エリア、フロア、ラベル (supernotify.notify アクションと同様)",
+                                "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値。カテゴリ: {categories}",
+                                "options": "このトランスポート固有のオプション (ページに記載)、例: chime の chime_aliases",
+                                "data": "配信が送る内容に追加するデータ",
+                                "inclusion": "配信が使われるとき - デフォルト、要求時のみ、シナリオ、またはフォールバック",
+                                "priority": "配信が使われる優先度",
+                                "other_delivery_defaults": "その他の配信デフォルト。YAML の delivery_defaults と同じ書き方で、conditions、template、title など"
+                            }
+                        },
+                        "connection": {
+                            "name": "接続",
+                            "data": {
+                                "host": "ホスト",
+                                "port": "ポート",
+                                "encryption": "暗号化",
+                                "username": "ユーザー名",
+                                "password": "パスワード",
+                                "timeout": "タイムアウト",
+                                "verify_ssl": "SSL 証明書を検証"
+                            },
+                            "data_description": {
+                                "host": "Home Assistant の SMTP 統合を使わない場合のメールサーバー",
+                                "port": "通常 STARTTLS は 587、TLS は 465",
+                                "encryption": "接続の保護方法",
+                                "username": "ログインに使うアカウント",
+                                "password": "空のままにすると、設定済みのパスワードが保持されます",
+                                "timeout": "サーバーを待つ秒数",
+                                "verify_ssl": "サーバーの証明書を確認 - 信頼できるサーバーの場合のみオフにしてください"
+                            }
+                        },
+                        "advanced": {
+                            "name": "詳細設定",
+                            "data": {
+                                "load": "読み込む"
+                            },
+                            "data_description": {
+                                "load": "このトランスポートを読み込むかどうか - オフのときは配信もスイッチもありません。無効にした場合、将来必要になったときはこのトランスポートを再度追加する必要があります"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "カスタムターゲットがメールアドレス、電話番号、またはカテゴリに有効な値を持つ カテゴリ:値 のいずれでもありません",
+                "invalid_transport": "トランスポートの設定が無効です: {error}"
+            },
+            "abort": {
+                "no_transports": "ここで使えるトランスポートはすべて一覧にあります"
             }
         }
     }

@@ -20,6 +20,7 @@ from pytest_homeassistant_custom_component.common import (
 
 from custom_components.supernotify import CONFIG_SCHEMA, DOMAIN, KEY_YAML_CONFIG
 from custom_components.supernotify.repairs import DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID
+from custom_components.supernotify.schema import as_raw_config
 from custom_components.supernotify.switch import OverrideStoredData
 
 if TYPE_CHECKING:
@@ -85,13 +86,17 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> SupernotifyEngi
 
 async def _reload(hass: HomeAssistant, config: dict[str, Any] | None = None) -> SupernotifyEngine:
     """Reload the config entry, optionally with changed YAML, as supernotify.reload would.
-    Recipients, imported from the YAML only once, are changed in their subentries, as the UI would."""
+    Recipients and transports, imported from the YAML only once, are changed in their subentries,
+    as the UI would."""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     if config is not None:
         hass.data[DOMAIN][KEY_YAML_CONFIG] = CONFIG_SCHEMA({DOMAIN: config})[DOMAIN]
         for recipient in hass.data[DOMAIN][KEY_YAML_CONFIG]["recipients"]:
             subentry = next(s for s in entry.subentries.values() if s.unique_id == recipient["person"])
             hass.config_entries.async_update_subentry(entry, subentry, data=recipient)
+        for name, transport in hass.data[DOMAIN][KEY_YAML_CONFIG]["transports"].items():
+            subentry = next(s for s in entry.subentries.values() if s.unique_id == name)
+            hass.config_entries.async_update_subentry(entry, subentry, data=as_raw_config(transport))
         await hass.async_block_till_done()
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
@@ -281,7 +286,13 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
         assert reg_entry.unique_id == unique_id
         assert reg_entry.entity_category == EntityCategory.CONFIG
         assert reg_entry.config_entry_id == entry.entry_id
-        assert reg_entry.device_id is not None
+        # a transport's switch is in its subentry, with no device, so it's only listed once
+        if unique_id.startswith("transport_"):
+            transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
+            assert reg_entry.config_subentry_id == transport.subentry_id
+            assert reg_entry.device_id is None
+        else:
+            assert reg_entry.device_id is not None
 
     state = hass.states.get("switch.supernotify_delivery_chat_room")
     assert state is not None
@@ -289,7 +300,8 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
     assert state.attributes["transport"] == "generic"
     state = hass.states.get("switch.supernotify_transport_generic")
     assert state is not None
-    assert state.name == "Supernotify Transport generic Enabled"
+    # no device, so no device name before its own
+    assert state.name == "Transport generic Enabled"
 
 
 async def test_delivery_names_slugified_alike_get_distinct_switches(hass: HomeAssistant) -> None:

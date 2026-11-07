@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import copy
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_NAME, SERVICE_RELOAD, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -110,18 +111,32 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
     cv.template's Template objects - see CONFIG_ENTRY_SCHEMA's docstring in schema.py).
 
     Settings the entry owns, like `archive`, are ignored in that YAML section, with a repair
-    issue naming them, rather than overriding the entry unvalidated. Recipients come from the
-    entry's recipient subentries, the YAML ones having been imported into those already.
+    issue naming them, rather than overriding the entry unvalidated. Recipients and transports
+    come from the entry's subentries, the YAML ones having been imported into those already.
     """
-    from .const import CONF_RECIPIENTS, SUBENTRY_TYPE_RECIPIENT
+    from .const import CONF_RECIPIENTS, CONF_TRANSPORTS, SUBENTRY_TYPE_RECIPIENT, SUBENTRY_TYPE_TRANSPORT
     from .repairs import async_check_yaml_entry_owned_keys
     from .schema import CONFIG_ENTRY_SCHEMA, ENTRY_OWNED_KEYS
 
     yaml_config = hass.data.get(DOMAIN, {}).get(KEY_YAML_CONFIG, {})
     async_check_yaml_entry_owned_keys(hass, [key for key in yaml_config if key in ENTRY_OWNED_KEYS])
-    yaml_only = {key: value for key, value in yaml_config.items() if key not in ENTRY_OWNED_KEYS and key != CONF_RECIPIENTS}
-    recipients = [dict(s.data) for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT]
-    return {**CONFIG_ENTRY_SCHEMA({**entry.data, **entry.options, CONF_RECIPIENTS: recipients}), **yaml_only}
+    yaml_only = {
+        key: value
+        for key, value in yaml_config.items()
+        if key not in ENTRY_OWNED_KEYS and key not in (CONF_RECIPIENTS, CONF_TRANSPORTS)
+    }
+    # copies, as the engine adds defaults to what it's given, which would otherwise change the
+    # subentries' own data
+    recipients = [copy.deepcopy(dict(s.data)) for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT]
+    transports = {
+        s.unique_id: copy.deepcopy(dict(s.data))
+        for s in entry.subentries.values()
+        if s.subentry_type == SUBENTRY_TYPE_TRANSPORT
+    }
+    return {
+        **CONFIG_ENTRY_SCHEMA({**entry.data, **entry.options, CONF_RECIPIENTS: recipients, CONF_TRANSPORTS: transports}),
+        **yaml_only,
+    }
 
 
 def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfigEntry, recipients: list[dict]) -> None:
@@ -152,6 +167,58 @@ def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfig
             ),
         )
         existing.add(key)
+
+
+def async_add_transport_subentries(
+    hass: HomeAssistant, entry: SupernotifyConfigEntry, transports: dict[str, dict[str, Any]]
+) -> None:
+    """Add a transport subentry for each of these transports, by name, that has none yet, its
+    configuration as it would be written in YAML, and titled by its alias, else its name"""
+    from types import MappingProxyType
+
+    from homeassistant.config_entries import ConfigSubentry
+    from homeassistant.const import CONF_ALIAS
+
+    from .const import SUBENTRY_TYPE_TRANSPORT
+
+    existing = {s.unique_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT}
+    for name, transport in transports.items():
+        if name in existing:
+            continue
+        _LOGGER.info("SUPERNOTIFY Adding transport %s", name)
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(dict(transport)),
+                subentry_type=SUBENTRY_TYPE_TRANSPORT,
+                title=str(transport.get(CONF_ALIAS) or name),
+                unique_id=name,
+            ),
+        )
+        existing.add(name)
+
+
+def _async_import_yaml_transports(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> None:
+    """Import the top-level YAML's transports into subentries, with a repair asking for the YAML
+    ones to be removed. That YAML has been validated already, so is turned back into what it was
+    validated from, for storing and validating again when loaded"""
+    from .const import CONF_TRANSPORTS
+    from .repairs import async_check_yaml_transports
+    from .schema import as_raw_config
+
+    transports: dict[str, dict[str, Any]] = hass.data.get(DOMAIN, {}).get(KEY_YAML_CONFIG, {}).get(CONF_TRANSPORTS) or {}
+    async_add_transport_subentries(hass, entry, as_raw_config(transports))
+    async_check_yaml_transports(hass, bool(transports))
+
+
+def _async_check_transport_deprecated_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> None:
+    from .const import SUBENTRY_TYPE_TRANSPORT
+    from .repairs import async_check_transport_deprecated_config
+
+    async_check_transport_deprecated_config(
+        hass,
+        {str(s.unique_id): s.data for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT},
+    )
 
 
 def _async_merge_user_recipients(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> None:
@@ -231,6 +298,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
 
     _async_merge_user_recipients(hass, entry)
     _async_import_yaml_recipients(hass, entry)
+    _async_import_yaml_transports(hass, entry)
+    _async_check_transport_deprecated_config(hass, entry)
     full_config = _entry_full_config(hass, entry)
     engine: SupernotifyEngine = build_supernotify_engine(hass, full_config)
     try:
@@ -245,6 +314,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     # every recipient discovered gets a subentry, so all are listed and can be changed, and
     # switched off with `enabled` - before the update listener, as the engine has them already
     async_add_recipient_subentries(hass, entry, list(engine.context.people_registry.discovered.values()))
+    # likewise every transport in use, whether configured or set up automatically
+    async_add_transport_subentries(hass, entry, {name: {} for name in engine.context.delivery_registry.transports})
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Add NotifyEntities via notify.py, plus the scenario/recipient entities and notification/

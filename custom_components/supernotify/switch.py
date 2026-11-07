@@ -39,6 +39,7 @@ from .const import (
     OVERRIDE_KIND_RECIPIENT,
     OVERRIDE_KIND_SCENARIO,
     OVERRIDE_KIND_TRANSPORT,
+    SUBENTRY_TYPE_TRANSPORT,
     TRANSPORT_UNRECORDED_ATTRIBUTES,
 )
 from .hass_api import ha_device_info
@@ -79,16 +80,20 @@ async def async_setup_entry(
     # just while what it depends on is still starting up
     delivery_registry = context.delivery_registry
     entities.extend(
-        SupernotifyTransportSwitch(transport, delivery_registry, device_info, switches)
-        for transport in delivery_registry.transports.values()
-    )
-    entities.extend(
         SupernotifyDeliverySwitch(delivery, delivery_registry, device_info, switches)
         for delivery in delivery_registry.deliveries.values()
     )
     async_add_entities(entities)
-    # each recipient's in its subentry where it has one, with no device, so a recipient is only
-    # listed once in the integration, as its subentry
+    # each transport's in its subentry, with no device, so a transport is only listed once in the
+    # integration, as its subentry - and likewise each recipient's, where it has one
+    transport_subentries = {
+        s.unique_id: s.subentry_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT
+    }
+    for transport in delivery_registry.transports.values():
+        async_add_entities(
+            [SupernotifyTransportSwitch(transport, delivery_registry, None, switches)],
+            config_subentry_id=transport_subentries.get(transport.name),
+        )
     subentry_ids = context.people_registry.subentry_ids(entry.subentries)
     for recipient in context.people_registry.people.values():
         async_add_entities(
@@ -310,7 +315,7 @@ class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
         self,
         transport: Transport,
         registry: DeliveryRegistry,
-        device_info: DeviceInfo,
+        device_info: DeviceInfo | None,
         switches: dict[str, SupernotifyOverridableSwitch],
     ) -> None:
         super().__init__(OVERRIDE_KIND_TRANSPORT, transport, device_info, switches)

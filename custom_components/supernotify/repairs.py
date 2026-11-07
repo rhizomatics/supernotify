@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -29,7 +30,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
-from . import DOMAIN, async_add_recipient_subentries, async_reload_yaml_config_and_entries
+from . import DOMAIN, async_add_recipient_subentries, async_add_transport_subentries, async_reload_yaml_config_and_entries
 from .common import ensure_list
 from .compat import vol
 from .config_flow import extract_legacy_data, extract_legacy_options
@@ -37,12 +38,18 @@ from .const import (
     CONF_ACTION_GROUPS,
     CONF_CAMERAS,
     CONF_DELIVERY,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_DEVICE_DISCOVERY,
+    CONF_DEVICE_DOMAIN,
+    CONF_DEVICE_MODEL_EXCLUDE,
+    CONF_DEVICE_MODEL_INCLUDE,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
+    CONF_SELECTION,
     CONF_SNOOZE,
     CONF_TRANSPORTS,
 )
-from .schema import RECIPIENT_SCHEMA, SUPERNOTIFY_YAML_SCHEMA
+from .schema import RECIPIENT_SCHEMA, SUPERNOTIFY_YAML_SCHEMA, TRANSPORT_SCHEMA
 
 if TYPE_CHECKING:
     # only for type checking, since RepairsFlowResult isn't exported on every supported HA version
@@ -63,6 +70,8 @@ RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "recipient_binary_sensor_deprecate
 DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "delivery_transport_binary_sensor_deprecated"
 YAML_ENTRY_OWNED_KEYS_ISSUE_ID = "yaml_entry_owned_keys"
 YAML_RECIPIENTS_ISSUE_ID = "yaml_recipients_imported"
+YAML_TRANSPORTS_ISSUE_ID = "yaml_transports_imported"
+TRANSPORT_DEPRECATED_CONFIG_ISSUE_KEY = "transport_deprecated_config"
 SUPERNOTIFY_YAML_FILENAME = "supernotify.yaml"
 CONFIGURATION_YAML_FILENAME = "configuration.yaml"
 
@@ -77,10 +86,9 @@ _MANUAL_MIGRATION_REASONS: dict[str, str] = {
 }
 
 # The keys migrated out of the legacy notify: platform block into supernotify.yaml, matching
-# schema.py's SUPERNOTIFY_YAML_SCHEMA. Recipients go straight into recipient subentries instead.
+# schema.py's SUPERNOTIFY_YAML_SCHEMA. Recipients and transports go straight into subentries instead.
 _YAML_ONLY_KEYS = (
     CONF_DELIVERY,
-    CONF_TRANSPORTS,
     CONF_SCENARIOS,
     CONF_CAMERAS,
     CONF_ACTION_GROUPS,
@@ -165,6 +173,65 @@ def async_check_yaml_entry_owned_keys(hass: HomeAssistant, keys: list[str]) -> N
         translation_placeholders={"keys": ", ".join(sorted(keys))},
         learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/",
     )
+
+
+def async_check_yaml_transports(hass: HomeAssistant, present: bool) -> None:
+    """Raise (or clear) a warning that transports in the top-level `supernotify:` YAML were
+    imported into the integration, and are ignored there from now on."""
+    if not present:
+        ir.async_delete_issue(hass, DOMAIN, YAML_TRANSPORTS_ISSUE_ID)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        YAML_TRANSPORTS_ISSUE_ID,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=YAML_TRANSPORTS_ISSUE_ID,
+        learn_more_url="https://supernotify.rhizomatics.org.uk/latest/transports/",
+    )
+
+
+def deprecated_transport_keys(transport: Mapping[str, Any]) -> list[str]:
+    """The deprecated settings in a transport's configuration, as written - see model.TransportConfig,
+    which still applies them, and the transport form, which moves them to their replacements"""
+    keys = [
+        key
+        for key in (CONF_DEVICE_DOMAIN, CONF_DEVICE_DISCOVERY, CONF_DEVICE_MODEL_INCLUDE, CONF_DEVICE_MODEL_EXCLUDE)
+        if key in transport
+    ]
+    if CONF_SELECTION in (transport.get(CONF_DELIVERY_DEFAULTS) or {}):
+        keys.append(f"{CONF_DELIVERY_DEFAULTS}.{CONF_SELECTION}")
+    return keys
+
+
+def async_check_transport_deprecated_config(hass: HomeAssistant, transports: Mapping[str, Mapping[str, Any]]) -> None:
+    """Raise a warning for each transport configured with deprecated settings, and clear it for
+    those without, or no longer there"""
+    prefix, suffix = "transport_", "_deprecated_config"
+    for name, transport in transports.items():
+        issue_id = f"{prefix}{name}{suffix}"
+        if keys := deprecated_transport_keys(transport):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=TRANSPORT_DEPRECATED_CONFIG_ISSUE_KEY,
+                translation_placeholders={"transport": name, "keys": ", ".join(keys)},
+                learn_more_url=f"https://supernotify.rhizomatics.org.uk/latest/transports/{name}/",
+            )
+        else:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(prefix)
+            and issue_id.endswith(suffix)
+            and issue_id[len(prefix) : -len(suffix)] not in transports
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 def async_check_yaml_recipients(hass: HomeAssistant, present: bool) -> None:
@@ -335,6 +402,10 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             try:
                 SUPERNOTIFY_YAML_SCHEMA(migrated)
                 recipients = [RECIPIENT_SCHEMA(r) for r in ensure_list(self._legacy_config.get(CONF_RECIPIENTS))]
+                # kept as they were written, since the validated ones can hold templates
+                transports: dict[str, dict[str, Any]] = dict(self._legacy_config.get(CONF_TRANSPORTS) or {})
+                for transport in transports.values():
+                    TRANSPORT_SCHEMA(transport)
             except vol.Invalid as err:
                 _LOGGER.warning("SUPERNOTIFY Legacy config failed validation, not migrating: %s", err)
                 self._async_raise_manual_migration_issue("migrated_config_invalid")
@@ -355,7 +426,7 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
                 return self.async_show_form(step_id="confirm", errors={"base": "validation_failed"})
 
             ir.async_delete_issue(self.hass, DOMAIN, MANUAL_MIGRATION_ISSUE_ID)
-            await self._async_finish_migration(recipients)
+            await self._async_finish_migration(recipients, transports)
             return self.async_create_entry(data={})
 
     def _async_raise_manual_migration_issue(self, reason_key: str) -> None:
@@ -425,19 +496,21 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             with open(configuration_yaml_path, "w", encoding="utf-8") as config_file:
                 config_file.write(self._original_configuration_yaml)
 
-    async def _async_finish_migration(self, recipients: list[dict[str, Any]]) -> None:
+    async def _async_finish_migration(self, recipients: list[dict[str, Any]], transports: dict[str, dict[str, Any]]) -> None:
         """Reload the migrated YAML immediately (no restart needed), and make sure an entry
         exists to own it - preserving a custom `name:` (-> notify.<name>) from the legacy
         config, since that's what determines the actual registered action name, along with any
         template_path/media_path/etc and archive/dupe_check/housekeeping settings the legacy
-        config carried. The legacy recipients become the entry's recipient subentries."""
+        config carried. The legacy recipients and transports become the entry's subentries."""
         if not self.hass.config_entries.async_entries(DOMAIN):
             from homeassistant.config_entries import SOURCE_IMPORT
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
         else:
             async_sync_entry_from_legacy_config(self.hass, self._legacy_config)
-        async_add_recipient_subentries(self.hass, self.hass.config_entries.async_entries(DOMAIN)[0], recipients)
+        entry = self.hass.config_entries.async_entries(DOMAIN)[0]
+        async_add_recipient_subentries(self.hass, entry, recipients)
+        async_add_transport_subentries(self.hass, entry, transports)
 
         await async_reload_yaml_config_and_entries(self.hass)
 

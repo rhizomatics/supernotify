@@ -20,6 +20,7 @@ CONF_RECIPIENTS: Final[str] = "recipients"
 CONF_RECIPIENTS_DISCOVERY: Final[str] = "recipients_discovery"
 # config subentry type holding one recipient, in RECIPIENT_SCHEMA shape
 SUBENTRY_TYPE_RECIPIENT: Final[str] = "recipient"
+SUBENTRY_TYPE_TRANSPORT: Final[str] = "transport"
 CONF_TEMPLATE_PATH: Final[str] = "template_path"
 CONF_MEDIA_PATH: Final[str] = "media_path"
 CONF_MEDIA_URL_PREFIX: Final[str] = "media_url_prefix"
@@ -229,6 +230,13 @@ TARGET_USE_ON_NO_ACTION_TARGETS = "no_action"
 TARGET_USE_FIXED = "fixed"
 TARGET_USE_MERGE_ALWAYS = "merge_always"
 TARGET_USE_MERGE_ON_DELIVERY_TARGETS = "merge_delivery"
+TARGET_USAGE_VALUES = [
+    TARGET_USE_ON_NO_ACTION_TARGETS,
+    TARGET_USE_ON_NO_DELIVERY_TARGETS,
+    TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
+    TARGET_USE_MERGE_ALWAYS,
+    TARGET_USE_FIXED,
+]
 
 # Options constants have been moved to `options.py`
 

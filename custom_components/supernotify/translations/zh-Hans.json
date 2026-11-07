@@ -533,6 +533,14 @@
         "yaml_recipients_imported": {
             "title": "YAML 中的 Supernotify 接收者将被忽略",
             "description": "接收者现在在 Supernotify 集成中管理，位于 **设置 → 设备与服务 → Supernotify**，顶层 `supernotify:` YAML 中的接收者已导入其中，因此在 YAML 中被忽略。\n\n从 YAML 中删除 `recipients:` 以清除此警告。在此之前，在集成中删除的接收者会在下次重启时再次导入。"
+        },
+        "yaml_transports_imported": {
+            "title": "YAML 中的 Supernotify 传输将被忽略",
+            "description": "传输现在在 Supernotify 集成中管理，位于 **设置 → 设备与服务 → Supernotify**，顶层 `supernotify:` YAML 中的传输已导入其中，因此在 YAML 中会被忽略。\n\n从 YAML 中删除 `transports:` 以清除此警告。"
+        },
+        "transport_deprecated_config": {
+            "title": "Supernotify 的 {transport} 传输使用了已弃用的设置",
+            "description": "{transport} 传输含有已弃用的 {keys}。目前它们仍然有效。\n\n在 **设置 → 设备与服务 → Supernotify** 中打开该传输并保存，即可将它们移到替代设置：`device_domain`、`device_discovery`、`device_model_include` 和 `device_model_exclude` 移到其选项，`selection` 移到 `inclusion`。"
         }
     },
     "exceptions": {
@@ -777,6 +785,22 @@
                 "delivery": "推送",
                 "transport": "传输"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "无"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "仅当通知没有目标时",
+                "no_delivery": "仅当通知没有此投递的目标时",
+                "merge_delivery": "当通知有此投递的目标时，添加到其中",
+                "merge_always": "始终添加到通知的目标中",
+                "fixed": "仅使用这些，忽略通知的目标"
+            }
         }
     },
     "config_subentries": {
@@ -843,6 +867,102 @@
             },
             "abort": {
                 "already_configured": "此人员或用户已是接收者"
+            }
+        },
+        "transport": {
+            "entry_type": "传输",
+            "initiate_flow": {
+                "user": "添加传输"
+            },
+            "step": {
+                "user": {
+                    "title": "传输",
+                    "description": "所有在用的传输都已列出。添加需要先配置才能使用的传输，例如带动作的 generic，或带别名的 chime。\n\n[了解更多]({learn_more_url})",
+                    "data": {
+                        "transport": "传输"
+                    },
+                    "data_description": {
+                        "transport": "尚未列出的传输，且在需要时已安装其 Home Assistant 集成"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "是否使用 {transport}，以及其投递的默认值。\n\n[了解有关 {transport} 的更多信息]({learn_more_url})",
+                    "data": {
+                        "enabled": "已启用",
+                        "alias": "别名"
+                    },
+                    "data_description": {
+                        "enabled": "是否使用此传输 - 关闭时，其所有投递都不使用",
+                        "alias": "代替此传输自身名称使用的名称"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "投递默认值",
+                            "data": {
+                                "debug": "调试",
+                                "action": "动作",
+                                "target_usage": "目标用法",
+                                "target": "目标",
+                                "custom_target": "自定义目标",
+                                "options": "选项",
+                                "data": "额外数据",
+                                "inclusion": "纳入方式",
+                                "priority": "优先级",
+                                "other_delivery_defaults": "其他投递默认值"
+                            },
+                            "data_description": {
+                                "debug": "等待其投递调用的每个动作的结果并记录，以便在存档和投递属性中看到错误",
+                                "action": "其投递调用的动作，例如 notify.my_service",
+                                "target_usage": "下方目标如何与通知的目标一起使用",
+                                "target": "其投递通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作相同",
+                                "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345。类别有：{categories}",
+                                "options": "此传输自身的选项，见其页面说明，例如 chime 的 chime_aliases",
+                                "data": "添加到其投递所发送内容中的数据",
+                                "inclusion": "何时使用其投递 - 默认、仅在请求时、按场景，或作为后备",
+                                "priority": "使用其投递的优先级",
+                                "other_delivery_defaults": "任何其他投递默认值，写法同 YAML 中 delivery_defaults 下，例如 conditions、template 或 title"
+                            }
+                        },
+                        "connection": {
+                            "name": "连接",
+                            "data": {
+                                "host": "主机",
+                                "port": "端口",
+                                "encryption": "加密",
+                                "username": "用户名",
+                                "password": "密码",
+                                "timeout": "超时",
+                                "verify_ssl": "验证 SSL 证书"
+                            },
+                            "data_description": {
+                                "host": "不使用 Home Assistant SMTP 集成时的邮件服务器",
+                                "port": "STARTTLS 通常为 587，TLS 为 465",
+                                "encryption": "连接的保护方式",
+                                "username": "用于登录的账户",
+                                "password": "留空则保留已设置的密码",
+                                "timeout": "等待服务器的秒数",
+                                "verify_ssl": "检查服务器证书 - 仅对可信服务器关闭"
+                            }
+                        },
+                        "advanced": {
+                            "name": "高级",
+                            "data": {
+                                "load": "加载"
+                            },
+                            "data_description": {
+                                "load": "是否加载此传输 - 关闭时它没有投递也没有开关。如果禁用，将来需要时必须重新添加此传输"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "自定义目标既不是电子邮件地址、电话号码，也不是值对其类别有效的 类别:值",
+                "invalid_transport": "传输配置无效：{error}"
+            },
+            "abort": {
+                "no_transports": "此处可用的传输都已列出"
             }
         }
     }

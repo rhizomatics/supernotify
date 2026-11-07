@@ -6,14 +6,17 @@
 
 # v2.18.0
 
-This release continues the move of configuration from YAML into the configuration web page - now for *Recipients*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users.
+This release continues the move of configuration from YAML into the configuration web page - now for *Recipients* and *Transports*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users.
 
 ## 🚨 Breaking changes
 - *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
+- *Transports*: `transports:` in YAML is imported into the integration at start up likewise, and ignored in the YAML from then on, with a repair asking for it to be removed
 
 ## ✨ Enhancements
 - *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery overrides of enabled, targets and data. No YAML needed for default e-mail targets
 - *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. Each recipient's notify entity and switch are listed under their recipient, rather than on the Supernotify device - entity ids are unchanged
+- *Transports*: every transport in use is listed under the integration, to change or switch off with **Enabled**, with **Load** to leave it out altogether, its *Delivery Defaults* - action, targets, options, data, inclusion, priority, debug and any others as YAML - and for email, its own mail server *Connection*. **Add transport** sets up one that needs configuring before it can be used, like generic with its action, or chime with its aliases. Each transport's switch is listed under its transport, rather than on the Supernotify device - entity ids are unchanged
+- *Transports*: a repair names any deprecated settings a transport still has, such as `device_domain` directly on it rather than in its options, and saving the transport in the integration moves them to their replacements
 
 ## 📝 Other changes
 ### Development

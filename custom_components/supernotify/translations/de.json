@@ -533,6 +533,14 @@
         "yaml_recipients_imported": {
             "title": "Supernotify-Empfänger in YAML werden ignoriert",
             "description": "Empfänger werden jetzt in der Supernotify-Integration verwaltet, unter **Einstellungen → Geräte & Dienste → Supernotify**, wohin die im obersten `supernotify:` YAML importiert wurden, und werden daher im YAML ignoriert.\n\nEntferne `recipients:` aus dem YAML, um diese Warnung zu beheben. Bis dahin wird ein in der Integration gelöschter Empfänger beim nächsten Neustart erneut importiert."
+        },
+        "yaml_transports_imported": {
+            "title": "Supernotify-Transporte in YAML werden ignoriert",
+            "description": "Transporte werden jetzt in der Supernotify-Integration verwaltet, unter **Einstellungen → Geräte & Dienste → Supernotify**, wohin die aus dem obersten `supernotify:`-YAML importiert wurden, sodass sie im YAML ignoriert werden.\n\nEntferne `transports:` aus dem YAML, um diese Warnung zu beseitigen."
+        },
+        "transport_deprecated_config": {
+            "title": "Supernotify-Transport {transport} verwendet veraltete Einstellungen",
+            "description": "Der Transport {transport} hat {keys}, die veraltet sind. Sie funktionieren vorerst noch.\n\nÖffne den Transport unter **Einstellungen → Geräte & Dienste → Supernotify** und speichere ihn, wodurch sie zu ihren Ersatzeinstellungen verschoben werden: `device_domain`, `device_discovery`, `device_model_include` und `device_model_exclude` zu seinen Optionen, und `selection` zu `inclusion`."
         }
     },
     "exceptions": {
@@ -777,6 +785,22 @@
                 "delivery": "Zustellung",
                 "transport": "Transport"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "Keine"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "Nur wenn die Benachrichtigung keine Ziele hat",
+                "no_delivery": "Nur wenn die Benachrichtigung keine für diese Lieferung hat",
+                "merge_delivery": "Zu denen der Benachrichtigung hinzugefügt, wenn sie welche für diese Lieferung hat",
+                "merge_always": "Immer zu denen der Benachrichtigung hinzugefügt",
+                "fixed": "Nur diese, die der Benachrichtigung werden ignoriert"
+            }
         }
     },
     "config_subentries": {
@@ -843,6 +867,102 @@
             },
             "abort": {
                 "already_configured": "Diese Person oder dieser Benutzer ist bereits ein Empfänger"
+            }
+        },
+        "transport": {
+            "entry_type": "Transport",
+            "initiate_flow": {
+                "user": "Transport hinzufügen"
+            },
+            "step": {
+                "user": {
+                    "title": "Transport",
+                    "description": "Jeder verwendete Transport ist bereits aufgeführt. Füge einen hinzu, der vor der Verwendung konfiguriert werden muss, etwa generic mit seiner Aktion oder chime mit seinen Aliasen.\n\n[Mehr erfahren]({learn_more_url})",
+                    "data": {
+                        "transport": "Transport"
+                    },
+                    "data_description": {
+                        "transport": "Noch nicht aufgeführte Transporte, deren Home Assistant-Integration installiert ist, falls sie eine benötigen"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "Ob {transport} verwendet wird, und die Standardwerte für seine Lieferungen.\n\n[Mehr über {transport} erfahren]({learn_more_url})",
+                    "data": {
+                        "enabled": "Aktiviert",
+                        "alias": "Alias"
+                    },
+                    "data_description": {
+                        "enabled": "Ob dieser Transport überhaupt verwendet wird - wenn aus, wird keine seiner Lieferungen verwendet",
+                        "alias": "Name, der für diesen Transport anstelle seines eigenen verwendet wird"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "Lieferungsstandardwerte",
+                            "data": {
+                                "debug": "Debug",
+                                "action": "Aktion",
+                                "target_usage": "Zielverwendung",
+                                "target": "Ziele",
+                                "custom_target": "Benutzerdefinierte Ziele",
+                                "options": "Optionen",
+                                "data": "Zusätzliche Daten",
+                                "inclusion": "Einbeziehung",
+                                "priority": "Priorität",
+                                "other_delivery_defaults": "Weitere Lieferungsstandardwerte"
+                            },
+                            "data_description": {
+                                "debug": "Auf das Ergebnis jeder Aktion warten, die seine Lieferungen aufrufen, und es festhalten, damit Fehler im Archiv und in den Lieferungsattributen sichtbar sind",
+                                "action": "Die Aktion, die seine Lieferungen aufrufen, etwa notify.my_service",
+                                "target_usage": "Wie die Ziele unten zusammen mit denen der Benachrichtigung verwendet werden",
+                                "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die seine Lieferungen benachrichtigen, wie bei der Aktion supernotify.notify",
+                                "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345. Die Kategorien sind: {categories}",
+                                "options": "Die eigenen Optionen dieses Transports, wie auf seiner Seite beschrieben, etwa chime_aliases für chime",
+                                "data": "Daten, die zu dem hinzugefügt werden, was seine Lieferungen senden",
+                                "inclusion": "Wann seine Lieferungen verwendet werden - standardmäßig, nur auf Anfrage, per Szenario oder als Ausweichlösung",
+                                "priority": "Die Prioritäten, für die seine Lieferungen verwendet werden",
+                                "other_delivery_defaults": "Weitere Lieferungsstandardwerte, wie in YAML unter delivery_defaults geschrieben, etwa conditions, template oder title"
+                            }
+                        },
+                        "connection": {
+                            "name": "Verbindung",
+                            "data": {
+                                "host": "Server",
+                                "port": "Port",
+                                "encryption": "Verschlüsselung",
+                                "username": "Benutzername",
+                                "password": "Passwort",
+                                "timeout": "Zeitlimit",
+                                "verify_ssl": "SSL-Zertifikat prüfen"
+                            },
+                            "data_description": {
+                                "host": "Der Mailserver, wenn keine SMTP-Integration von Home Assistant verwendet wird",
+                                "port": "Meist 587 für STARTTLS oder 465 für TLS",
+                                "encryption": "Wie die Verbindung gesichert wird",
+                                "username": "Das Konto für die Anmeldung",
+                                "password": "Leer gelassen, bleibt das bereits gesetzte Passwort",
+                                "timeout": "Sekunden, die auf den Server gewartet wird",
+                                "verify_ssl": "Das Zertifikat des Servers prüfen - nur für einen vertrauenswürdigen Server ausschalten"
+                            }
+                        },
+                        "advanced": {
+                            "name": "Erweitert",
+                            "data": {
+                                "load": "Laden"
+                            },
+                            "data_description": {
+                                "load": "Ob dieser Transport überhaupt geladen wird - wenn aus, hat er keine Lieferungen oder Schalter. Wenn deaktiviert, muss dieser Transport künftig erneut hinzugefügt werden, falls er gebraucht wird"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "Ein benutzerdefiniertes Ziel ist weder eine E-Mail-Adresse, eine Telefonnummer noch Kategorie:Wert mit einem für die Kategorie gültigen Wert",
+                "invalid_transport": "Die Konfiguration des Transports ist ungültig: {error}"
+            },
+            "abort": {
+                "no_transports": "Jeder Transport, der hier verwendet werden kann, ist bereits aufgeführt"
             }
         }
     }

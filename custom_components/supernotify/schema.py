@@ -1,5 +1,6 @@
 """The Supernotify integration"""
 
+import datetime as dt
 import re
 from collections.abc import Callable
 from enum import IntFlag, StrEnum, auto
@@ -28,6 +29,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import TemplateVarsType
 
 from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
@@ -621,8 +623,9 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
-        # from the entry's recipient subentries, not its data or options
+        # from the entry's recipient and transport subentries, not its data or options
         vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
+        vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -724,3 +727,20 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
     }),
 )
+
+
+def as_raw_config(value: Any) -> Any:  # ruff: ignore[any-type]
+    """Validated configuration back as the plain values it was validated from, so it can be
+    stored, in a config subentry, and validated again when loaded - cv.template's Template
+    objects as their source, and the times and time periods of conditions as strings"""
+    if isinstance(value, Template):
+        return value.template
+    if isinstance(value, dict):
+        return {k: as_raw_config(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [as_raw_config(v) for v in value]
+    if isinstance(value, dt.time):
+        return value.isoformat()
+    if isinstance(value, dt.timedelta):
+        return str(value)
+    return value

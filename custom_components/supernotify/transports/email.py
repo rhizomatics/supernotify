@@ -185,6 +185,7 @@ class Alert(TypedDict):
 
 class EmailTransport(Transport):
     name = TRANSPORT_EMAIL
+    uses_connection = True
     declared_options: ClassVar[list[DeliveryOption]] = [
         *MEDIA_OPTIONS,
         DeliveryOption(

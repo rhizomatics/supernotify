@@ -533,6 +533,14 @@
         "yaml_recipients_imported": {
             "title": "Supernotify-ontvangers in YAML worden genegeerd",
             "description": "Ontvangers worden nu beheerd in de Supernotify-integratie, onder **Instellingen → Apparaten & diensten → Supernotify**, waar die uit de bovenste `supernotify:` YAML zijn geïmporteerd, dus worden ze in de YAML genegeerd.\n\nVerwijder `recipients:` uit de YAML om deze waarschuwing op te lossen. Tot die tijd wordt een in de integratie verwijderde ontvanger bij de volgende herstart opnieuw geïmporteerd."
+        },
+        "yaml_transports_imported": {
+            "title": "Supernotify-transporten in YAML worden genegeerd",
+            "description": "Transporten worden nu beheerd in de Supernotify-integratie, onder **Instellingen → Apparaten & diensten → Supernotify**, waar die uit de bovenste `supernotify:`-YAML zijn geïmporteerd, dus worden ze in de YAML genegeerd.\n\nVerwijder `transports:` uit de YAML om deze waarschuwing te wissen."
+        },
+        "transport_deprecated_config": {
+            "title": "Supernotify-transport {transport} gebruikt verouderde instellingen",
+            "description": "Het transport {transport} heeft {keys}, die verouderd zijn. Ze werken voorlopig nog.\n\nOpen het transport in **Instellingen → Apparaten & diensten → Supernotify** en sla het op, waardoor ze naar hun vervangers gaan: `device_domain`, `device_discovery`, `device_model_include` en `device_model_exclude` naar zijn opties, en `selection` naar `inclusion`."
         }
     },
     "exceptions": {
@@ -777,6 +785,22 @@
                 "delivery": "Bezorging",
                 "transport": "Transport"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "Geen"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "Alleen als de melding geen doelen heeft",
+                "no_delivery": "Alleen als de melding er geen voor deze levering heeft",
+                "merge_delivery": "Toegevoegd aan die van de melding, als die er voor deze levering heeft",
+                "merge_always": "Altijd toegevoegd aan die van de melding",
+                "fixed": "Alleen deze, die van de melding worden genegeerd"
+            }
         }
     },
     "config_subentries": {
@@ -843,6 +867,102 @@
             },
             "abort": {
                 "already_configured": "Deze persoon of gebruiker is al een ontvanger"
+            }
+        },
+        "transport": {
+            "entry_type": "Transport",
+            "initiate_flow": {
+                "user": "Transport toevoegen"
+            },
+            "step": {
+                "user": {
+                    "title": "Transport",
+                    "description": "Elk transport dat in gebruik is, staat al in de lijst. Voeg er een toe die eerst geconfigureerd moet worden, zoals generic met zijn actie, of chime met zijn aliassen.\n\n[Meer informatie]({learn_more_url})",
+                    "data": {
+                        "transport": "Transport"
+                    },
+                    "data_description": {
+                        "transport": "Transporten die nog niet in de lijst staan, waarvan de Home Assistant-integratie is geïnstalleerd, als ze er een nodig hebben"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "Of {transport} wordt gebruikt, en de standaardwaarden voor zijn leveringen.\n\n[Meer informatie over {transport}]({learn_more_url})",
+                    "data": {
+                        "enabled": "Ingeschakeld",
+                        "alias": "Alias"
+                    },
+                    "data_description": {
+                        "enabled": "Of dit transport überhaupt wordt gebruikt - uit betekent dat geen van zijn leveringen wordt gebruikt",
+                        "alias": "Naam die voor dit transport wordt gebruikt in plaats van zijn eigen naam"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "Standaardwaarden voor leveringen",
+                            "data": {
+                                "debug": "Debug",
+                                "action": "Actie",
+                                "target_usage": "Doelgebruik",
+                                "target": "Doelen",
+                                "custom_target": "Aangepaste doelen",
+                                "options": "Opties",
+                                "data": "Extra gegevens",
+                                "inclusion": "Opname",
+                                "priority": "Prioriteit",
+                                "other_delivery_defaults": "Overige standaardwaarden voor leveringen"
+                            },
+                            "data_description": {
+                                "debug": "Wachten op het resultaat van elke actie die zijn leveringen aanroepen, en dit vastleggen, zodat fouten zichtbaar zijn in het archief en de leveringsattributen",
+                                "action": "De actie die zijn leveringen aanroepen, zoals notify.my_service",
+                                "target_usage": "Hoe de doelen hieronder samen met die van de melding worden gebruikt",
+                                "target": "Entiteiten, apparaten, ruimtes, verdiepingen of labels die zijn leveringen melden, zoals bij de actie supernotify.notify",
+                                "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345. De categorieën zijn: {categories}",
+                                "options": "De eigen opties van dit transport, zoals beschreven op zijn pagina, zoals chime_aliases voor chime",
+                                "data": "Gegevens die worden toegevoegd aan wat zijn leveringen versturen",
+                                "inclusion": "Wanneer zijn leveringen worden gebruikt - standaard, alleen op verzoek, per scenario, of als terugval",
+                                "priority": "De prioriteiten waarvoor zijn leveringen worden gebruikt",
+                                "other_delivery_defaults": "Alle overige standaardwaarden voor leveringen, zoals geschreven in YAML onder delivery_defaults, zoals conditions, template of title"
+                            }
+                        },
+                        "connection": {
+                            "name": "Verbinding",
+                            "data": {
+                                "host": "Server",
+                                "port": "Poort",
+                                "encryption": "Versleuteling",
+                                "username": "Gebruikersnaam",
+                                "password": "Wachtwoord",
+                                "timeout": "Time-out",
+                                "verify_ssl": "SSL-certificaat controleren"
+                            },
+                            "data_description": {
+                                "host": "De mailserver, als er geen SMTP-integratie van Home Assistant wordt gebruikt",
+                                "port": "Meestal 587 voor STARTTLS, of 465 voor TLS",
+                                "encryption": "Hoe de verbinding is beveiligd",
+                                "username": "Het account om mee in te loggen",
+                                "password": "Leeg gelaten blijft het al ingestelde wachtwoord",
+                                "timeout": "Seconden wachten op de server",
+                                "verify_ssl": "Het certificaat van de server controleren - alleen uitzetten voor een vertrouwde server"
+                            }
+                        },
+                        "advanced": {
+                            "name": "Geavanceerd",
+                            "data": {
+                                "load": "Laden"
+                            },
+                            "data_description": {
+                                "load": "Of dit transport überhaupt wordt geladen - uit betekent geen leveringen of schakelaar. Indien uitgeschakeld, moet dit transport opnieuw worden toegevoegd als het in de toekomst nodig is"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "Een aangepast doel is geen e-mailadres, telefoonnummer of categorie:waarde met een geldige waarde voor de categorie",
+                "invalid_transport": "De configuratie van het transport is ongeldig: {error}"
+            },
+            "abort": {
+                "no_transports": "Elk transport dat hier gebruikt kan worden, staat al in de lijst"
             }
         }
     }

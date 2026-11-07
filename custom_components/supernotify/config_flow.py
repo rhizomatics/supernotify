@@ -12,7 +12,7 @@ unconditional owner of registering notify.supernotify in every case.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from anyio import Path
 from homeassistant.config_entries import (
@@ -30,11 +30,19 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ALIAS,
+    CONF_DEBUG,
     CONF_EMAIL,
     CONF_ENABLED,
+    CONF_HOST,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
     CONF_TARGET,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
@@ -42,6 +50,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     ObjectSelector,
     SelectOptionDict,
     SelectSelector,
@@ -71,40 +82,70 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
+    CONF_CONNECTION,
+    CONF_DATA,
     CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_DEVICE_DISCOVERY,
+    CONF_DEVICE_DOMAIN,
+    CONF_DEVICE_MODEL_EXCLUDE,
+    CONF_DEVICE_MODEL_INCLUDE,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
+    CONF_ENCRYPTION,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_INCLUSION,
     CONF_LLM_ACTION_TOOLS,
     CONF_LLM_DIAGNOSTIC_TOOLS,
     CONF_LLM_TOOLS,
+    CONF_LOAD,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
+    CONF_OPTIONS,
     CONF_PERSON,
     CONF_PHONE_NUMBER,
+    CONF_PRIORITY,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_SELECTION,
     CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
+    CONF_TARGET_USAGE,
     CONF_TEMPLATE_PATH,
+    CONF_TRANSPORT,
     CONF_TTL,
     CONF_USER_ID,
     CONF_VOICE_OCCUPANCY,
     DEFAULT_INCLUSION_VALUES,
+    INCLUSION_VALUES,
     OCCUPANCY_VALUES,
+    PRIORITY_VALUES,
     SUBENTRY_TYPE_RECIPIENT,
+    SUBENTRY_TYPE_TRANSPORT,
     TARGET_CATEGORY_VALUES,
+    TARGET_USAGE_VALUES,
+    TRANSPORT_GENERIC,
 )
 from .hass_api import HomeAssistantAPI
+from .options import (
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
+)
 from .people import PeopleRegistry, recipient_key
-from .schema import RECIPIENT_DELIVERY_SCHEMA, RECIPIENT_SCHEMA, OutcomeSelection
+from .schema import RECIPIENT_DELIVERY_SCHEMA, RECIPIENT_SCHEMA, TRANSPORT_SCHEMA, OutcomeSelection
 from .target import Target
+
+if TYPE_CHECKING:
+    from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,6 +159,21 @@ _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_
 ARCHIVE_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/"
 DUPE_CHECK_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/"
 PEOPLE_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/people/"
+TRANSPORTS_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/transports/"
+# the transport form's field for the delivery defaults it has no field of its own for, and
+# those it does
+ATTR_OTHER_DELIVERY_DEFAULTS = "other_delivery_defaults"
+_TYPED_DELIVERY_DEFAULTS = (
+    CONF_DEBUG,
+    CONF_ACTION,
+    CONF_TARGET_USAGE,
+    CONF_OPTIONS,
+    CONF_DATA,
+    CONF_INCLUSION,
+    CONF_PRIORITY,
+)
+# the transport form's section for settings seldom changed
+SECTION_ADVANCED = "advanced"
 
 # The Delivery Control choices meaning "not set", which leave deliveries with their transport's own
 # default - never stored, the option is left out instead
@@ -342,7 +398,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @callback
     def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:
-        return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlow}
+        return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlow, SUBENTRY_TYPE_TRANSPORT: TransportSubentryFlow}
 
 
 class SupernotifyOptionsFlow(OptionsFlow):
@@ -732,3 +788,234 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         """The running deliveries, to list for the delivery field"""
         engine = getattr(self._get_entry(), "runtime_data", None)
         return sorted(engine.context.delivery_registry.deliveries) if engine is not None else []
+
+
+class TransportSubentryFlow(ConfigSubentryFlow):
+    """Add or change a transport - whether it's used, and the defaults for its deliveries.
+
+    Every transport in use is listed already, so adding one is for those needing configuration
+    before they can be used, like generic's action or chime's aliases. The transport is held as
+    it would be written in YAML under `transports:`, and saved as that.
+    """
+
+    def __init__(self) -> None:
+        self._name: str = ""
+        self._transport: dict[str, Any] = {}
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Which transport, of those not listed already whose integration is here"""
+        addable = self._addable()
+        if not addable:
+            return self.async_abort(reason="no_transports")
+        if user_input is not None:
+            self._name = user_input[CONF_TRANSPORT]
+            return await self.async_step_details()
+        schema = vol.Schema({vol.Required(CONF_TRANSPORT): SelectSelector(SelectSelectorConfig(options=addable))})
+        return self.async_show_form(
+            step_id="user", data_schema=schema, description_placeholders={"learn_more_url": TRANSPORTS_DOCS_URL}
+        )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        subentry = self._get_reconfigure_subentry()
+        self._name = str(subentry.unique_id)
+        self._transport = dict(subentry.data)
+        return await self.async_step_details()
+
+    async def async_step_details(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Whether the transport is used, the defaults for its deliveries, and its connection"""
+        errors: dict[str, str] = {}
+        error = ""
+        # deprecated settings are shown, and saved, as their replacements
+        defaults: dict[str, Any] = dict(_migrate_deprecated(self._transport).get(CONF_DELIVERY_DEFAULTS) or {})
+        if user_input is not None:
+            given: dict[str, Any] = user_input.get(CONF_DELIVERY_DEFAULTS, {})
+            other = given.get(ATTR_OTHER_DELIVERY_DEFAULTS) or {}
+            try:
+                target = target_from_fields(given.get(CONF_TARGET), given.get(ATTR_CUSTOM_TARGET))
+            except vol.Invalid:
+                errors["base"] = "invalid_custom_target"
+            if not isinstance(other, dict):
+                errors["base"] = "invalid_transport"
+                error = str(other)
+            if not errors:
+                # a field left empty leaves the same setting in the other delivery defaults alone
+                defaults = dict(other)
+                for key in _TYPED_DELIVERY_DEFAULTS:
+                    if given.get(key):
+                        defaults[key] = given[key]
+                if target:
+                    defaults[CONF_TARGET] = target
+                transport = {
+                    k: v
+                    for k, v in _migrate_deprecated(self._transport).items()
+                    if k not in (CONF_ALIAS, CONF_ENABLED, CONF_LOAD, CONF_DELIVERY_DEFAULTS, CONF_CONNECTION)
+                }
+                transport[CONF_ENABLED] = user_input[CONF_ENABLED]
+                transport[CONF_LOAD] = user_input.get(SECTION_ADVANCED, {}).get(CONF_LOAD, True)
+                for key, value in (
+                    (CONF_ALIAS, user_input.get(CONF_ALIAS)),
+                    (CONF_DELIVERY_DEFAULTS, defaults),
+                    (CONF_CONNECTION, self._connection(user_input.get(CONF_CONNECTION))),
+                ):
+                    if value:
+                        transport[key] = value
+                try:
+                    TRANSPORT_SCHEMA(transport)
+                except vol.Invalid as err:
+                    errors["base"] = "invalid_transport"
+                    error = str(err)
+                else:
+                    self._transport = transport
+                    return await self.async_step_save()
+
+        selected_target, custom_target = target_to_fields(defaults.get(CONF_TARGET))
+        transport_class = self._transport_class()
+        fields: dict[Any, Any] = {
+            vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_ALIAS): TextSelector(),
+        }
+        default_fields: dict[Any, Any] = {vol.Optional(CONF_DEBUG): cv.boolean}
+        if self._takes_action():
+            default_fields[vol.Optional(CONF_ACTION)] = TextSelector()
+        default_fields.update({
+            # above the targets, as it says how they're used
+            vol.Optional(CONF_TARGET_USAGE): SelectSelector(
+                SelectSelectorConfig(options=TARGET_USAGE_VALUES, translation_key=CONF_TARGET_USAGE)
+            ),
+            vol.Optional(CONF_TARGET): TargetSelector(),
+            vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
+            vol.Optional(CONF_OPTIONS): ObjectSelector(),
+            vol.Optional(CONF_DATA): ObjectSelector(),
+            vol.Optional(CONF_INCLUSION): SelectSelector(SelectSelectorConfig(options=INCLUSION_VALUES, multiple=True)),
+            # custom values, as YAML can give a priority as a number
+            vol.Optional(CONF_PRIORITY): SelectSelector(
+                SelectSelectorConfig(options=list(PRIORITY_VALUES), multiple=True, custom_value=True)
+            ),
+            vol.Optional(ATTR_OTHER_DELIVERY_DEFAULTS): ObjectSelector(),
+        })
+        fields[vol.Optional(CONF_DELIVERY_DEFAULTS, default=dict)] = section(vol.Schema(default_fields), {"collapsed": False})
+        load = self._transport.get(CONF_LOAD, True)
+        fields[vol.Optional(SECTION_ADVANCED, default=dict)] = section(
+            vol.Schema({vol.Optional(CONF_LOAD, default=True): cv.boolean}), {"collapsed": bool(load)}
+        )
+        connection: dict[str, Any] = dict(self._transport.get(CONF_CONNECTION) or {})
+        if transport_class is not None and transport_class.uses_connection:
+            fields[vol.Optional(CONF_CONNECTION, default=dict)] = section(
+                vol.Schema({
+                    vol.Optional(CONF_HOST): TextSelector(),
+                    vol.Optional(CONF_PORT): NumberSelector(
+                        NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
+                    ),
+                    vol.Optional(CONF_ENCRYPTION): SelectSelector(
+                        SelectSelectorConfig(options=["tls", "starttls", "none"], translation_key="connection_encryption")
+                    ),
+                    vol.Optional(CONF_USERNAME): TextSelector(),
+                    # never shown, and left empty to keep the one there is
+                    vol.Optional(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+                    vol.Optional(CONF_TIMEOUT): NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
+                    vol.Optional(CONF_VERIFY_SSL): cv.boolean,
+                }),
+                {"collapsed": not connection},
+            )
+        suggested = {
+            CONF_ENABLED: self._transport.get(CONF_ENABLED, True),
+            SECTION_ADVANCED: {CONF_LOAD: load},
+            CONF_ALIAS: self._transport.get(CONF_ALIAS),
+            CONF_DELIVERY_DEFAULTS: {
+                CONF_ACTION: defaults.get(CONF_ACTION),
+                CONF_TARGET: selected_target or None,
+                ATTR_CUSTOM_TARGET: custom_target or None,
+                CONF_OPTIONS: defaults.get(CONF_OPTIONS),
+                CONF_DATA: defaults.get(CONF_DATA),
+                CONF_INCLUSION: cv.ensure_list(defaults.get(CONF_INCLUSION)) or None,
+                CONF_PRIORITY: [str(p) for p in cv.ensure_list(defaults.get(CONF_PRIORITY))] or None,
+                CONF_DEBUG: defaults.get(CONF_DEBUG, False),
+                CONF_TARGET_USAGE: defaults.get(CONF_TARGET_USAGE),
+                ATTR_OTHER_DELIVERY_DEFAULTS: {
+                    k: v for k, v in defaults.items() if k not in (*_TYPED_DELIVERY_DEFAULTS, CONF_TARGET)
+                }
+                or None,
+            },
+            CONF_CONNECTION: {k: v for k, v in connection.items() if k != CONF_PASSWORD},
+        }
+        return self.async_show_form(
+            step_id="details",
+            data_schema=self.add_suggested_values_to_schema(vol.Schema(fields), suggested),
+            errors=errors,
+            description_placeholders={
+                "transport": self._title(),
+                "learn_more_url": f"{TRANSPORTS_DOCS_URL}{self._name}/",
+                "categories": ", ".join(TARGET_CATEGORY_VALUES),
+                "error": error,
+            },
+        )
+
+    def _connection(self, given: dict[str, Any] | None) -> dict[str, Any]:
+        """The connection as entered, the numbers as whole numbers, and with the password kept
+        when it's left empty"""
+        connection = {k: int(v) if isinstance(v, float) else v for k, v in (given or {}).items() if v not in (None, "")}
+        if CONF_PASSWORD not in connection and (password := (self._transport.get(CONF_CONNECTION) or {}).get(CONF_PASSWORD)):
+            connection[CONF_PASSWORD] = password
+        return connection
+
+    async def async_step_save(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), data=self._transport, title=self._title()
+            )
+        return self.async_create_entry(title=self._title(), data=self._transport, unique_id=self._name)
+
+    def _title(self) -> str:
+        return str(self._transport.get(CONF_ALIAS) or self._name)
+
+    def _transport_class(self) -> type[Transport] | None:
+        from .static_config import TRANSPORTS
+
+        return next((t for t in TRANSPORTS if t.name == self._name), None)
+
+    def _takes_action(self) -> bool:
+        """Whether the transport's action is configured, rather than fixed or found for it"""
+        transport_class = self._transport_class()
+        return transport_class is not None and (transport_class.action_configured or self._name == TRANSPORT_GENERIC)
+
+    def _addable(self) -> list[str]:
+        """The transports not listed already, whose integration, if they need one, is here"""
+        from .static_config import TRANSPORTS
+
+        listed = {s.unique_id for s in self._get_entry().subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT}
+        hass_api = HomeAssistantAPI(self.hass)
+        return sorted(
+            t.name
+            for t in TRANSPORTS
+            if t.name not in listed and (t.integration_domain is None or hass_api.integration_loaded(t.integration_domain))
+        )
+
+
+def _migrate_deprecated(transport: dict[str, Any]) -> dict[str, Any]:
+    """A transport's configuration with its deprecated settings moved to their replacements, as
+    model.TransportConfig applies them - device_domain, device_discovery and device_model_include/
+    exclude to its options, and its delivery defaults' selection to inclusion"""
+    migrated = {
+        k: v
+        for k, v in transport.items()
+        if k not in (CONF_DEVICE_DOMAIN, CONF_DEVICE_DISCOVERY, CONF_DEVICE_MODEL_INCLUDE, CONF_DEVICE_MODEL_EXCLUDE)
+    }
+    defaults: dict[str, Any] = dict(transport.get(CONF_DELIVERY_DEFAULTS) or {})
+    options: dict[str, Any] = dict(defaults.get(CONF_OPTIONS) or {})
+    if CONF_DEVICE_DOMAIN in transport:
+        options[OPTION_DEVICE_DOMAIN] = transport[CONF_DEVICE_DOMAIN]
+    if CONF_DEVICE_MODEL_INCLUDE in transport or CONF_DEVICE_MODEL_EXCLUDE in transport:
+        options[OPTION_DEVICE_MODEL_SELECT] = {
+            SELECT_INCLUDE: transport.get(CONF_DEVICE_MODEL_INCLUDE),
+            SELECT_EXCLUDE: transport.get(CONF_DEVICE_MODEL_EXCLUDE),
+        }
+    if CONF_DEVICE_DISCOVERY in transport and options.get(OPTION_DEVICE_DISCOVERY) is None:
+        options[OPTION_DEVICE_DISCOVERY] = transport[CONF_DEVICE_DISCOVERY]
+    if CONF_SELECTION in defaults:
+        selection = defaults.pop(CONF_SELECTION)
+        defaults.setdefault(CONF_INCLUSION, selection)
+    if options:
+        defaults[CONF_OPTIONS] = options
+    if defaults:
+        migrated[CONF_DELIVERY_DEFAULTS] = defaults
+    return migrated

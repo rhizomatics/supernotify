@@ -533,6 +533,14 @@
         "yaml_recipients_imported": {
             "title": "Os destinatários do Supernotify em YAML são ignorados",
             "description": "Os destinatários são agora geridos na integração Supernotify, em **Definições → Dispositivos e serviços → Supernotify**, onde foram importados os do YAML `supernotify:` de topo, pelo que são ignorados no YAML.\n\nRemova `recipients:` do YAML para eliminar este aviso. Até lá, um destinatário apagado na integração é importado de novo no reinício seguinte."
+        },
+        "yaml_transports_imported": {
+            "title": "Os transportes do Supernotify em YAML são ignorados",
+            "description": "Os transportes são agora geridos na integração Supernotify, em **Definições → Dispositivos e serviços → Supernotify**, onde os do YAML `supernotify:` de nível superior foram importados, pelo que são ignorados no YAML.\n\nRemova `transports:` do YAML para limpar este aviso."
+        },
+        "transport_deprecated_config": {
+            "title": "O transporte {transport} do Supernotify usa definições obsoletas",
+            "description": "O transporte {transport} tem {keys}, que estão obsoletas. Por agora ainda funcionam.\n\nAbra o transporte em **Definições → Dispositivos e serviços → Supernotify** e guarde-o, o que as move para as suas substituições: `device_domain`, `device_discovery`, `device_model_include` e `device_model_exclude` para as suas opções, e `selection` para `inclusion`."
         }
     },
     "exceptions": {
@@ -777,6 +785,22 @@
                 "delivery": "Entrega",
                 "transport": "Transporte"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "Nenhuma"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "Só quando a notificação não tem destinos",
+                "no_delivery": "Só quando a notificação não tem nenhum para esta entrega",
+                "merge_delivery": "Acrescentados aos da notificação, quando tem algum para esta entrega",
+                "merge_always": "Sempre acrescentados aos da notificação",
+                "fixed": "Só estes, ignorando os da notificação"
+            }
         }
     },
     "config_subentries": {
@@ -843,6 +867,102 @@
             },
             "abort": {
                 "already_configured": "Esta pessoa ou utilizador já é um destinatário"
+            }
+        },
+        "transport": {
+            "entry_type": "Transporte",
+            "initiate_flow": {
+                "user": "Adicionar transporte"
+            },
+            "step": {
+                "user": {
+                    "title": "Transporte",
+                    "description": "Todos os transportes em uso já estão listados. Adicione um que precise de configuração antes de poder ser usado, como generic com a sua ação, ou chime com os seus aliases.\n\n[Saiba mais]({learn_more_url})",
+                    "data": {
+                        "transport": "Transporte"
+                    },
+                    "data_description": {
+                        "transport": "Transportes ainda não listados, cuja integração do Home Assistant está instalada, se precisarem de uma"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "Se {transport} é usado, e as predefinições das suas entregas.\n\n[Saiba mais sobre {transport}]({learn_more_url})",
+                    "data": {
+                        "enabled": "Ativado",
+                        "alias": "Alias"
+                    },
+                    "data_description": {
+                        "enabled": "Se este transporte é usado - desativado, nenhuma das suas entregas é usada",
+                        "alias": "Nome usado para este transporte em vez do seu próprio"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "Predefinições de entrega",
+                            "data": {
+                                "debug": "Depuração",
+                                "action": "Ação",
+                                "target_usage": "Utilização dos destinos",
+                                "target": "Destinos",
+                                "custom_target": "Destinos personalizados",
+                                "options": "Opções",
+                                "data": "Dados extra",
+                                "inclusion": "Inclusão",
+                                "priority": "Prioridade",
+                                "other_delivery_defaults": "Outras predefinições de entrega"
+                            },
+                            "data_description": {
+                                "debug": "Esperar pelo resultado de cada ação chamada pelas suas entregas, e registá-lo, para ver os erros no arquivo e nos atributos da entrega",
+                                "action": "A ação chamada pelas suas entregas, como notify.my_service",
+                                "target_usage": "Como os destinos abaixo são usados com os da notificação",
+                                "target": "Entidades, dispositivos, áreas, pisos ou etiquetas notificados pelas suas entregas, como na ação supernotify.notify",
+                                "custom_target": "Destinos que o seletor não oferece, um por linha - um endereço de e-mail, um número de telefone ou categoria:valor, como telegram_chat_id:12345. As categorias são: {categories}",
+                                "options": "As opções próprias deste transporte, descritas na sua página, como chime_aliases para chime",
+                                "data": "Dados acrescentados ao que as suas entregas enviam",
+                                "inclusion": "Quando as suas entregas são usadas - por predefinição, só quando pedidas, por cenário, ou como alternativa",
+                                "priority": "As prioridades para as quais as suas entregas são usadas",
+                                "other_delivery_defaults": "Quaisquer outras predefinições de entrega, escritas como em YAML em delivery_defaults, como conditions, template ou title"
+                            }
+                        },
+                        "connection": {
+                            "name": "Ligação",
+                            "data": {
+                                "host": "Servidor",
+                                "port": "Porta",
+                                "encryption": "Encriptação",
+                                "username": "Nome de utilizador",
+                                "password": "Palavra-passe",
+                                "timeout": "Tempo limite",
+                                "verify_ssl": "Verificar certificado SSL"
+                            },
+                            "data_description": {
+                                "host": "O servidor de correio, quando não se usa uma integração SMTP do Home Assistant",
+                                "port": "Normalmente 587 para STARTTLS, ou 465 para TLS",
+                                "encryption": "Como a ligação é protegida",
+                                "username": "A conta com que iniciar sessão",
+                                "password": "Deixada vazia, mantém-se a palavra-passe já definida",
+                                "timeout": "Segundos de espera pelo servidor",
+                                "verify_ssl": "Verificar o certificado do servidor - desative apenas para um servidor de confiança"
+                            }
+                        },
+                        "advanced": {
+                            "name": "Avançado",
+                            "data": {
+                                "load": "Carregar"
+                            },
+                            "data_description": {
+                                "load": "Se este transporte é carregado - desativado, não tem entregas nem interruptor. Se desativado, este transporte terá de ser adicionado de novo se for preciso no futuro"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "Um destino personalizado não é um endereço de e-mail, um número de telefone nem categoria:valor com um valor válido para a sua categoria",
+                "invalid_transport": "A configuração do transporte não é válida: {error}"
+            },
+            "abort": {
+                "no_transports": "Todos os transportes que podem ser usados aqui já estão listados"
             }
         }
     }

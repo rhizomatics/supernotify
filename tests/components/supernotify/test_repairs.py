@@ -216,7 +216,8 @@ async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     hass.config.config_dir = str(tmp_path)
     (tmp_path / "configuration.yaml").write_text("homeassistant:\n")
 
-    flow = _flow(hass)
+    transport = {"delivery_defaults": {"action": "notify.send_message", "conditions": "{{ true }}"}}
+    flow = _flow(hass, {**LEGACY_CONFIG, "transports": {"generic": transport}})
     form = await flow.async_step_init()
     assert form["type"] == FlowResultType.FORM
     assert form["step_id"] == "confirm"
@@ -239,9 +240,13 @@ async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert hass.services.has_service("notify", "supernotify")
-    # recipients go straight to subentries, never through supernotify.yaml
+    # recipients and transports go straight to subentries, never through supernotify.yaml, the
+    # transports as they were written, rather than validated, which holds templates
     assert "recipients" not in written
-    assert [(s.subentry_type, s.unique_id) for s in entries[0].subentries.values()] == [("recipient", "person.house_owner")]
+    assert "transports" not in written
+    subentries = {(s.subentry_type, s.unique_id): s for s in entries[0].subentries.values()}
+    assert ("recipient", "person.house_owner") in subentries
+    assert dict(subentries["transport", "generic"].data) == transport
     assert "person.house_owner" in entries[0].runtime_data.context.people_registry.people
 
     issue_registry = ir.async_get(hass)

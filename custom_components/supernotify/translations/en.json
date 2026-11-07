@@ -681,6 +681,14 @@
         "yaml_recipients_imported": {
             "title": "Supernotify recipients in YAML are ignored",
             "description": "Recipients are now managed in the Supernotify integration, under **Settings → Devices & services → Supernotify**, where those in the top-level `supernotify:` YAML have been imported, so are ignored in the YAML.\n\nRemove `recipients:` from the YAML to clear this warning. Until then, a recipient deleted in the integration is imported again on the next restart."
+        },
+        "yaml_transports_imported": {
+            "title": "Supernotify transports in YAML are ignored",
+            "description": "Transports are now managed in the Supernotify integration, under **Settings → Devices & services → Supernotify**, where those in the top-level `supernotify:` YAML have been imported, so are ignored in the YAML.\n\nRemove `transports:` from the YAML to clear this warning."
+        },
+        "transport_deprecated_config": {
+            "title": "Supernotify {transport} transport uses deprecated settings",
+            "description": "The {transport} transport has {keys}, which are deprecated. They still work for now.\n\nOpen the transport in **Settings → Devices & services → Supernotify** and save it, which moves them to their replacements: `device_domain`, `device_discovery`, `device_model_include` and `device_model_exclude` to its options, and `selection` to `inclusion`."
         }
     },
     "exceptions": {
@@ -812,6 +820,22 @@
                 "delivery": "Delivery",
                 "transport": "Transport"
             }
+        },
+        "connection_encryption": {
+            "options": {
+                "tls": "TLS",
+                "starttls": "STARTTLS",
+                "none": "None"
+            }
+        },
+        "target_usage": {
+            "options": {
+                "no_action": "Only when the notification has no targets",
+                "no_delivery": "Only when the notification has none for this delivery",
+                "merge_delivery": "Added to the notification's, where it has some for this delivery",
+                "merge_always": "Always added to the notification's",
+                "fixed": "Only these, ignoring the notification's"
+            }
         }
     },
     "config_subentries": {
@@ -878,6 +902,102 @@
             },
             "abort": {
                 "already_configured": "This person or user is already a recipient"
+            }
+        },
+        "transport": {
+            "entry_type": "Transport",
+            "initiate_flow": {
+                "user": "Add transport"
+            },
+            "step": {
+                "user": {
+                    "title": "Transport",
+                    "description": "Every transport in use is listed already. Add one that needs configuring before it can be used, such as generic with its action, or chime with its aliases.\n\n[Learn more]({learn_more_url})",
+                    "data": {
+                        "transport": "Transport"
+                    },
+                    "data_description": {
+                        "transport": "Transports not listed already, whose Home Assistant integration is installed, if they need one"
+                    }
+                },
+                "details": {
+                    "title": "{transport}",
+                    "description": "Whether {transport} is used, and the defaults for its deliveries.\n\n[Learn more about {transport}]({learn_more_url})",
+                    "data": {
+                        "enabled": "Enabled",
+                        "alias": "Alias"
+                    },
+                    "data_description": {
+                        "enabled": "Whether this transport is used at all - when off, none of its deliveries are",
+                        "alias": "Name used for this transport in place of its own"
+                    },
+                    "sections": {
+                        "delivery_defaults": {
+                            "name": "Delivery Defaults",
+                            "data": {
+                                "debug": "Debug",
+                                "action": "Action",
+                                "target_usage": "Target usage",
+                                "target": "Targets",
+                                "custom_target": "Custom targets",
+                                "options": "Options",
+                                "data": "Extra Data",
+                                "inclusion": "Inclusion",
+                                "priority": "Priority",
+                                "other_delivery_defaults": "Other delivery defaults"
+                            },
+                            "data_description": {
+                                "debug": "Wait for the result of each action its deliveries call, and record it, so errors are seen in the archive and delivery attributes",
+                                "action": "The action its deliveries call, such as notify.my_service",
+                                "target_usage": "How the targets below are used alongside those of the notification",
+                                "target": "Entities, devices, areas, floors or labels its deliveries notify, as in the supernotify.notify action",
+                                "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345. The categories are: {categories}",
+                                "options": "This transport's own options, as described on its page, such as chime_aliases for chime",
+                                "data": "Data added to what its deliveries send",
+                                "inclusion": "When its deliveries are used - by default, only when asked for, by scenario, or as a fallback",
+                                "priority": "The priorities its deliveries are used for",
+                                "other_delivery_defaults": "Any other delivery defaults, as written in YAML under delivery_defaults, such as conditions, template or title"
+                            }
+                        },
+                        "connection": {
+                            "name": "Connection",
+                            "data": {
+                                "host": "Host",
+                                "port": "Port",
+                                "encryption": "Encryption",
+                                "username": "Username",
+                                "password": "Password",
+                                "timeout": "Timeout",
+                                "verify_ssl": "Verify SSL certificate"
+                            },
+                            "data_description": {
+                                "host": "The mail server, when not using a Home Assistant SMTP integration",
+                                "port": "Usually 587 for STARTTLS, or 465 for TLS",
+                                "encryption": "How the connection is secured",
+                                "username": "The account to log in with",
+                                "password": "Left empty, the password set already is kept",
+                                "timeout": "Seconds to wait for the server",
+                                "verify_ssl": "Check the server's certificate - only turn off for a server you trust"
+                            }
+                        },
+                        "advanced": {
+                            "name": "Advanced",
+                            "data": {
+                                "load": "Load"
+                            },
+                            "data_description": {
+                                "load": "Whether this transport is loaded at all - when off, it has no deliveries or switch. If disabled, this transport will have to be re-added if needed in future"
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "invalid_custom_target": "A custom target isn't an e-mail address, a phone number, or category:value with a valid value for its category",
+                "invalid_transport": "The transport's configuration isn't valid: {error}"
+            },
+            "abort": {
+                "no_transports": "Every transport that can be used here is listed already"
             }
         }
     }
