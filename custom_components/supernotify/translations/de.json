@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "Wartungszeit",
-                    "media_storage_days": "Medienspeichertage"
+                    "media_storage_days": "Medienspeichertage",
+                    "deprecated_entities": "Veraltete Entitäten"
                 },
                 "data_description": {
                     "housekeeping_time": "Tageszeit (HH:MM:SS), zu der die geplante Wartung, z. B. Medienbereinigung, ausgeführt wird",
-                    "media_storage_days": "Wie viele Tage gespeicherte Medien, z. B. Snapshots und Anhänge, aufbewahrt werden"
+                    "media_storage_days": "Wie viele Tage gespeicherte Medien, z. B. Snapshots und Anhänge, aufbewahrt werden",
+                    "deprecated_entities": "Die veralteten Empfänger-, Lieferungs- und Transport-binary_sensors aus einer früheren Version behalten. Ausgeschaltet werden sie entfernt und können nicht wiederhergestellt werden"
                 },
                 "title": "Wartungsoptionen"
             },

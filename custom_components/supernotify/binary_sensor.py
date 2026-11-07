@@ -40,12 +40,15 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 from .common import sanitize
 from .const import (
+    CONF_DEPRECATED_ENTITIES,
+    CONF_HOUSEKEEPING,
     DELIVERY_UNRECORDED_ATTRIBUTES,
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_TRANSPORT,
@@ -53,6 +56,8 @@ from .const import (
 )
 from .hass_api import ha_device_info
 from .repairs import (
+    DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID,
+    RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID,
     async_create_delivery_transport_binary_sensor_deprecated_issue,
     async_create_recipient_binary_sensor_deprecated_issue,
 )
@@ -102,6 +107,11 @@ async def async_setup_entry(
     # existing install that already has them, and never published for anyone new - which
     # includes a recipient, delivery or transport added to an existing install. Whether an entity
     # exists is known from its registry entry, which is only created by adding the entity.
+    # Housekeeping's deprecated_entities switched off removes them, for good.
+    if not entry.options.get(CONF_HOUSEKEEPING, {}).get(CONF_DEPRECATED_ENTITIES, True):
+        async_remove_deprecated_entities(hass, entry.entry_id)
+        async_add_entities(entities)
+        return
     in_use = False
     for recipient in service.context.people_registry.people.values():
         registry_entry = _existing_row(entity_registry, f"recipient_{recipient.name}")
@@ -316,3 +326,26 @@ class SupernotifyTransportBinarySensor(SupernotifyLegacyBinarySensor):
 
     def __init__(self, transport: Transport, registry: DeliveryRegistry, device_info: DeviceInfo) -> None:
         super().__init__(OVERRIDE_KIND_TRANSPORT, transport, registry, device_info)
+
+
+_DEPRECATED_UNIQUE_ID_PREFIXES = ("recipient_", "delivery_", "transport_")
+
+
+def deprecated_entity_ids(hass: HomeAssistant, entry_id: str) -> list[str]:
+    """The deprecated recipient, delivery and transport binary_sensors this entry still has"""
+    return [
+        e.entity_id
+        for e in er.async_entries_for_config_entry(er.async_get(hass), entry_id)
+        if e.domain == Platform.BINARY_SENSOR and e.unique_id.startswith(_DEPRECATED_UNIQUE_ID_PREFIXES)
+    ]
+
+
+def async_remove_deprecated_entities(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove the deprecated binary_sensors, and the repairs asking for them to be replaced"""
+    entity_registry = er.async_get(hass)
+    for entity_id in deprecated_entity_ids(hass, entry_id):
+        _LOGGER.info("SUPERNOTIFY Removing deprecated %s", entity_id)
+        entity_registry.async_remove(entity_id)
+        hass.states.async_remove(entity_id)
+    for issue_id in (RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID, DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)

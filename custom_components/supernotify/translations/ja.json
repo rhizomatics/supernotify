@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "ハウスキーピング時刻",
-                    "media_storage_days": "メディア保存日数"
+                    "media_storage_days": "メディア保存日数",
+                    "deprecated_entities": "非推奨のエンティティ"
                 },
                 "data_description": {
                     "housekeeping_time": "メディアパージなどの定期ハウスキーピングが実行される時刻（HH:MM:SS）",
-                    "media_storage_days": "スナップショットや添付ファイルなどの保存メディアを保持する日数"
+                    "media_storage_days": "スナップショットや添付ファイルなどの保存メディアを保持する日数",
+                    "deprecated_entities": "以前のバージョンから引き継いだ非推奨の受信者・配信・トランスポートの binary_sensor を保持します。オフにすると削除され、元に戻せません"
                 },
                 "title": "ハウスキーピングオプション"
             },

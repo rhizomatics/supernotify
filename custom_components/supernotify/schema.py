@@ -100,6 +100,7 @@ from .const import (
     CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
     CONF_DELIVERY_DEFAULTS,
+    CONF_DEPRECATED_ENTITIES,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
     CONF_DEVICE_MODEL_EXCLUDE,
@@ -568,6 +569,7 @@ ARCHIVE_SCHEMA = vol.All(
 HOUSEKEEPING_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOUSEKEEPING_TIME, default="00:00:01"): cv.time,
     vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=7): cv.positive_int,
+    vol.Optional(CONF_DEPRECATED_ENTITIES, default=True): cv.boolean,
 })
 
 # The 8 keys not yet configurable via ConfigFlow - defined under the top-level `supernotify:`

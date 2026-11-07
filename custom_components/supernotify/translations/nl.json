@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "Onderhoudstijd",
-                    "media_storage_days": "Mediaopslagdagen"
+                    "media_storage_days": "Mediaopslagdagen",
+                    "deprecated_entities": "Verouderde entiteiten"
                 },
                 "data_description": {
                     "housekeeping_time": "Tijdstip (UU:MM:SS) waarop gepland onderhoud, zoals media-opschoning, wordt uitgevoerd",
-                    "media_storage_days": "Hoeveel dagen opgeslagen media, zoals snapshots en bijlagen, wordt bewaard"
+                    "media_storage_days": "Hoeveel dagen opgeslagen media, zoals snapshots en bijlagen, wordt bewaard",
+                    "deprecated_entities": "De verouderde binary_sensors voor ontvanger, levering en transport uit een eerdere versie behouden. Uitgeschakeld worden ze verwijderd en kunnen ze niet worden teruggehaald"
                 },
                 "title": "Onderhoudsopties"
             },

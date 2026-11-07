@@ -546,11 +546,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "Housekeeping Time",
-                    "media_storage_days": "Media Storage Days"
+                    "media_storage_days": "Media Storage Days",
+                    "deprecated_entities": "Deprecated Entities"
                 },
                 "data_description": {
                     "housekeeping_time": "Time of day (HH:MM:SS) that scheduled housekeeping, such as media purge, runs",
-                    "media_storage_days": "How many days of stored media, such as snapshots and attachments, to keep"
+                    "media_storage_days": "How many days of stored media, such as snapshots and attachments, to keep",
+                    "deprecated_entities": "Keep the deprecated recipient, delivery and transport binary_sensors carried over from an earlier version. Turned off, they're removed, and can't be brought back"
                 },
                 "title": "Housekeeping Options"
             },

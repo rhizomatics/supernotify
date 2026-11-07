@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "维护时间",
-                    "media_storage_days": "媒体存储天数"
+                    "media_storage_days": "媒体存储天数",
+                    "deprecated_entities": "已弃用的实体"
                 },
                 "data_description": {
                     "housekeeping_time": "计划维护（例如媒体清理）运行的时间（HH:MM:SS）",
-                    "media_storage_days": "存储的媒体（例如快照和附件）保留的天数"
+                    "media_storage_days": "存储的媒体（例如快照和附件）保留的天数",
+                    "deprecated_entities": "保留从早期版本沿用的已弃用接收人、投递和传输 binary_sensor。关闭后它们会被删除，且无法恢复"
                 },
                 "title": "维护选项"
             },

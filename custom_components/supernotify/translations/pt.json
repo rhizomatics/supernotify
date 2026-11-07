@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "Horário de manutenção",
-                    "media_storage_days": "Dias de armazenamento de mídia"
+                    "media_storage_days": "Dias de armazenamento de mídia",
+                    "deprecated_entities": "Entidades obsoletas"
                 },
                 "data_description": {
                     "housekeeping_time": "Horário do dia (HH:MM:SS) em que a manutenção agendada, como limpeza de mídia, é executada",
-                    "media_storage_days": "Por quantos dias a mídia armazenada, como capturas e anexos, é mantida"
+                    "media_storage_days": "Por quantos dias a mídia armazenada, como capturas e anexos, é mantida",
+                    "deprecated_entities": "Manter os binary_sensors obsoletos de destinatário, entrega e transporte herdados de uma versão anterior. Desativado, são removidos e não podem ser repostos"
                 },
                 "title": "Opções de manutenção"
             },

@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, State
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -575,3 +576,36 @@ def test_recipient_binary_sensor_has_no_misleading_device_class() -> None:
     from custom_components.supernotify.binary_sensor import SupernotifyRecipientBinarySensor
 
     assert "_attr_device_class" not in SupernotifyRecipientBinarySensor.__dict__
+
+
+async def test_housekeeping_option_removes_deprecated_entities(hass: HomeAssistant) -> None:
+    """Only offered while an install still has deprecated binary_sensors, and switched off,
+    removes them, with their repairs, for good"""
+    _preexisting_binary_sensors(hass, "recipient_joe", "delivery_testing")
+    hass.states.async_set("person.joe", "home")
+    await _setup_supernotify(hass, _recipient_config())
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    registry = er.async_get(hass)
+    assert registry.async_get("binary_sensor.supernotify_recipient_joe") is not None
+    issues = ir.async_get(hass)
+    assert issues.async_get_issue(DOMAIN, "recipient_binary_sensor_deprecated") is not None
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    form = await hass.config_entries.options.async_configure(flow["flow_id"], {"next_step_id": "housekeeping"})
+    assert "deprecated_entities" in form["data_schema"].schema
+    result = await hass.config_entries.options.async_configure(
+        form["flow_id"], {"housekeeping_time": "00:00:01", "media_storage_days": 7, "deprecated_entities": False}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    for entity_id in ("binary_sensor.supernotify_recipient_joe", "binary_sensor.supernotify_delivery_testing"):
+        assert registry.async_get(entity_id) is None
+        assert hass.states.get(entity_id) is None
+    assert issues.async_get_issue(DOMAIN, "recipient_binary_sensor_deprecated") is None
+    assert issues.async_get_issue(DOMAIN, "delivery_transport_binary_sensor_deprecated") is None
+
+    # with none left, it's no longer offered
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    form = await hass.config_entries.options.async_configure(flow["flow_id"], {"next_step_id": "housekeeping"})
+    assert "deprecated_entities" not in form["data_schema"].schema

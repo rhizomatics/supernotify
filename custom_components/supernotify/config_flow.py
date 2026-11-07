@@ -88,6 +88,7 @@ from .const import (
     CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
     CONF_DELIVERY_DEFAULTS,
+    CONF_DEPRECATED_ENTITIES,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
     CONF_DEVICE_MODEL_EXCLUDE,
@@ -521,6 +522,13 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_HOUSEKEEPING_TIME, default=housekeeping_time): cv.string,
             vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=current.get(CONF_MEDIA_STORAGE_DAYS, 7)): cv.positive_int,
         })
+        # only offered while there are some, carried over from an earlier version
+        from .binary_sensor import deprecated_entity_ids
+
+        if deprecated_entity_ids(self.hass, self.config_entry.entry_id):
+            schema = schema.extend({
+                vol.Optional(CONF_DEPRECATED_ENTITIES, default=current.get(CONF_DEPRECATED_ENTITIES, True)): cv.boolean
+            })
         return self.async_show_form(step_id="housekeeping", data_schema=schema)
 
     async def async_step_delivery_control(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

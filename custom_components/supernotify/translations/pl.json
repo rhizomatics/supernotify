@@ -653,11 +653,13 @@
             "housekeeping": {
                 "data": {
                     "housekeeping_time": "Czas konserwacji",
-                    "media_storage_days": "Dni przechowywania mediów"
+                    "media_storage_days": "Dni przechowywania mediów",
+                    "deprecated_entities": "Przestarzałe encje"
                 },
                 "data_description": {
                     "housekeeping_time": "Pora dnia (GG:MM:SS), o której uruchamiana jest zaplanowana konserwacja, np. czyszczenie mediów",
-                    "media_storage_days": "Przez ile dni przechowywane są media, np. zrzuty i załączniki"
+                    "media_storage_days": "Przez ile dni przechowywane są media, np. zrzuty i załączniki",
+                    "deprecated_entities": "Zachowaj przestarzałe binary_sensory odbiorców, dostarczeń i transportów przeniesione z wcześniejszej wersji. Po wyłączeniu są usuwane i nie można ich przywrócić"
                 },
                 "title": "Opcje konserwacji"
             },

@@ -26,6 +26,8 @@ CONF_MEDIA_PATH: Final[str] = "media_path"
 CONF_MEDIA_URL_PREFIX: Final[str] = "media_url_prefix"
 CONF_HOUSEKEEPING: Final[str] = "housekeeping"
 CONF_HOUSEKEEPING_TIME: Final[str] = "housekeeping_time"
+# keep the deprecated recipient, delivery and transport binary_sensors an install already has
+CONF_DEPRECATED_ENTITIES: Final[str] = "deprecated_entities"
 CONF_ARCHIVE_PATH: Final[str] = "file_path"
 CONF_ARCHIVE: Final[str] = "archive"
 CONF_ARCHIVE_DAYS: Final[str] = "file_retention_days"

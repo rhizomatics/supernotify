@@ -206,6 +206,8 @@ async def test_options_flow_housekeeping(hass: HomeAssistant) -> None:
     options_init = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "housekeeping"})
     assert menu_result["step_id"] == "housekeeping"
+    # a new install has no deprecated entities, so isn't offered keeping them
+    assert "deprecated_entities" not in menu_result["data_schema"].schema
 
     result = await hass.config_entries.options.async_configure(
         menu_result["flow_id"], {CONF_HOUSEKEEPING_TIME: "01:02:03", CONF_MEDIA_STORAGE_DAYS: 14}
