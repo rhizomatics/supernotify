@@ -43,6 +43,7 @@ run = [
     "rm -fr htmlcov",
     "rm -f .coverage",
     "rm -f cov.xml",
+    "rm -fr custom_components/supernotify.egg-info",
     "find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete",
     "uv venv .venv --clear",
 ]
