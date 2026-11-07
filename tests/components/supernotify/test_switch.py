@@ -84,10 +84,15 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> SupernotifyEngi
 
 
 async def _reload(hass: HomeAssistant, config: dict[str, Any] | None = None) -> SupernotifyEngine:
-    """Reload the config entry, optionally with changed YAML, as supernotify.reload would."""
+    """Reload the config entry, optionally with changed YAML, as supernotify.reload would.
+    Recipients, imported from the YAML only once, are changed in their subentries, as the UI would."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     if config is not None:
         hass.data[DOMAIN][KEY_YAML_CONFIG] = CONFIG_SCHEMA({DOMAIN: config})[DOMAIN]
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
+        for recipient in hass.data[DOMAIN][KEY_YAML_CONFIG]["recipients"]:
+            subentry = next(s for s in entry.subentries.values() if s.unique_id == recipient["person"])
+            hass.config_entries.async_update_subentry(entry, subentry, data=recipient)
+        await hass.async_block_till_done()
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     return hass.config_entries.async_entries(DOMAIN)[0].runtime_data

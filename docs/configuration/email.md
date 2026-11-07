@@ -39,15 +39,8 @@ supernotify:
 This has the advantage that e-mail addresses can be defined in one place, and you can send targeted
 email notifications in automations by using the `person` entity instead.
 
-```yaml title="Supernotify Config"
-supernotify:
-  ...
-  recipients:
-    - person: person.joe_mcdoe
-      email: joe@mcdoe.com
-    - person: person.billy_mcdoe
-      email: billy@weeschool.edu
-```
+Add each person as a recipient, under *Settings → Devices & services → Supernotify → Add recipient*, with their
+**E-mail address** - see [People](people.md#adding-or-changing-a-recipient).
 
 ### On Action Call
 

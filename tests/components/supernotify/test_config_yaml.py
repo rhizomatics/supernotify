@@ -121,7 +121,8 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     uut = entry.runtime_data
-    assert len(uut.context.people_registry.people) == 3
+    # FIXTURE's 3 recipients are imported alongside SIMPLE_CONFIG's, which stays a subentry
+    assert len(uut.context.people_registry.people) == 4
 
     assert "notify_entity" in uut.context.delivery_registry.deliveries
     assert "html_email" in uut.context.delivery_registry.deliveries

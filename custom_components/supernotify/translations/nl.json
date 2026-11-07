@@ -488,7 +488,7 @@
                 "step": {
                     "confirm": {
                         "title": "Supernotify YAML-configuratie migreren",
-                        "description": "Bezorging-, transport-, scenario-, ontvanger-, camera-, actiegroep-, links- en snooze-instellingen moeten worden verplaatst uit het `notify: - platform: supernotify` YAML-blok naar een nieuwe toplevel `supernotify:`-sleutel.\n\nDoor **Verzenden** te kiezen, wordt dit geautomatiseerd: er wordt een nieuw bestand `supernotify.yaml` geschreven met je huidige instellingen, en er wordt een regel `supernotify: !include supernotify.yaml` toegevoegd aan het einde van je `configuration.yaml`. Je configuratie wordt onmiddellijk opnieuw geladen - geen herstart nodig.\n\n**Doe je het liever handmatig?** Verplaats de instellingen dan zelf naar een toplevel `supernotify:`-sleutel in plaats van op Verzenden te klikken - beide manieren zijn prima, en voor deze reparatie hoef je niet terug te komen om te bevestigen.\n\nIn beide gevallen wordt het oude `notify: - platform: supernotify`-blok hierdoor **niet** verwijderd. Zodra dat blok uit `configuration.yaml` is verwijderd en Home Assistant opnieuw is gestart, lost deze reparatie zichzelf automatisch op - handmatig sluiten is niet nodig."
+                        "description": "Bezorging-, transport-, scenario-, camera-, actiegroep-, links- en snooze-instellingen moeten worden verplaatst uit het `notify: - platform: supernotify` YAML-blok naar een nieuwe toplevel `supernotify:`-sleutel. Ontvangers worden in plaats daarvan als ontvangers van de integratie geïmporteerd.\n\nDoor **Verzenden** te kiezen, wordt dit geautomatiseerd: er wordt een nieuw bestand `supernotify.yaml` geschreven met je huidige instellingen, en er wordt een regel `supernotify: !include supernotify.yaml` toegevoegd aan het einde van je `configuration.yaml`. Je configuratie wordt onmiddellijk opnieuw geladen - geen herstart nodig.\n\n**Doe je het liever handmatig?** Verplaats de instellingen dan zelf naar een toplevel `supernotify:`-sleutel in plaats van op Verzenden te klikken - beide manieren zijn prima, en voor deze reparatie hoef je niet terug te komen om te bevestigen.\n\nIn beide gevallen wordt het oude `notify: - platform: supernotify`-blok hierdoor **niet** verwijderd. Zodra dat blok uit `configuration.yaml` is verwijderd en Home Assistant opnieuw is gestart, lost deze reparatie zichzelf automatisch op - handmatig sluiten is niet nodig."
                     },
                     "already_migrated": {
                         "title": "Supernotify YAML-configuratie al gemigreerd",
@@ -529,6 +529,10 @@
         "archive_path": {
             "title": "Archiefpad kan niet worden gebruikt",
             "description": "Meldingen kunnen niet als bestand worden gearchiveerd in {path} (fout: {error}). Kies een ander pad in de archiefopties van de Supernotify-integratie, of herstel de rechten van de map, en laad Supernotify daarna opnieuw."
+        },
+        "yaml_recipients_imported": {
+            "title": "Supernotify-ontvangers in YAML worden genegeerd",
+            "description": "Ontvangers worden nu beheerd in de Supernotify-integratie, onder **Instellingen → Apparaten & diensten → Supernotify**, waar die uit de bovenste `supernotify:` YAML zijn geïmporteerd, dus worden ze in de YAML genegeerd.\n\nVerwijder `recipients:` uit de YAML om deze waarschuwing op te lossen. Tot die tijd wordt een in de integratie verwijderde ontvanger bij de volgende herstart opnieuw geïmporteerd."
         }
     },
     "exceptions": {
@@ -772,6 +776,98 @@
                 "recipient": "Ontvanger",
                 "delivery": "Bezorging",
                 "transport": "Transport"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "Zoals de bezorging is ingesteld",
+                "enabled": "Ingeschakeld",
+                "disabled": "Uitgeschakeld"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "Ontvanger",
+            "initiate_flow": {
+                "user": "Ontvanger toevoegen"
+            },
+            "step": {
+                "user": {
+                    "title": "Ontvanger",
+                    "description": "De persoon, of voor iemand zonder persoon de gebruiker, die deze ontvanger is. Wat hier is ingesteld vult aan of vervangt wat voor hen wordt ontdekt.",
+                    "data": {
+                        "person": "Persoon",
+                        "user_id": "Gebruiker"
+                    },
+                    "data_description": {
+                        "person": "De Home Assistant persoon",
+                        "user_id": "De Home Assistant gebruiker, voor iemand zonder persoon"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "Hoe {recipient} te bereiken.",
+                    "data": {
+                        "alias": "Alias",
+                        "email": "E-mailadres",
+                        "phone_number": "Telefoonnummer",
+                        "enabled": "Ingeschakeld",
+                        "mobile_discovery": "Detectie van mobiele apparaten",
+                        "mobile_devices": "Mobiele apparaten",
+                        "target": "Doelen",
+                        "custom_target": "Aangepaste doelen"
+                    },
+                    "data_description": {
+                        "alias": "Naam voor deze ontvanger in plaats van die van de persoon",
+                        "email": "Gebruikt door e-mailbezorgingen",
+                        "phone_number": "Gebruikt door sms- en andere telefoonbezorgingen",
+                        "enabled": "Of deze ontvanger überhaupt een melding krijgt",
+                        "mobile_discovery": "Mobiele-app-apparaten gebruiken die nieuw voor deze ontvanger zijn geregistreerd",
+                        "mobile_devices": "De mobiele-app-apparaten om te melden - niet aangevinkte worden overgeslagen",
+                        "target": "Entiteiten, apparaten, ruimtes, verdiepingen of labels om als deze ontvanger te melden, zoals in de actie supernotify.notify",
+                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "Wijzig hoe een bezorging {recipient} behandelt, of sla op.",
+                    "menu_options": {
+                        "delivery": "Een bezorging wijzigen",
+                        "save": "Opslaan"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "De bezorging om voor deze ontvanger te wijzigen.",
+                    "data": {
+                        "delivery": "Bezorging"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{delivery} voor {recipient}",
+                    "description": "Hoe {delivery} {recipient} behandelt. Laat alles leeg om de wijziging te verwijderen.",
+                    "data": {
+                        "enabled": "Ingeschakeld",
+                        "target": "Doelen",
+                        "custom_target": "Aangepaste doelen",
+                        "extra_data": "Extra gegevens"
+                    },
+                    "data_description": {
+                        "enabled": "Of deze bezorging voor deze ontvanger wordt gebruikt, of aan de bezorging wordt overgelaten",
+                        "target": "Doelen die alleen deze bezorging voor deze ontvanger gebruikt",
+                        "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345",
+                        "extra_data": "Gegevens toegevoegd aan wat deze bezorging voor deze ontvanger verstuurt"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "Kies een persoon of een gebruiker",
+                "invalid_custom_target": "Een aangepast doel is geen e-mailadres, telefoonnummer of categorie:waarde",
+                "invalid_extra_data": "Extra gegevens kunnen geen door Supernotify gereserveerde sleutel gebruiken"
+            },
+            "abort": {
+                "already_configured": "Deze persoon of gebruiker is al een ontvanger"
             }
         }
     }

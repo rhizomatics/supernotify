@@ -488,7 +488,7 @@
                 "step": {
                     "confirm": {
                         "title": "Migruj konfigurację YAML Supernotify",
-                        "description": "Ustawienia dostarczenia, transportów, scenariuszy, odbiorców, kamer, grup akcji, linków i drzemki trzeba przenieść z bloku YAML `notify: - platform: supernotify` do nowego klucza najwyższego poziomu `supernotify:`.\n\nWybranie **Wyślij** automatyzuje ten proces: zapisywany jest nowy plik `supernotify.yaml` zawierający bieżące ustawienia, a na końcu pliku `configuration.yaml` dodawana jest linia `supernotify: !include supernotify.yaml`. Konfiguracja jest natychmiast przeładowywana - restart nie jest wymagany.\n\n**Wolisz zrobić to ręcznie?** Po prostu przenieś ustawienia samodzielnie do klucza najwyższego poziomu `supernotify:` zamiast klikać Wyślij - oba sposoby są w porządku, a ta naprawa nie wymaga powrotu w celu potwierdzenia.\n\nW obu przypadkach stary blok `notify: - platform: supernotify` **nie** zostaje przez to usunięty. Gdy tylko ten blok zostanie usunięty z `configuration.yaml`, a Home Assistant zostanie ponownie uruchomiony, ta naprawa zniknie automatycznie - nie trzeba jej ręcznie odrzucać."
+                        "description": "Ustawienia dostarczenia, transportów, scenariuszy, kamer, grup akcji, linków i drzemki trzeba przenieść z bloku YAML `notify: - platform: supernotify` do nowego klucza najwyższego poziomu `supernotify:`. Odbiorcy są zamiast tego importowani do integracji jako jej odbiorcy.\n\nWybranie **Wyślij** automatyzuje ten proces: zapisywany jest nowy plik `supernotify.yaml` zawierający bieżące ustawienia, a na końcu pliku `configuration.yaml` dodawana jest linia `supernotify: !include supernotify.yaml`. Konfiguracja jest natychmiast przeładowywana - restart nie jest wymagany.\n\n**Wolisz zrobić to ręcznie?** Po prostu przenieś ustawienia samodzielnie do klucza najwyższego poziomu `supernotify:` zamiast klikać Wyślij - oba sposoby są w porządku, a ta naprawa nie wymaga powrotu w celu potwierdzenia.\n\nW obu przypadkach stary blok `notify: - platform: supernotify` **nie** zostaje przez to usunięty. Gdy tylko ten blok zostanie usunięty z `configuration.yaml`, a Home Assistant zostanie ponownie uruchomiony, ta naprawa zniknie automatycznie - nie trzeba jej ręcznie odrzucać."
                     },
                     "already_migrated": {
                         "title": "Konfiguracja YAML Supernotify została już zmigrowana",
@@ -529,6 +529,10 @@
         "archive_path": {
             "title": "Nie można użyć ścieżki archiwum",
             "description": "Nie można archiwizować powiadomień do pliku w {path} (błąd: {error}). Wybierz inną ścieżkę w opcjach archiwum integracji Supernotify lub popraw uprawnienia folderu, a następnie przeładuj Supernotify."
+        },
+        "yaml_recipients_imported": {
+            "title": "Odbiorcy Supernotify w YAML są ignorowani",
+            "description": "Odbiorcy są teraz zarządzani w integracji Supernotify, w **Ustawienia → Urządzenia oraz usługi → Supernotify**, gdzie zaimportowano tych z głównego YAML `supernotify:`, więc w YAML są ignorowani.\n\nUsuń `recipients:` z YAML, aby usunąć to ostrzeżenie. Do tego czasu odbiorca usunięty w integracji jest importowany ponownie przy następnym uruchomieniu."
         }
     },
     "exceptions": {
@@ -772,6 +776,98 @@
                 "recipient": "Odbiorca",
                 "delivery": "Dostarczenie",
                 "transport": "Transport"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "Tak jak ustawiono w dostarczeniu",
+                "enabled": "Włączone",
+                "disabled": "Wyłączone"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "Odbiorca",
+            "initiate_flow": {
+                "user": "Dodaj odbiorcę"
+            },
+            "step": {
+                "user": {
+                    "title": "Odbiorca",
+                    "description": "Osoba lub, dla kogoś bez osoby, użytkownik, którym jest ten odbiorca. To, co ustawisz tutaj, uzupełnia lub zastępuje to, co zostało dla nich wykryte.",
+                    "data": {
+                        "person": "Osoba",
+                        "user_id": "Użytkownik"
+                    },
+                    "data_description": {
+                        "person": "Osoba w Home Assistant",
+                        "user_id": "Użytkownik Home Assistant, dla kogoś bez osoby"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "Jak dotrzeć do {recipient}.",
+                    "data": {
+                        "alias": "Alias",
+                        "email": "Adres e-mail",
+                        "phone_number": "Numer telefonu",
+                        "enabled": "Włączony",
+                        "mobile_discovery": "Wykrywanie urządzeń mobilnych",
+                        "mobile_devices": "Urządzenia mobilne",
+                        "target": "Cele",
+                        "custom_target": "Własne cele"
+                    },
+                    "data_description": {
+                        "alias": "Nazwa używana dla tego odbiorcy zamiast nazwy osoby",
+                        "email": "Używany przez dostarczenia e-mail",
+                        "phone_number": "Używany przez dostarczenia SMS i inne telefoniczne",
+                        "enabled": "Czy ten odbiorca jest w ogóle powiadamiany",
+                        "mobile_discovery": "Używaj urządzeń aplikacji mobilnej nowo zarejestrowanych dla tego odbiorcy",
+                        "mobile_devices": "Urządzenia aplikacji mobilnej do powiadamiania - niezaznaczone są pomijane",
+                        "target": "Encje, urządzenia, obszary, piętra lub etykiety powiadamiane jako ten odbiorca, jak w akcji supernotify.notify",
+                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "Zmień, jak dostarczenie traktuje {recipient}, lub zapisz.",
+                    "menu_options": {
+                        "delivery": "Zmień dostarczenie",
+                        "save": "Zapisz"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "Dostarczenie do zmiany dla tego odbiorcy.",
+                    "data": {
+                        "delivery": "Dostarczenie"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{delivery} dla {recipient}",
+                    "description": "Jak {delivery} traktuje {recipient}. Pozostaw wszystko puste, aby usunąć zmianę.",
+                    "data": {
+                        "enabled": "Włączony",
+                        "target": "Cele",
+                        "custom_target": "Własne cele",
+                        "extra_data": "Dodatkowe dane"
+                    },
+                    "data_description": {
+                        "enabled": "Czy to dostarczenie jest używane dla tego odbiorcy, czy pozostawione dostarczeniu",
+                        "target": "Cele używane dla tego odbiorcy tylko przez to dostarczenie",
+                        "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345",
+                        "extra_data": "Dane dodawane do tego, co to dostarczenie wysyła dla tego odbiorcy"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "Wybierz osobę lub użytkownika",
+                "invalid_custom_target": "Własny cel nie jest adresem e-mail, numerem telefonu ani kategorią:wartością",
+                "invalid_extra_data": "Dodatkowe dane nie mogą używać klucza zarezerwowanego przez Supernotify"
+            },
+            "abort": {
+                "already_configured": "Ta osoba lub użytkownik jest już odbiorcą"
             }
         }
     }

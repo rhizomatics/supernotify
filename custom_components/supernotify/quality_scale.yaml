@@ -50,8 +50,8 @@ rules:
       Immediate phase of configflow_approach RFC implemented: config_flow.py's
       user step reproduces examples/minimal.yaml (all fields optional, everything else
       auto-discovered/auto-generated), with an options flow for archive/dupe_check/
-      housekeeping. single_config_entry enforced via manifest.json. Deliveries, transports,
-      scenarios, recipients and cameras remain YAML-only - tracked as the Third phase in
+      housekeeping, and a recipient subentry flow. single_config_entry enforced via manifest.json.
+      Deliveries, transports, scenarios and cameras remain YAML-only - tracked as the Third phase in
       the roadmap doc. The legacy YAML notify platform (async_get_service) keeps working
       unchanged for existing users; a config entry declines to set up if a legacy YAML
       platform already registered notify.supernotify, rather than silently double-registering.

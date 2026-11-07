@@ -18,6 +18,8 @@ CONF_TITLE: Final[str] = "title"
 CONF_URI: Final[str] = "uri"
 CONF_RECIPIENTS: Final[str] = "recipients"
 CONF_RECIPIENTS_DISCOVERY: Final[str] = "recipients_discovery"
+# config subentry type holding one recipient, in RECIPIENT_SCHEMA shape
+SUBENTRY_TYPE_RECIPIENT: Final[str] = "recipient"
 CONF_TEMPLATE_PATH: Final[str] = "template_path"
 CONF_MEDIA_PATH: Final[str] = "media_path"
 CONF_MEDIA_URL_PREFIX: Final[str] = "media_url_prefix"

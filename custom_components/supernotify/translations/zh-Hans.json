@@ -488,7 +488,7 @@
                 "step": {
                     "confirm": {
                         "title": "迁移 Supernotify 的 YAML 配置",
-                        "description": "推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置需要从 `notify: - platform: supernotify` YAML 块中迁移到新的顶级 `supernotify:` 键中。\n\n选择**提交**将自动完成此操作：会写入一个包含当前设置的新文件 `supernotify.yaml`，并在 `configuration.yaml` 末尾添加一行 `supernotify: !include supernotify.yaml`。配置会立即重新加载，无需重启。\n\n**更想手动完成？**只需自行将设置移动到顶级 `supernotify:` 键中，而不是点击提交——两种方式都可以，此修复也不需要你返回确认。\n\n无论哪种方式，这都**不会**移除旧的 `notify: - platform: supernotify` 块本身。一旦该块从 `configuration.yaml` 中删除且 Home Assistant 重启后，此修复会自动清除——无需手动关闭。"
+                        "description": "推送、传输方式、场景、摄像头、操作组、链接和打盹设置需要从 `notify: - platform: supernotify` YAML 块中迁移到新的顶级 `supernotify:` 键中。收件人则改为导入集成，作为其接收者。\n\n选择**提交**将自动完成此操作：会写入一个包含当前设置的新文件 `supernotify.yaml`，并在 `configuration.yaml` 末尾添加一行 `supernotify: !include supernotify.yaml`。配置会立即重新加载，无需重启。\n\n**更想手动完成？**只需自行将设置移动到顶级 `supernotify:` 键中，而不是点击提交——两种方式都可以，此修复也不需要你返回确认。\n\n无论哪种方式，这都**不会**移除旧的 `notify: - platform: supernotify` 块本身。一旦该块从 `configuration.yaml` 中删除且 Home Assistant 重启后，此修复会自动清除——无需手动关闭。"
                     },
                     "already_migrated": {
                         "title": "Supernotify 的 YAML 配置已迁移",
@@ -529,6 +529,10 @@
         "archive_path": {
             "title": "无法使用存档路径",
             "description": "无法将通知以文件形式存档到 {path}（错误：{error}）。请在 Supernotify 集成的存档选项中选择其他路径，或修复该文件夹的权限，然后重新加载 Supernotify。"
+        },
+        "yaml_recipients_imported": {
+            "title": "YAML 中的 Supernotify 接收者将被忽略",
+            "description": "接收者现在在 Supernotify 集成中管理，位于 **设置 → 设备与服务 → Supernotify**，顶层 `supernotify:` YAML 中的接收者已导入其中，因此在 YAML 中被忽略。\n\n从 YAML 中删除 `recipients:` 以清除此警告。在此之前，在集成中删除的接收者会在下次重启时再次导入。"
         }
     },
     "exceptions": {
@@ -772,6 +776,98 @@
                 "recipient": "接收者",
                 "delivery": "推送",
                 "transport": "传输"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "按投递的设置",
+                "enabled": "已启用",
+                "disabled": "已禁用"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "接收者",
+            "initiate_flow": {
+                "user": "添加接收者"
+            },
+            "step": {
+                "user": {
+                    "title": "接收者",
+                    "description": "此接收者对应的人员，或对于没有人员的人，对应的用户。此处设置的内容会补充或覆盖为其发现的内容。",
+                    "data": {
+                        "person": "人员",
+                        "user_id": "用户"
+                    },
+                    "data_description": {
+                        "person": "Home Assistant 人员",
+                        "user_id": "Home Assistant 用户，用于没有人员的人"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "如何联系 {recipient}。",
+                    "data": {
+                        "alias": "别名",
+                        "email": "电子邮件地址",
+                        "phone_number": "电话号码",
+                        "enabled": "已启用",
+                        "mobile_discovery": "移动设备发现",
+                        "mobile_devices": "移动设备",
+                        "target": "目标",
+                        "custom_target": "自定义目标"
+                    },
+                    "data_description": {
+                        "alias": "用于此接收者、代替人员名称的名称",
+                        "email": "供电子邮件投递使用",
+                        "phone_number": "供短信及其他电话投递使用",
+                        "enabled": "是否通知此接收者",
+                        "mobile_discovery": "使用为此接收者新注册的移动应用设备",
+                        "mobile_devices": "要通知的移动应用设备 - 未勾选的会被排除",
+                        "target": "作为此接收者通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作中相同",
+                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "更改某个投递如何对待 {recipient}，或保存。",
+                    "menu_options": {
+                        "delivery": "更改投递",
+                        "save": "保存"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "要为此接收者更改的投递。",
+                    "data": {
+                        "delivery": "投递"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{recipient} 的 {delivery}",
+                    "description": "{delivery} 如何对待 {recipient}。全部留空即可移除此更改。",
+                    "data": {
+                        "enabled": "已启用",
+                        "target": "目标",
+                        "custom_target": "自定义目标",
+                        "extra_data": "附加数据"
+                    },
+                    "data_description": {
+                        "enabled": "此投递是否用于此接收者，或交由投递决定",
+                        "target": "仅此投递为此接收者使用的目标",
+                        "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345",
+                        "extra_data": "添加到此投递为此接收者发送内容中的数据"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "请选择人员或用户",
+                "invalid_custom_target": "自定义目标既不是电子邮件地址、电话号码，也不是 类别:值",
+                "invalid_extra_data": "附加数据不能使用 Supernotify 保留的键"
+            },
+            "abort": {
+                "already_configured": "此人员或用户已是接收者"
             }
         }
     }

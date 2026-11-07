@@ -1,6 +1,6 @@
 # RFC 0003: Auto Notifier Packages
 
-2026-10-07 · Jey Burrows · Status: In Progress
+2026-10-07 · Jey Burrows · Status: Done
 
 ## Problem
 
@@ -316,6 +316,9 @@ action:
 ```
 
 ### Frigate
+
+!!! note
+    Implemented as a more generic *Camera AutoNotify*
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) works well, however using Blueprints is still not very non-tech friendly, a lot of the blueprint logic is doing things in clumsy YAML that are already done in Supernotify, and there are some long standing bugs like mobile groups to work around.
 

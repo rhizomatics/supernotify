@@ -4,6 +4,13 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.18.0
+## 🚨 Breaking changes
+- *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
+
+## ✨ Enhancements
+- *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery enabled, targets and extra data. No YAML needed for default e-mail targets
+
 # v2.17.2
 ## 🚨 Breaking changes
 - Support for old versions of `Pillow` library removed, in line with minimum HA 2026.5 version. Attachments will fail to reprocess on old versions of HA - either upgrade HA or don't upgrade Supernotify.

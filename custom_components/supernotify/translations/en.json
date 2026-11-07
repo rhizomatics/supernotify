@@ -588,7 +588,7 @@
                 "step": {
                     "confirm": {
                         "title": "Migrate Supernotify YAML configuration",
-                        "description": "Delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings need to move out of the `notify: - platform: supernotify` YAML block into a new top-level `supernotify:` key instead.\n\nSelecting **Submit** automates this: it writes a new `supernotify.yaml` file containing your current settings, and adds a `supernotify: !include supernotify.yaml` line to the end of your `configuration.yaml`. Your configuration is reloaded immediately - no restart needed.\n\n**Prefer to do it by hand instead?** Just move the settings to a top-level `supernotify:` key yourself instead of clicking Submit - either way is fine, and this repair doesn't need you to come back and confirm it.\n\nEither way, this does **not** remove the old `notify: - platform: supernotify` block itself. Once that block is deleted from `configuration.yaml` and Home Assistant is restarted, this repair clears itself automatically - no need to dismiss it manually."
+                        "description": "Delivery, transports, scenarios, cameras, action groups, links and snooze settings need to move out of the `notify: - platform: supernotify` YAML block into a new top-level `supernotify:` key instead. Recipients are imported into the integration instead, as its recipients.\n\nSelecting **Submit** automates this: it writes a new `supernotify.yaml` file containing your current settings, and adds a `supernotify: !include supernotify.yaml` line to the end of your `configuration.yaml`. Your configuration is reloaded immediately - no restart needed.\n\n**Prefer to do it by hand instead?** Just move the settings to a top-level `supernotify:` key yourself instead of clicking Submit - either way is fine, and this repair doesn't need you to come back and confirm it.\n\nEither way, this does **not** remove the old `notify: - platform: supernotify` block itself. Once that block is deleted from `configuration.yaml` and Home Assistant is restarted, this repair clears itself automatically - no need to dismiss it manually."
                     },
                     "already_migrated": {
                         "title": "Supernotify YAML configuration already migrated",
@@ -677,6 +677,10 @@
         "archive_path": {
             "title": "Archive path cannot be used",
             "description": "Notifications can't be archived to file at {path} (error: {error}). Choose another path in the Supernotify integration's archive options, or fix the folder's permissions, then reload Supernotify."
+        },
+        "yaml_recipients_imported": {
+            "title": "Supernotify recipients in YAML are ignored",
+            "description": "Recipients are now managed in the Supernotify integration, under **Settings → Devices & services → Supernotify**, where those in the top-level `supernotify:` YAML have been imported, so are ignored in the YAML.\n\nRemove `recipients:` from the YAML to clear this warning. Until then, a recipient deleted in the integration is imported again on the next restart."
         }
     },
     "exceptions": {
@@ -807,6 +811,98 @@
                 "recipient": "Recipient",
                 "delivery": "Delivery",
                 "transport": "Transport"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "As the delivery is set",
+                "enabled": "Enabled",
+                "disabled": "Disabled"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "Recipient",
+            "initiate_flow": {
+                "user": "Add recipient"
+            },
+            "step": {
+                "user": {
+                    "title": "Recipient",
+                    "description": "The person, or for someone with no person, the user, this recipient is. Anything set here adds to, or overrides, what's discovered for them.",
+                    "data": {
+                        "person": "Person",
+                        "user_id": "User"
+                    },
+                    "data_description": {
+                        "person": "The Home Assistant person",
+                        "user_id": "The Home Assistant user, for someone with no person"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "How to reach {recipient}.",
+                    "data": {
+                        "alias": "Alias",
+                        "email": "E-mail address",
+                        "phone_number": "Phone number",
+                        "enabled": "Enabled",
+                        "mobile_discovery": "Mobile Device Discovery",
+                        "mobile_devices": "Mobile devices",
+                        "target": "Targets",
+                        "custom_target": "Custom targets"
+                    },
+                    "data_description": {
+                        "alias": "Name used for this recipient in place of the person's",
+                        "email": "Used by e-mail deliveries",
+                        "phone_number": "Used by SMS and other phone deliveries",
+                        "enabled": "Whether this recipient is notified at all",
+                        "mobile_discovery": "Use mobile app devices newly registered to this recipient",
+                        "mobile_devices": "The mobile app devices to notify - unticked ones are left out",
+                        "target": "Entities, devices, areas, floors or labels to notify as this recipient, as in the supernotify.notify action",
+                        "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "Change how a delivery treats {recipient}, or save.",
+                    "menu_options": {
+                        "delivery": "Change a delivery",
+                        "save": "Save"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "The delivery to change for this recipient.",
+                    "data": {
+                        "delivery": "Delivery"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{delivery} for {recipient}",
+                    "description": "How {delivery} treats {recipient}. Leave everything unset to remove the change.",
+                    "data": {
+                        "enabled": "Enabled",
+                        "target": "Targets",
+                        "custom_target": "Custom targets",
+                        "extra_data": "Extra data"
+                    },
+                    "data_description": {
+                        "enabled": "Whether this delivery is used for this recipient, or left to the delivery",
+                        "target": "Targets used for this recipient by this delivery only",
+                        "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345",
+                        "extra_data": "Data added to what this delivery sends for this recipient"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "Choose a person or a user",
+                "invalid_custom_target": "A custom target isn't an e-mail address, a phone number or category:value",
+                "invalid_extra_data": "Extra data can't use a key Supernotify reserves"
+            },
+            "abort": {
+                "already_configured": "This person or user is already a recipient"
             }
         }
     }

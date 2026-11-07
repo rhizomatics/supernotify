@@ -618,6 +618,8 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
+        # from the entry's recipient subentries, not its data or options
+        vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
     },
     extra=vol.ALLOW_EXTRA,
 )

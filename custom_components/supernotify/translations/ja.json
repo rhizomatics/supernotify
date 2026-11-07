@@ -488,7 +488,7 @@
                 "step": {
                     "confirm": {
                         "title": "Supernotify の YAML 設定を移行する",
-                        "description": "配信、トランスポート、シナリオ、受信者、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` YAML ブロックから、新しいトップレベルの `supernotify:` キーに移動する必要があります。\n\n**送信**を選択すると、これが自動的に行われます。現在の設定を含む新しい `supernotify.yaml` ファイルが書き込まれ、`configuration.yaml` の末尾に `supernotify: !include supernotify.yaml` の行が追加されます。設定はすぐに再読み込みされます。再起動は不要です。\n\n**手動で行いたい場合は？** 送信をクリックする代わりに、設定を自分でトップレベルの `supernotify:` キーに移動するだけで構いません。どちらの方法でも問題なく、この修正を確認するために戻ってくる必要はありません。\n\nいずれの場合も、これによって古い `notify: - platform: supernotify` ブロック自体は削除**されません**。そのブロックが `configuration.yaml` から削除され、Home Assistant が再起動されると、この修正は自動的に解消されます。手動で閉じる必要はありません。"
+                        "description": "配信、トランスポート、シナリオ、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` YAML ブロックから、新しいトップレベルの `supernotify:` キーに移動する必要があります。受信者は代わりに、統合の受信者としてインポートされます。\n\n**送信**を選択すると、これが自動的に行われます。現在の設定を含む新しい `supernotify.yaml` ファイルが書き込まれ、`configuration.yaml` の末尾に `supernotify: !include supernotify.yaml` の行が追加されます。設定はすぐに再読み込みされます。再起動は不要です。\n\n**手動で行いたい場合は？** 送信をクリックする代わりに、設定を自分でトップレベルの `supernotify:` キーに移動するだけで構いません。どちらの方法でも問題なく、この修正を確認するために戻ってくる必要はありません。\n\nいずれの場合も、これによって古い `notify: - platform: supernotify` ブロック自体は削除**されません**。そのブロックが `configuration.yaml` から削除され、Home Assistant が再起動されると、この修正は自動的に解消されます。手動で閉じる必要はありません。"
                     },
                     "already_migrated": {
                         "title": "Supernotify の YAML 設定は移行済みです",
@@ -529,6 +529,10 @@
         "archive_path": {
             "title": "アーカイブパスを使用できません",
             "description": "{path} に通知をファイルとしてアーカイブできません（エラー: {error}）。Supernotify 統合のアーカイブオプションで別のパスを選ぶか、フォルダーの権限を修正してから、Supernotify を再読み込みしてください。"
+        },
+        "yaml_recipients_imported": {
+            "title": "YAML の Supernotify 受信者は無視されます",
+            "description": "受信者は現在 Supernotify 統合の **設定 → デバイスとサービス → Supernotify** で管理され、トップレベルの `supernotify:` YAML の受信者はそこにインポートされたため、YAML では無視されます。\n\nこの警告を消すには YAML から `recipients:` を削除してください。それまでは、統合で削除した受信者は次回の再起動時に再びインポートされます。"
         }
     },
     "exceptions": {
@@ -772,6 +776,98 @@
                 "recipient": "受信者",
                 "delivery": "配信",
                 "transport": "トランスポート"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "配信の設定どおり",
+                "enabled": "有効",
+                "disabled": "無効"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "受信者",
+            "initiate_flow": {
+                "user": "受信者を追加"
+            },
+            "step": {
+                "user": {
+                    "title": "受信者",
+                    "description": "この受信者である人物、または人物がいない場合はユーザー。ここで設定した内容は、その人について検出された内容に追加されるか、上書きします。",
+                    "data": {
+                        "person": "人物",
+                        "user_id": "ユーザー"
+                    },
+                    "data_description": {
+                        "person": "Home Assistant の人物",
+                        "user_id": "人物がいない場合の Home Assistant ユーザー"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "{recipient} への連絡方法。",
+                    "data": {
+                        "alias": "別名",
+                        "email": "メールアドレス",
+                        "phone_number": "電話番号",
+                        "enabled": "有効",
+                        "mobile_discovery": "モバイルデバイスの検出",
+                        "mobile_devices": "モバイルデバイス",
+                        "target": "ターゲット",
+                        "custom_target": "カスタムターゲット"
+                    },
+                    "data_description": {
+                        "alias": "人物の名前の代わりにこの受信者に使う名前",
+                        "email": "メール配信で使用",
+                        "phone_number": "SMS などの電話配信で使用",
+                        "enabled": "この受信者に通知するかどうか",
+                        "mobile_discovery": "この受信者に新たに登録されたモバイルアプリのデバイスを使用する",
+                        "mobile_devices": "通知するモバイルアプリのデバイス - チェックのないものは除外されます",
+                        "target": "この受信者として通知するエンティティ、デバイス、エリア、フロア、ラベル (supernotify.notify アクションと同様)",
+                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "配信での {recipient} の扱いを変更するか、保存します。",
+                    "menu_options": {
+                        "delivery": "配信を変更",
+                        "save": "保存"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "この受信者について変更する配信。",
+                    "data": {
+                        "delivery": "配信"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{recipient} の {delivery}",
+                    "description": "{delivery} での {recipient} の扱い。変更を取り消すには、すべて未設定のままにします。",
+                    "data": {
+                        "enabled": "有効",
+                        "target": "ターゲット",
+                        "custom_target": "カスタムターゲット",
+                        "extra_data": "追加データ"
+                    },
+                    "data_description": {
+                        "enabled": "この受信者にこの配信を使うか、配信の設定に任せるか",
+                        "target": "この配信でのみこの受信者に使うターゲット",
+                        "custom_target": "セレクターで選べないターゲット、1 行に 1 つ - メールアドレス、電話番号、または telegram_chat_id:12345 のような カテゴリ:値",
+                        "extra_data": "この配信がこの受信者に送る内容に追加するデータ"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "人物またはユーザーを選択してください",
+                "invalid_custom_target": "カスタムターゲットがメールアドレス、電話番号、カテゴリ:値 のいずれでもありません",
+                "invalid_extra_data": "追加データには Supernotify が予約しているキーは使えません"
+            },
+            "abort": {
+                "already_configured": "この人物またはユーザーはすでに受信者です"
             }
         }
     }

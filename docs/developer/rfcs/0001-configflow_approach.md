@@ -45,7 +45,7 @@ Top-level config should be entirely ConfigEntry. The first ConfigFlow version of
 
 Landed for the Immediate phase as a *mirror*, not a full cutover: an existing YAML config gets a one-shot import into a ConfigEntry (visible in the UI, editable via the same reconfigure/options flows a UI-only install gets), and a `deprecated_yaml` repair nags on every YAML load until it's removed - but the legacy YAML platform keeps owning `notify.supernotify` for these entries, so editing the mirrored entry does not yet change runtime behaviour. Full cutover (the entry becoming authoritative, editing it actually doing something) waits until Delivery/Transport/Scenario/Recipient/Camera also move off YAML in the Third phase - doing it earlier would mean deliveries silently stop working the moment someone touches the UI, which is worse than the mirror being cosmetic-only in the meantime. YAML-rewrite automation (ruamel.yaml) is not implemented - still deferred.
 
-Deliveries, Transports, Scenarios and Recipients should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing. Testing needs improved for Scenario before major changes.
+Deliveries and Scenarios should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing. Testing needs improved for Scenario before major changes. These are selected because of the potential large number of them, which can make easier to use text files to manage. Transports are limited to 1 per transport class, and recipients to the people in the house, so are presumed to be worth moving to ConfigFlow only.
 
 Balance moving up the Quality Scale over focusing solely on the purely config flow phases, for example handling of runtime data and async processing.
 
@@ -81,7 +81,7 @@ Breakdown:
   - Delivery only needs its own ConfigFlow entry for the advanced case of more than one preset per Transport (e.g. a low-priority and high-priority chime) - Principle #3, Design Decision 2.
   - Prerequisite engine change, ahead of or alongside the UI work rather than part of it: merge the `DELIVERY_SCHEMA` extensions back into `DELIVERY_CONFIG_SCHEMA` (Design Decision 1), so there's a single config shape to expose instead of two.
   - This may mean that the UI supports only a simplified version of these, if for example Condition editing is not viable, and the YAML remains. Preferably every one of these can be edited in either the UI or YAML, and round-tripped between them.
-  - YAML stays the primary store, with UI edits round-tripped to the file as automations do. Config subentries were prototyped and rejected as the store ([#166](https://github.com/rhizomatics/supernotify/issues/166)).
+  - For at least Delivery and Scenario, YAML stays the primary store, with UI edits round-tripped to the file as automations do. Config subentries were prototyped and rejected as the store ([#166](https://github.com/rhizomatics/supernotify/issues/166)).
 * Extend auto discovery to other viable transports
   - ntfy, gotify, telegram, pushover, lametric, alexa devices, SMS (if mikrotik_sms, twilio, clicksend etc installed)
 

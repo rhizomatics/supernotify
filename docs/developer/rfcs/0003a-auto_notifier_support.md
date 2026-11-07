@@ -1,6 +1,6 @@
 # RFC 0003a: Auto Notifier Packages
 
-2026-10-07 · Jey Burrows · Status: In Progress
+2026-10-07 · Jey Burrows · Status: Archived
 
 # Appendix - Anticipated Changes
 

@@ -1,6 +1,6 @@
 # RFC 0006: Frigate Auto Notifier
 
-2026-09-24 · Jey Burrows · Status: draft
+2026-09-24 · Jey Burrows · Status: Done
 
 ## Summary
 

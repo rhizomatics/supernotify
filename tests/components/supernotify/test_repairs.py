@@ -239,6 +239,10 @@ async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert hass.services.has_service("notify", "supernotify")
+    # recipients go straight to subentries, never through supernotify.yaml
+    assert "recipients" not in written
+    assert [(s.subentry_type, s.unique_id) for s in entries[0].subentries.values()] == [("recipient", "person.house_owner")]
+    assert "person.house_owner" in entries[0].runtime_data.context.people_registry.people
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, MANUAL_MIGRATION_ISSUE_ID) is None
@@ -362,6 +366,17 @@ async def test_fix_flow_stops_when_migrated_config_is_invalid(hass: HomeAssistan
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, MANUAL_MIGRATION_ISSUE_ID) is not None
+
+
+async def test_fix_flow_stops_when_legacy_recipient_is_invalid(hass: HomeAssistant, tmp_path: Path) -> None:
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / "configuration.yaml").write_text("homeassistant:\n")
+
+    flow = _flow(hass, {**LEGACY_CONFIG, "recipients": [{"alias": "nobody"}]})
+    await flow.async_step_init()
+    result = await flow.async_step_confirm({})
+    assert result["errors"] == {"base": "migrated_config_invalid"}
+    assert not (tmp_path / "supernotify.yaml").exists()
 
 
 async def test_concurrent_confirm_attempts_do_not_interleave(hass: HomeAssistant, tmp_path: Path) -> None:

@@ -488,7 +488,7 @@
                 "step": {
                     "confirm": {
                         "title": "Supernotify-YAML-Konfiguration migrieren",
-                        "description": "Lieferungen, Transporte, Szenarien, Empfänger, Kameras, Aktionsgruppen, Links und Snooze-Einstellungen müssen aus dem `notify: - platform: supernotify`-YAML-Block in einen neuen Top-Level-Schlüssel `supernotify:` verschoben werden.\n\nDurch Auswahl von **Absenden** wird dies automatisiert: Es wird eine neue Datei `supernotify.yaml` mit deinen aktuellen Einstellungen geschrieben und eine Zeile `supernotify: !include supernotify.yaml` am Ende deiner `configuration.yaml` hinzugefügt. Deine Konfiguration wird sofort neu geladen - kein Neustart nötig.\n\n**Lieber von Hand erledigen?** Verschiebe die Einstellungen einfach selbst in einen Top-Level-Schlüssel `supernotify:`, anstatt auf Absenden zu klicken - beides ist in Ordnung, und diese Reparatur muss dafür nicht bestätigt werden.\n\nIn beiden Fällen wird der alte `notify: - platform: supernotify`-Block dadurch **nicht** entfernt. Sobald dieser Block aus der `configuration.yaml` gelöscht und Home Assistant neu gestartet wurde, wird diese Reparatur automatisch aufgelöst - ein manuelles Schließen ist nicht nötig."
+                        "description": "Lieferungen, Transporte, Szenarien, Kameras, Aktionsgruppen, Links und Snooze-Einstellungen müssen aus dem `notify: - platform: supernotify`-YAML-Block in einen neuen Top-Level-Schlüssel `supernotify:` verschoben werden. Empfänger werden stattdessen als Empfänger der Integration übernommen.\n\nDurch Auswahl von **Absenden** wird dies automatisiert: Es wird eine neue Datei `supernotify.yaml` mit deinen aktuellen Einstellungen geschrieben und eine Zeile `supernotify: !include supernotify.yaml` am Ende deiner `configuration.yaml` hinzugefügt. Deine Konfiguration wird sofort neu geladen - kein Neustart nötig.\n\n**Lieber von Hand erledigen?** Verschiebe die Einstellungen einfach selbst in einen Top-Level-Schlüssel `supernotify:`, anstatt auf Absenden zu klicken - beides ist in Ordnung, und diese Reparatur muss dafür nicht bestätigt werden.\n\nIn beiden Fällen wird der alte `notify: - platform: supernotify`-Block dadurch **nicht** entfernt. Sobald dieser Block aus der `configuration.yaml` gelöscht und Home Assistant neu gestartet wurde, wird diese Reparatur automatisch aufgelöst - ein manuelles Schließen ist nicht nötig."
                     },
                     "already_migrated": {
                         "title": "Supernotify-YAML-Konfiguration bereits migriert",
@@ -529,6 +529,10 @@
         "archive_path": {
             "title": "Archivpfad kann nicht verwendet werden",
             "description": "Benachrichtigungen können nicht als Datei unter {path} archiviert werden (Fehler: {error}). Wähle in den Archivoptionen der Supernotify-Integration einen anderen Pfad oder korrigiere die Berechtigungen des Ordners und lade Supernotify dann neu."
+        },
+        "yaml_recipients_imported": {
+            "title": "Supernotify-Empfänger in YAML werden ignoriert",
+            "description": "Empfänger werden jetzt in der Supernotify-Integration verwaltet, unter **Einstellungen → Geräte & Dienste → Supernotify**, wohin die im obersten `supernotify:` YAML importiert wurden, und werden daher im YAML ignoriert.\n\nEntferne `recipients:` aus dem YAML, um diese Warnung zu beheben. Bis dahin wird ein in der Integration gelöschter Empfänger beim nächsten Neustart erneut importiert."
         }
     },
     "exceptions": {
@@ -772,6 +776,98 @@
                 "recipient": "Empfänger",
                 "delivery": "Zustellung",
                 "transport": "Transport"
+            }
+        },
+        "delivery_override_enabled": {
+            "options": {
+                "default": "Wie bei der Zustellung eingestellt",
+                "enabled": "Aktiviert",
+                "disabled": "Deaktiviert"
+            }
+        }
+    },
+    "config_subentries": {
+        "recipient": {
+            "entry_type": "Empfänger",
+            "initiate_flow": {
+                "user": "Empfänger hinzufügen"
+            },
+            "step": {
+                "user": {
+                    "title": "Empfänger",
+                    "description": "Die Person, oder für jemanden ohne Person der Benutzer, die dieser Empfänger ist. Alles hier Festgelegte ergänzt oder ersetzt, was für sie erkannt wird.",
+                    "data": {
+                        "person": "Person",
+                        "user_id": "Benutzer"
+                    },
+                    "data_description": {
+                        "person": "Die Home Assistant Person",
+                        "user_id": "Der Home Assistant Benutzer, für jemanden ohne Person"
+                    }
+                },
+                "details": {
+                    "title": "{recipient}",
+                    "description": "Wie {recipient} erreicht wird.",
+                    "data": {
+                        "alias": "Alias",
+                        "email": "E-Mail-Adresse",
+                        "phone_number": "Telefonnummer",
+                        "enabled": "Aktiviert",
+                        "mobile_discovery": "Mobilgeräte-Erkennung",
+                        "mobile_devices": "Mobilgeräte",
+                        "target": "Ziele",
+                        "custom_target": "Benutzerdefinierte Ziele"
+                    },
+                    "data_description": {
+                        "alias": "Name, der für diesen Empfänger statt dem der Person verwendet wird",
+                        "email": "Wird von E-Mail-Zustellungen verwendet",
+                        "phone_number": "Wird von SMS- und anderen Telefon-Zustellungen verwendet",
+                        "enabled": "Ob dieser Empfänger überhaupt benachrichtigt wird",
+                        "mobile_discovery": "Neu für diesen Empfänger registrierte Mobile-App-Geräte verwenden",
+                        "mobile_devices": "Die zu benachrichtigenden Mobile-App-Geräte - nicht angehakte werden ausgelassen",
+                        "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die als dieser Empfänger benachrichtigt werden, wie in der Aktion supernotify.notify",
+                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345"
+                    }
+                },
+                "menu": {
+                    "title": "{recipient}",
+                    "description": "Ändern, wie eine Zustellung {recipient} behandelt, oder speichern.",
+                    "menu_options": {
+                        "delivery": "Eine Zustellung ändern",
+                        "save": "Speichern"
+                    }
+                },
+                "delivery": {
+                    "title": "{recipient}",
+                    "description": "Die Zustellung, die für diesen Empfänger geändert werden soll.",
+                    "data": {
+                        "delivery": "Zustellung"
+                    }
+                },
+                "delivery_override": {
+                    "title": "{delivery} für {recipient}",
+                    "description": "Wie {delivery} {recipient} behandelt. Alles leer lassen, um die Änderung zu entfernen.",
+                    "data": {
+                        "enabled": "Aktiviert",
+                        "target": "Ziele",
+                        "custom_target": "Benutzerdefinierte Ziele",
+                        "extra_data": "Zusätzliche Daten"
+                    },
+                    "data_description": {
+                        "enabled": "Ob diese Zustellung für diesen Empfänger verwendet wird, oder der Zustellung überlassen",
+                        "target": "Ziele, die nur diese Zustellung für diesen Empfänger verwendet",
+                        "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345",
+                        "extra_data": "Daten, die dem hinzugefügt werden, was diese Zustellung für diesen Empfänger sendet"
+                    }
+                }
+            },
+            "error": {
+                "person_or_user_required": "Eine Person oder einen Benutzer wählen",
+                "invalid_custom_target": "Ein benutzerdefiniertes Ziel ist weder eine E-Mail-Adresse, eine Telefonnummer noch Kategorie:Wert",
+                "invalid_extra_data": "Zusätzliche Daten dürfen keinen von Supernotify reservierten Schlüssel verwenden"
+            },
+            "abort": {
+                "already_configured": "Diese Person oder dieser Benutzer ist bereits ein Empfänger"
             }
         }
     }

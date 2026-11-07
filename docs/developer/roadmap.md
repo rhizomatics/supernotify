@@ -169,6 +169,8 @@ Storage model for deliveries, scenarios and transports, settled in [#166](https:
 - Anything stored in a config entry must be raw strings re-validated at load time, since validated config holds `Template` objects that are not JSON-serializable. Handled for now by the `CONFIG_ENTRY_SCHEMA` / `FULL_CONFIG_SCHEMA` split
 - Update listeners from `entry.add_update_listener()` must be coroutine functions; a sync `@callback` fails at the first options save
 
+Recipients moved off YAML entirely in v2.18.0, as config subentries, one per person or user (`RecipientSubentryFlow`, `config_flow.py`) - few per house and with no templates, none of #166's reasons against subentries apply. Each subentry's data is in `RECIPIENT_SCHEMA` shape, re-validated at load. YAML recipients are imported into subentries at every setup when missing, with a `yaml_recipients_imported` repair; one deleted in the UI while still in YAML comes back, accepted rather than tracking what was imported. The form deliberately has no free-form mobile device entry, since every device has to be set up in Home Assistant already.
+
 Also raised there and still open, and more pressing once deliveries are edited in a form:
 
 - `delivery:` as a map defaults to implicit selection, as a list to explicit, so the same key behaves differently by YAML shape. Expose the selection mode explicitly in the delivery form and decouple the default from the shape

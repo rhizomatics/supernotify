@@ -1,9 +1,9 @@
 """Repairs for supernotify's legacy `notify: - platform: supernotify` YAML block.
 
 The config entry is the sole, unconditional owner of registering notify.supernotify (see
-async_setup_entry in __init__.py) - delivery/transports/scenarios/recipients/cameras/
+async_setup_entry in __init__.py) - delivery/transports/scenarios/cameras/
 action_groups/snooze now live under a top-level `supernotify:` YAML key instead (see
-CONFIG_SCHEMA/async_setup in __init__.py). A leftover legacy block is inert (notify.py's
+CONFIG_SCHEMA/async_setup in __init__.py), and recipients in the entry's recipient subentries. A leftover legacy block is inert (notify.py's
 async_get_service shim registers nothing from it) but still raises this fixable repair, which
 automates moving that config into `supernotify.yaml` plus a `supernotify: !include
 supernotify.yaml` line in configuration.yaml.
@@ -29,7 +29,8 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
-from . import DOMAIN, async_reload_yaml_config_and_entries
+from . import DOMAIN, async_add_recipient_subentries, async_reload_yaml_config_and_entries
+from .common import ensure_list
 from .compat import vol
 from .config_flow import extract_legacy_data, extract_legacy_options
 from .const import (
@@ -41,7 +42,7 @@ from .const import (
     CONF_SNOOZE,
     CONF_TRANSPORTS,
 )
-from .schema import SUPERNOTIFY_YAML_SCHEMA
+from .schema import RECIPIENT_SCHEMA, SUPERNOTIFY_YAML_SCHEMA
 
 if TYPE_CHECKING:
     # only for type checking, since RepairsFlowResult isn't exported on every supported HA version
@@ -61,6 +62,7 @@ PYTHON_313_DEPRECATED_ISSUE_ID = "python_313_deprecated"
 RECIPIENT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "recipient_binary_sensor_deprecated"
 DELIVERY_TRANSPORT_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "delivery_transport_binary_sensor_deprecated"
 YAML_ENTRY_OWNED_KEYS_ISSUE_ID = "yaml_entry_owned_keys"
+YAML_RECIPIENTS_ISSUE_ID = "yaml_recipients_imported"
 SUPERNOTIFY_YAML_FILENAME = "supernotify.yaml"
 CONFIGURATION_YAML_FILENAME = "configuration.yaml"
 
@@ -74,13 +76,12 @@ _MANUAL_MIGRATION_REASONS: dict[str, str] = {
     "validation_failed": "the updated configuration.yaml failed validation and was rolled back",
 }
 
-# The 8 keys migrated out of the legacy notify: platform block, matching schema.py's
-# SUPERNOTIFY_YAML_SCHEMA.
+# The keys migrated out of the legacy notify: platform block into supernotify.yaml, matching
+# schema.py's SUPERNOTIFY_YAML_SCHEMA. Recipients go straight into recipient subentries instead.
 _YAML_ONLY_KEYS = (
     CONF_DELIVERY,
     CONF_TRANSPORTS,
     CONF_SCENARIOS,
-    CONF_RECIPIENTS,
     CONF_CAMERAS,
     CONF_ACTION_GROUPS,
     CONF_SNOOZE,
@@ -163,6 +164,23 @@ def async_check_yaml_entry_owned_keys(hass: HomeAssistant, keys: list[str]) -> N
         translation_key=YAML_ENTRY_OWNED_KEYS_ISSUE_ID,
         translation_placeholders={"keys": ", ".join(sorted(keys))},
         learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/",
+    )
+
+
+def async_check_yaml_recipients(hass: HomeAssistant, present: bool) -> None:
+    """Raise (or clear) a warning that recipients in the top-level `supernotify:` YAML were
+    imported into the integration, and are ignored there from now on."""
+    if not present:
+        ir.async_delete_issue(hass, DOMAIN, YAML_RECIPIENTS_ISSUE_ID)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        YAML_RECIPIENTS_ISSUE_ID,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=YAML_RECIPIENTS_ISSUE_ID,
+        learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/people/",
     )
 
 
@@ -316,6 +334,7 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             migrated = _extract_yaml_only_config(self._legacy_config)
             try:
                 SUPERNOTIFY_YAML_SCHEMA(migrated)
+                recipients = [RECIPIENT_SCHEMA(r) for r in ensure_list(self._legacy_config.get(CONF_RECIPIENTS))]
             except vol.Invalid as err:
                 _LOGGER.warning("SUPERNOTIFY Legacy config failed validation, not migrating: %s", err)
                 self._async_raise_manual_migration_issue("migrated_config_invalid")
@@ -336,7 +355,7 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
                 return self.async_show_form(step_id="confirm", errors={"base": "validation_failed"})
 
             ir.async_delete_issue(self.hass, DOMAIN, MANUAL_MIGRATION_ISSUE_ID)
-            await self._async_finish_migration()
+            await self._async_finish_migration(recipients)
             return self.async_create_entry(data={})
 
     def _async_raise_manual_migration_issue(self, reason_key: str) -> None:
@@ -406,18 +425,19 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             with open(configuration_yaml_path, "w", encoding="utf-8") as config_file:
                 config_file.write(self._original_configuration_yaml)
 
-    async def _async_finish_migration(self) -> None:
+    async def _async_finish_migration(self, recipients: list[dict[str, Any]]) -> None:
         """Reload the migrated YAML immediately (no restart needed), and make sure an entry
         exists to own it - preserving a custom `name:` (-> notify.<name>) from the legacy
         config, since that's what determines the actual registered action name, along with any
         template_path/media_path/etc and archive/dupe_check/housekeeping settings the legacy
-        config carried."""
+        config carried. The legacy recipients become the entry's recipient subentries."""
         if not self.hass.config_entries.async_entries(DOMAIN):
             from homeassistant.config_entries import SOURCE_IMPORT
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
         else:
             async_sync_entry_from_legacy_config(self.hass, self._legacy_config)
+        async_add_recipient_subentries(self.hass, self.hass.config_entries.async_entries(DOMAIN)[0], recipients)
 
         await async_reload_yaml_config_and_entries(self.hass)
 

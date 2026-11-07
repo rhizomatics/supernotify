@@ -1,9 +1,9 @@
 """Config flow for the Supernotify integration.
 
 A UI setup path that reproduces examples/minimal.yaml (everything auto-discovered, no required
-fields), plus options pages for the archive, dupe_check and housekeeping settings. Delivery,
-transports, scenarios, scenario_control, recipients, cameras, action_groups and snooze stay
-YAML-only, now
+fields), plus options pages for the archive, dupe_check and housekeeping settings, and a
+subentry per recipient. Delivery, transports, scenarios, scenario_control, cameras,
+action_groups and snooze stay YAML-only, now
 under a top-level `supernotify:` key (see CONFIG_SCHEMA/async_setup in __init__.py) rather than
 the legacy `notify: - platform: supernotify` block - this config entry is the sole,
 unconditional owner of registering notify.supernotify in every case.
@@ -15,18 +15,54 @@ import logging
 from typing import Any
 
 from anyio import Path
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_ENABLED, CONF_NAME
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+    CONF_ALIAS,
+    CONF_EMAIL,
+    CONF_ENABLED,
+    CONF_NAME,
+    CONF_TARGET,
+)
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    EntitySelector,
+    EntitySelectorConfig,
+    ObjectSelector,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    TargetSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+from homeassistant.util import slugify
 
 from . import ARCHIVE_DIR, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .compat import vol
 from .const import (
+    ATTR_CUSTOM_TARGET,
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
+    ATTR_EMAIL,
+    ATTR_EXTRA_DATA,
+    ATTR_PHONE,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
@@ -36,7 +72,9 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
+    CONF_DATA,
     CONF_DEFAULT_INCLUSION,
+    CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
@@ -48,17 +86,26 @@ from .const import (
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
+    CONF_MOBILE_APP_ID,
+    CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
+    CONF_PERSON,
+    CONF_PHONE_NUMBER,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
     CONF_TEMPLATE_PATH,
     CONF_TTL,
+    CONF_USER_ID,
     CONF_VOICE_OCCUPANCY,
     DEFAULT_INCLUSION_VALUES,
     OCCUPANCY_VALUES,
+    SUBENTRY_TYPE_RECIPIENT,
 )
-from .schema import OutcomeSelection
+from .hass_api import HomeAssistantAPI
+from .people import PeopleRegistry
+from .schema import DATA_SCHEMA, RECIPIENT_SCHEMA, OutcomeSelection
+from .target import Target
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -289,6 +336,11 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> SupernotifyOptionsFlow:
         return SupernotifyOptionsFlow()
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:
+        return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlow}
+
 
 class SupernotifyOptionsFlow(OptionsFlow):
     """Options pages for archive, dupe_check, housekeeping and LLM tools settings."""
@@ -445,3 +497,268 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_SENTENCE_COMMANDS, default=current.get(CONF_SENTENCE_COMMANDS, False)): cv.boolean,
         })
         return self.async_show_form(step_id="llm_tools", data_schema=schema)
+
+
+# The target categories the target selector gives, as in supernotify.notify - anything else is
+# a custom target, entered as text
+_SELECTOR_TARGET_CATEGORIES = (ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+# Custom targets recognised without a "category:" prefix
+_PLAIN_CUSTOM_CATEGORIES = (ATTR_EMAIL, ATTR_PHONE)
+
+# Choices for a delivery override's enabled, "default" leaving it to the delivery
+OVERRIDE_DEFAULT = "default"
+OVERRIDE_ENABLED = "enabled"
+OVERRIDE_DISABLED = "disabled"
+_OVERRIDE_ENABLED_VALUES = {OVERRIDE_ENABLED: True, OVERRIDE_DISABLED: False}
+
+
+def target_from_fields(selected: dict[str, Any] | None, custom: list[str] | None) -> dict[str, list[str]]:
+    """Build a recipient target from the target selector and custom target fields, the same
+    pair supernotify.notify offers. A custom target is a "category:value", or an e-mail address
+    or phone number on its own. Raises vol.Invalid for one that is neither."""
+    target: dict[str, list[str]] = {}
+    for category, values in (selected or {}).items():
+        if found := [str(v) for v in cv.ensure_list(values) if v]:
+            target[category] = found
+    for value in custom or []:
+        value = value.strip()
+        if not value:
+            continue
+        prefix, sep, rest = value.partition(":")
+        if sep and rest and not rest.startswith("/") and prefix == slugify(prefix):
+            category, value = prefix, rest
+        else:
+            category = next(iter(Target([value]).targets))
+            if category not in _PLAIN_CUSTOM_CATEGORIES:
+                raise vol.Invalid(f"unrecognised custom target {value}")
+        target.setdefault(category, [])
+        if value not in target[category]:
+            target[category].append(value)
+    return target
+
+
+def target_to_fields(target: Any) -> tuple[dict[str, list[str]], list[str]]:  # ruff: ignore[any-type]
+    """Split a recipient target back into the target selector and custom target fields"""
+    as_dict: dict[str, list[str]] = Target(target).as_dict() if target else {}
+    selected: dict[str, list[str]] = {}
+    custom: list[str] = []
+    for category, values in as_dict.items():
+        if category in _SELECTOR_TARGET_CATEGORIES:
+            selected[category] = list(values)
+        elif category in _PLAIN_CUSTOM_CATEGORIES:
+            custom.extend(values)
+        else:
+            custom.extend(f"{category}:{v}" for v in values)
+    return selected, custom
+
+
+class RecipientSubentryFlow(ConfigSubentryFlow):
+    """Add or change a recipient - who, how to reach them, which of their mobile devices to
+    use, and how individual deliveries treat them.
+
+    The recipient is held in RECIPIENT_SCHEMA shape as the steps go, and saved from the menu.
+    A recipient adds to, or overrides, the one discovered for the same person or user.
+    """
+
+    def __init__(self) -> None:
+        self._recipient: dict[str, Any] = {}
+        # the delivery picked in async_step_delivery, for async_step_delivery_override
+        self._delivery: str = ""
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Who the recipient is - a person, or a user with no person"""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            key = user_input.get(CONF_PERSON) or user_input.get(CONF_USER_ID)
+            if not key:
+                errors["base"] = "person_or_user_required"
+            elif any(s.unique_id == key for s in self._get_entry().subentries.values()):
+                return self.async_abort(reason="already_configured")
+            else:
+                self._recipient = {k: v for k, v in user_input.items() if v}
+                self._recipient[CONF_MOBILE_DISCOVERY] = self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True)
+                return await self.async_step_details()
+        users = await HomeAssistantAPI(self.hass).async_real_user_ids()
+        schema = vol.Schema({
+            vol.Optional(CONF_PERSON): EntitySelector(EntitySelectorConfig(domain="person")),
+            vol.Optional(CONF_USER_ID): SelectSelector(
+                SelectSelectorConfig(options=[SelectOptionDict(value=k, label=v) for k, v in users.items()])
+            ),
+        })
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        self._recipient = dict(self._get_reconfigure_subentry().data)
+        return await self.async_step_details()
+
+    async def async_step_details(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """How to reach the recipient, and which of their mobile devices to use"""
+        errors: dict[str, str] = {}
+        devices = self._mobile_device_options()
+        if user_input is not None:
+            try:
+                target = target_from_fields(user_input.get(CONF_TARGET), user_input.get(ATTR_CUSTOM_TARGET))
+            except vol.Invalid:
+                errors[ATTR_CUSTOM_TARGET] = "invalid_custom_target"
+            else:
+                for key in (CONF_ALIAS, CONF_EMAIL, CONF_PHONE_NUMBER):
+                    if user_input.get(key):
+                        self._recipient[key] = user_input[key]
+                    else:
+                        self._recipient.pop(key, None)
+                self._recipient[CONF_ENABLED] = user_input[CONF_ENABLED]
+                self._recipient[CONF_MOBILE_DISCOVERY] = user_input[CONF_MOBILE_DISCOVERY]
+                if target:
+                    self._recipient[CONF_TARGET] = target
+                else:
+                    self._recipient.pop(CONF_TARGET, None)
+                selected = user_input.get(CONF_MOBILE_DEVICES, [])
+                self._recipient[CONF_MOBILE_DEVICES] = [
+                    {CONF_MOBILE_APP_ID: d["value"], CONF_ENABLED: d["value"] in selected} for d in devices
+                ]
+                return await self.async_step_menu()
+
+        selected_target, custom_target = target_to_fields(self._recipient.get(CONF_TARGET))
+        disabled = {
+            d.get(CONF_MOBILE_APP_ID) for d in self._recipient.get(CONF_MOBILE_DEVICES, []) if not d.get(CONF_ENABLED, True)
+        }
+        schema = vol.Schema({
+            vol.Optional(CONF_ALIAS): TextSelector(),
+            vol.Optional(CONF_EMAIL): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL)),
+            vol.Optional(CONF_PHONE_NUMBER): TextSelector(TextSelectorConfig(type=TextSelectorType.TEL)),
+            vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
+            vol.Optional(CONF_MOBILE_DEVICES): SelectSelector(SelectSelectorConfig(options=devices, multiple=True)),
+            vol.Optional(CONF_TARGET): TargetSelector(),
+            vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
+        })
+        suggested = {
+            CONF_ALIAS: self._recipient.get(CONF_ALIAS),
+            CONF_EMAIL: self._recipient.get(CONF_EMAIL),
+            CONF_PHONE_NUMBER: self._recipient.get(CONF_PHONE_NUMBER),
+            CONF_ENABLED: self._recipient.get(CONF_ENABLED, True),
+            CONF_MOBILE_DISCOVERY: self._recipient.get(CONF_MOBILE_DISCOVERY, True),
+            CONF_MOBILE_DEVICES: [d["value"] for d in devices if d["value"] not in disabled],
+            CONF_TARGET: selected_target or None,
+            ATTR_CUSTOM_TARGET: custom_target or None,
+        }
+        return self.async_show_form(
+            step_id="details",
+            data_schema=self.add_suggested_values_to_schema(schema, suggested),
+            errors=errors,
+            description_placeholders={"recipient": self._title()},
+        )
+
+    async def async_step_menu(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        options = ["delivery", "save"] if self._delivery_names() else ["save"]
+        return self.async_show_menu(step_id="menu", menu_options=options, description_placeholders={"recipient": self._title()})
+
+    async def async_step_delivery(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Pick a delivery to change for this recipient"""
+        if user_input is not None:
+            self._delivery = user_input[CONF_DELIVERY]
+            return await self.async_step_delivery_override()
+        schema = vol.Schema({vol.Required(CONF_DELIVERY): SelectSelector(SelectSelectorConfig(options=self._delivery_names()))})
+        return self.async_show_form(step_id="delivery", data_schema=schema)
+
+    async def async_step_delivery_override(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Whether the delivery is used for this recipient, extra targets, and extra data for it"""
+        overrides: dict[str, dict[str, Any]] = dict(self._recipient.get(CONF_DELIVERY) or {})
+        current: dict[str, Any] = overrides.get(self._delivery) or {}
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            override: dict[str, Any] = {}
+            if user_input[CONF_ENABLED] in _OVERRIDE_ENABLED_VALUES:
+                override[CONF_ENABLED] = _OVERRIDE_ENABLED_VALUES[user_input[CONF_ENABLED]]
+            try:
+                if target := target_from_fields(user_input.get(CONF_TARGET), user_input.get(ATTR_CUSTOM_TARGET)):
+                    override[CONF_TARGET] = target
+            except vol.Invalid:
+                errors[ATTR_CUSTOM_TARGET] = "invalid_custom_target"
+            try:
+                if extra_data := user_input.get(ATTR_EXTRA_DATA):
+                    override[CONF_DATA] = DATA_SCHEMA(extra_data)
+            except vol.Invalid:
+                errors[ATTR_EXTRA_DATA] = "invalid_extra_data"
+            if not errors:
+                # an override left with nothing set is removed
+                if override:
+                    overrides[self._delivery] = override
+                else:
+                    overrides.pop(self._delivery, None)
+                self._recipient[CONF_DELIVERY] = overrides
+                return await self.async_step_menu()
+
+        selected_target, custom_target = target_to_fields(current.get(CONF_TARGET))
+        enabled = current.get(CONF_ENABLED)
+        schema = vol.Schema({
+            vol.Optional(CONF_ENABLED, default=OVERRIDE_DEFAULT): SelectSelector(
+                SelectSelectorConfig(
+                    options=[OVERRIDE_DEFAULT, OVERRIDE_ENABLED, OVERRIDE_DISABLED], translation_key="delivery_override_enabled"
+                )
+            ),
+            vol.Optional(CONF_TARGET): TargetSelector(),
+            vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
+            vol.Optional(ATTR_EXTRA_DATA): ObjectSelector(),
+        })
+        suggested = {
+            CONF_ENABLED: OVERRIDE_DEFAULT if enabled is None else (OVERRIDE_ENABLED if enabled else OVERRIDE_DISABLED),
+            CONF_TARGET: selected_target or None,
+            ATTR_CUSTOM_TARGET: custom_target or None,
+            ATTR_EXTRA_DATA: current.get(CONF_DATA),
+        }
+        return self.async_show_form(
+            step_id="delivery_override",
+            data_schema=self.add_suggested_values_to_schema(schema, suggested),
+            errors=errors,
+            description_placeholders={"recipient": self._title(), "delivery": self._delivery},
+        )
+
+    async def async_step_save(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        RECIPIENT_SCHEMA(self._recipient)  # anything the steps let through that it wouldn't is a bug here
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), data=self._recipient, title=self._title()
+            )
+        return self.async_create_entry(
+            title=self._title(),
+            data=self._recipient,
+            unique_id=self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID),
+        )
+
+    def _title(self) -> str:
+        """The alias, else the person's name, else the user's"""
+        if alias := self._recipient.get(CONF_ALIAS):
+            return str(alias)
+        if (person := self._recipient.get(CONF_PERSON)) and (state := self.hass.states.get(person)):
+            return state.name
+        return str(self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID))
+
+    def _mobile_device_options(self) -> list[SelectOptionDict]:
+        """The recipient's discovered mobile devices that can be notified, and any already
+        configured for them that weren't discovered"""
+        hass_api = HomeAssistantAPI(self.hass)
+        hass_api.build_mobile_app_cache()
+        registry = PeopleRegistry([], hass_api)
+        user_id = self._recipient.get(CONF_USER_ID)
+        discovered = (
+            registry.mobile_devices_for_user(user_id)
+            if user_id
+            else registry.mobile_devices_for_person(self._recipient.get(CONF_PERSON, ""))
+        )
+        options = {
+            d.mobile_app_id: SelectOptionDict(value=d.mobile_app_id, label=d.device_name or d.mobile_app_id)
+            for d in discovered
+            if d.mobile_app_id and d.action
+        }
+        for d in self._recipient.get(CONF_MOBILE_DEVICES, []):
+            app_id = d.get(CONF_MOBILE_APP_ID)
+            if app_id and app_id not in options:
+                options[app_id] = SelectOptionDict(value=app_id, label=app_id)
+        return list(options.values())
+
+    def _delivery_names(self) -> list[str]:
+        """The running deliveries, and any this recipient already overrides"""
+        engine = getattr(self._get_entry(), "runtime_data", None)
+        names = set(engine.context.delivery_registry.deliveries) if engine is not None else set()
+        return sorted(names | set(self._recipient.get(CONF_DELIVERY) or {}))
