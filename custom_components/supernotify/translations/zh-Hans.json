@@ -53,7 +53,7 @@
                 "name": "推送 {delivery} 已启用"
             },
             "transport_enabled": {
-                "name": "传输方式 {transport} 已启用"
+                "name": "已启用"
             }
         },
         "button": {

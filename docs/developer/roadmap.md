@@ -188,6 +188,10 @@ Also raised there and still open, and more pressing once deliveries are edited i
 
 Config subentries are one level deep, so a delivery can't be a subentry of its transport, and the integration page has no tree. Since v2.18.0 each delivery's switch is in its transport's subentry, so a transport's card lists its deliveries, which is as close to nesting as the page allows. The next step is editing a transport's deliveries from its own form, a step listing them, to add, change or remove one. Where those are stored follows the Extended UI Configuration decision above: written back to the YAML file by the round-trip editor, with YAML staying the store, rather than kept in the transport's subentry, which would be simpler but lose having many deliveries in one file to manage and compare. So this waits for the round-trip editor.
 
+### Email Using Home Assistant's SMTP Entries
+
+Home Assistant's SMTP integration is now configured in the UI, as a config entry per mail server, with recipients as its subentries (**Add recipient**) and a service device for the server - much the same shape as Supernotify's, which follows it for the transport service devices. The email transport keeps its own `connection` for sending directly, duplicating the host, port, encryption and login the SMTP integration already holds. Offer the SMTP config entries already set up in place of that, so the transport picks a mail server rather than repeating its settings, keeping `connection` only for a mail server with no SMTP entry.
+
 ### Managing Many Subentries
 
 Recipients and transports are subentries, and every one discovered or in use is listed, so a house with many people, and many transports in use, has a long, flat list on the integration page, with no grouping, filtering or search. Ways to keep it manageable:

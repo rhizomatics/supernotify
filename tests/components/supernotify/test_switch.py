@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import Context, State
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -286,20 +287,22 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
         assert reg_entry.unique_id == unique_id
         assert reg_entry.entity_category == EntityCategory.CONFIG
         assert reg_entry.config_entry_id == entry.entry_id
-        # a transport's switch, and its deliveries', are in its subentry, with no device
+        # a transport's switch, and its deliveries', are on its service device, in its subentry
         transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
         assert reg_entry.config_subentry_id == transport.subentry_id
-        assert reg_entry.device_id is None
+        device = dr.async_get(hass).async_get(reg_entry.device_id)  # type: ignore[arg-type]
+        assert device is not None
+        assert device.name == "generic"
+        assert device.entry_type == dr.DeviceEntryType.SERVICE
 
     state = hass.states.get("switch.supernotify_delivery_chat_room")
     assert state is not None
-    # no device, so no device name before its own
-    assert state.name == "Delivery Chat Room Enabled"
+    # named after the transport's device
+    assert state.name == "generic Delivery Chat Room Enabled"
     assert state.attributes["transport"] == "generic"
     state = hass.states.get("switch.supernotify_transport_generic")
     assert state is not None
-    # no device, so no device name before its own
-    assert state.name == "Transport generic Enabled"
+    assert state.name == "generic Enabled"
 
 
 async def test_delivery_names_slugified_alike_get_distinct_switches(hass: HomeAssistant) -> None:

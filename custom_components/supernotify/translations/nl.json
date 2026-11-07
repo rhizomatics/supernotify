@@ -53,7 +53,7 @@
                 "name": "Bezorging {delivery} ingeschakeld"
             },
             "transport_enabled": {
-                "name": "Transport {transport} ingeschakeld"
+                "name": "Ingeschakeld"
             }
         },
         "button": {

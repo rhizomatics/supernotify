@@ -151,7 +151,25 @@ def ha_device_info(entry_id: str) -> dr.DeviceInfo:
     registry. Unrelated to `TrackedDeviceDetails` above, which describes a discovered mobile_app
     device for targeting.
     """
-    return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="Supernotify", manufacturer="Supernotify")
+    return dr.DeviceInfo(
+        identifiers={(DOMAIN, entry_id)},
+        name="Supernotify",
+        manufacturer="Supernotify",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+
+def ha_transport_device_info(entry_id: str, name: str, title: str) -> dr.DeviceInfo:
+    """Home Assistant device-registry DeviceInfo for one transport, as a service, holding its
+    switch and its deliveries', in its subentry - as the SMTP integration has a service device
+    for each mail server"""
+    return dr.DeviceInfo(
+        identifiers={(DOMAIN, f"{entry_id}_transport_{name}")},
+        name=title,
+        manufacturer="Supernotify",
+        model="Transport",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
 
 def _describe_unsubscribe(unsub: Callable[[], Any]) -> str:

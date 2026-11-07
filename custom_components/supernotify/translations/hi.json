@@ -53,7 +53,7 @@
                 "name": "डिलीवरी {delivery} सक्षम"
             },
             "transport_enabled": {
-                "name": "परिवहन {transport} सक्षम"
+                "name": "सक्षम"
             }
         },
         "button": {

@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, State
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -489,13 +490,16 @@ async def test_delivery_entities_belong_to_the_config_entry(hass: HomeAssistant)
         reg_entry = er.async_get(hass).async_get(entity_id)
         assert reg_entry is not None
         assert reg_entry.config_entry_id == entry.entry_id
-    # the transport's switch and its delivery's are both in the transport's subentry, with no device
+    # the transport's switch and its delivery's are both on the transport's service device, in its subentry
     transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
     for entity_id in ("switch.supernotify_delivery_testing", "switch.supernotify_transport_generic"):
         reg_entry = er.async_get(hass).async_get(entity_id)
         assert reg_entry is not None
         assert reg_entry.config_subentry_id == transport.subentry_id
-        assert reg_entry.device_id is None
+        device = dr.async_get(hass).async_get(reg_entry.device_id)  # type: ignore[arg-type]
+        assert device is not None
+        assert device.name == "generic"
+        assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 
 # --- Medium bug: occupancy recomputed once per scenario in a batch refresh -----------------

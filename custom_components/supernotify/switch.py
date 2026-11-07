@@ -42,7 +42,7 @@ from .const import (
     SUBENTRY_TYPE_TRANSPORT,
     TRANSPORT_UNRECORDED_ATTRIBUTES,
 )
-from .hass_api import ha_device_info
+from .hass_api import ha_device_info, ha_transport_device_info
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -80,16 +80,19 @@ async def async_setup_entry(
     # just while what it depends on is still starting up
     delivery_registry = context.delivery_registry
     async_add_entities(entities)
-    # each transport's in its subentry, with no device, so a transport is only listed once in the
-    # integration, as its subentry, along with its deliveries' - and likewise each recipient's,
-    # where it has one
+    # each transport's on its own service device in its subentry, along with its deliveries' -
+    # and each recipient's in its subentry, where it has one, with no device, so a recipient is
+    # only listed once in the integration
     transport_subentries = {
         s.unique_id: s.subentry_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT
     }
     for transport in delivery_registry.transports.values():
-        transport_entities: list[SwitchEntity] = [SupernotifyTransportSwitch(transport, delivery_registry, None, switches)]
+        transport_device = ha_transport_device_info(entry.entry_id, transport.name, transport.alias or transport.name)
+        transport_entities: list[SwitchEntity] = [
+            SupernotifyTransportSwitch(transport, delivery_registry, transport_device, switches)
+        ]
         transport_entities.extend(
-            SupernotifyDeliverySwitch(delivery, delivery_registry, None, switches)
+            SupernotifyDeliverySwitch(delivery, delivery_registry, transport_device, switches)
             for delivery in delivery_registry.deliveries.values()
             if delivery.transport.name == transport.name
         )
@@ -321,7 +324,7 @@ class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
         super().__init__(OVERRIDE_KIND_TRANSPORT, transport, device_info, switches)
         self._transport = transport
         self._registry = registry
-        self._attr_translation_placeholders = {"transport": transport.alias or transport.name}
+        # named after its device, the transport's own
         # Setting entity_id directly is not preferred Home Assistant practice - see
         # SupernotifyScenarioSwitch and SupernotifyDeliverySwitch.
         self.entity_id = f"switch.{DOMAIN}_transport_{slugify(transport.name)}"

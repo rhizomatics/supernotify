@@ -88,7 +88,7 @@
                 "name": "Delivery {delivery} Enabled"
             },
             "transport_enabled": {
-                "name": "Transport {transport} Enabled"
+                "name": "Enabled"
             }
         },
         "button": {

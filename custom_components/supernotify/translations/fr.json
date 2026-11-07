@@ -53,7 +53,7 @@
                 "name": "Livraison {delivery} activée"
             },
             "transport_enabled": {
-                "name": "Transport {transport} activé"
+                "name": "Activé"
             }
         },
         "button": {

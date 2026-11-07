@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, ConfigSubentryData, SubentryFlowResult
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
@@ -91,11 +92,15 @@ async def test_transports_in_use_listed(hass: HomeAssistant) -> None:
     assert {"generic", "persistent"} <= set(transports)
     assert dict(transports["generic"].data) == {}
     assert transports["generic"].title == "generic"
-    # the transport's switch is in its subentry, with no device, so it's only listed once
+    # the transport's switch is on its own service device, in its subentry, as SMTP's mail server is
     registry_entry = er.async_get(hass).async_get("switch.supernotify_transport_generic")
     assert registry_entry is not None
     assert registry_entry.config_subentry_id == transports["generic"].subentry_id
-    assert registry_entry.device_id is None
+    device = dr.async_get(hass).async_get(registry_entry.device_id)  # type: ignore[arg-type]
+    assert device is not None
+    assert device.name == "generic"
+    assert device.entry_type == dr.DeviceEntryType.SERVICE
+    assert hass.states.get("switch.supernotify_transport_generic").name == "generic Enabled"  # type: ignore[union-attr]
 
     # already listed, so not added again on a reload
     assert await hass.config_entries.async_reload(entry.entry_id)
