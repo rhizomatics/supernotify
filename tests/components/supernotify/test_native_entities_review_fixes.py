@@ -489,9 +489,13 @@ async def test_delivery_entities_belong_to_the_config_entry(hass: HomeAssistant)
         reg_entry = er.async_get(hass).async_get(entity_id)
         assert reg_entry is not None
         assert reg_entry.config_entry_id == entry.entry_id
-    # the transport's switch is in its subentry with no device, the delivery's on the Supernotify device
-    assert er.async_get(hass).async_get("switch.supernotify_delivery_testing").device_id is not None  # type: ignore[union-attr]
-    assert er.async_get(hass).async_get("switch.supernotify_transport_generic").device_id is None  # type: ignore[union-attr]
+    # the transport's switch and its delivery's are both in the transport's subentry, with no device
+    transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
+    for entity_id in ("switch.supernotify_delivery_testing", "switch.supernotify_transport_generic"):
+        reg_entry = er.async_get(hass).async_get(entity_id)
+        assert reg_entry is not None
+        assert reg_entry.config_subentry_id == transport.subentry_id
+        assert reg_entry.device_id is None
 
 
 # --- Medium bug: occupancy recomputed once per scenario in a batch refresh -----------------

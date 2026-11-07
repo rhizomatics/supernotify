@@ -286,17 +286,15 @@ async def test_delivery_and_transport_switches_created(hass: HomeAssistant) -> N
         assert reg_entry.unique_id == unique_id
         assert reg_entry.entity_category == EntityCategory.CONFIG
         assert reg_entry.config_entry_id == entry.entry_id
-        # a transport's switch is in its subentry, with no device, so it's only listed once
-        if unique_id.startswith("transport_"):
-            transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
-            assert reg_entry.config_subentry_id == transport.subentry_id
-            assert reg_entry.device_id is None
-        else:
-            assert reg_entry.device_id is not None
+        # a transport's switch, and its deliveries', are in its subentry, with no device
+        transport = next(s for s in entry.subentries.values() if s.unique_id == "generic")
+        assert reg_entry.config_subentry_id == transport.subentry_id
+        assert reg_entry.device_id is None
 
     state = hass.states.get("switch.supernotify_delivery_chat_room")
     assert state is not None
-    assert state.name == "Supernotify Delivery Chat Room Enabled"
+    # no device, so no device name before its own
+    assert state.name == "Delivery Chat Room Enabled"
     assert state.attributes["transport"] == "generic"
     state = hass.states.get("switch.supernotify_transport_generic")
     assert state is not None
