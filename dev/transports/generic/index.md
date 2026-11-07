@@ -72,12 +72,6 @@ If it's not a standard target type, then make one up. In this example, for perso
 Config Snippets
 
 ```yaml
-recipients:
-  - person: person.my_user
-    delivery:
-      slack:
-        target:
-           slack_channel: A20H2AN55DX
 delivery:
   slack:
       transport: generic

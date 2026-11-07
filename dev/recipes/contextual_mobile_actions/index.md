@@ -20,11 +20,6 @@ The mobile action itself will be handled by the [Auto Arm](https://autoarm.rhizo
 
 ```yaml
 supernotify:
-  recipients:
-    - person: person.joe_mcphee
-      mobile_devices:
-          - mobile_app_id: mobile_app_joe_nokia
-
   delivery:
     mobile_push:
       transport: mobile_push

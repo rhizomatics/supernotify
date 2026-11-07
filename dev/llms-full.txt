@@ -3949,6 +3949,7 @@ Transports are set up in the integration, not YAML. Go to *Settings → Devices 
 A transport's form has:
 
 - **Enabled**, to switch it off without removing it, and **Alias**
+- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
 - **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
   - **Debug**, to wait for the result of each action its deliveries call, and record it
   - **Action**, for a transport whose action is configured rather than fixed or found, such as generic
@@ -3957,7 +3958,6 @@ A transport's form has:
   - **Options**, the transport's own options, and **Extra Data**, both as YAML
   - **Inclusion** and **Priority**
   - **Other delivery defaults**, as YAML, for anything else, such as `occupancy`, `conditions`, `template` or `title`
-- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
 - **Advanced**, with **Load**, which leaves the transport out altogether when off, with no deliveries or switch. If disabled, the transport will have to be re-added with **Add transport** if needed in future
 
 So a YAML example elsewhere in this documentation, under `transports:`, is entered on that transport's form - its `delivery_defaults` `options` under **Options**, and so on.
@@ -4885,12 +4885,6 @@ If it's not a standard target type, then make one up. In this example, for perso
 Config Snippets
 
 ```yaml
-recipients:
-  - person: person.my_user
-    delivery:
-      slack:
-        target:
-           slack_channel: A20H2AN55DX
 delivery:
   slack:
       transport: generic
@@ -6952,11 +6946,6 @@ The mobile action itself will be handled by the [Auto Arm](https://autoarm.rhizo
 
 ```yaml
 supernotify:
-  recipients:
-    - person: person.joe_mcphee
-      mobile_devices:
-          - mobile_app_id: mobile_app_joe_nokia
-
   delivery:
     mobile_push:
       transport: mobile_push
@@ -7449,17 +7438,11 @@ Vary how and which notifications are made if someone is home on their own.
 
 ## Implementation
 
-Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when `recipients` are defined in the config. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
+Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when the *Person* integration is used in Home Assistant and automatically discovered in Supernotify. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
 
 ## Example Configuration
 
 ```yaml
-recipients:
-    - person: person.joe_mcphee
-      email: joe.mcphee@home.mail.net
-      phone_number: "+3294924848"
-    - person: person.jabilee_sokata
-      email: jab@sokata.family.net
 scenarios:
     lone_night:
         alias: only one person home at night
@@ -7480,6 +7463,8 @@ scenarios:
 ```
 
 ## Variations
+
+- Add email addresses, phone numbers, telegram IDs etc to Recipients in the Supernotify configuration screen to give more ways to contact people
 
 - Determine night time using the `sun` entity, or a daylight sensor device, rather than alarm status.
 
@@ -7653,11 +7638,10 @@ Note that `inclusion: fallback` plays no part in this - see the warning below.
 
 ## Example Configuration
 
+In this example, there are at least two [Person](https://www.home-assistant.io/integrations/person/) entries added in Home Assistant.
+
 ```yaml
 supernotify:
-  recipients:
-    - person: person.alex
-    - person: person.sam
   delivery:
     notify_home:
       transport: mobile_push
@@ -7685,6 +7669,8 @@ Add a third recipient and both deliveries pick it up automatically - nothing els
 
 `occupancy: only_in` narrows *which recipients* a delivery reaches, not which of a person's own registered devices get notified - if someone has two phones, both get the notification. To pin a delivery to one named device per person instead, drop the shared `notify_home` delivery and give each person their own, with `target_usage: fixed` and a bare `mobile_app_id` target (see [Explicit Targets](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/#explicit-targets)):
 
+In this example there's a *Person* in Home Assistant named `alex`
+
 ```yaml
   delivery:
     notify_alex:
@@ -7704,7 +7690,7 @@ This doesn't scale the way the `occupancy`-only version does - a new recipient n
 
 `inclusion: fallback` would do nothing here - don't add it
 
-It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual gating here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
+It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual control here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
 
 # Recipe - Pyscript
 

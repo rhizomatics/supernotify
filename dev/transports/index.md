@@ -13,6 +13,7 @@ Transports are set up in the integration, not YAML. Go to *Settings → Devices 
 A transport's form has:
 
 - **Enabled**, to switch it off without removing it, and **Alias**
+- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
 - **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
   - **Debug**, to wait for the result of each action its deliveries call, and record it
   - **Action**, for a transport whose action is configured rather than fixed or found, such as generic
@@ -21,7 +22,6 @@ A transport's form has:
   - **Options**, the transport's own options, and **Extra Data**, both as YAML
   - **Inclusion** and **Priority**
   - **Other delivery defaults**, as YAML, for anything else, such as `occupancy`, `conditions`, `template` or `title`
-- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
 - **Advanced**, with **Load**, which leaves the transport out altogether when off, with no deliveries or switch. If disabled, the transport will have to be re-added with **Add transport** if needed in future
 
 So a YAML example elsewhere in this documentation, under `transports:`, is entered on that transport's form - its `delivery_defaults` `options` under **Options**, and so on.
