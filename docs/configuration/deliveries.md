@@ -228,6 +228,8 @@ An `error` is only seen when the call to the action waits for its result, as wit
 !!! warning "Deprecated"
     The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
 
+    To remove them now, switch off **Deprecated Entities** in the integration's *Housekeeping* options, which is only there while you have some. They can't be brought back afterwards.
+
 ### Notify Entity
 
 A delivery can also be given a notify entity of its own, so it can be used from anywhere Home Assistant asks for a notify entity. Add `notify_entity` with the name to go after `notify.`

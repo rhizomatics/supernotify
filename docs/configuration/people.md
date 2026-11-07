@@ -145,6 +145,8 @@ This lasts across restarts and reloads, until the recipient's **Enabled** settin
 !!! warning "Deprecated"
     The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
 
+    To remove them now, switch off **Deprecated Entities** in the integration's *Housekeeping* options, which is only there while you have some. They can't be brought back afterwards.
+
 This can be handy if someone should be temporarily switched off for notifications, or you want your own
 automation to determine which people get notified when.
 
