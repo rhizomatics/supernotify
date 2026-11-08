@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
-from homeassistant.components.llm import LLMTools  # type: ignore[import-not-found,unused-ignore]  # HA < 2026.x on py3.13
+from homeassistant.components.llm import LLMTools  # type: ignore[unresolved-import,unused-ignore]  # HA < 2026.x on py3.13
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput

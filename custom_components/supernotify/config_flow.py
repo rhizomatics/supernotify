@@ -132,7 +132,8 @@ from .const import (
     TARGET_CATEGORY_VALUES,
     TARGET_USAGE_VALUES,
     TRANSPORT_GENERIC,
-    transport_display_name,
+    recipient_subentry_title,
+    transport_subentry_title,
 )
 from .hass_api import HomeAssistantAPI
 from .options import (
@@ -765,12 +766,12 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         return bool(self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True))
 
     def _title(self) -> str:
-        """The alias, else the person's name, else the user's"""
+        """The alias, else the person's name, else the user's, prefixed as a recipient"""
         if alias := self._recipient.get(CONF_ALIAS):
-            return str(alias)
+            return recipient_subentry_title(str(alias))
         if (person := self._recipient.get(CONF_PERSON)) and (state := self.hass.states.get(person)):
-            return state.name
-        return str(self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID))
+            return recipient_subentry_title(state.name)
+        return recipient_subentry_title(str(self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID)))
 
     def _mobile_device_options(self) -> list[SelectOptionDict]:
         """The recipient's discovered mobile devices that can be notified, and any already
@@ -997,7 +998,7 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         return self.async_create_entry(title=self._title(), data=self._transport, unique_id=self._name)
 
     def _title(self) -> str:
-        return transport_display_name(self._name)
+        return transport_subentry_title(self._name)
 
     def _transport_class(self) -> type[Transport] | None:
         from .static_config import TRANSPORTS

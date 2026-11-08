@@ -147,10 +147,15 @@ def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfig
     from homeassistant.config_entries import ConfigSubentry
     from homeassistant.const import CONF_ALIAS
 
-    from .const import CONF_PERSON, SUBENTRY_TYPE_RECIPIENT
+    from .const import CONF_PERSON, SUBENTRY_TYPE_RECIPIENT, recipient_subentry_title
     from .people import recipient_key
 
-    existing = {s.unique_id for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT}
+    existing = set()
+    for subentry in [s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT]:
+        existing.add(subentry.unique_id)
+        # titled without its type's prefix in 2.18.0 betas
+        if subentry.title != (title := recipient_subentry_title(subentry.title)):
+            hass.config_entries.async_update_subentry(entry, subentry, title=title)
     for recipient in recipients:
         key = recipient_key(recipient)
         if key is None or key in existing:
@@ -162,7 +167,7 @@ def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfig
             ConfigSubentry(
                 data=MappingProxyType(dict(recipient)),
                 subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                title=str(recipient.get(CONF_ALIAS) or (person.name if person else key)),
+                title=recipient_subentry_title(str(recipient.get(CONF_ALIAS) or (person.name if person else key))),
                 unique_id=key,
             ),
         )
@@ -178,13 +183,14 @@ def async_add_transport_subentries(
 
     from homeassistant.config_entries import ConfigSubentry
 
-    from .const import SUBENTRY_TYPE_TRANSPORT, transport_display_name
+    from .const import SUBENTRY_TYPE_TRANSPORT, transport_subentry_title
 
     existing = set()
     for subentry in [s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT]:
         existing.add(subentry.unique_id)
-        # titled by an alias before 2.18.0 was released, which is now the transport device's name
-        if subentry.unique_id and subentry.title != (title := transport_display_name(subentry.unique_id)):
+        # titled by an alias before 2.18.0 was released, which is now the transport device's name,
+        # and without its type's prefix in its betas
+        if subentry.unique_id and subentry.title != (title := transport_subentry_title(subentry.unique_id)):
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
     for name, transport in transports.items():
         if name in existing:
@@ -195,7 +201,7 @@ def async_add_transport_subentries(
             ConfigSubentry(
                 data=MappingProxyType(dict(transport)),
                 subentry_type=SUBENTRY_TYPE_TRANSPORT,
-                title=transport_display_name(name),
+                title=transport_subentry_title(name),
                 unique_id=name,
             ),
         )

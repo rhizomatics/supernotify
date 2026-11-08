@@ -1,5 +1,7 @@
 [tools]
-pre-commit = "latest"
+# not in the mise registry, so installed with uv as a tool of its own
+"pipx:codespell" = "latest"
+prek = "latest"
 python = "3.14"
 ruff = "latest"
 ty = "latest"
@@ -46,14 +48,4 @@ run = [
     "rm -fr custom_components/supernotify.egg-info",
     "find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete",
     "uv venv .venv --clear",
-]
-
-[tasks.refresh]
-description = "Refresh tools and dependencies"
-run = [
-    "mise upgrade --local",
-    "git pull",
-    "uv lock --upgrade",
-    "uv sync --dev --group docs",
-    "pre-commit autoupdate"
 ]

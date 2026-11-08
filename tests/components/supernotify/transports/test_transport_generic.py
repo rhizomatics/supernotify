@@ -1,12 +1,12 @@
-# ty: ignore[import-not-found]
+# ty: ignore[unresolved-import]
 from unittest.mock import ANY, Mock, call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 
 try:
-    from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[import-not-found,attr-defined]
+    from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[unresolved-import,attr-defined]
 except ImportError:
-    from homeassistant.components.ntfy.services import SERVICE_PUBLISH_SCHEMA  # type: ignore[no-redef,import-not-found]
+    from homeassistant.components.ntfy.services import SERVICE_PUBLISH_SCHEMA  # type: ignore[no-redef,unresolved-import]
 from dataclasses import replace
 
 import pytest
