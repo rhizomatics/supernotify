@@ -61,11 +61,14 @@ This release continues the move of configuration from YAML into the configuratio
 - *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
 - *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tasks` to see the list.
 - Archived notifications now record the selected targets
+- Logging improved for skipped deliveries, no give reason why
+- Voice/chat assistant now has reason why last delivery skipped
 
 ## 📚 Documentation
 New recipes
 - Easy Notifications for Someone Who Isn't a Home Assistant User
 - Send Notifications with Action Buttons Only Where They Work
+Email CC recipe updated with instructions on how to force delivery if Supernotify configured to only deliver when explicitly switched on (in action call or by scenario).
 
 # v2.17.1
 

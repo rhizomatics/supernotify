@@ -17,13 +17,16 @@ Copy in an e-mail address on all notifications, for example as a message archive
 Define a target on the `email` transport, and set the `target_usage` to `merge_delivery`, so these addresses are combined with the addresses on the notification.
 
 ## Example Configuration
+
+Change the `email` transport under *Settings → Devices & services → Supernotify*, and in its *Delivery Defaults*,
+set the **Target usage** to `merge_delivery` and add `mailarchive@mymail.com` as a **Custom target**. As YAML,
+that is the transport's:
+
 ```yaml
-    transports:
-      email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+delivery_defaults:
+  target_usage: merge_delivery
+  target:
+    - mailarchive@mymail.com
 ```
 
 ## Variations
@@ -35,17 +38,17 @@ This will work identically for any transport, there's nothing email specific in 
 
 You have both `html_email` and plain `email` deliveries, and only want to cc the plain ones.
 
-In this case, define the defaults at delivery level rather than transport level.
+In this case, set the target on the delivery rather than the transport.
 
 The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.com` address will only be added if there's already an e-mail being sent with other targets.
 
 ```yaml
     delivery:
       email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+        transport: email
+        target_usage: merge_delivery
+        target:
+          - mailarchive@mymail.com
 ```
 
 If you want to always have the email sent, even if there are no other recipients, then set  `target_usage: merge_always`.
@@ -56,9 +59,16 @@ and nobody else.
 ```yaml
   delivery:
     email_archive:
-      action: notify.smtp
-      delivery_defaults:
-          target_usage: fixed
-          target:
-              - mailarchive@mymail.com
+      transport: email
+      inclusion: default
+      target_usage: fixed
+      target:
+        - mailarchive@mymail.com
 ```
+
+!!! warning "Only when the delivery is selected"
+    `merge_always` and a dedicated delivery like `email_archive` only send when their delivery is selected
+    for the notification. A delivery whose **Inclusion** is `explicit` or `scenario`, or any delivery without
+    an `inclusion` of its own, or from its transport's *Delivery Defaults*, when **Default Inclusion** is `explicit` in the integration's *Delivery Control*
+    options, is only selected when a notification names it, or a scenario switches it on - so not for every
+    notification. Give it `inclusion: default`, as above, to have it used for every notification.

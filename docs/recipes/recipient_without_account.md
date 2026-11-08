@@ -63,6 +63,25 @@ data:
 
 Either sends an e-mail to `granny@example.com`, and a Telegram message to chat `215678938`. Their recipient id can also be mixed in with other targets, such as `person.bob`.
 
+!!! warning "Only the deliveries that are selected"
+    A recipient is only sent to by the deliveries selected for the notification. If the e-mail or Telegram
+    delivery is only used when asked for - its **Inclusion** is `explicit` or `scenario`, or **Default Inclusion**
+    is `explicit` in the integration's *Delivery Control* options - nothing is sent to them unless the
+    notification names the delivery, or a scenario switches it on. That can mean nothing at all for someone
+    with no mobile devices, and the archived notification lists them under `unassigned_targets`.
+
+    To always use a delivery for them, change their recipient, and under **Advanced - Delivery Overrides**
+    set **Deliveries** to:
+
+    ```yaml
+    email:
+      enabled: true
+    telegram:
+      enabled: true
+    ```
+
+    See [Enabling a Delivery Just for One Recipient](../configuration/people.md#enabling-a-delivery-just-for-one-recipient).
+
 A notification with no `target` goes to every recipient, so they get those too. To keep them off one delivery, use **Advanced - Delivery Overrides** on their recipient - see [Disabling a Delivery for One Recipient](../configuration/people.md#disabling-a-delivery-for-one-recipient). To pause them altogether for a while, turn off their switch.
 
 ## Variations

@@ -1079,6 +1079,8 @@ class Notification(ArchivableObject):
                 skip_summary["targets"] = targets
             self.deliveries[delivery_name][EnvelopeOutcome.SKIPPED] = skip_summary
             self.skipped += 1
+            if suppression_reason and suppression_reason not in self._skip_reasons:
+                self._skip_reasons.append(suppression_reason)
             implicit_no_target = suppression_reason == SuppressionReason.NO_TARGET and delivery_name in (
                 self.implicit_only_deliveries
             )

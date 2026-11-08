@@ -5,7 +5,7 @@ notified by their recipient id or their notify entity"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -29,14 +29,14 @@ delivery:
 STUB_ACTIONS = ["notify.smtp", "telegram_bot.send_message"]
 
 
-async def granny_house(hass: HomeAssistant) -> House:
+async def granny_house(hass: HomeAssistant, config: str = CONFIG, delivery: dict[str, Any] | None = None) -> House:
     MockConfigEntry(domain="telegram_bot", data={}).add_to_hass(hass)
     # registered ahead of setup, so the transports are viable - House replaces them with recording stubs
     for action in STUB_ACTIONS:
         domain, service = action.split(".", 1)
         hass.services.async_register(domain, service, AsyncMock())
     # the real notify.send_message, to reach the recipient's notify entity
-    house = House(users={"Bob": "bob"}, config=CONFIG, stub_actions=STUB_ACTIONS, alexa_per_area=False, stub_send_message=False)
+    house = House(users={"Bob": "bob"}, config=config, stub_actions=STUB_ACTIONS, alexa_per_area=False, stub_send_message=False)
     await house.setup(hass)
 
     # Settings -> Devices & services -> Supernotify -> Add recipient
@@ -53,6 +53,7 @@ async def granny_house(hass: HomeAssistant) -> House:
             "custom_target": ["telegram_chat_id:215678938"],
             "enabled": True,
             "mobile_discovery": False,
+            "delivery_overrides": {"delivery": delivery or {}},
         },
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY, result.get("errors")
@@ -114,5 +115,31 @@ async def test_everyone_includes_recipient(hass: HomeAssistant) -> None:
         assert "granny@example.com" in email.data["target"]
         (telegram,) = calls(house, "telegram_bot", "send_message")
         assert telegram.data["chat_id"] == [215678938]
+    finally:
+        house.cleanup()
+
+
+EXPLICIT_CONFIG = """
+delivery:
+  email:
+    transport: email
+    action: notify.smtp
+    inclusion: explicit
+"""
+
+
+@pytest.mark.parametrize(("delivery", "emailed"), [(None, False), ({"email": {"enabled": True}}, True)])
+async def test_explicit_delivery_only_with_recipients_override(
+    hass: HomeAssistant, delivery: dict[str, Any] | None, emailed: bool
+) -> None:
+    """An e-mail delivery used only when asked for isn't used for the recipient, unless their
+    delivery overrides enable it"""
+    house = await granny_house(hass, EXPLICIT_CONFIG, delivery)
+    try:
+        await house.call("""
+            message: Roast at 1pm
+            target: user.granny_smith
+        """)
+        assert bool(calls(house, "notify", "smtp")) == emailed
     finally:
         house.cleanup()
