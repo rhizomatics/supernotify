@@ -1125,7 +1125,7 @@ class Notification(ArchivableObject):
         minimal = not diagnostics
         object_refs = ["context", "ha_context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
-        debug_only = ["debug_trace", "condition_variables", "occupancy"]
+        debug_only = ["debug_trace"]
         exposed_if_populated = [
             "_delivery_error",
             "message_html",
