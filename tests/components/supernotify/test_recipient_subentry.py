@@ -161,6 +161,25 @@ async def test_add_user_only_recipient(hass: HomeAssistant) -> None:
     assert _recipients(entry)[0].unique_id == user.id
 
 
+async def test_only_users_without_a_person_offered(hass: HomeAssistant) -> None:
+    alice = await hass.auth.async_create_user("Alice")
+    bob = await hass.auth.async_create_user("Bob")
+    hass.states.async_set("person.bob", "home", {"user_id": bob.id})
+    entry = await _entry(hass)
+
+    result = await _start(hass, entry)
+    assert {o["value"] for o in result["data_schema"].schema["user_id"].config["options"]} == {alice.id}
+
+
+async def test_no_user_field_when_every_user_has_a_person(hass: HomeAssistant) -> None:
+    bob = await hass.auth.async_create_user("Bob")
+    hass.states.async_set("person.bob", "home", {"user_id": bob.id})
+    entry = await _entry(hass)
+
+    result = await _start(hass, entry)
+    assert [str(k) for k in result["data_schema"].schema] == ["person", "alias"]
+
+
 async def test_person_or_user_required(hass: HomeAssistant) -> None:
     entry = await _entry(hass)
     result = await _configure(hass, await _start(hass, entry), {})

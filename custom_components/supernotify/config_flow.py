@@ -658,14 +658,16 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                 has_user = CONF_PERSON in self._recipient or CONF_USER_ID in self._recipient
                 self._recipient[CONF_MOBILE_DISCOVERY] = has_user and self._mobile_discovery_default()
                 return await self.async_step_details()
-        users = await HomeAssistantAPI(self.hass).async_real_user_ids()
-        schema = vol.Schema({
-            vol.Optional(CONF_PERSON): EntitySelector(EntitySelectorConfig(domain="person")),
-            vol.Optional(CONF_USER_ID): SelectSelector(
+        # only users with no person, since one with a person is chosen by the person
+        person_user_ids = {s.attributes.get(CONF_USER_ID) for s in self.hass.states.async_all("person")}
+        users = {k: v for k, v in (await HomeAssistantAPI(self.hass).async_real_user_ids()).items() if k not in person_user_ids}
+        fields: dict[Any, Any] = {vol.Optional(CONF_PERSON): EntitySelector(EntitySelectorConfig(domain="person"))}
+        if users:
+            fields[vol.Optional(CONF_USER_ID)] = SelectSelector(
                 SelectSelectorConfig(options=[SelectOptionDict(value=k, label=v) for k, v in users.items()])
-            ),
-            vol.Optional(CONF_ALIAS): TextSelector(),
-        })
+            )
+        fields[vol.Optional(CONF_ALIAS)] = TextSelector()
+        schema = vol.Schema(fields)
         return self.async_show_form(
             step_id="user", data_schema=schema, errors=errors, description_placeholders={"learn_more_url": PEOPLE_DOCS_URL}
         )
