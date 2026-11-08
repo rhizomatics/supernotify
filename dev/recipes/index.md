@@ -28,6 +28,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md) scenarioconditionmobile_pushpushover
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
 - [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md) pyscriptcamera
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config

@@ -388,8 +388,10 @@ Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_conce
   - standard Home Assistant target selectors, `label_id`,`floor_id` and `area_id`.
   - *Group* targets (both new and old style Home Assistant groups)
 - Targets can be qualified for a specific **Target Category**, like `discord_channel:839439434`, see [Category Prefixes](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#category-prefixes) for more info.
-- Targets are picked off the list by notifications by the best integration to handle it.
+- Each target is picked off the list by the best integration to handle that kind of target.
 - For example, a Notify Entity on Alexa Devices will be handled by the Alexa Devices transport whereas a generic Notify Entity would fall back to the less capable Notify Entity transport.
+- This choice is made on the target alone, not on what the notification contains. A notification with action buttons still goes to a transport that can't show them, such as Pushover, and the buttons are left out.
+- A delivery's own `fallback:` is used only when that delivery fails, see [Fallback for one delivery](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#fallback-for-one-delivery).
 - See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information
 
 ## Recipient
@@ -1948,7 +1950,9 @@ A notification with a single delivery, as archived without full diagnostics:
     "notification_priority": "high",
     "occupancy": ["UNDEFINED_OCCUPANTS"],
     "notification_data": {},
-    "camera": {}
+    "camera": {},
+    "notification_actions": [],
+    "notification_action_groups": []
   }
 }
 ```
@@ -1963,23 +1967,26 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/inde
 
 `Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can access, such as entities, templating etc. In addition, Supernotify makes additional variables automatically available:
 
-| Template Variable     | Description                                                                                                                                                                                                  | Default  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| notification_priority | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
-| notification_message  | Message of current notification                                                                                                                                                                              | *None*   |
-| notification_title    | Title of current notification                                                                                                                                                                                | *None*   |
-| applied_scenarios     | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
-| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
-| constrain_scenarios   | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
-| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
-| notification_data     | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
-| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
+| Template Variable          | Description                                                                                                                                                                                                  | Default  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| notification_priority      | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
+| notification_message       | Message of current notification                                                                                                                                                                              | *None*   |
+| notification_title         | Title of current notification                                                                                                                                                                                | *None*   |
+| applied_scenarios          | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
+| required_scenarios         | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
+| constrain_scenarios        | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
+| occupancy                  | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
+| notification_data          | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
+| notification_actions       | Ad-hoc `actions` passed on notification action call                                                                                                                                                          | `[]`     |
+| notification_action_groups | `action_groups` passed on notification action call, not ones added by a scenario                                                                                                                             | `[]`     |
+| camera                     | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
 - [Content Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
 - [Alexa Whisper](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
 - [Except Scenario](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md)
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md)
 
 Be aware of values that can be empty, and which can trip Jinja2 up with some checks. For example `{{ 'CRITICAL' in notification_title}}` will fail with a "not iterable" error if title is not set, which will be the case when the condition is validated at start up or if no title passed on a notification. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`, or the `upper`,`lower` filters if checking for case.
 
@@ -1995,6 +2002,8 @@ The [Developer Tools Template Tab](https://www.home-assistant.io/docs/tools/dev-
 {% set required_scenarios = [] %}
 {% set constrain_scenarios = [] %}
 {% set occupancy = {} %}
+{% set notification_actions = [] %}
+{% set notification_action_groups = [] %}
 ```
 
 ## References
@@ -6600,6 +6609,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md) scenarioconditionmobile_pushpushover
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
 - [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md) pyscriptcamera
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
@@ -6854,6 +6864,71 @@ scenarios:
             entity_id: binary_sensor.bedtime
             state: "on"
 ```
+
+# Recipe - Send Buttons Only Where They Work
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/
+
+## Purpose
+
+Use Pushover for everyday notifications, but send any notification with action buttons to the Home Assistant Companion App instead, since Pushover can't show buttons.
+
+Supernotify picks deliveries by target, not by what the notification contains, so on its own a notification with buttons still goes to Pushover, with the buttons left out. A delivery's `fallback:` doesn't help either, as that is only used when a delivery fails.
+
+## Implementation
+
+A **Scenario** with a condition on the `notification_actions` and `notification_action_groups` [condition variables](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#condition-variables), which hold the `actions` and `action_groups` given on the notify action. When either has something in it, the scenario switches Pushover off and Mobile Push on.
+
+## Example Configuration
+
+```yaml
+delivery:
+  pushover:
+    transport: pushover
+    inclusion: default
+  mobile_push:
+    transport: mobile_push
+    inclusion: scenario
+
+scenarios:
+  needs_buttons:
+    alias: Buttons only work on the Companion App
+    conditions: "{{ (notification_actions + notification_action_groups) | length > 0 }}"
+    delivery:
+      pushover:
+        enabled: false
+      mobile_push:
+
+action_groups:
+  garage:
+    - action: CLOSE_GARAGE
+      title: Close the garage
+```
+
+Either of these notifications goes to the Companion App, and one without `actions` or `action_groups` goes to Pushover:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Garage door left open
+  action_groups:
+    - garage
+```
+
+```yaml
+action: notify.supernotify
+data:
+  message: Garage door left open
+  actions:
+    - action: CLOSE_GARAGE
+      title: Close it now
+```
+
+## Notes
+
+- Action groups added by a scenario aren't in `notification_action_groups`, since scenarios add them after their conditions are checked. Only what's given on the notify action is there.
+- Buttons put directly in a Companion App style `data: actions:` aren't in `notification_actions`, but can be checked with `notification_data.actions`.
+- To send to both, leave out the `pushover: enabled: false` part.
 
 # Recipe - Channel Specific Messages
 

@@ -786,6 +786,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/</loc>
+        <lastmod>2026-11-08</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/</loc>
         <lastmod>2026-11-08</lastmod>
         <changefreq>daily</changefreq>

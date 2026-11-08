@@ -192,7 +192,9 @@ A notification with a single delivery, as archived without full diagnostics:
     "notification_priority": "high",
     "occupancy": ["UNDEFINED_OCCUPANTS"],
     "notification_data": {},
-    "camera": {}
+    "camera": {},
+    "notification_actions": [],
+    "notification_action_groups": []
   }
 }
 ```

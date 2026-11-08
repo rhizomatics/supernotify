@@ -81,6 +81,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md)
 - [Basic HTML Formatted Email Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md)
 - [Bedtime Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md)
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md)
 - [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md)
 - [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
 - [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md)

@@ -8,23 +8,26 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/inde
 
 `Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can access, such as entities, templating etc. In addition, Supernotify makes additional variables automatically available:
 
-| Template Variable     | Description                                                                                                                                                                                                  | Default  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| notification_priority | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
-| notification_message  | Message of current notification                                                                                                                                                                              | *None*   |
-| notification_title    | Title of current notification                                                                                                                                                                                | *None*   |
-| applied_scenarios     | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
-| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
-| constrain_scenarios   | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
-| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
-| notification_data     | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
-| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
+| Template Variable          | Description                                                                                                                                                                                                  | Default  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| notification_priority      | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
+| notification_message       | Message of current notification                                                                                                                                                                              | *None*   |
+| notification_title         | Title of current notification                                                                                                                                                                                | *None*   |
+| applied_scenarios          | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
+| required_scenarios         | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
+| constrain_scenarios        | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
+| occupancy                  | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
+| notification_data          | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
+| notification_actions       | Ad-hoc `actions` passed on notification action call                                                                                                                                                          | `[]`     |
+| notification_action_groups | `action_groups` passed on notification action call, not ones added by a scenario                                                                                                                             | `[]`     |
+| camera                     | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
 - [Content Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
 - [Alexa Whisper](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
 - [Except Scenario](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md)
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md)
 
 Be aware of values that can be empty, and which can trip Jinja2 up with some checks. For example `{{ 'CRITICAL' in notification_title}}` will fail with a "not iterable" error if title is not set, which will be the case when the condition is validated at start up or if no title passed on a notification. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`, or the `upper`,`lower` filters if checking for case.
 
@@ -40,6 +43,8 @@ The [Developer Tools Template Tab](https://www.home-assistant.io/docs/tools/dev-
 {% set required_scenarios = [] %}
 {% set constrain_scenarios = [] %}
 {% set occupancy = {} %}
+{% set notification_actions = [] %}
+{% set notification_action_groups = [] %}
 ```
 
 ## References
