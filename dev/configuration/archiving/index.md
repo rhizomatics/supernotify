@@ -50,6 +50,8 @@ Key fields to check if something doesn't seem right:
 - `selected_deliveries` - what was selected by the action, scenarios or delivery configuration
 - `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
 - `deliveries` - what happened to each delivery: `success`, `error` or `suppressed` for each message sent, with the action calls made and any that failed, or `skipped` with the reason if nothing was sent
+- `target` - the target the notification asked for, with recipient notify entities turned into their recipient
+- `unassigned_targets` - targets asked for that no delivery sent to, including recipients none of whose own targets were used
 - `enabled_scenarios` and `occupancy` - the scenarios that applied, and who was in or out
 
 ## Diagnostics
@@ -101,6 +103,7 @@ A notification with a single delivery, as archived without full diagnostics:
   "title": "Security",
   "message": "Front door opened",
   "priority": "high",
+  "target": null,
   "stats": {
     "total_duration_ms": 1.0,
     "slowest_delivery": "dummy",
