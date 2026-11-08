@@ -1014,7 +1014,10 @@ class Notification(ArchivableObject):
                         self.record_result(delivery, envelope)
                     else:
                         _LOGGER.info("SUPERNOTIFY No delivery for %s (id: %s)", delivery.name, envelope.notification_id)
-                        self.record_result(delivery, envelope, suppression_reason=SuppressionReason.UNKNOWN)
+                        # keep a reason the transport gave, such as NO_TARGET when every target was skipped
+                        self.record_result(
+                            delivery, envelope, suppression_reason=envelope.skip_reason or SuppressionReason.UNKNOWN
+                        )
                 except Exception as e2:
                     envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")

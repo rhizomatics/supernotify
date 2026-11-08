@@ -22,6 +22,9 @@ This release continues the move of configuration from YAML into the configuratio
 - *Transports*: [LG webOS TV](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/) transport, set up automatically with the LG webOS TV integration, showing a toast on each TV targeted directly or by area, floor, label or device, and skipping TVs that are off ([#313](https://github.com/rhizomatics/supernotify/issues/313))
 - *Deliveries*: an `area_id`, `floor_id` or `label_id` target now selects a delivery by what's in it, so an area with an Alexa echo uses `alexa_devices`, rather than the generic notify entity delivery
 
+## 🐛 Bug fixes
+- *Archive*: a delivery its transport skipped now keeps the transport's reason, such as `NO_TARGET` for Kodi or Discord with no valid target, rather than always showing `UNKNOWN`
+
 ## 📝 Other changes
 ### Development
 - *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)

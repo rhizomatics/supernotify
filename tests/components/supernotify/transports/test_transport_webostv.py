@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
 
-from custom_components.supernotify.model import TransportFeature
+from custom_components.supernotify.model import SuppressionReason, TransportFeature
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.webostv import WebOsTvTransport
@@ -100,7 +100,9 @@ async def test_all_tvs_off_is_skipped_not_an_error(hass: HomeAssistant) -> None:
     await uut.deliver()
 
     assert calls == []
-    assert uut.deliveries["webostv"].get(EnvelopeOutcome.SUPPRESSED)
+    envelope = uut.deliveries["webostv"][EnvelopeOutcome.SUPPRESSED][0]  # type: ignore
+    # the transport's own reason is kept, not replaced with UNKNOWN
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
     assert not uut.deliveries["webostv"].get(EnvelopeOutcome.ERROR)
     assert uut.error_count == 0
 
