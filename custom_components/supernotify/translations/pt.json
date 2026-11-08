@@ -879,7 +879,7 @@
             "step": {
                 "user": {
                     "title": "Transporte",
-                    "description": "Todos os transportes em uso já estão listados. Adicione um que precise de configuração antes de poder ser usado, como generic com a sua ação, ou chime com os seus aliases.\n\n[Saiba mais]({learn_more_url})",
+                    "description": "Todos os transportes que podem ser usados automaticamente já estão criados. Os transportes abaixo podem ser adicionados, mas vão precisar de configuração adicional antes de poderem ser usados. Por exemplo, indicar uma ação do Home Assistant para generic, ou definições de aliases para chime. Cada transporte tem uma página de ajuda online com mais informação.\n\n[Saiba mais]({learn_more_url})",
                     "data": {
                         "transport": "Transporte"
                     },

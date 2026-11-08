@@ -879,7 +879,7 @@
             "step": {
                 "user": {
                     "title": "Transport",
-                    "description": "Elk transport dat in gebruik is, staat al in de lijst. Voeg er een toe die eerst geconfigureerd moet worden, zoals generic met zijn actie, of chime met zijn aliassen.\n\n[Meer informatie]({learn_more_url})",
+                    "description": "Elk transport dat automatisch gebruikt kan worden, is al aangemaakt. De transports hieronder kunnen worden toegevoegd, maar hebben extra configuratie nodig voordat ze gebruikt kunnen worden. Bijvoorbeeld een Home Assistant-actie voor generic, of aliasdefinities voor chime. Elk transport heeft een online helppagina met meer informatie.\n\n[Meer informatie]({learn_more_url})",
                     "data": {
                         "transport": "Transport"
                     },

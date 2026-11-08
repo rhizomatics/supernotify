@@ -879,7 +879,7 @@
             "step": {
                 "user": {
                     "title": "Transport",
-                    "description": "Jeder verwendete Transport ist bereits aufgeführt. Füge einen hinzu, der vor der Verwendung konfiguriert werden muss, etwa generic mit seiner Aktion oder chime mit seinen Aliasen.\n\n[Mehr erfahren]({learn_more_url})",
+                    "description": "Jeder Transport, der automatisch verwendet werden kann, ist bereits angelegt. Die unten aufgeführten Transporte können hinzugefügt werden, brauchen aber zusätzliche Konfiguration, bevor sie verwendet werden können. Zum Beispiel eine Home Assistant Aktion für generic oder Alias-Definitionen für chime. Zu jedem Transport gibt es eine Online-Hilfeseite mit weiteren Informationen.\n\n[Mehr erfahren]({learn_more_url})",
                     "data": {
                         "transport": "Transport"
                     },

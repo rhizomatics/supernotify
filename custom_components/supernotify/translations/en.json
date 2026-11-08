@@ -914,7 +914,7 @@
             "step": {
                 "user": {
                     "title": "Transport",
-                    "description": "Every transport in use is listed already. Add one that needs configuring before it can be used, such as generic with its action, or chime with its aliases.\n\n[Learn more]({learn_more_url})",
+                    "description": "Every transport that can be automatically used is already created. The transports below can be added, however will need additional configuration before they can be used. For example, providing a Home Assistant action for generic, or alias definitions for chime. Each transport has an on-line help page with more information.\n\n[Learn more]({learn_more_url})",
                     "data": {
                         "transport": "Transport"
                     },

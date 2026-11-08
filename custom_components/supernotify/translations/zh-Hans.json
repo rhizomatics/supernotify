@@ -879,7 +879,7 @@
             "step": {
                 "user": {
                     "title": "传输",
-                    "description": "所有在用的传输都已列出。添加需要先配置才能使用的传输，例如带动作的 generic，或带别名的 chime。\n\n[了解更多]({learn_more_url})",
+                    "description": "所有可自动使用的传输都已创建。以下传输可以添加，但在使用前需要额外配置。例如，为 generic 提供 Home Assistant 动作，或为 chime 定义别名。每个传输都有在线帮助页面，提供更多信息。\n\n[了解更多]({learn_more_url})",
                     "data": {
                         "transport": "传输"
                     },
