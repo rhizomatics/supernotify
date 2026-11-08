@@ -9,7 +9,8 @@ repos:
         args: [--unsafe]
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-  # ruff, ty and codespell from mise.toml, rather than versions of their own
+  # ruff, ty and codespell from mise.toml, and mypy from uv.lock, rather than versions of their own,
+  # so they follow the same release cooldowns, and run as in CI
   - repo: local
     hooks:
       - id: ruff-check
@@ -31,6 +32,12 @@ repos:
         language: system
         types_or: [python, pyi]
         pass_filenames: false
+      - id: mypy
+        name: mypy
+        entry: uv run mypy custom_components/supernotify
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
       - id: codespell
         name: codespell
         entry: codespell
@@ -45,16 +52,6 @@ repos:
         args:
           - --quiet
         files: ^(custom_components)/.+\.py$
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v2.4.1'
-    hooks:
-      - id: mypy
-        args:
-          - --pretty
-          - --explicit-package-bases
-          - --show-error-codes
-          - --show-error-context
-        exclude: ^(docgen|preview)/.*\.py$
         additional_dependencies:
           - homeassistant-stubs>=2026.10.0
           - pytest-homeassistant-custom-component>=0.13.356
