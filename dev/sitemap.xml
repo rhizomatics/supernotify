@@ -376,6 +376,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0012-agentic_scenarios/</loc>
+        <lastmod>2026-11-08</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/es/</loc>
         <lastmod>2026-11-08</lastmod>
         <changefreq>daily</changefreq>
