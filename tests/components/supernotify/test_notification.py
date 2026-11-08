@@ -235,6 +235,28 @@ async def test_unassigned_targets_reported_in_archive() -> None:
     assert uut.contents()["unassigned_targets"] == {"phone": ["+3294924848"]}
 
 
+async def test_requested_target_and_unreached_recipient_in_archive() -> None:
+    """The target asked for is archived, and a recipient in it that no delivery reached, as
+    when their only delivery isn't selected, is listed in `unassigned_targets`"""
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+        viable_transport_types=[MobilePushTransport],
+        services=MOCK_SERVICES,
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", target=["person.jabilee_sokata", "person.joe_mcphee"])
+    await uut.initialize()
+    await uut.deliver()
+
+    contents = uut.contents()
+    assert contents["target"] == {"person_id": ["person.jabilee_sokata", "person.joe_mcphee"]}
+    # joe is reached by his mobile app, jabilee only has an e-mail address, with no e-mail delivery
+    assert contents["unassigned_targets"] == {"person_id": ["person.jabilee_sokata"]}
+
+
 async def test_call_transport_records_delivery_exception() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()

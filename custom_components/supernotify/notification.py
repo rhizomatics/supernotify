@@ -181,6 +181,7 @@ class Notification(ArchivableObject):
                 self._apply_delivery_defaults = True
         self._already_selected: Target = Target()
         self._recorded_person_ids: set[str] = set()  # recipients whose notify entity this notification has updated
+        self._reached_person_ids: set[str] = set()  # recipients with a target in an envelope, see _attach_person_ids()
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.delivered: int = 0
@@ -1144,6 +1145,7 @@ class Notification(ArchivableObject):
             "spoken_message",
             "message_html",
             "priority",
+            "target",
             "stats",
             "delivered",
             "failed",
@@ -1178,6 +1180,7 @@ class Notification(ArchivableObject):
         ]
         # preferred fields
         raw: dict[str, Any] = dict(self.__dict__)
+        raw["target"] = self._target.as_dict() if self._target else None
         raw["unassigned_targets"] = self._unassigned_targets()
         raw["stats"] = self._delivery_stats()
         raw["version"] = _VERSION
@@ -1447,6 +1450,7 @@ class Notification(ArchivableObject):
             for envelope_target in envelope_targets:
                 if recipient_targets.intersection(envelope_target.resolved_targets()):
                     envelope_target.extend(ATTR_PERSON_ID, person_id)
+                    self._reached_person_ids.add(person_id)
 
     def resolve_scenario_targets(self, delivery: Delivery) -> Target:
         resolved: Target = Target()
@@ -1476,8 +1480,8 @@ class Notification(ArchivableObject):
 
         (entity_id, email, phone, mobile_app_id, device_id, or an explicit custom category)
         that never ended up in any envelope across the whole notification - as opposed to
-        `uncategorized_targets`, which tracks values with no recognisable shape at all.
-        Grouped by category, like `uncategorized_targets`, so a gap is easy to place when
+        `uncategorized_targets`, which tracks values with no recognisable shape at all - and
+        recipients asked for whose own targets didn't reach any delivery. Grouped by category, like `uncategorized_targets`, so a gap is easy to place when
         debugging. Computed here rather than tracked as an instance attribute, since it's
         only ever needed for the archive.
         """
@@ -1490,6 +1494,9 @@ class Notification(ArchivableObject):
             unassigned = [t for t in targets if t not in self._already_selected.targets.get(category, [])]
             if unassigned:
                 result[category] = unassigned
+        # a recipient asked for, that no delivery had a target of theirs for
+        if unreached := [p for p in self._target.person_ids if p not in self._reached_person_ids]:
+            result[ATTR_PERSON_ID] = unreached
         return result
 
     def all_recipients(self) -> list[Recipient]:

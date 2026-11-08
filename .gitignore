@@ -20,7 +20,7 @@ package-lock.json
 supernotify/media
 media/supernotify
 .devcontainer/.venv
-
+.logs.env
 
 # C extensions
 *.so
