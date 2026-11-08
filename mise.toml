@@ -5,6 +5,7 @@ lockfile = true
 minimum_release_age = "5d"
 
 [tools]
+"pipx:codespell" = "latest"
 prek = "latest"
 python = "3.14"
 ruff = "latest"
