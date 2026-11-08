@@ -60,6 +60,11 @@ This release continues the move of configuration from YAML into the configuratio
 - *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
 - *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tasks` to see the list.
 
+## 📚 Documentation
+New recipes
+- Easy Notifications for Someone Who Isn't a Home Assistant User
+- Send Notifications with Action Buttons Only Where They Work
+
 # v2.17.2
 ## 🚨 Breaking changes
 - Support for old versions of `Pillow` library removed, in line with minimum HA 2026.5 version. Attachments will fail to reprocess on old versions of HA - either upgrade HA or don't upgrade Supernotify.
@@ -72,12 +77,6 @@ This release continues the move of configuration from YAML into the configuratio
 ## 🐛 Bug fixes
 - *Message usage*: `combine_title` with a title and no message sends just the title, rather than the title followed by `None`
 - *Media*: the default `media_path` is now `media/supernotify`, i.e. `/config/media/supernotify`, as the documentation's `allowlist_external_dirs` and `media_dirs` examples have always given. It was `supernotify/media`, so following the docs left snapshots outside the allowed and media source folders, and email attachments were dropped. Existing setups keep the `media_path` already saved in their config entry; a left-over `/config/supernotify/media` folder can be deleted
-
-## 📚 Documentation
-New recipes
-- Easy Notifications for Someone Who Isn't a Home Assistant User
-- Send Notifications with Action Buttons Only Where They Work
-
 
 # v2.17.0
 
