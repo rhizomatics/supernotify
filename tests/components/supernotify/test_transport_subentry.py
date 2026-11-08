@@ -94,7 +94,7 @@ async def test_transports_in_use_listed(hass: HomeAssistant) -> None:
     assert {"generic", "persistent"} <= set(transports)
     assert dict(transports["generic"].data) == {}
     # titled, and its device named, with its name as shown
-    assert transports["generic"].title == "Generic"
+    assert transports["generic"].title == "Transport - Generic"
     # the transport's switch is on its own service device, in its subentry, as SMTP's mail server is
     registry_entry = er.async_get(hass).async_get("switch.supernotify_transport_generic")
     assert registry_entry is not None
@@ -219,7 +219,7 @@ async def test_reconfigure_transport(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    assert subentry.title == "Generic"
+    assert subentry.title == "Transport - Generic"
     assert dict(subentry.data) == {
         **GENERIC,
         "enabled": False,
@@ -503,7 +503,7 @@ async def test_alias_names_device_and_is_kept(hass: HomeAssistant) -> None:
         ],
     )
     subentry = _transports(entry)["generic"]
-    assert subentry.title == "Generic"
+    assert subentry.title == "Transport - Generic"
     registry_entry = er.async_get(hass).async_get("switch.supernotify_transport_generic")
     device = dr.async_get(hass).async_get(registry_entry.device_id)  # type: ignore[union-attr,arg-type]
     assert device is not None

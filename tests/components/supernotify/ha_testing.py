@@ -20,7 +20,7 @@ try:
     )
     from pytest_homeassistant.typing import WebSocketGenerator  # type: ignore[import-not-found,unused-ignore]
 except ImportError:
-    from pytest_homeassistant_custom_component.common import (  # type: ignore[import-untyped,unused-ignore]
+    from pytest_homeassistant_custom_component.common import (  # type: ignore[import-not-found,unused-ignore]
         MockConfigEntry,
         async_fire_time_changed,
         async_mock_service,

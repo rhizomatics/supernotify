@@ -1,3 +1,9 @@
+[settings]
+# tools are locked in mise.lock, as Python dependencies are in uv.lock, so CI runs the versions
+# used here, and only those released at least as long ago as uv's exclude-newer in pyproject.toml
+lockfile = true
+minimum_release_age = "5d"
+
 [tools]
 prek = "latest"
 python = "3.14"

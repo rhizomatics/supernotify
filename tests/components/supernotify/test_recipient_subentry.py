@@ -155,7 +155,7 @@ async def test_add_user_only_recipient(hass: HomeAssistant) -> None:
     result = await _configure(hass, result, {"user_id": user.id})
     result = await _configure(hass, result, {"alias": "Alice", "enabled": True, "mobile_discovery": True})
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Alice"
+    assert result["title"] == "Recipient - Alice"
     await hass.async_block_till_done()
 
     assert _recipients(entry)[0].unique_id == user.id
@@ -244,7 +244,7 @@ async def test_reconfigure_recipient(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    assert subentry.title == "Bobby"
+    assert subentry.title == "Recipient - Bobby"
     assert dict(subentry.data) == {
         "person": "person.bob",
         "alias": "Bobby",
@@ -266,7 +266,10 @@ async def test_yaml_recipients_imported_once_with_repair(hass: HomeAssistant) ->
     }
     entry = await _entry(hass, yaml_config)
 
-    assert sorted((s.unique_id, s.title) for s in _recipients(entry)) == [("abc123", "abc123"), ("person.bob", "Bob")]
+    assert sorted((s.unique_id, s.title) for s in _recipients(entry)) == [
+        ("abc123", "Recipient - abc123"),
+        ("person.bob", "Recipient - Bob"),
+    ]
     assert entry.runtime_data.context.people_registry.people["person.bob"].email == "bob@example.com"
     assert ir.async_get(hass).async_get_issue(DOMAIN, YAML_RECIPIENTS_ISSUE_ID) is not None
 
@@ -303,7 +306,9 @@ async def test_discovered_recipients_listed(hass: HomeAssistant) -> None:
     )
 
     by_key = {s.unique_id: s for s in _recipients(entry)}
-    assert by_key["person.alice"].title == "Alice"
+    assert by_key["person.alice"].title == "Recipient - Alice"
+    # one titled without the prefix, before it was added, is retitled with it
+    assert by_key["person.bob"].title == "Recipient - Bobby"
     assert dict(by_key["person.alice"].data) == {"person": "person.alice"}
     assert dict(by_key["person.bob"].data) == {"person": "person.bob", "enabled": False}
     assert not entry.runtime_data.context.people_registry.people["person.bob"].enabled
@@ -333,7 +338,7 @@ async def test_add_recipient_who_isnt_a_user(hass: HomeAssistant) -> None:
     assert result["data_schema"].schema["mobile_devices"].config["options"] == []
     result = await _configure(hass, result, {"email": "granny@example.com", "enabled": True, "mobile_discovery": False})
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Granny Smith"
+    assert result["title"] == "Recipient - Granny Smith"
     await hass.async_block_till_done()
 
     (subentry,) = _recipients(entry)

@@ -47,7 +47,6 @@ dev=[
     "types-aiofiles",
     # ruff, ty and prek come from mise.toml, not here
     "pytest-httpserver",
-    "codespell",
     "mypy",
     "genbadge[all]",
     # generic transport testing
@@ -211,7 +210,7 @@ unresolved-attribute = "ignore"
 include = ["tests/components/supernotify/ha_testing.py"]
 
 [tool.ty.overrides.rules]
-import-not-found = "ignore"
+unresolved-import = "ignore"
 
 [tool.codespell]
 ignore-words-list = "HASS,hass,wee,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,alle,comando,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"

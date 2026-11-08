@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      # mise.toml is the one source of the tools - ruff, ty, pre-commit, uv and Python
+      # mise.toml is the one source of the tools - ruff, ty, codespell, pre-commit, uv and Python
       - name: Install tools
         uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
 
@@ -33,7 +33,7 @@ jobs:
         run: ruff format --check --diff
 
       - name: Codespell
-        run: uv run codespell
+        run: codespell
 
   typecheck:
     runs-on: ubuntu-latest

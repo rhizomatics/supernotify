@@ -416,3 +416,18 @@ _TRANSPORT_ACRONYMS: Final[dict[str, str]] = {"tts": "TTS", "sms": "SMS", "mqtt"
 def transport_display_name(name: str) -> str:
     """A transport's name to show, such as "Alexa Media Player" for alexa_media_player"""
     return " ".join(_TRANSPORT_ACRONYMS.get(word, word.capitalize()) for word in name.split("_"))
+
+
+# subentry titles are prefixed by their type, to tell them apart in the integration's list of them
+RECIPIENT_TITLE_PREFIX: Final[str] = "Recipient - "
+TRANSPORT_TITLE_PREFIX: Final[str] = "Transport - "
+
+
+def recipient_subentry_title(name: str) -> str:
+    """A recipient subentry's title, such as "Recipient - Alice" for alice"""
+    return name if name.startswith(RECIPIENT_TITLE_PREFIX) else f"{RECIPIENT_TITLE_PREFIX}{name}"
+
+
+def transport_subentry_title(name: str) -> str:
+    """A transport subentry's title, such as "Transport - Alexa Media Player" for alexa_media_player"""
+    return f"{TRANSPORT_TITLE_PREFIX}{transport_display_name(name)}"
