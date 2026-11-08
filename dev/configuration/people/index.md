@@ -22,7 +22,7 @@ With the `recipient` definition you can:
 
 Recipients are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, where everyone [discovered](#automatic-recipient-discovery) is already listed as a recipient, and choose the cog by one to change it. Anything set there adds to, or overrides, what Supernotify discovers for them, so you only need to set what discovery can't find.
 
-**Add recipient** is for someone who isn't discovered, usually someone who isn't a Home Assistant user at all, like a relative to be e-mailed. Give their **Name**, or pick a **Person** or **User** when [discovery](#automatic-recipient-discovery) is switched off. Someone with only a name has no mobile devices, and never counts towards occupancy.
+**Add recipient** is for someone who isn't discovered, usually someone who isn't a Home Assistant user at all, like a relative to be e-mailed. Give their **Name**, or pick a **Person** or **User** when [discovery](#automatic-recipient-discovery) is switched off. **User** only lists users with no Person, and isn't shown when every user has one. Someone with only a name has no mobile devices, and never counts towards occupancy.
 
 When adding or changing a recipient:
 
