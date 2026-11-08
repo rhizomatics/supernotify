@@ -81,6 +81,6 @@ Common commands:
 - `ruff format` - format code
 - `uv run mypy custom_components/supernotify` - type check
 - `ty check` - type check with ty
-- `codespell` - spell check
+- `uv run codespell` - spell check
 - `prek run` - check all staged files
 - `properdocs build` - build the documentation without starting a server

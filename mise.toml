@@ -5,8 +5,6 @@ lockfile = true
 minimum_release_age = "5d"
 
 [tools]
-# not in the mise registry, so installed with uv as a tool of its own
-"pipx:codespell" = "latest"
 prek = "latest"
 python = "3.14"
 ruff = "latest"

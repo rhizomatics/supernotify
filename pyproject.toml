@@ -45,7 +45,7 @@ dev=[
     "pytest-icdiff",
     "icdiff",
     "types-aiofiles",
-    # ruff, ty, codespell and pre-commit come from mise.toml, not here
+    # ruff, ty and prek come from mise.toml, not here
     "pytest-httpserver",
     "mypy",
     "genbadge[all]",
@@ -102,7 +102,7 @@ environments = [
     "python_full_version >= '3.14.2'",
 ]
 
-exclude-newer = "5 days"
+exclude-newer = "7 days"
 exclude-newer-package = { certifi=false, homeassistant_repl=false,homeassistant=false,homeassistant-stubs=false,pytest-homeassistant=false,pytest-homeassistant-custom-component="2 days",aiohttp=false,uv=false }
 add-bounds = "major"
 # Home Assistant pins uv exactly, and under `uv run` the venv's uv comes first on PATH,
