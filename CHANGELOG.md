@@ -61,6 +61,7 @@ This release continues the move of configuration from YAML into the configuratio
 - *Preview Environment*: a Docker preview Home Assistant running the checkout's Supernotify, set up on first start as the same house the integration tests use, with `ha_repl_server` for agent access with `ha-repl`. `mise run clean` removes it. See [Preview Environment](https://supernotify.rhizomatics.org.uk/developer/preview/)
 - *Commands*: a set of commands are implemented using [mise-en-place](https://mise.jdx.dev), including `clean` to remove all ephemeral files and rebuild the virtual environment, `refresh` to update dependencies and git and a set of `preview-xxxx` commands for the preview environment. Run `mise tasks` to see the list.
 - Archived notifications now record the selected targets
+- Archived notifications now only show `occupancy` and `condition_variables` in debug mode
 - Logging improved for skipped deliveries, no give reason why
 - Voice/chat assistant now has reason why last delivery skipped
 

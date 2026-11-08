@@ -124,9 +124,13 @@ async def test_debug_call_archives_trace_whatever_diagnostics(
             # debug records every scenario disable, even of a delivery that wouldn't have been selected
             assert reobj["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
             assert "resolved" in reobj["debug_trace"]
+            assert reobj["condition_variables"]["notification_message"] == "just a test"
+            assert "home" in reobj["occupancy"]
         else:
             assert "chime" not in reobj.get("delivery_provenance", {})
             assert "debug_trace" not in reobj
+            assert "condition_variables" not in reobj
+            assert "occupancy" not in reobj
 
         # debug only changes the content archived, not which outcomes generate events
         events = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_EVENT_SELECTION: OutcomeSelection.ERROR}, mock_hass_api)
