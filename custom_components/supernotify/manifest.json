@@ -48,5 +48,5 @@
         "aiofiles"
     ],
     "single_config_entry": true,
-    "version": "2.18.0"
+    "version": "2.18.1"
 }
