@@ -4,7 +4,7 @@
 
 - uv
 - python3.14
-- pre-commit
+- prek
 - ruff
 - ty
 - codespell

@@ -82,5 +82,5 @@ Common commands:
 - `uv run mypy custom_components/supernotify` - type check
 - `ty check` - type check with ty
 - `codespell` - spell check
-- `pre-commit run` - check all staged files
+- `prek run` - check all staged files
 - `properdocs build` - build the documentation without starting a server
