@@ -6660,6 +6660,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancywildcardscondition
 - [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushandroid
 - [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
+- [Easy Notifications for Someone Who Isn't a Home Assistant User](https://supernotify.rhizomatics.org.uk/latest/recipes/recipient_without_account/index.md) emailtelegramrecipient
 - [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushapplemacos
 - [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md)
 - [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
@@ -6669,9 +6670,9 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
-- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md) scenarioconditionmobile_pushpushover
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
 - [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md) pyscriptcamera
+- [Send Notifications with Action Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md) scenarioconditionmobile_pushpushover
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushandroidapplezero_yaml_config
 - [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) doorbellalexavoice_assistantcameramobile_pushchimeoccupancyzero_yaml_config
@@ -7979,6 +7980,74 @@ So the two together say "only mobile push". Other notifications are not affected
 - Add `done_message` to the alert to be told when the rain has stopped, which goes through the same scenario.
 - Add more deliveries to the scenario by name, such as a chime, and they are sent too.
 - The same notify entity works anywhere else that takes one, like an automation's `notify.send_message`.
+
+# Recipe - Notify Someone Who Isn't a Home Assistant User
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/recipient_without_account/
+
+## Purpose
+
+Keep someone in the loop who has no Home Assistant account, like a relative, a neighbour keeping an eye on the house, or a cleaner. Notify them by e-mail and Telegram, without repeating their address and chat id in every automation.
+
+## Implementation
+
+A **Recipient** added by name in the integration, with their e-mail address, and their Telegram chat id as a custom target. No YAML is needed.
+
+Supernotify gives them a recipient id, `user.` followed by their name in lower case with underscores, and a *Notify Entity*, `notify.recipient_` followed by the same. Either can be used as a target, and stands in for everything set up for them - the e-mail delivery gets their e-mail address, and the Telegram delivery gets their chat id.
+
+## Prerequisites
+
+- The [email transport](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) with a mail server connection, of its own or reused from the SMTP integration
+- The [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration, with the recipient's chat id allowed. The [telegram transport](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md) is set up automatically once it is there
+- Their Telegram chat id - one way to find it is to have them message the bot, and look at the `telegram_text` event in *Developer Tools → Events*
+
+## Adding the Recipient
+
+Go to *Settings → Devices & services → Supernotify → Add recipient*.
+
+1. Give their **Name**, such as `Granny Smith`, leaving **Person** and **User** empty
+1. Fill in:
+   - **E-mail address** - `granny@example.com`
+   - **Custom targets** - `telegram_chat_id:215678938`
+
+That's it. They're listed under the integration as *Recipient - Granny Smith*, with `notify.recipient_granny_smith` and `switch.supernotify_recipient_granny_smith` entities.
+
+## Sending Notifications
+
+Address them by their recipient id:
+
+```yaml
+action: supernotify.notify
+data:
+  title: Sunday lunch
+  message: Roast at 1pm
+  target: user.granny_smith
+```
+
+or their notify entity, from anything that takes a standard Home Assistant notify target:
+
+```yaml
+action: notify.send_message
+target:
+  entity_id: notify.recipient_granny_smith
+data:
+  title: Sunday lunch
+  message: Roast at 1pm
+```
+
+Either sends an e-mail to `granny@example.com`, and a Telegram message to chat `215678938`. Their recipient id can also be mixed in with other targets, such as `person.bob`.
+
+A notification with no `target` goes to every recipient, so they get those too. To keep them off one delivery, use **Advanced - Delivery Overrides** on their recipient - see [Disabling a Delivery for One Recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#disabling-a-delivery-for-one-recipient). To pause them altogether for a while, turn off their switch.
+
+## Variations
+
+- Add a **Phone number** too, for an SMS delivery
+- Other custom targets work the same way, such as a `discord_channel:` for the [discord transport](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)
+
+## See Also
+
+- [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)
+- [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md)
 
 # Recipe - Home Assistant Restart
 

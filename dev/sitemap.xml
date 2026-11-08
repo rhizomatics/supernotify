@@ -886,6 +886,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/recipient_without_account/</loc>
+        <lastmod>2026-11-08</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/</loc>
         <lastmod>2026-11-08</lastmod>
         <changefreq>daily</changefreq>
