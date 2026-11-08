@@ -911,10 +911,12 @@ class Notification(ArchivableObject):
         later, so this can be generous (a plain-string category needs a non-empty value list; a
         `TargetEntityCategory` needs any pool entity_id whose domain/platform matches, group
         entities expanded first since a bare `group.*` id's own domain never matches anything -
-        it's the members' domain that counts)."""
+        it's the members' domain that counts, and area/floor/label selectors resolved to their
+        entities, so a TV in the targeted area counts)."""
         if not categories:
             return False
         hass_api: HomeAssistantAPI = self.context.hass_api
+        pool = pool.resolve_selectors(hass_api)
         entity_ids: list[str] = hass_api.expand_group(pool.entity_ids) if pool.entity_ids else []
         for category in categories:
             if isinstance(category, TargetEntityCategory):
@@ -1012,7 +1014,10 @@ class Notification(ArchivableObject):
                         self.record_result(delivery, envelope)
                     else:
                         _LOGGER.info("SUPERNOTIFY No delivery for %s (id: %s)", delivery.name, envelope.notification_id)
-                        self.record_result(delivery, envelope, suppression_reason=SuppressionReason.UNKNOWN)
+                        # keep a reason the transport gave, such as NO_TARGET when every target was skipped
+                        self.record_result(
+                            delivery, envelope, suppression_reason=envelope.skip_reason or SuppressionReason.UNKNOWN
+                        )
                 except Exception as e2:
                     envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")

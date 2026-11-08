@@ -299,6 +299,7 @@ TRANSPORT_HTML5 = "html5"
 TRANSPORT_MATRIX = "matrix"
 TRANSPORT_KODI = "kodi"
 TRANSPORT_DISCORD = "discord"
+TRANSPORT_WEBOSTV = "webostv"
 TRANSPORT_VALUES = [
     TRANSPORT_SMS,
     TRANSPORT_MQTT,
@@ -321,6 +322,7 @@ TRANSPORT_VALUES = [
     TRANSPORT_MATRIX,
     TRANSPORT_KODI,
     TRANSPORT_DISCORD,
+    TRANSPORT_WEBOSTV,
 ]
 
 # The master list of target category names, independent of any one transport - both

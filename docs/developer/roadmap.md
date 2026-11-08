@@ -133,6 +133,10 @@ Rethink `footer`, which is a key in `data` that only plain emails use. For examp
 - Support `dir`, for right-to-left languages, perhaps set from the Home Assistant language as `lang` now is
 - Support `timestamp`, for example from when a camera event happened rather than when the notification was sent
 
+### LG webOS TV
+
+The LG webOS TV integration still uses a legacy notify action for each TV, named after its config entry, so the `webostv` transport maps each TV's `media_player` entity to that action through its config entry, to reach TVs by area. If the integration moves to notify entities, as Home Assistant is doing for notify platforms, the `notify_entity` transport would cover the TVs, area included. Then the transport could be dropped, or kept only for skipping TVs that are off.
+
 ### Alert
 
 Review integration with `alert` - align live activities where possible with its behaviour and syntax, add recipe, make sure it works well with `notifiers`.

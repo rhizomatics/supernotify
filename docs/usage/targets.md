@@ -22,7 +22,7 @@ Categories marked *Auto* are recognized from the format of the target itself. Th
 
 | Category                          | Auto | Used By |
 | --------------------------------- | ---- | ------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, Media Player, Notify Entity, TTS |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
 | `device_id`                       | Y    | Chime   |
 | `email`                           | Y    | Email   |
 | `mobile_app_id`                   | Y    | Mobile Push, TTS |

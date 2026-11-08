@@ -20,6 +20,7 @@ from .transports.pushover import PushoverTransport
 from .transports.sms import SMSTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
+from .transports.webostv import WebOsTvTransport
 
 TRANSPORTS: list[type[Transport]] = [
     EmailTransport,
@@ -43,6 +44,7 @@ TRANSPORTS: list[type[Transport]] = [
     MatrixTransport,
     KodiTransport,
     DiscordTransport,
+    WebOsTvTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 TRANSPORT_NAMES = [t.name for t in TRANSPORTS]
