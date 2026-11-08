@@ -25,8 +25,10 @@ description: Advanced concepts of Supernotify for Home Assistant, including Tran
     - standard Home Assistant target selectors, `label_id`,`floor_id` and `area_id`.
     - *Group* targets (both new and old style Home Assistant groups)
 - Targets can be qualified for a specific **Target Category**, like `discord_channel:839439434`, see [Category Prefixes](../usage/targets.md#category-prefixes) for more info.
-- Targets are picked off the list by notifications by the best integration to handle it.
+- Each target is picked off the list by the best integration to handle that kind of target.
   - For example, a Notify Entity on Alexa Devices will be handled by the Alexa Devices transport whereas a generic Notify Entity would fall back to the less capable Notify Entity transport.
+  - This choice is made on the target alone, not on what the notification contains. A notification with action buttons still goes to a transport that can't show them, such as Pushover, and the buttons are left out.
+  - A delivery's own `fallback:` is used only when that delivery fails, see [Fallback for one delivery](../configuration/deliveries.md#fallback-for-one-delivery).
 - See [Targets](../usage/targets.md) for more information
 
 ## Recipient

@@ -23,6 +23,8 @@ automatically available:
 | constrain_scenarios   | Restricted list of scenarios                                       | `[]`     |
 | occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME             | `{}`     |
 | notification_data     | Additional `data` passed on notification action call               | `{}`     |
+| notification_actions  | Ad-hoc `actions` passed on notification action call                | `[]`     |
+| notification_action_groups | `action_groups` passed on notification action call, not ones added by a scenario | `[]`     |
 | camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
@@ -30,6 +32,7 @@ These recipes demonstrate how the template variables can be used:
 * [Content Escalation](../recipes/content_escalation.md)
 * [Alexa Whisper](../recipes/alexa_whisper.md)
 * [Except Scenario](../recipes/except_scenario.md)
+* [Send Buttons Only Where They Work](../recipes/buttons_where_supported.md)
 
 Be aware of values that can be empty, and which can trip Jinja2 up with some checks. For example `{{ 'CRITICAL' in notification_title}}` will fail with a "not iterable" error if title is not set, which will be the case when the condition is validated at start up or if no title passed on a notification. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`, or the `upper`,`lower` filters if checking for case.
 
@@ -47,6 +50,8 @@ populate all the Supernotify condition variables, and set up the test values:
 {% set required_scenarios = [] %}
 {% set constrain_scenarios = [] %}
 {% set occupancy = {} %}
+{% set notification_actions = [] %}
+{% set notification_action_groups = [] %}
 ```
 
 ![Template Debug](../assets/images/template_debug.png)

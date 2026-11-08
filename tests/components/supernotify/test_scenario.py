@@ -786,3 +786,72 @@ async def test_scenario_delivery_invalid_type(mock_hass_api: HomeAssistantAPI, m
 
     uut = Scenario("test_invalid", {CONF_DELIVERY: 123}, mock_delivery_registry, mock_hass_api)
     assert uut._config_delivery == {}
+
+
+async def test_scenario_condition_on_notification_actions(hass: HomeAssistant) -> None:
+    # issue #311: send notifications with buttons only to a delivery that can show them
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
+            "needs_buttons": {
+                CONF_DELIVERY: {"pushover_push": {"enabled": False}, "mobile": {}},
+                CONF_CONDITIONS: "{{ (notification_actions + notification_action_groups) | length > 0 }}",
+            },
+        },
+        deliveries={
+            "pushover_push": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "explicit"},
+        },
+        transport_types=[DummyTransport],
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "no buttons")
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == []
+    assert list(uut.selected_deliveries) == ["pushover_push"]
+
+    uut = Notification(ctx, "with actions", action_data={"actions": [{"action": "CLOSE_GARAGE", "title": "Close"}]})
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == ["needs_buttons"]
+    assert list(uut.selected_deliveries) == ["mobile"]
+    assert uut.condition_variables.notification_actions == [{"action": "CLOSE_GARAGE", "title": "Close"}]
+
+    uut = Notification(ctx, "with action groups", action_data={"action_groups": ["garage"]})
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == ["needs_buttons"]
+    assert list(uut.selected_deliveries) == ["mobile"]
+    assert uut.condition_variables.as_dict()["notification_action_groups"] == ["garage"]
+
+
+async def test_scenario_action_groups_not_in_condition_variables(hass: HomeAssistant) -> None:
+    # a scenario's own action_groups are applied after conditions, and don't leak back into them
+    ctx = TestingContext(
+        homeassistant=hass,
+        yaml="""
+name: Supernotify
+platform: supernotify
+delivery:
+  pushover_push:
+    transport: dummy
+    inclusion: default
+scenarios:
+  garage:
+    action_groups:
+      - garage_doors
+action_groups:
+  lights:
+    - action: LIGHTS_OFF
+      title: Lights off
+  garage_doors:
+    - action: CLOSE_GARAGE
+      title: Close
+""",
+        transport_types=[DummyTransport],
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "with action groups", action_data={"action_groups": ["lights"], ATTR_SCENARIOS_APPLY: ["garage"]})
+    await uut.initialize()
+    assert uut.action_groups == ["lights", "garage_doors"]
+    assert uut.condition_variables.notification_action_groups == ["lights"]
