@@ -93,6 +93,7 @@ class DiscordTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_DISCORD
+    integration_domain = HA_DISCORD_DOMAIN
     action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 

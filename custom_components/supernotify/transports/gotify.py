@@ -99,6 +99,7 @@ class GotifyTransport(Transport):
     """Notify via Gotify self-hosted push notification server."""
 
     name = TRANSPORT_GOTIFY
+    integration_domain = "gotify"
     action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 

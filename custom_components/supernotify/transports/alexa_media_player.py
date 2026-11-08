@@ -158,6 +158,7 @@ class AlexaMediaPlayerTransport(Transport):
     """
 
     name = TRANSPORT_ALEXA_MEDIA_PLAYER
+    integration_domain = HA_ALEXA_MEDIA_PLAYER_PLATFORM
     action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [
         DeliveryOption(

@@ -13,14 +13,44 @@ This release continues the move of configuration from YAML into the configuratio
 - *Transports*: `transports:` in YAML is imported into the integration at start up likewise, and ignored in the YAML from then on, with a repair asking for it to be removed
 
 ## ✨ Enhancements
-- *Recipients*: added and changed in the integration, under *Settings → Devices & services → Supernotify → Add recipient* - e-mail address, phone number, which discovered mobile devices to use, targets chosen as in the `supernotify.notify` action, and per-delivery overrides of enabled, targets and data. No YAML needed for default e-mail targets
-- *Recipients*: everyone discovered, as a Person or a user, is listed under the integration as a recipient, to change or switch off with **Enabled**. **Add recipient** also takes someone who isn't a Home Assistant user, by name, to reach by e-mail, phone or other targets. Each recipient's notify entity and switch are listed under their recipient, rather than on the Supernotify device - entity ids are unchanged
-- *Transports*: every transport in use is listed under the integration, to change or switch off with **Enabled**, with **Load** to leave it out altogether, its *Delivery Defaults* - action, targets, options, data, inclusion, priority, debug and any others as YAML - and for email, its own mail server *Connection*. **Add transport** sets up one that needs configuring before it can be used, like generic with its action, or chime with its aliases. Each transport has a service device of its own, as the SMTP integration has for a mail server, named by the transport's `alias` from YAML, if it had one, with its switch, now named **Enabled**, and its deliveries' switches, listed under the transport, rather than on the Supernotify device - entity ids are unchanged. The Supernotify device is now marked as a service too
-- *Housekeeping*: a **Deprecated Entities** option removes the deprecated recipient, delivery and transport `binary_sensor` entities an install carried over from an earlier version, along with their repairs - only offered while there are some
-- *Transports*: a repair names any deprecated settings a transport still has, such as `device_domain` directly on it rather than in its options, and saving the transport in the integration moves them to their replacements
-- *Conditions*: `notification_actions` and `notification_action_groups` condition variables, holding the `actions` and `action_groups` given on the notify action, so a scenario can send notifications with buttons only to deliveries that can show them - see the [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/) recipe ([#311](https://github.com/rhizomatics/supernotify/issues/311))
-- *Transports*: [LG webOS TV](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/) transport, set up automatically with the LG webOS TV integration, showing a toast on each TV targeted directly or by area, floor, label or device, and skipping TVs that are off ([#313](https://github.com/rhizomatics/supernotify/issues/313))
-- *Deliveries*: an `area_id`, `floor_id` or `label_id` target now selects a delivery by what's in it, so an area with an Alexa echo uses `alexa_devices`, rather than the generic notify entity delivery
+### Recipients
+- No YAML required - can now be setup, changed and removed from the Integrations web page
+  - Go to *Settings → Devices & services → Supernotify → Add recipient*
+- Can specify optional
+  - e-mail address
+  - phone number (e.g. for SMS)
+  - which discovered mobile devices to use
+  - additional targets chosen as in the `supernotify.notify` action, including custom ones such as Telegram, Slack, Alexa etc
+  - per-delivery overrides of enabled, targets and data.
+- Recipients can now be added for contacts who are not registered as a *Person* or *User* in Home Assistant
+  - Set up a contact for any email address, Telegram ID etc needed
+  - Use them as a Notify Entity
+- Everyone auto-discovered, as a Person or a user, is listed under the integration as a recipient
+  - To change or switch off with **Enabled**. *
+  - Each recipient's notify entity and switch are listed under their recipient, rather than on the Supernotify device - entity ids are unchanged
+- Existing recipients in YAML are automatically migrated, and any subsequent YAML changes ignored
+### Transports
+- No YAML needed - can now be added, edited and removed from Integrations web page.
+  - Every transport in use is listed under the integration, to change or switch off with **Enabled**
+  - Use **Load** to remove altogether
+- Change *Delivery Defaults* - action, targets, options, data, inclusion, priority, debug and any others as YAML - and for email, its own mail server *Connection*.
+- **Add transport** sets up one that needs configuring before it can be used, like generic with its action, or chime with its aliases.
+  - Only transports whose integration is installed are offered - Discord, Gotify, Pushover and Alexa Media Player were previously offered regardless
+- Each transport has a service device of its own, as the SMTP integration has for a mail server, named by the transport's `alias` from YAML, if it had one, with its switch, now named **Enabled**, and its deliveries' switches, listed under the transport, rather than on the Supernotify device - entity ids are unchanged.
+- Existing transports automatically migrated from YAML, and subsequent changes to YAML ignored
+- A repair names any deprecated settings a transport still has, such as `device_domain` directly on it rather than in its options, and saving the transport in the integration moves them to their replacements
+### Housekeeping
+- A **Deprecated Entities** option removes the deprecated recipient, delivery and transport `binary_sensor` entities an install carried over from an earlier version, along with their repairs - only offered while there are some
+### Conditions
+- New `notification_actions` and `notification_action_groups` condition variables, holding the `actions` and `action_groups` given on the notify action, so a scenario can send notifications with buttons only to deliveries that can show them
+ - Example recipe added - [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/) recipe ([#311](https://github.com/rhizomatics/supernotify/issues/311))
+### LG webOS TV
+- New transport for [LG webOS TV](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/) notifications
+  - Set up automatically with the LG webOS TV integration
+  - Shows a toast on each TV targeted directly or by area, floor, label or device,
+  - Skips TVs that are off ([#313](https://github.com/rhizomatics/supernotify/issues/313))
+### Deliveries
+- An `area_id`, `floor_id` or `label_id` target now selects a delivery by what's in it, so an area with an Alexa echo uses `alexa_devices`, rather than the generic notify entity delivery
 
 ## 🐛 Bug fixes
 - *Archive*: a delivery its transport skipped now keeps the transport's reason, such as `NO_TARGET` for Kodi or Discord with no valid target, rather than always showing `UNKNOWN`

@@ -166,6 +166,20 @@ async def test_no_transports_to_add(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_transports"
 
 
+async def test_transports_offered_only_with_their_integration(hass: HomeAssistant) -> None:
+    entry = await _entry(hass)
+    integrations = {"discord": "discord", "gotify": "gotify", "pushover": "pushover", "alexa_media_player": "alexa_media"}
+
+    def offered(result: SubentryFlowResult) -> set[str]:
+        return set(result["data_schema"].schema["transport"].config["options"])
+
+    result = await _start(hass, entry)
+    assert not offered(result) & integrations.keys()
+    hass.config.components.update(integrations.values())
+    result = await _start(hass, entry)
+    assert integrations.keys() <= offered(result)
+
+
 async def test_fields_only_where_the_transport_has_them(hass: HomeAssistant) -> None:
     entry = await _entry(hass)
     result = await _start(hass, entry, SOURCE_RECONFIGURE, subentry_id=_transports(entry)["persistent"].subentry_id)

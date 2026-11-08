@@ -93,6 +93,7 @@ class PushoverTransport(Transport):
     """Notify via Pushover push notification service."""
 
     name = TRANSPORT_PUSHOVER
+    integration_domain = "pushover"
     action_configured = True
     declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
