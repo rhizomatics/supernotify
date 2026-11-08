@@ -13,14 +13,12 @@ exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for 
 exclude-newer-span = "P7D"
 
 [options.exclude-newer-package]
-aiohttp = false
-certifi = false
-homeassistant = false
+homeassistant = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 homeassistant-repl = false
-homeassistant-stubs = false
-pytest-homeassistant = false
+homeassistant-stubs = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
+pytest-homeassistant = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 pytest-homeassistant-custom-component = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
-uv = false
+uv = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 
 [manifest]
 overrides = [{ name = "uv", specifier = ">=0.13.4" }]

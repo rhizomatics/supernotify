@@ -2,15 +2,15 @@
 # tools are locked in mise.lock, as Python dependencies are in uv.lock, so CI runs the versions
 # used here, and only those released at least as long ago as uv's exclude-newer in pyproject.toml
 lockfile = true
-minimum_release_age = "5d"
+minimum_release_age = "7d"
 
 [tools]
 "pipx:codespell" = "latest"
 prek = "latest"
 python = "3.14"
-ruff = "latest"
-ty = "latest"
-uv = "latest"
+ruff = { version = "latest", minimum_release_age = "2d" }
+ty = { version = "latest", minimum_release_age = "2d" }
+uv = { version = "latest", minimum_release_age = "2d" }
 
 [tasks.preview-start]
 description = "Start the Docker preview, seeding it as the preview house the first time"
