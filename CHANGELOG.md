@@ -11,6 +11,7 @@ This release continues the move of configuration from YAML into the configuratio
 ## 🚨 Breaking changes
 - *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
 - *Transports*: `transports:` in YAML is imported into the integration at start up likewise, and ignored in the YAML from then on, with a repair asking for it to be removed
+- Support for old versions of `Pillow` library removed, in line with minimum HA 2026.5 version. Attachments will fail to reprocess on old versions of HA - either upgrade HA or don't upgrade Supernotify.
 
 ## ✨ Enhancements
 ### Recipients
@@ -64,10 +65,6 @@ This release continues the move of configuration from YAML into the configuratio
 New recipes
 - Easy Notifications for Someone Who Isn't a Home Assistant User
 - Send Notifications with Action Buttons Only Where They Work
-
-# v2.17.2
-## 🚨 Breaking changes
-- Support for old versions of `Pillow` library removed, in line with minimum HA 2026.5 version. Attachments will fail to reprocess on old versions of HA - either upgrade HA or don't upgrade Supernotify.
 
 # v2.17.1
 
