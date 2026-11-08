@@ -9,7 +9,7 @@ repos:
         args: [--unsafe]
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-  # ruff and codespell from mise.toml, rather than versions of their own
+  # ruff, ty and codespell from mise.toml, rather than versions of their own
   - repo: local
     hooks:
       - id: ruff-check
@@ -24,6 +24,13 @@ repos:
         language: system
         types_or: [python, pyi]
         require_serial: true
+      - id: ty
+        name: ty check
+        # the whole project with its pyproject.toml settings, as in CI
+        entry: ty check
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
       - id: codespell
         name: codespell
         entry: codespell
@@ -67,8 +74,3 @@ repos:
         entry: node docgen/diagram_thumbnails.mjs
         language: system
         files: ^docs/developer/diagrams/.+\.html$
-  - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.96
-    hooks:
-      - id: ty
-        args: [--isolated, --no-python-downloads]

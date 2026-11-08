@@ -1,4 +1,4 @@
-# ty: ignore[unresolved-import]
+# ty: ignore[import-not-found]
 from unittest.mock import ANY, Mock, call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE

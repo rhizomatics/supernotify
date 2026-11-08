@@ -309,6 +309,8 @@ class Notification(ArchivableObject):
             self._title,
             self.extra_data,
             self.camera_variables(),
+            self.actions,
+            self.action_groups,
         )  # requires occupancy first
 
         enabled_scenario_names: list[str] = list(self.applied_scenario_names) or []

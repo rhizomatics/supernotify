@@ -40,7 +40,6 @@ from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.const import (
     ATTR_USER_ID,
     CONF_ACTION_GROUPS,
-    CONF_ACTIONS,
     CONF_ARCHIVE,
     CONF_CAMERAS,
     CONF_DELIVERY,
@@ -298,7 +297,7 @@ class TestingContext(Context):
         if scenarios:
             raw_config[CONF_SCENARIOS] = load_config(scenarios)
         if mobile_actions:
-            raw_config[CONF_ACTIONS] = load_config(mobile_actions)
+            raw_config[CONF_ACTION_GROUPS] = load_config(mobile_actions)
         if transports:
             raw_config[CONF_TRANSPORT] = load_config(transports)
         if archive_config:
