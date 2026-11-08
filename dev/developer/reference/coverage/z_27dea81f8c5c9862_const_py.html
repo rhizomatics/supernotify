@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">248 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">248<span class="text"> run</span></button>
+            <span class="text">254 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">254<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 18:35 +0000
+            created at 2026-11-08 11:29 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -498,6 +498,21 @@
     <p class="run"><span class="n"><a id="t416" href="#t416">416</a></span><span class="t"><span class="key">def</span> <span class="nam">transport_display_name</span><span class="op">(</span><span class="nam">name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t417" href="#t417">417</a></span><span class="t">    <span class="str">&quot;&quot;&quot;A transport&#x27;s name to show, such as &quot;Alexa Media Player&quot; for alexa_media_player&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t418" href="#t418">418</a></span><span class="t">    <span class="key">return</span> <span class="str">&quot; &quot;</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">_TRANSPORT_ACRONYMS</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">word</span><span class="op">,</span> <span class="nam">word</span><span class="op">.</span><span class="nam">capitalize</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="key">for</span> <span class="nam">word</span> <span class="key">in</span> <span class="nam">name</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">&quot;_&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t419" href="#t419">419</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t420" href="#t420">420</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t421" href="#t421">421</a></span><span class="t"><span class="com"># subentry titles are prefixed by their type, to tell them apart in the integration&#x27;s list of them</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t422" href="#t422">422</a></span><span class="t"><span class="nam">RECIPIENT_TITLE_PREFIX</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;Recipient - &quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t423" href="#t423">423</a></span><span class="t"><span class="nam">TRANSPORT_TITLE_PREFIX</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;Transport - &quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t424" href="#t424">424</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t425" href="#t425">425</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t426" href="#t426">426</a></span><span class="t"><span class="key">def</span> <span class="nam">recipient_subentry_title</span><span class="op">(</span><span class="nam">name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">    <span class="str">&quot;&quot;&quot;A recipient subentry&#x27;s title, such as &quot;Recipient - Alice&quot; for alice&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">    <span class="key">return</span> <span class="nam">name</span> <span class="key">if</span> <span class="nam">name</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">RECIPIENT_TITLE_PREFIX</span><span class="op">)</span> <span class="key">else</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">RECIPIENT_TITLE_PREFIX</span><span class="op">}</span><span class="op">{</span><span class="nam">name</span><span class="op">}</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t"><span class="key">def</span> <span class="nam">transport_subentry_title</span><span class="op">(</span><span class="nam">name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t432" href="#t432">432</a></span><span class="t">    <span class="str">&quot;&quot;&quot;A transport subentry&#x27;s title, such as &quot;Transport - Alexa Media Player&quot; for alexa_media_player&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t433" href="#t433">433</a></span><span class="t">    <span class="key">return</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">TRANSPORT_TITLE_PREFIX</span><span class="op">}</span><span class="op">{</span><span class="nam">transport_display_name</span><span class="op">(</span><span class="nam">name</span><span class="op">)</span><span class="op">}</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -507,7 +522,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-11-07 18:35 +0000
+            created at 2026-11-08 11:29 +0000
         </p>
     </div>
 </footer>
