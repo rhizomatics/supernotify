@@ -6,7 +6,7 @@ tags:
   - mobile_push
   - pushover
   - actionable_notifications
-title: Send Buttons Only Where They Work
+title: Send Notifications with Action Buttons Only Where They Work
 description: Use a Supernotify Scenario to send notifications with action buttons to the Companion App instead of a transport that can't show them, like Pushover
 ---
 # Recipe - Send Buttons Only Where They Work

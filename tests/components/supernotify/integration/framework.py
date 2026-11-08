@@ -43,6 +43,7 @@ class House:
         stub_actions: list[str] | None = None,
         demo: bool = False,
         alexa_per_area: bool = True,
+        stub_send_message: bool = True,
     ) -> None:
         # Supernotify YAML config, or None for a zero-YAML install
         self.config: str | None = config
@@ -52,6 +53,8 @@ class House:
         self.demo: bool = demo
         # an Alexa echo notify entity in every area
         self.alexa_per_area: bool = alexa_per_area
+        # notify.send_message recorded rather than run - off to send to real notify entities, like a recipient's
+        self.stub_send_message: bool = stub_send_message
         self._floors: list[str] = floors or []
         self._areas: dict[str, str | None] = areas or {}
 
@@ -175,8 +178,9 @@ class House:
 
         # setting up the notify platform registers the real, entity-backed notify.send_message -
         # replace it with a stub, since these devices have no backing NotifyEntity to dispatch to
-        hass.services.async_remove("notify", "send_message")
-        hass.services.async_register("notify", "send_message", fake_call_service)
+        if self.stub_send_message:
+            hass.services.async_remove("notify", "send_message")
+            hass.services.async_register("notify", "send_message", fake_call_service)
 
         for device_name in self.android_apps:
             service_name = slugify(f"mobile_app_{device_name}")

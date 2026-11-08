@@ -14,7 +14,7 @@ This release continues the move of configuration from YAML into the configuratio
 
 ## ✨ Enhancements
 ### Recipients
-- No YAML required - can now be setup, changed and removed from the Integrations web page
+- **No YAML required** - can now be setup, changed and removed from the Integrations web page
   - Go to *Settings → Devices & services → Supernotify → Add recipient*
 - Can specify optional
   - e-mail address
@@ -30,7 +30,7 @@ This release continues the move of configuration from YAML into the configuratio
   - Each recipient's notify entity and switch are listed under their recipient, rather than on the Supernotify device - entity ids are unchanged
 - Existing recipients in YAML are automatically migrated, and any subsequent YAML changes ignored
 ### Transports
-- No YAML needed - can now be added, edited and removed from Integrations web page.
+- **No YAML needed** - can now be added, edited and removed from Integrations web page.
   - Every transport in use is listed under the integration, to change or switch off with **Enabled**
   - Use **Load** to remove altogether
 - Change *Delivery Defaults* - action, targets, options, data, inclusion, priority, debug and any others as YAML - and for email, its own mail server *Connection*.
@@ -72,6 +72,12 @@ This release continues the move of configuration from YAML into the configuratio
 ## 🐛 Bug fixes
 - *Message usage*: `combine_title` with a title and no message sends just the title, rather than the title followed by `None`
 - *Media*: the default `media_path` is now `media/supernotify`, i.e. `/config/media/supernotify`, as the documentation's `allowlist_external_dirs` and `media_dirs` examples have always given. It was `supernotify/media`, so following the docs left snapshots outside the allowed and media source folders, and email attachments were dropped. Existing setups keep the `media_path` already saved in their config entry; a left-over `/config/supernotify/media` folder can be deleted
+
+## 📚 Documentation
+New recipes
+- Easy Notifications for Someone Who Isn't a Home Assistant User
+- Send Notifications with Action Buttons Only Where They Work
+
 
 # v2.17.0
 
