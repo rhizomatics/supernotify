@@ -14,7 +14,7 @@ A Delivery gets configured automatically for every usable [transport](https://su
 
 For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
 
-Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
+Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices`, `webostv` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity, an LG TV's `media_player` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
 
 In any case, the `inclusion` key can be used, either in the Transport or Delivery configuration, to override any of the automatic choices. See [Delivery Inclusion](#delivery-inclusion) for more on how that works.
 
@@ -170,6 +170,8 @@ delivery:
 ### Implicit Deliveries
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
+
+An `area_id`, `floor_id` or `label_id` target counts by what's in it, so targeting the lounge uses the `webostv` delivery if there's an LG TV in the lounge, and `alexa_devices` if there's an Echo.
 
 ### Delivery Control
 

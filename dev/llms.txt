@@ -71,6 +71,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [SMS (Text Messaging) Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)
 - [Telegram Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)
 - [TTS Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)
+- [LG webOS TV Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)
 
 ## Recipes
 

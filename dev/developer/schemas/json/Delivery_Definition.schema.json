@@ -234,7 +234,8 @@
         "html5",
         "matrix",
         "kodi",
-        "discord"
+        "discord",
+        "webostv"
       ]
     },
     "enabled": {

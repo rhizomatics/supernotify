@@ -1410,19 +1410,19 @@ A **Target Category** identifies what kind of target it is, and how to use it. S
 
 Categories marked *Auto* are recognized from the format of the target itself. The others need to be qualified with a [prefix](#category-prefixes) or given in a [mapping](#category-mapping).
 
-| Category                          | Auto | Used By                                                                                 |
-| --------------------------------- | ---- | --------------------------------------------------------------------------------------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, Media Player, Notify Entity, TTS |
-| `device_id`                       | Y    | Chime                                                                                   |
-| `email`                           | Y    | Email                                                                                   |
-| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                        |
-| `phone`                           | Y    | SMS                                                                                     |
-| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                        |
-| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                        |
-| `topic`                           | N    | MQTT                                                                                    |
-| `discord_channel`                 | N    | Discord                                                                                 |
-| `matrix_room`                     | N    | Matrix                                                                                  |
-| `telegram_chat_id`                | N    | Telegram                                                                                |
+| Category                          | Auto | Used By                                                                                              |
+| --------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
+| `device_id`                       | Y    | Chime                                                                                                |
+| `email`                           | Y    | Email                                                                                                |
+| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                     |
+| `phone`                           | Y    | SMS                                                                                                  |
+| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                     |
+| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                     |
+| `topic`                           | N    | MQTT                                                                                                 |
+| `discord_channel`                 | N    | Discord                                                                                              |
+| `matrix_room`                     | N    | Matrix                                                                                               |
+| `telegram_chat_id`                | N    | Telegram                                                                                             |
 
 ### Notify Entity
 
@@ -2184,7 +2184,7 @@ A Delivery gets configured automatically for every usable [transport](https://su
 
 For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
 
-Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
+Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices`, `webostv` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity, an LG TV's `media_player` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
 
 In any case, the `inclusion` key can be used, either in the Transport or Delivery configuration, to override any of the automatic choices. See [Delivery Inclusion](#delivery-inclusion) for more on how that works.
 
@@ -2340,6 +2340,8 @@ delivery:
 ### Implicit Deliveries
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
+
+An `area_id`, `floor_id` or `label_id` target counts by what's in it, so targeting the lounge uses the `webostv` delivery if there's an LG TV in the lounge, and `alexa_devices` if there's an Echo.
 
 ### Delivery Control
 
@@ -6577,6 +6579,64 @@ To get canned sounds rather than speech, use the [Chime](https://supernotify.rhi
 - [TTS Integrations](https://www.home-assistant.io/integrations/#text-to-speech)
   - [Nabu Casa TTS](https://support.nabucasa.com/hc/en-us/articles/25619386304541-Text-to-speech-TTS)
 - [Android Companion App TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+
+# LG webOS TV Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/webostv/
+
+## Motivation
+
+Shows notifications as a toast on LG webOS TVs, through the Home Assistant [LG webOS TV](https://www.home-assistant.io/integrations/webostv/#notifications) integration.
+
+The integration gives each TV a notify action of its own, such as `notify.living_room_tv`, rather than a notify entity, so on their own the TVs can't be reached by area. This transport targets each TV's `media_player` entity instead, and finds its notify action, so a TV can be reached by area, floor, label or device as well as by its entity.
+
+## Features
+
+- No set up: a `webostv` delivery is made whenever the LG webOS TV integration is set up.
+- Only sent to a TV when it is targeted, directly or by its area, floor, label or device, so a TV isn't interrupted by every notification in the house.
+- TVs that are off, or unavailable, are skipped, as the integration can't reach them.
+- Only the message is shown. The title is used only when there's no message.
+
+## Configuration
+
+Nothing is needed. Target the TV, or where it is:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Dinner is ready
+  target:
+    area_id: lounge
+```
+
+Targeting the whole ground floor reaches every TV on it that's on, as well as anything else there, such as Alexa devices:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Someone's at the door
+  target:
+    floor_id: ground
+```
+
+## webOS TV Data Keys
+
+- `icon` — path to an image file on the Home Assistant host, shown as the toast's icon. Any other `data` is left out, since the integration takes nothing else
+
+```yaml
+action: notify.supernotify
+data:
+  message: Dinner is ready
+  target:
+    area_id: lounge
+  data:
+    icon: /config/www/dinner.png
+```
+
+## Notes
+
+- The notify action is named by the integration after the TV, as it was called when set up. After renaming the TV, its notify action keeps the old name until the integration is reloaded.
+- A TV that is skipped because it's off isn't an error, so a delivery `fallback:` isn't used for it. To reach someone another way when the TV is off, use a [scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) with a condition on the TV's state.
 # Recipes
 
 # Recipe Index
@@ -8499,6 +8559,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE                                                        |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | FIRST | always          | default   | MESSAGE                                                        |
 
 ## Target Categories
 
@@ -8527,6 +8588,7 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | phone                                                                       | -                         | -                                                                                 |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | telegram_chat_id, entity_id (domain=notify, platform=telegram_bot)          | -                         | -                                                                                 |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | -                                                                           | -                         | entity_id (domain=media_player), mobile_app_id                                    |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | entity_id (domain=media_player, platform=webostv)                           | -                         | -                                                                                 |
 
 ## Default Options
 
@@ -8553,3 +8615,4 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
