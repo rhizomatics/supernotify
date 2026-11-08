@@ -335,6 +335,15 @@ class HomeAssistantAPI:
         """A path relative to the Home Assistant config directory, or the path itself if absolute."""
         return self._hass.config.path(path)
 
+    def config_entry_title_for_entity(self, entity_id: str) -> str | None:
+        """The title of the config entry that registered this entity, if any."""
+        entity_registry: EntityRegistry | None = self._entity_registry()
+        reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
+        if reg_entry is None or reg_entry.config_entry_id is None:
+            return None
+        config_entry = self._hass.config_entries.async_get_entry(reg_entry.config_entry_id)
+        return config_entry.title if config_entry else None
+
     def device_for_entity(self, entity_id: str) -> str | None:
         """The device this entity belongs to, if any."""
         entity_registry: EntityRegistry | None = self._entity_registry()

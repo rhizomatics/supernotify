@@ -6,7 +6,7 @@
 
 # v2.18.0
 
-This release continues the move of configuration from YAML into the configuration web page - now for *Recipients* and *Transports*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users.
+This release continues the move of configuration from YAML into the configuration web page - now for *Recipients* and *Transports*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users. It also adds WebOS TV notifications.
 
 ## 🚨 Breaking changes
 - *Recipients*: `recipients:` in YAML is imported into the integration at start up, and ignored in the YAML from then on, with a repair asking for it to be removed
@@ -19,6 +19,8 @@ This release continues the move of configuration from YAML into the configuratio
 - *Housekeeping*: a **Deprecated Entities** option removes the deprecated recipient, delivery and transport `binary_sensor` entities an install carried over from an earlier version, along with their repairs - only offered while there are some
 - *Transports*: a repair names any deprecated settings a transport still has, such as `device_domain` directly on it rather than in its options, and saving the transport in the integration moves them to their replacements
 - *Conditions*: `notification_actions` and `notification_action_groups` condition variables, holding the `actions` and `action_groups` given on the notify action, so a scenario can send notifications with buttons only to deliveries that can show them - see the [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/) recipe ([#311](https://github.com/rhizomatics/supernotify/issues/311))
+- *Transports*: [LG webOS TV](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/) transport, set up automatically with the LG webOS TV integration, showing a toast on each TV targeted directly or by area, floor, label or device, and skipping TVs that are off ([#313](https://github.com/rhizomatics/supernotify/issues/313))
+- *Deliveries*: an `area_id`, `floor_id` or `label_id` target now selects a delivery by what's in it, so an area with an Alexa echo uses `alexa_devices`, rather than the generic notify entity delivery
 
 ## 📝 Other changes
 ### Development

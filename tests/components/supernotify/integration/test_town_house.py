@@ -154,10 +154,10 @@ async def test_notify_targets_floor_and_area_with_default_deliveries_via_own_dev
                     device_id:
                       - {town_house.supernotify_device_id()}
             """,
-        # mobile_push (a unique-category delivery, selection_rank FIRST) dispatches before
-        # notify_entity (a fallback-category delivery, selection_rank LAST) - see
-        # Notification.select_deliveries()'s ordering
-        expected_calls={"notify": ["mobile_app_alice_phone", "mobile_app_bob_phone", "send_message"]},
+        # the area/floor's Alexa echoes go to alexa_devices, which claims them as its own
+        # unique category once the selectors are resolved, and dispatches before mobile_push -
+        # see Notification.select_deliveries()'s ordering
+        expected_calls={"notify": ["send_message", "mobile_app_alice_phone", "mobile_app_bob_phone"]},
         expected_entities={
             "notify": [
                 "notify.kitchen",

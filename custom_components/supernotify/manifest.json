@@ -24,6 +24,7 @@
         "trace",
         "tts",
         "twilio_sms",
+        "webostv",
         "workday"
     ],
     "categories": [
