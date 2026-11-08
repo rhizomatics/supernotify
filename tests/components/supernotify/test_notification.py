@@ -257,6 +257,27 @@ async def test_requested_target_and_unreached_recipient_in_archive() -> None:
     assert contents["unassigned_targets"] == {"person_id": ["person.jabilee_sokata"]}
 
 
+async def test_delivery_skipped_without_envelope_gives_its_reason() -> None:
+    """A delivery skipped before any envelope, like one with no target, gives its reason for
+    the engine's "No deliveries made" log, rather than leaving it blank"""
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+        viable_transport_types=[MobilePushTransport],
+        services=MOCK_SERVICES,
+    )
+    await ctx.test_initialize()
+
+    # jabilee has no mobile app, only an e-mail address, and mobile_push is asked for, as a scenario might
+    uut = Notification(ctx, "testing 123", target=["person.jabilee_sokata"], action_data={"delivery": ["mobile_push"]})
+    await uut.initialize()
+    await uut.deliver()
+
+    assert uut.delivered == 0
+    assert SuppressionReason.NO_TARGET in uut._skip_reasons
+
+
 async def test_call_transport_records_delivery_exception() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
