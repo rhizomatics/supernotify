@@ -388,8 +388,10 @@ Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_conce
   - standard Home Assistant target selectors, `label_id`,`floor_id` and `area_id`.
   - *Group* targets (both new and old style Home Assistant groups)
 - Targets can be qualified for a specific **Target Category**, like `discord_channel:839439434`, see [Category Prefixes](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#category-prefixes) for more info.
-- Targets are picked off the list by notifications by the best integration to handle it.
+- Each target is picked off the list by the best integration to handle that kind of target.
 - For example, a Notify Entity on Alexa Devices will be handled by the Alexa Devices transport whereas a generic Notify Entity would fall back to the less capable Notify Entity transport.
+- This choice is made on the target alone, not on what the notification contains. A notification with action buttons still goes to a transport that can't show them, such as Pushover, and the buttons are left out.
+- A delivery's own `fallback:` is used only when that delivery fails, see [Fallback for one delivery](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#fallback-for-one-delivery).
 - See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information
 
 ## Recipient
@@ -1408,19 +1410,19 @@ A **Target Category** identifies what kind of target it is, and how to use it. S
 
 Categories marked *Auto* are recognized from the format of the target itself. The others need to be qualified with a [prefix](#category-prefixes) or given in a [mapping](#category-mapping).
 
-| Category                          | Auto | Used By                                                                                 |
-| --------------------------------- | ---- | --------------------------------------------------------------------------------------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, Media Player, Notify Entity, TTS |
-| `device_id`                       | Y    | Chime                                                                                   |
-| `email`                           | Y    | Email                                                                                   |
-| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                        |
-| `phone`                           | Y    | SMS                                                                                     |
-| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                        |
-| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                        |
-| `topic`                           | N    | MQTT                                                                                    |
-| `discord_channel`                 | N    | Discord                                                                                 |
-| `matrix_room`                     | N    | Matrix                                                                                  |
-| `telegram_chat_id`                | N    | Telegram                                                                                |
+| Category                          | Auto | Used By                                                                                              |
+| --------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
+| `device_id`                       | Y    | Chime                                                                                                |
+| `email`                           | Y    | Email                                                                                                |
+| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                     |
+| `phone`                           | Y    | SMS                                                                                                  |
+| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                     |
+| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                     |
+| `topic`                           | N    | MQTT                                                                                                 |
+| `discord_channel`                 | N    | Discord                                                                                              |
+| `matrix_room`                     | N    | Matrix                                                                                               |
+| `telegram_chat_id`                | N    | Telegram                                                                                             |
 
 ### Notify Entity
 
@@ -1740,7 +1742,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/configuration/
 
 Start with the simplest possible setup, [added from the UI](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md) with no YAML at all - see the [minimal](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md) page. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
 
-This page onwards covers YAML configuration - still how [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md), transports, scenarios, recipients and cameras are set up, though archive, duplicate detection and housekeeping can also be configured from the UI.
+This page onwards covers configuration - [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md), scenarios and cameras are set up in YAML, while [recipients](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), [transports](https://supernotify.rhizomatics.org.uk/latest/transports/index.md), archive, duplicate detection and housekeeping are configured in the integration.
 
 [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) explains how to set up the basic notification channels you want, and [Configuration Levels](https://supernotify.rhizomatics.org.uk/latest/configuration/levels/index.md) how to choose the best place to put configuration for simplicity, clarity and concision.
 
@@ -1806,6 +1808,8 @@ Key fields to check if something doesn't seem right:
 - `selected_deliveries` - what was selected by the action, scenarios or delivery configuration
 - `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
 - `deliveries` - what happened to each delivery: `success`, `error` or `suppressed` for each message sent, with the action calls made and any that failed, or `skipped` with the reason if nothing was sent
+- `target` - the target the notification asked for, with recipient notify entities turned into their recipient
+- `unassigned_targets` - targets asked for that no delivery sent to, including recipients none of whose own targets were used
 - `enabled_scenarios` and `occupancy` - the scenarios that applied, and who was in or out
 
 ## Diagnostics
@@ -1857,6 +1861,7 @@ A notification with a single delivery, as archived without full diagnostics:
   "title": "Security",
   "message": "Front door opened",
   "priority": "high",
+  "target": null,
   "stats": {
     "total_duration_ms": 1.0,
     "slowest_delivery": "dummy",
@@ -1948,7 +1953,9 @@ A notification with a single delivery, as archived without full diagnostics:
     "notification_priority": "high",
     "occupancy": ["UNDEFINED_OCCUPANTS"],
     "notification_data": {},
-    "camera": {}
+    "camera": {},
+    "notification_actions": [],
+    "notification_action_groups": []
   }
 }
 ```
@@ -1963,23 +1970,26 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/inde
 
 `Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can access, such as entities, templating etc. In addition, Supernotify makes additional variables automatically available:
 
-| Template Variable     | Description                                                                                                                                                                                                  | Default  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| notification_priority | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
-| notification_message  | Message of current notification                                                                                                                                                                              | *None*   |
-| notification_title    | Title of current notification                                                                                                                                                                                | *None*   |
-| applied_scenarios     | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
-| required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
-| constrain_scenarios   | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
-| occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
-| notification_data     | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
-| camera                | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
+| Template Variable          | Description                                                                                                                                                                                                  | Default  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| notification_priority      | Priority of current notification, explicitly selected or default                                                                                                                                             | `medium` |
+| notification_message       | Message of current notification                                                                                                                                                                              | *None*   |
+| notification_title         | Title of current notification                                                                                                                                                                                | *None*   |
+| applied_scenarios          | Scenarios explicitly selected in current notification call                                                                                                                                                   | `[]`     |
+| required_scenarios         | Scenarios a notification mandates to be enabled or else suppressed                                                                                                                                           | `[]`     |
+| constrain_scenarios        | Restricted list of scenarios                                                                                                                                                                                 | `[]`     |
+| occupancy                  | One or more occupancy states, e.g. ALL_HOME, LONE_HOME                                                                                                                                                       | `{}`     |
+| notification_data          | Additional `data` passed on notification action call                                                                                                                                                         | `{}`     |
+| notification_actions       | Ad-hoc `actions` passed on notification action call                                                                                                                                                          | `[]`     |
+| notification_action_groups | `action_groups` passed on notification action call, not ones added by a scenario                                                                                                                             | `[]`     |
+| camera                     | Camera of the notification, as `camera.entity_id` plus anything configured for it under `cameras:`, such as `camera.alias`. A camera chosen by a scenario is there for templates, but not yet for conditions | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
 - [Content Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
 - [Alexa Whisper](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
 - [Except Scenario](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md)
+- [Send Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md)
 
 Be aware of values that can be empty, and which can trip Jinja2 up with some checks. For example `{{ 'CRITICAL' in notification_title}}` will fail with a "not iterable" error if title is not set, which will be the case when the condition is validated at start up or if no title passed on a notification. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`, or the `upper`,`lower` filters if checking for case.
 
@@ -1995,6 +2005,8 @@ The [Developer Tools Template Tab](https://www.home-assistant.io/docs/tools/dev-
 {% set required_scenarios = [] %}
 {% set constrain_scenarios = [] %}
 {% set occupancy = {} %}
+{% set notification_actions = [] %}
+{% set notification_action_groups = [] %}
 ```
 
 ## References
@@ -2175,7 +2187,7 @@ A Delivery gets configured automatically for every usable [transport](https://su
 
 For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
 
-Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
+Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices`, `webostv` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity, an LG TV's `media_player` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
 
 In any case, the `inclusion` key can be used, either in the Transport or Delivery configuration, to override any of the automatic choices. See [Delivery Inclusion](#delivery-inclusion) for more on how that works.
 
@@ -2332,6 +2344,8 @@ delivery:
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
 
+An `area_id`, `floor_id` or `label_id` target counts by what's in it, so targeting the lounge uses the `webostv` delivery if there's an LG TV in the lounge, and `alexa_devices` if there's an Echo.
+
 ### Delivery Control
 
 A delivery without its own `inclusion` takes its transport's, which is `default` for email, SMS, mobile push, notify entities, Alexa Devices, HTML5, Discord, Matrix, MQTT and Telegram, and `explicit` for the rest - see [Standard Delivery](#standard-delivery) above for why. These are `default` despite some of their targets (a channel/user ID, a room ID/alias, a topic, a chat ID) being opaque values, because each has its own dedicated target category (`discord_channel`/`matrix_room`/`topic`/`telegram_chat_id`) no other transport uses - a target explicitly qualified with one reaches its delivery automatically, and the delivery is simply skipped otherwise. MQTT's topic can also come from a `data:` keyword instead of a target - unlike Discord/Matrix/Telegram, that alone wouldn't tell it whether a given notification is even relevant - so its standard delivery only counts as truly asked-for, and allowed to rely on a `data:`-only topic, when the call names `mqtt` explicitly; swept in implicitly with no `topic:` target, it's simply skipped instead of attempting every notification. See [Suppression Reasons](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/#suppression-reasons) and the [Target-Driven Implicit Selection roadmap item](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md) for the fuller picture. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
@@ -2348,7 +2362,7 @@ This is a config-time property of the delivery itself - whether it's a *candidat
 
 ## Entities
 
-Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNotify** device, that is the delivery `enabled` flag, with the delivery configuration as attributes. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the delivery, and turning it on enables it again, for run-time control of notifications. Each transport also has a switch, `switch.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled, without changing the delivery switches themselves. Only a transport that is loaded, and so usable, has a switch, as do only its deliveries. A switch left from a transport or delivery that is no longer loaded shows as unavailable, and can be deleted from its entity settings.
+Each delivery has a `switch.supernotify_delivery_XXXX` entity, on its transport's service device, listed under the transport in the integration, that is the delivery `enabled` flag, with the delivery configuration as attributes. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the delivery, and turning it on enables it again, for run-time control of notifications. Each transport also has a switch, `switch.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled, without changing the delivery switches themselves. Only a transport that is loaded, and so usable, has a switch, as do only its deliveries. A switch left from a transport or delivery that is no longer loaded shows as unavailable, and can be deleted from its entity settings.
 
 Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
 
@@ -2371,6 +2385,8 @@ An `error` is only seen when the call to the action waits for its result, as wit
 Deprecated
 
 The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
+
+To remove them now, switch off **Deprecated Entities** in the integration's *Housekeeping* options, which is only there while you have some. They can't be brought back afterwards.
 
 ### Notify Entity
 
@@ -2748,17 +2764,32 @@ With the `recipient` definition you can:
 - Create a **Notify Entity** for that person, which will use any or all of the delivery transports enabled for them.
 - The Notify Entity for Recipient can also be a member of a **Notify Entity Group**
 
+## Adding or Changing a Recipient
+
+Recipients are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, where everyone [discovered](#automatic-recipient-discovery) is already listed as a recipient, and choose the cog by one to change it. Anything set there adds to, or overrides, what Supernotify discovers for them, so you only need to set what discovery can't find.
+
+**Add recipient** is for someone who isn't discovered, usually someone who isn't a Home Assistant user at all, like a relative to be e-mailed. Give their **Name**, or pick a **Person** or **User** when [discovery](#automatic-recipient-discovery) is switched off. **User** only lists users with no Person, and isn't shown when every user has one. Someone with only a name has no mobile devices, and never counts towards occupancy.
+
+When adding or changing a recipient:
+
+1. Fill in how to reach them:
+   - **E-mail address** and **Phone number**, used by e-mail and SMS deliveries
+   - **Alias**, a name to use in place of the Person's
+   - **Enabled**, to switch the recipient off without removing them
+   - **Mobile devices**, the mobile app devices to notify, from those registered in Home Assistant for them - untick any that shouldn't be used
+   - **Mobile Device Discovery**, to pick up devices newly registered for them
+   - **Targets** and **Custom targets**, more places to notify them, chosen just as in the `supernotify.notify` action - entities, devices, areas, floors and labels from the selector, and anything else as text, one per line: an e-mail address, a phone number, or `category:value`, such as `telegram_chat_id:12345`. The form lists the known categories, and checks the value of one of those, so `email:` has to be followed by an e-mail address
+1. Optionally, under **Advanced - Delivery Overrides**, set how individual deliveries treat them - see [Enabling, Disabling and Overriding Targets per Delivery](#enabling-disabling-and-overriding-targets-per-delivery).
+
+Recipients from YAML
+
+Recipients used to be set under `recipients:` in YAML. From version `2.18.0` those are imported into the integration when it starts, and a repair asks for them to be removed from the YAML, where they are ignored from then on. Until they are removed, a recipient deleted in the integration is imported again at the next restart.
+
 ## Automatic Recipient Discovery
 
-The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch this off using `recipient_discovery: false` in the configuration. And sice each *Recipient* is automatically populated with all their mobile devices, an empty YAML config can do a lot.
+The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch off **Recipient Discovery** in the integration's settings. And since each *Recipient* is automatically populated with all their mobile devices, there's a lot done without any configuration.
 
-Disabling One of the Automatic Discoveries
-
-```yaml
- recipients:
-    - person: person.new_home_owner
-      enabled: false
-```
+Everyone discovered is listed as a recipient in the integration. To leave one out, change their recipient, and untick **Enabled** - deleting a discovered recipient only has them listed again at the next restart.
 
 ## Automatic Mobile App Discovery
 
@@ -2768,17 +2799,9 @@ A mobile app with no `notify` action is skipped, since it can't be notified. An 
 
 This can be switched off by default for everyone from the UI config:
 
-or using, the advanced YAML config, per recipient:
+or per recipient, with **Mobile Device Discovery** when adding or changing them.
 
-```yaml
- recipients:
-    - person: person.new_home_owner
-      mobile_discovery: false
-```
-
-It is also possible to have discovery off by default at platform level, then selectively re-enabled for the folk you want, using the `recipients` configuration.
-
-If you want to do the device registration manually, see [Manual Device Registration](#manual-device-registration)
+It is also possible to have discovery off by default, then selectively re-enabled for the folk you want, as recipients.
 
 ### Users without Person entries
 
@@ -2792,21 +2815,11 @@ Home Assistant uses the *Person* to say who is home or away, and Supernotify fol
 
 ### Disabling Auto Discovered Devices
 
-Its usually easier to let Supernotify automatically find devices, and only intervene when there's one you don't want, or isn't working. Use the `enabled` flag to stop this being used for notifications.
-
-```yaml
-recipients:
-   - person: person.joe_mctest
-     mobile_devices:
-       - mobile_app_id: mobile_app_joes_broken_phone
-         enabled: False
-```
-
-If for some odd reason auto-discover doesn't find a device, you can enable it by listing it under `mobile_devices` in a similar way (`enabled` defaults to `True`).
+Its usually easier to let Supernotify automatically find devices, and only intervene when there's one you don't want, or isn't working. Change the person's recipient, and untick the device under **Mobile devices** to stop it being used for notifications.
 
 ### Missing Mobile Apps
 
-At start up, each enabled mobile device of a recipient is checked for a matching `notify.mobile_app_XXXX` action. If there isn't one, for example because the phone was replaced or the Home Assistant app removed from it, a repair is raised in Home Assistant. Remove the device from Home Assistant, or disable it as above, to clear the repair, or ignore the repair in Home Assistant if the device is only away for a while.
+At start up, each enabled mobile device of a recipient is checked for a matching `notify.mobile_app_XXXX` action. If there isn't one, for example because the phone was replaced or the Home Assistant app removed from it, a repair is raised in Home Assistant. Remove the device from Home Assistant, or untick it as above, to clear the repair, or ignore the repair in Home Assistant if the device is only away for a while.
 
 A notification that includes a device with no action still goes to all the other targets. The device is snoozed for a day, and the failed call is listed in the [archived notification](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md).
 
@@ -2842,11 +2855,13 @@ Example Message to Some People
 
 ## Entities
 
-Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again. This lasts across restarts and reloads, until the recipient's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
+Each recipient has, listed under them in the integration, their [Notify Entity](#notify-entity) and a `switch.supernotify_recipient_XXXXX` entity, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again. This lasts across restarts and reloads, until the recipient's **Enabled** setting is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 Deprecated
 
 The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
+
+To remove them now, switch off **Deprecated Entities** in the integration's *Housekeeping* options, which is only there while you have some. They can't be brought back afterwards.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own automation to determine which people get notified when.
 
@@ -2884,13 +2899,29 @@ Notify Entities get updated on every notification by Supernotify for that person
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 
-A recipient's `delivery:` block (also used below for [per-delivery targets](#manual-configuration)) can switch a delivery on or off just for that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else.
+**Deliveries**, in the **Advanced - Delivery Overrides** section of the form for adding or changing a recipient, sets how individual deliveries treat that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else. Every Supernotify has some deliveries, even with no configuration, and the form lists them.
+
+It's YAML, keyed by delivery name, with any of these for each:
+
+- `enabled`, `true` or `false`, switches the delivery on or off just for that recipient - leave it out to leave it as the delivery is set
+- `target` adds targets used only for that recipient on that delivery
+- `data` adds to the data the delivery sends for that recipient
+
+```yaml
+html_email:
+  target: assistant@myhome.net
+slack:
+  enabled: true
+  target: slack_channel:A20H2AN55DX
+```
+
+A delivery left out isn't changed for the recipient, and emptying the field removes all the changes.
 
 ### Enabling a Delivery Just for One Recipient
 
-A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone, or conversely `enabled: false` to switch it off just for those recipients.
+A delivery doesn't need to be turned on for everybody to be useful to one person - setting **Enabled** for a delivery on a recipient switches it on for them alone, or conversely **Disabled** to switch it off just for that recipient.
 
-A `target:` override can also be used, independently of the enabled status, to override the target only for that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/#selecting-targets) that only Jane uses:
+Targets can also be set, independently of the enabled status, for only that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/#selecting-targets) that only Jane uses:
 
 ```yaml
 delivery:
@@ -2900,17 +2931,19 @@ delivery:
     enabled: false
     options:
       target_categories: slack_channel
-
-recipients:
-  - person: person.jane
-    delivery:
-      slack:
-        enabled: true # leave this out if the slack delivery is usually enabled for everyone
-        target:
-          slack_channel: A20H2AN55DX
 ```
 
-Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane's recipient entry, and only because she explicitly set `enabled: true`.
+Then change Jane's recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+slack:
+  enabled: true
+  target: slack_channel:A20H2AN55DX
+```
+
+leaving out `enabled` if the slack delivery is usually enabled for everyone.
+
+Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane, and only because it was explicitly enabled for her.
 
 ### Disabling a Delivery for One Recipient
 
@@ -2921,104 +2954,28 @@ delivery:
   html_email:
     transport: email
     template: default.html.j2
+```
 
-recipients:
-  - person: person.new_home_owner
-    email: jalaboli@myhome.net
-  - person: person.grumpy_teenager
-    email: leave.me.alone@myhome.net
-    delivery:
-      html_email:
-        enabled: false
+Change `person.grumpy_teenager`'s recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+html_email:
+  enabled: false
 ```
 
 Everyone else still gets `html_email`; `person.grumpy_teenager` is left out of just that delivery, while still receiving anything else that applies to them (mobile push, other deliveries, and so on).
 
 ### Adding a Target for One Recipient
 
-The same `delivery:` block can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery:
+The same delivery change can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery, with `target: assistant@myhome.net` for `html_email`.
 
-```yaml
-recipients:
-  - person: person.new_home_owner
-    delivery:
-      html_email:
-        target:
-          - assistant@myhome.net
-```
+`enabled`, `target` and `data` can be combined as needed - `enabled: false` always wins over any targets or data set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
 
-`enabled`, `target` and `data` can be combined in the same block as needed - `enabled: false` always wins over any `target`/`data` set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
+## Devices Kept Out of Occupancy
 
-## Manual Configuration
+Adding devices to the Person in Home Assistant affects the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you would like to have notifications on, but aren't always with you, adding them to Person might make it look as if you're home when its only an iPad sitting on a shelf.
 
-Simple Example
-
-```yaml
- recipients:
-    - person: person.new_home_owner
-      email: jalaboli@myhome.net
-      phone_number: "+430504103451"
-      delivery:
-        alexa_announce:
-          target:
-            - media_player.echo_study
-```
-
-## Manual Device Registration
-
-### Simple
-
-One good reason for manual device registration is that adding devices to the Person in Home Assistant affects the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you would like to have notifications on, but aren't always with you, adding them to Person might make it it look as if you're home when its only an iPad sitting on a shelf.
-
-So adding these devices to the `recipients` section of Supernotify configuration will mean they get included in notifications, but won't be used for occupancy, by Supernotify or other integrations.
-
-Simple Example
-
-```yaml
-recipients:
-    - person: person.new_home_owner
-      mobile_devices:
-        - mobile_app_id: mobile_app_old_laptop
-        - mobile_app_id: mobile_app_ipad11
-```
-
-### Complicated
-
-Its possible to hold as many details about the device as Home Assistant itself does, although Supernotify does not currently care about manufacturers and models other than for matching rules.
-
-Complicated Example
-
-```yaml
- recipients:
-    - person: person.new_home_owner
-      alias: sysadmin
-      email: jalaboli@myhome.net
-      phone_number: "+430504103451"
-      delivery:
-        mobile_push:
-          target:
-            - mobile_app.new_iphone
-          data:
-            push:
-              sound:
-                name: default
-        alexa_announce:
-          target:
-            - media_player.echo_study
-    - person: person.bidey_in
-      phone_number: "+4287600013834"
-      target:
-        - switch.garden_shed_chime
-      mobile_discovery: false
-      mobile_devices:
-        - manufacturer: nokia
-          model: 6110
-          mobile_app_id: mobile_old
-          device_tracker: device_tracker.nokia_6110
-      delivery:
-        text_message:
-        enabled: false
-```
+**Mobile devices** offers every mobile app device registered in Home Assistant for the recipient's user, whether or not it's one of the Person's trackers, so these can be notified without counting towards occupancy.
 
 ## References
 
@@ -3420,7 +3377,7 @@ Both forms can be combined freely and nest to any depth.
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/
 
-By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
+By default, advanced configuration - `delivery`, `scenarios`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, the action name, [recipients](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#adding-or-changing-a-recipient) and [transports](https://supernotify.rhizomatics.org.uk/latest/transports/#customizing-transports)) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
 
 Those settings are ignored if they're in the `supernotify` YAML section, and a single repair lists the ones found, so they can be set in the integration's options instead and removed from the YAML.
 
@@ -3452,7 +3409,7 @@ notify:
       ...
 ```
 
-That form is no longer read. If Home Assistant still finds one, a repair appears in **Settings → System → Repairs** offering to migrate it automatically: it writes a `supernotify.yaml` file with your delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze settings and adds the `supernotify: !include supernotify.yaml` line above to `configuration.yaml` for you, reloading immediately (no restart needed). A `name:` in the old block is preserved as the Integration's configured name automatically, independent of whether you run this repair.
+That form is no longer read. If Home Assistant still finds one, a repair appears in **Settings → System → Repairs** offering to migrate it automatically: it writes a `supernotify.yaml` file with your delivery/transports/scenarios/cameras/action_groups/links/snooze settings, imports your recipients and transports into the integration, and adds the `supernotify: !include supernotify.yaml` line above to `configuration.yaml` for you, reloading immediately (no restart needed). A `name:` in the old block is preserved as the Integration's configured name automatically, independent of whether you run this repair.
 
 You can just as easily do this move by hand instead of using the repair - either way works. Either way, the old `notify:` block itself is left in place and simply ignored; delete it yourself once you're happy the new configuration works. The repair keeps reappearing (and the old block stays harmless either way) until you do - once it's gone, the repair clears itself automatically on the next restart.
 
@@ -3492,17 +3449,7 @@ supernotify:
 
 This has the advantage that e-mail addresses can be defined in one place, and you can send targeted email notifications in automations by using the `person` entity instead.
 
-Supernotify Config
-
-```yaml
-supernotify:
-  ...
-  recipients:
-    - person: person.joe_mcdoe
-      email: joe@mcdoe.com
-    - person: person.billy_mcdoe
-      email: billy@weeschool.edu
-```
+Add each person as a recipient, under *Settings → Devices & services → Supernotify → Add recipient*, with their **E-mail address** - see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#adding-or-changing-a-recipient).
 
 ### On Action Call
 
@@ -4015,11 +3962,37 @@ These are the notification transport adaptors built into Supernotify:
 
 ## Customizing Transports
 
+Transports are set up in the integration, not YAML. Go to *Settings → Devices & services → Supernotify*, where every transport in use is listed already, to change it, or switch it off with **Enabled**. **Add transport** sets up one that needs configuring before it can be used, such as [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) with its action, or [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) with its aliases - it lists those not in use yet whose Home Assistant integration is installed.
+
+A transport's form has:
+
+- **Enabled**, to switch it off without removing it
+- **Connection**, only for a transport that makes its own connection, like [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) - the mail server's host, port, encryption, username, password, timeout and certificate check. The password is never shown, and left empty, the one set already is kept
+- **Delivery Defaults**, the defaults for its deliveries, the same as `delivery_defaults` in YAML:
+  - **Debug**, to wait for the result of each action its deliveries call, and record it
+  - **Action**, for a transport whose action is configured rather than fixed or found, such as generic
+  - **Inclusion** and **Priority**
+- **Delivery Defaults - Targets**:
+  - **Target usage**, how the targets below are used alongside a notification's own - see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets)
+  - **Targets** and **Custom targets**, chosen as in the `supernotify.notify` action
+- **Delivery Defaults - Advanced**, all as YAML:
+  - **Options**, the transport's own options, and **Extra Data**
+  - **Other delivery defaults**, for anything else, such as `occupancy`, `conditions`, `template` or `title`
+- **Advanced**, with **Load**, which leaves the transport out altogether when off, with no deliveries or switch. If disabled, the transport will have to be re-added with **Add transport** if needed in future
+
+So a YAML example elsewhere in this documentation, under `transports:`, is entered on that transport's form - its `delivery_defaults` `options` under **Options**, and so on.
+
+Deprecated settings, such as `device_domain` directly on a transport rather than in its options, raise a repair naming them. Saving the transport's form moves them to their replacements.
+
+Transports from YAML
+
+Transports used to be set under `transports:` in YAML. From version `2.18.0` those are imported into the integration when it starts, and a repair asks for them to be removed from the YAML, where they are ignored from then on.
+
 ### Options
 
 Most transport adaptors support an additional set of options, some common ones for handling titles or suppressing URLs, and some specific to a transport.
 
-In this example, image attachments for emails get tuned ( since these are commonly needed, the email delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
+In this example, entered as the email transport's **Action** and **Options**, image attachments for emails get tuned ( since these are commonly needed, the email delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
 
 ```yaml
 transports:
@@ -4037,7 +4010,7 @@ transports:
 
 ## Entities
 
-Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
+Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, on a service device of its own, named after the transport, or by its `alias` if it had one in YAML, and renamed like any other device, listed under its transport in the integration along with its deliveries' switches, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
 
 ### Table of Options
 
@@ -4932,12 +4905,6 @@ If it's not a standard target type, then make one up. In this example, for perso
 Config Snippets
 
 ```yaml
-recipients:
-  - person: person.my_user
-    delivery:
-      slack:
-        target:
-           slack_channel: A20H2AN55DX
 delivery:
   slack:
       transport: generic
@@ -6615,6 +6582,64 @@ To get canned sounds rather than speech, use the [Chime](https://supernotify.rhi
 - [TTS Integrations](https://www.home-assistant.io/integrations/#text-to-speech)
   - [Nabu Casa TTS](https://support.nabucasa.com/hc/en-us/articles/25619386304541-Text-to-speech-TTS)
 - [Android Companion App TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+
+# LG webOS TV Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/webostv/
+
+## Motivation
+
+Shows notifications as a toast on LG webOS TVs, through the Home Assistant [LG webOS TV](https://www.home-assistant.io/integrations/webostv/#notifications) integration.
+
+The integration gives each TV a notify action of its own, such as `notify.living_room_tv`, rather than a notify entity, so on their own the TVs can't be reached by area. This transport targets each TV's `media_player` entity instead, and finds its notify action, so a TV can be reached by area, floor, label or device as well as by its entity.
+
+## Features
+
+- No set up: a `webostv` delivery is made whenever the LG webOS TV integration is set up.
+- Only sent to a TV when it is targeted, directly or by its area, floor, label or device, so a TV isn't interrupted by every notification in the house.
+- TVs that are off, or unavailable, are skipped, as the integration can't reach them.
+- Only the message is shown. The title is used only when there's no message.
+
+## Configuration
+
+Nothing is needed. Target the TV, or where it is:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Dinner is ready
+  target:
+    area_id: lounge
+```
+
+Targeting the whole ground floor reaches every TV on it that's on, as well as anything else there, such as Alexa devices:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Someone's at the door
+  target:
+    floor_id: ground
+```
+
+## webOS TV Data Keys
+
+- `icon` — path to an image file on the Home Assistant host, shown as the toast's icon. Any other `data` is left out, since the integration takes nothing else
+
+```yaml
+action: notify.supernotify
+data:
+  message: Dinner is ready
+  target:
+    area_id: lounge
+  data:
+    icon: /config/www/dinner.png
+```
+
+## Notes
+
+- The notify action is named by the integration after the TV, as it was called when set up. After renaming the TV, its notify action keeps the old name until the integration is reloaded.
+- A TV that is skipped because it's off isn't an error, so a delivery `fallback:` isn't used for it. To reach someone another way when the TV is off, use a [scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) with a condition on the TV's state.
 # Recipes
 
 # Recipe Index
@@ -6638,6 +6663,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancywildcardscondition
 - [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushandroid
 - [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
+- [Easy Notifications for Someone Who Isn't a Home Assistant User](https://supernotify.rhizomatics.org.uk/latest/recipes/recipient_without_account/index.md) emailtelegramrecipient
 - [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushapplemacos
 - [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md)
 - [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
@@ -6649,6 +6675,7 @@ Select a tag to see only the recipes with that tag, and select it again to see t
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
 - [Send Notifications from Pyscript](https://supernotify.rhizomatics.org.uk/latest/recipes/pyscript/index.md) pyscriptcamera
+- [Send Notifications with Action Buttons Only Where They Work](https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/index.md) scenarioconditionmobile_pushpushover
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushandroidapplezero_yaml_config
 - [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) doorbellalexavoice_assistantcameramobile_pushchimeoccupancyzero_yaml_config
@@ -6902,6 +6929,71 @@ scenarios:
             state: "on"
 ```
 
+# Recipe - Send Buttons Only Where They Work
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/buttons_where_supported/
+
+## Purpose
+
+Use Pushover for everyday notifications, but send any notification with action buttons to the Home Assistant Companion App instead, since Pushover can't show buttons.
+
+Supernotify picks deliveries by target, not by what the notification contains, so on its own a notification with buttons still goes to Pushover, with the buttons left out. A delivery's `fallback:` doesn't help either, as that is only used when a delivery fails.
+
+## Implementation
+
+A **Scenario** with a condition on the `notification_actions` and `notification_action_groups` [condition variables](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#condition-variables), which hold the `actions` and `action_groups` given on the notify action. When either has something in it, the scenario switches Pushover off and Mobile Push on.
+
+## Example Configuration
+
+```yaml
+delivery:
+  pushover:
+    transport: pushover
+    inclusion: default
+  mobile_push:
+    transport: mobile_push
+    inclusion: scenario
+
+scenarios:
+  needs_buttons:
+    alias: Buttons only work on the Companion App
+    conditions: "{{ (notification_actions + notification_action_groups) | length > 0 }}"
+    delivery:
+      pushover:
+        enabled: false
+      mobile_push:
+
+action_groups:
+  garage:
+    - action: CLOSE_GARAGE
+      title: Close the garage
+```
+
+Either of these notifications goes to the Companion App, and one without `actions` or `action_groups` goes to Pushover:
+
+```yaml
+action: notify.supernotify
+data:
+  message: Garage door left open
+  action_groups:
+    - garage
+```
+
+```yaml
+action: notify.supernotify
+data:
+  message: Garage door left open
+  actions:
+    - action: CLOSE_GARAGE
+      title: Close it now
+```
+
+## Notes
+
+- Action groups added by a scenario aren't in `notification_action_groups`, since scenarios add them after their conditions are checked. Only what's given on the notify action is there.
+- Buttons put directly in a Companion App style `data: actions:` aren't in `notification_actions`, but can be checked with `notification_data.actions`.
+- To send to both, leave out the `pushover: enabled: false` part.
+
 # Recipe - Channel Specific Messages
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/
@@ -6999,11 +7091,6 @@ The mobile action itself will be handled by the [Auto Arm](https://autoarm.rhizo
 
 ```yaml
 supernotify:
-  recipients:
-    - person: person.joe_mcphee
-      mobile_devices:
-          - mobile_app_id: mobile_app_joe_nokia
-
   delivery:
     mobile_push:
       transport: mobile_push
@@ -7218,13 +7305,13 @@ Define a target on the `email` transport, and set the `target_usage` to `merge_d
 
 ## Example Configuration
 
+Change the `email` transport under *Settings → Devices & services → Supernotify*, and in its *Delivery Defaults*, set the **Target usage** to `merge_delivery` and add `mailarchive@mymail.com` as a **Custom target**. As YAML, that is the transport's:
+
 ```yaml
-    transports:
-      email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+delivery_defaults:
+  target_usage: merge_delivery
+  target:
+    - mailarchive@mymail.com
 ```
 
 ## Variations
@@ -7237,17 +7324,17 @@ This will work identically for any transport, there's nothing email specific in 
 
 You have both `html_email` and plain `email` deliveries, and only want to cc the plain ones.
 
-In this case, define the defaults at delivery level rather than transport level.
+In this case, set the target on the delivery rather than the transport.
 
 The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.com` address will only be added if there's already an e-mail being sent with other targets.
 
 ```yaml
     delivery:
       email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+        transport: email
+        target_usage: merge_delivery
+        target:
+          - mailarchive@mymail.com
 ```
 
 If you want to always have the email sent, even if there are no other recipients, then set `target_usage: merge_always`.
@@ -7257,12 +7344,16 @@ Alternatively, set up a dedicated delivery like this, which will always send off
 ```yaml
   delivery:
     email_archive:
-      action: notify.smtp
-      delivery_defaults:
-          target_usage: fixed
-          target:
-              - mailarchive@mymail.com
+      transport: email
+      inclusion: default
+      target_usage: fixed
+      target:
+        - mailarchive@mymail.com
 ```
+
+Only when the delivery is selected
+
+`merge_always` and a dedicated delivery like `email_archive` only send when their delivery is selected for the notification. A delivery whose **Inclusion** is `explicit` or `scenario`, or any delivery without an `inclusion` of its own, or from its transport's *Delivery Defaults*, when **Default Inclusion** is `explicit` in the integration's *Delivery Control* options, is only selected when a notification names it, or a scenario switches it on - so not for every notification. Give it `inclusion: default`, as above, to have it used for every notification.
 
 # Recipe - Except Scenario
 
@@ -7496,17 +7587,11 @@ Vary how and which notifications are made if someone is home on their own.
 
 ## Implementation
 
-Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when `recipients` are defined in the config. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
+Uses a **Scenario** and the automatic occupancy checks that are enabled using mobile discovery when the *Person* integration is used in Home Assistant and automatically discovered in Supernotify. [Auto Arm](https://autoarm.rhizomatics.org.uk/) or custom automations set the *Alarm Control Panel* state to night.
 
 ## Example Configuration
 
 ```yaml
-recipients:
-    - person: person.joe_mcphee
-      email: joe.mcphee@home.mail.net
-      phone_number: "+3294924848"
-    - person: person.jabilee_sokata
-      email: jab@sokata.family.net
 scenarios:
     lone_night:
         alias: only one person home at night
@@ -7527,6 +7612,8 @@ scenarios:
 ```
 
 ## Variations
+
+- Add email addresses, phone numbers, telegram IDs etc to Recipients in the Supernotify configuration screen to give more ways to contact people
 
 - Determine night time using the `sun` entity, or a daylight sensor device, rather than alarm status.
 
@@ -7700,11 +7787,10 @@ Note that `inclusion: fallback` plays no part in this - see the warning below.
 
 ## Example Configuration
 
+In this example, there are at least two [Person](https://www.home-assistant.io/integrations/person/) entries added in Home Assistant.
+
 ```yaml
 supernotify:
-  recipients:
-    - person: person.alex
-    - person: person.sam
   delivery:
     notify_home:
       transport: mobile_push
@@ -7732,6 +7818,8 @@ Add a third recipient and both deliveries pick it up automatically - nothing els
 
 `occupancy: only_in` narrows *which recipients* a delivery reaches, not which of a person's own registered devices get notified - if someone has two phones, both get the notification. To pin a delivery to one named device per person instead, drop the shared `notify_home` delivery and give each person their own, with `target_usage: fixed` and a bare `mobile_app_id` target (see [Explicit Targets](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/#explicit-targets)):
 
+In this example there's a *Person* in Home Assistant named `alex`
+
 ```yaml
   delivery:
     notify_alex:
@@ -7751,7 +7839,7 @@ This doesn't scale the way the `occupancy`-only version does - a new recipient n
 
 `inclusion: fallback` would do nothing here - don't add it
 
-It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual gating here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
+It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual control here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
 
 # Recipe - Pyscript
 
@@ -7899,6 +7987,89 @@ So the two together say "only mobile push". Other notifications are not affected
 - Add `done_message` to the alert to be told when the rain has stopped, which goes through the same scenario.
 - Add more deliveries to the scenario by name, such as a chime, and they are sent too.
 - The same notify entity works anywhere else that takes one, like an automation's `notify.send_message`.
+
+# Recipe - Notify Someone Who Isn't a Home Assistant User
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/recipient_without_account/
+
+## Purpose
+
+Keep someone in the loop who has no Home Assistant account, like a relative, a neighbour keeping an eye on the house, or a cleaner. Notify them by e-mail and Telegram, without repeating their address and chat id in every automation.
+
+## Implementation
+
+A **Recipient** added by name in the integration, with their e-mail address, and their Telegram chat id as a custom target. No YAML is needed.
+
+Supernotify gives them a recipient id, `user.` followed by their name in lower case with underscores, and a *Notify Entity*, `notify.recipient_` followed by the same. Either can be used as a target, and stands in for everything set up for them - the e-mail delivery gets their e-mail address, and the Telegram delivery gets their chat id.
+
+## Prerequisites
+
+- The [email transport](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md) with a mail server connection, of its own or reused from the SMTP integration
+- The [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration, with the recipient's chat id allowed. The [telegram transport](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md) is set up automatically once it is there
+- Their Telegram chat id - one way to find it is to have them message the bot, and look at the `telegram_text` event in *Developer Tools → Events*
+
+## Adding the Recipient
+
+Go to *Settings → Devices & services → Supernotify → Add recipient*.
+
+1. Give their **Name**, such as `Granny Smith`, leaving **Person** and **User** empty
+1. Fill in:
+   - **E-mail address** - `granny@example.com`
+   - **Custom targets** - `telegram_chat_id:215678938`
+
+That's it. They're listed under the integration as *Recipient - Granny Smith*, with `notify.recipient_granny_smith` and `switch.supernotify_recipient_granny_smith` entities.
+
+## Sending Notifications
+
+Address them by their recipient id:
+
+```yaml
+action: supernotify.notify
+data:
+  title: Sunday lunch
+  message: Roast at 1pm
+  target: user.granny_smith
+```
+
+or their notify entity, from anything that takes a standard Home Assistant notify target:
+
+```yaml
+action: notify.send_message
+target:
+  entity_id: notify.recipient_granny_smith
+data:
+  title: Sunday lunch
+  message: Roast at 1pm
+```
+
+Either sends an e-mail to `granny@example.com`, and a Telegram message to chat `215678938`. Their recipient id can also be mixed in with other targets, such as `person.bob`.
+
+Only the deliveries that are selected
+
+A recipient is only sent to by the deliveries selected for the notification. If the e-mail or Telegram delivery is only used when asked for - its **Inclusion** is `explicit` or `scenario`, or **Default Inclusion** is `explicit` in the integration's *Delivery Control* options - nothing is sent to them unless the notification names the delivery, or a scenario switches it on. That can mean nothing at all for someone with no mobile devices, and the archived notification lists them under `unassigned_targets`.
+
+To always use a delivery for them, change their recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+email:
+  enabled: true
+telegram:
+  enabled: true
+```
+
+See [Enabling a Delivery Just for One Recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#enabling-a-delivery-just-for-one-recipient).
+
+A notification with no `target` goes to every recipient, so they get those too. To keep them off one delivery, use **Advanced - Delivery Overrides** on their recipient - see [Disabling a Delivery for One Recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#disabling-a-delivery-for-one-recipient). To pause them altogether for a while, turn off their switch.
+
+## Variations
+
+- Add a **Phone number** too, for an SMS delivery
+- Other custom targets work the same way, such as a `discord_channel:` for the [discord transport](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)
+
+## See Also
+
+- [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)
+- [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md)
 
 # Recipe - Home Assistant Restart
 
@@ -8193,6 +8364,10 @@ If the porch camera can pan, tilt or zoom, have it [move to the door before the 
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/
 
+Info
+
+There is now a much easier way of setting this up, with no configuration needed, using v0.4.0 or later of [Camera AutoNotify](https://github.com/rhizomatics/camera_autonotify) which will automatically detect and setup GenAI notifications when Frigate has them configured.
+
 ## Purpose
 
 A voice assistant will announce a description of events discovered on CCTV camera, with an evaluation of risk.
@@ -8475,6 +8650,7 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | FIRST | always          | default   | MESSAGE                                                        |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | FIRST | always          | default   | MESSAGE                                                        |
 
 ## Target Categories
 
@@ -8503,6 +8679,7 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | phone                                                                       | -                         | -                                                                                 |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | telegram_chat_id, entity_id (domain=notify, platform=telegram_bot)          | -                         | -                                                                                 |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | -                                                                           | -                         | entity_id (domain=media_player), mobile_app_id                                    |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | entity_id (domain=media_player, platform=webostv)                           | -                         | -                                                                                 |
 
 ## Default Options
 
@@ -8529,3 +8706,4 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [sms](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)                               | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | COMBINE_TITLE | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | False      | N/A                                                                      |
 | [telegram](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)                     | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
 | [tts](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)                               | N/A              | False            | ['mobile_app']    | {'exclude': ['Apple']}     | N/A                            | N/A              | N/A                                         | N/A              | STANDARD      | N/A    | N/A                  | N/A             | N/A              | N/A   | True          | N/A             | True       | \['^media_player.[A-Za-z0-9\_]+$', '(notify.)?mobile_app\_[a-z0-9\_]+'\] |
+| [webostv](https://supernotify.rhizomatics.org.uk/latest/transports/webostv/index.md)                       | N/A              | N/A              | N/A               | N/A                        | N/A                            | N/A              | N/A                                         | N/A              | N/A           | N/A    | N/A                  | N/A             | N/A              | N/A   | N/A           | N/A             | N/A        | N/A                                                                      |
