@@ -7302,13 +7302,13 @@ Define a target on the `email` transport, and set the `target_usage` to `merge_d
 
 ## Example Configuration
 
+Change the `email` transport under *Settings → Devices & services → Supernotify*, and in its *Delivery Defaults*, set the **Target usage** to `merge_delivery` and add `mailarchive@mymail.com` as a **Custom target**. As YAML, that is the transport's:
+
 ```yaml
-    transports:
-      email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+delivery_defaults:
+  target_usage: merge_delivery
+  target:
+    - mailarchive@mymail.com
 ```
 
 ## Variations
@@ -7321,17 +7321,17 @@ This will work identically for any transport, there's nothing email specific in 
 
 You have both `html_email` and plain `email` deliveries, and only want to cc the plain ones.
 
-In this case, define the defaults at delivery level rather than transport level.
+In this case, set the target on the delivery rather than the transport.
 
 The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.com` address will only be added if there's already an e-mail being sent with other targets.
 
 ```yaml
     delivery:
       email:
-        delivery_defaults:
-            target_usage: merge_delivery
-            target:
-                - mailarchive@mymail.com
+        transport: email
+        target_usage: merge_delivery
+        target:
+          - mailarchive@mymail.com
 ```
 
 If you want to always have the email sent, even if there are no other recipients, then set `target_usage: merge_always`.
@@ -7341,12 +7341,16 @@ Alternatively, set up a dedicated delivery like this, which will always send off
 ```yaml
   delivery:
     email_archive:
-      action: notify.smtp
-      delivery_defaults:
-          target_usage: fixed
-          target:
-              - mailarchive@mymail.com
+      transport: email
+      inclusion: default
+      target_usage: fixed
+      target:
+        - mailarchive@mymail.com
 ```
+
+Only when the delivery is selected
+
+`merge_always` and a dedicated delivery like `email_archive` only send when their delivery is selected for the notification. A delivery whose **Inclusion** is `explicit` or `scenario`, or any delivery without an `inclusion` of its own, or from its transport's *Delivery Defaults*, when **Default Inclusion** is `explicit` in the integration's *Delivery Control* options, is only selected when a notification names it, or a scenario switches it on - so not for every notification. Give it `inclusion: default`, as above, to have it used for every notification.
 
 # Recipe - Except Scenario
 
@@ -8036,6 +8040,21 @@ data:
 ```
 
 Either sends an e-mail to `granny@example.com`, and a Telegram message to chat `215678938`. Their recipient id can also be mixed in with other targets, such as `person.bob`.
+
+Only the deliveries that are selected
+
+A recipient is only sent to by the deliveries selected for the notification. If the e-mail or Telegram delivery is only used when asked for - its **Inclusion** is `explicit` or `scenario`, or **Default Inclusion** is `explicit` in the integration's *Delivery Control* options - nothing is sent to them unless the notification names the delivery, or a scenario switches it on. That can mean nothing at all for someone with no mobile devices, and the archived notification lists them under `unassigned_targets`.
+
+To always use a delivery for them, change their recipient, and under **Advanced - Delivery Overrides** set **Deliveries** to:
+
+```yaml
+email:
+  enabled: true
+telegram:
+  enabled: true
+```
+
+See [Enabling a Delivery Just for One Recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#enabling-a-delivery-just-for-one-recipient).
 
 A notification with no `target` goes to every recipient, so they get those too. To keep them off one delivery, use **Advanced - Delivery Overrides** on their recipient - see [Disabling a Delivery for One Recipient](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#disabling-a-delivery-for-one-recipient). To pause them altogether for a while, turn off their switch.
 
