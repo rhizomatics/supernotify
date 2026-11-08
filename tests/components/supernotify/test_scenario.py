@@ -828,25 +828,12 @@ async def test_scenario_action_groups_not_in_condition_variables(hass: HomeAssis
     # a scenario's own action_groups are applied after conditions, and don't leak back into them
     ctx = TestingContext(
         homeassistant=hass,
-        yaml="""
-name: Supernotify
-platform: supernotify
-delivery:
-  pushover_push:
-    transport: dummy
-    inclusion: default
-scenarios:
-  garage:
-    action_groups:
-      - garage_doors
-action_groups:
-  lights:
-    - action: LIGHTS_OFF
-      title: Lights off
-  garage_doors:
-    - action: CLOSE_GARAGE
-      title: Close
-""",
+        scenarios={"garage": {"action_groups": ["garage_doors"]}},
+        mobile_actions={
+            "lights": [{"action": "LIGHTS_OFF", "title": "Lights off"}],
+            "garage_doors": [{"action": "CLOSE_GARAGE", "title": "Close"}],
+        },
+        deliveries={"pushover_push": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"}},
         transport_types=[DummyTransport],
     )
     await ctx.test_initialize()
