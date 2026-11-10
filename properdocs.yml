@@ -195,6 +195,9 @@ plugins:
         - docgen/options_table.py
         - docgen/render_templates.py
 
+extra_css:
+  - assets/stylesheets/extra.css
+
 extra_javascript:
   - javascripts/markdown_actions.js
   - javascripts/nav_collapse.js
