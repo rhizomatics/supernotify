@@ -65,9 +65,10 @@ The notification can have a `message_html` supplied for html that will be used i
 
 ## HTML Templates
 
-HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc. Templates are read once and kept, so restart Home Assistant after changing one.
 
-Templates are read once and kept, so restart Home Assistant after changing one.
+!!! tip
+    [HTML EMail Renders](../reference/html_email_renders/index.md) show previews of how the default template looks for different priorities.
 
 Padding to nudge e-mail clients from reading too deeply into the e-mail for in-box summaries can be tuned with `preheader_blank` and `preheader_length` configuration in the transport `options`. The other useful option is `strict_template` to switch on or off the stricter
 Jinja2 template validation.
@@ -77,7 +78,7 @@ Jinja2 template validation.
 Supernotify ships with a built in template, `default.html.j2` which can be used by setting `template: default.html.j2` on the delivery. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
 it into a custom template directory, usually inside Home Assistant's `\config` directory. Templates can live in this directory, or in an `email` subdirectory ( the top-level is for templates that could be used with any transport, and `email` only for this one).
 
-![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
+![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png){width=500}
 
 Once a template is in that directory, set it as the `template` of an email delivery, and select that delivery when sending a notification:
 
