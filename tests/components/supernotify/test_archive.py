@@ -306,13 +306,13 @@ def test_selected_returns_false_for_none_policy() -> None:
 
 
 async def test_archivable_object_abstract_stubs_return_none() -> None:
-    obj = ArchivableObject()  # type: ignore[abstract]  # ty: ignore[call-non-callable]
+    obj = ArchivableObject()  # type: ignore[abstract]  # ty: ignore[abstract-class-instantiation]
     assert obj.base_filename() is None
     assert obj.contents() is None
 
 
 async def test_archive_destination_abstract_stub_returns_none() -> None:
-    destination = ArchiveDestination()  # type: ignore[abstract]  # ty: ignore[call-non-callable]
+    destination = ArchiveDestination()  # type: ignore[abstract]  # ty: ignore[abstract-class-instantiation]
     result = await destination.archive(ArchiveCrashDummy())
     assert result is None
 

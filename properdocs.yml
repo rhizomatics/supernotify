@@ -83,6 +83,7 @@ plugins:
       validate_external_urls: False
       ignore_pages:
         - developer/reference/schemas/*
+        - developer/reference/html_email_renders/index.md
         - developer/classes.md
         - reference/transports.md
         - reference/options.md

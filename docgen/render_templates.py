@@ -23,7 +23,7 @@ from tests.components.supernotify.hass_setup_lib import TestingContext
 if TYPE_CHECKING:
     from custom_components.supernotify.transports.email import EmailTransport
 
-output_root = "developer/reference/HTML Email Renders"
+output_root = "reference/html_email_renders"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,9 +66,18 @@ async def create_examples() -> None:
             t.write(html)
             t.write("\n")
 
-        nav["configuration", "example", "html_email_template", priority] = (
-            f"../developer/reference/html_email_renders/{dest_page}"
+        nav["configuration", "example", "html_email_template", priority] = f"../reference/html_email_renders/{dest_page}"
+
+    index_page = f"{output_root}/index.md"
+    with mkdocs_gen_files.open(index_page, "w") as df:
+        df.write("# HTML Email Renders\n\n")
+        df.write(
+            "Examples of the `default.html.j2` email template, rendered by `docgen/render_templates.py`"
+            " from the built-in templates, one per notification priority.\n\n"
         )
+        for priority in PRIORITY_VALUES:
+            df.write(f"- [{priority.capitalize()}](example-default-{priority}.md)\n")
+    mkdocs_gen_files.set_edit_path(index_page, "../docgen/render_templates.py")
 
     _LOGGER.debug("Finished template render")
 

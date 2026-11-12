@@ -194,8 +194,10 @@ include = ["custom_components/supernotify","tests"]
 
 [tool.ty.rules]
 unused-type-ignore-comment="ignore"
-# Home Assistant entities override is_on, extra_state_attributes etc. with a plain property
-invalid-property-type-override="ignore"
+# Home Assistant entities override is_on, extra_state_attributes etc. with a plain property,
+# where HA declares them as a (writable) cached_property
+incompatible-property-override="ignore"
+
 
 [[tool.ty.overrides]]
 include = ["tests/**"]
@@ -203,7 +205,8 @@ include = ["tests/**"]
 [tool.ty.overrides.rules]
 invalid-argument-type = "ignore"
 not-subscriptable = "ignore"
-unresolved-attribute = "ignore"
+missing-attribute = "ignore"
+missing-union-attribute = "ignore"
 
 # only one of the two test helper packages is installed at a time
 [[tool.ty.overrides]]
