@@ -59,9 +59,11 @@ The notification can have a `message_html` supplied for html that will be used i
 
 ## HTML Templates
 
-HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc. Templates are read once and kept, so restart Home Assistant after changing one.
 
-Templates are read once and kept, so restart Home Assistant after changing one.
+Tip
+
+[HTML EMail Renders](https://supernotify.rhizomatics.org.uk/latest/reference/html_email_renders/index.md) show previews of how the default template looks for different priorities.
 
 Padding to nudge e-mail clients from reading too deeply into the e-mail for in-box summaries can be tuned with `preheader_blank` and `preheader_length` configuration in the transport `options`. The other useful option is `strict_template` to switch on or off the stricter Jinja2 template validation.
 
