@@ -250,7 +250,7 @@ Chimes work well with scenarios, you can easily add a chime for all critical not
 
 **Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several underlying mechanisms (switch, siren, script, rest_command, media_player) with no single integration to discover, so it stays unconfigured until a transport-level `chime_aliases` option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own to use it directly.
 
-The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune.
+The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune. It always sounds every siren, ignoring any target on the action call (`target_usage: fixed`).
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording. This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
 
