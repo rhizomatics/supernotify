@@ -8,12 +8,11 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  release:
-    types: [published]
+  # a release's docs are deployed by release.yml, which publishes the release with its zip and then runs this
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag to deploy (e.g. v1.14.0)'
+        description: 'Release tag to deploy docs for (e.g. v1.14.0)'
         required: true
         type: string
       prerelease:
@@ -23,27 +22,6 @@ on:
         default: false
 
 jobs:
-  release-zip:
-    # separate from build, and outside its concurrency group, so HACS can download the zip as soon as possible
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.event.release.tag_name }}
-    steps:
-    - uses: actions/checkout@v7.0.1
-      with:
-        ref: ${{ env.TAG }}
-    - name: Package release zip
-      run: |
-        cd custom_components/supernotify
-        zip -r "${{ github.workspace }}/supernotify.zip" . -x "__pycache__/*" "*/__pycache__/*"
-    - name: Upload release zip asset
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload "$TAG" supernotify.zip --clobber
-
   build:
     runs-on: ubuntu-latest
     concurrency:
@@ -126,14 +104,9 @@ jobs:
         git config push.autoSetupRemote true
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git fetch origin gh-pages
-        if [ "${{ github.event_name }}" = "release" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag_name }}"
-            IS_PRERELEASE="${{ inputs.prerelease }}"
-          else
-            TAG="${{ github.event.release.tag_name }}"
-            IS_PRERELEASE="${{ github.event.release.prerelease }}"
-          fi
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG="${{ inputs.tag_name }}"
+          IS_PRERELEASE="${{ inputs.prerelease }}"
           if [[ "$IS_PRERELEASE" = "true" ]]; then
             echo "Deploying prerelease version: $TAG"
             uv run mike deploy --update-aliases "$TAG" beta

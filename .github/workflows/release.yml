@@ -1,0 +1,65 @@
+# Releases are immutable once published, so the zip HACS installs from (hacs.json zip_release) has to be attached
+# while the release is still a draft. Write the release as a draft in GitHub as usual, with its notes and whether
+# it's a pre-release, then run this from the Actions tab with its tag, to attach the zip, publish it, and deploy
+# that version's docs.
+
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag of the draft release, such as v2.18.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  # to start deploy.yml for the docs, as a release published with this workflow's token raises no release event
+  actions: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+    - name: Find the draft release
+      id: draft
+      run: |
+        release=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,targetCommitish)
+        if [ "$(jq -r .isDraft <<<"$release")" != "true" ]; then
+          echo "::error::$TAG is already published, and a published release can't have the zip added. Draft a new release."
+          exit 1
+        fi
+        # a tag chosen as new in the draft isn't made till the release is published, so till then the draft's
+        # target is what's released
+        if git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/$TAG" >/dev/null; then
+          ref="refs/tags/$TAG"
+        else
+          ref=$(jq -r .targetCommitish <<<"$release")
+        fi
+        echo "Releasing $TAG from $ref"
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"
+        echo "prerelease=$(jq -r .isPrerelease <<<"$release")" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/checkout@v7.0.1
+      with:
+        ref: ${{ steps.draft.outputs.ref }}
+
+    - name: Package release zip
+      run: |
+        cd custom_components/supernotify
+        zip -r "${{ github.workspace }}/supernotify.zip" . -x "__pycache__/*" "*/__pycache__/*"
+
+    - name: Attach zip to the draft
+      run: gh release upload "$TAG" supernotify.zip --clobber --repo "$GITHUB_REPOSITORY"
+
+    - name: Publish
+      run: gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"
+
+    - name: Deploy the release's docs
+      run: |
+        gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" \
+          -f tag_name="$TAG" -f prerelease="${{ steps.draft.outputs.prerelease }}"
