@@ -18,7 +18,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import OPTION_DEVICE_DISCOVERY
 from custom_components.supernotify.transports.chime import (
@@ -732,6 +732,22 @@ async def test_deliver_with_unrecognized_domain() -> None:
     )
     result = await uut.deliver(envelope)
     assert result is False
+
+
+async def test_deliver_without_targets_reports_no_target() -> None:
+    """With nothing to ring, the skip says why, rather than leaving it UNKNOWN"""
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME)
+
+    envelope = Envelope(
+        Delivery("chimes", ctx.delivery_config("chimes"), uut),
+        Notification(ctx, message="test"),
+        target=Target(),
+        data={"chime_tune": "high_alert"},
+    )
+    assert await uut.deliver(envelope) is False
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
 
 
 def test_build_aliases_with_empty_target() -> None:

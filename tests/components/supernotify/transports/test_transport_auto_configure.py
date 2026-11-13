@@ -48,6 +48,7 @@ from pytest_unordered import unordered
 from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
+    TARGET_USE_FIXED,
     TRANSPORT_ALEXA,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
@@ -477,10 +478,14 @@ async def test_alexa_devices_speak_all_and_announce_all_conditional(hass: HomeAs
     assert speak.target is not None
     assert speak.target.entity_ids == ["notify.bedroom_echo_speak"]
     assert speak.inclusion == [INCLUSION_EXPLICIT]
+    # "all" means all - a person or other target on the call mustn't narrow or empty it
+    assert speak.target_usage == TARGET_USE_FIXED
     announce = DeliveryConfig(result["alexa_devices_announce_all"], uut.delivery_defaults)
     assert announce.target is not None
     assert announce.target.entity_ids == ["notify.kitchen_echo_announce"]
     assert announce.inclusion == [INCLUSION_EXPLICIT]
+    # "all" means all - a person or other target on the call mustn't narrow or empty it
+    assert announce.target_usage == TARGET_USE_FIXED
 
 
 async def test_alexa_devices_excludes_speaker_groups(hass: HomeAssistant) -> None:
@@ -588,6 +593,8 @@ async def test_chime_siren_all_created_when_sirens_exist(hass: HomeAssistant) ->
     assert dc.target is not None
     assert dc.target.entity_ids == unordered(["siren.hallway", "siren.garage"])
     assert dc.inclusion == [INCLUSION_EXPLICIT]
+    # "all" means all - a person or other target on the call mustn't narrow or empty it
+    assert dc.target_usage == TARGET_USE_FIXED
 
 
 async def test_chime_no_siren_all_without_sirens(hass: HomeAssistant) -> None:

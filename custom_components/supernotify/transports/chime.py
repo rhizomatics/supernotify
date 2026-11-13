@@ -23,16 +23,19 @@ from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DURATION,
     CONF_INCLUSION,
+    CONF_TARGET_USAGE,
     CONF_TUNE,
     CONF_VOLUME,
     INCLUSION_EXPLICIT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
+    TARGET_USE_FIXED,
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
     SelectionRule,
+    SuppressionReason,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -384,6 +387,7 @@ class ChimeTransport(Transport):
             deliveries[STANDARD_DELIVERY_SIREN_ALL] = {
                 CONF_TARGET: {ATTR_ENTITY_ID: siren_entity_ids},
                 CONF_INCLUSION: [INCLUSION_EXPLICIT],
+                CONF_TARGET_USAGE: TARGET_USE_FIXED,
             }
 
         return deliveries
@@ -428,6 +432,7 @@ class ChimeTransport(Transport):
         chimes = 0
         if not expanded_targets:
             _LOGGER.info("SUPERNOTIFY Skipping chime, no targets")
+            envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
         if debug_trace:
             debug_trace.record_delivery_artefact(envelope.delivery.name, "expanded_targets", expanded_targets)

@@ -53,7 +53,7 @@ notification than used for other transports like email or mobile push.
 | `alexa_devices_speak_all` | Every `notify.*_speak` entity of the integration |
 | `alexa_devices_announce_all` | Every `notify.*_announce` entity of the integration |
 
-Each is only generated if there's at least one matching entity. Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
+Each is only generated if there's at least one matching entity, and always announces on all of them: any target on the action call, such as a `person_id`, is ignored for these two (`target_usage: fixed`). Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
 
 
 ## References

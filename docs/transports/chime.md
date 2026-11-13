@@ -288,7 +288,8 @@ to use it directly.
 
 The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is
 created that targets all of them. It is explicit-only, so it is used only when named in an action
-call or scenario, and needs no aliases since a siren can be turned on without a tune.
+call or scenario, and needs no aliases since a siren can be turned on without a tune. It always
+sounds every siren, ignoring any target on the action call (`target_usage: fixed`).
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
 This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.

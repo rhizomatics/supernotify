@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.helpers import entity_registry as er
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .framework import House
 
@@ -151,5 +152,28 @@ async def test_alexa_media_player_volume_from_template_set_and_restored(hass: Ho
             "data": {"type": "announce"},
             "target": ["media_player.echo"],
         }
+    finally:
+        house.cleanup()
+
+
+async def test_alexa_announce_all_keeps_its_targets_when_call_targets_a_person(hass: HomeAssistant) -> None:
+    """A person target on the call (as a Frigate blueprint sends) mustn't empty an "_all"
+    delivery selected alongside it, here by name - it announces on every Echo regardless"""
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    for room in ("kitchen", "hall"):
+        entry = er.async_get(hass).async_get_or_create(
+            "notify", "alexa_devices", f"{room}_announce_id", suggested_object_id=f"{room}_echo_announce"
+        )
+        hass.states.async_set(entry.entity_id, "unknown")
+    house = House(users={"Bob": "bob"}, alexa_per_area=False)
+    await house.setup(hass)
+    try:
+        await house.call("""
+            message: Someone at the gate
+            delivery: alexa_devices_announce_all
+            target: person.bob
+        """)
+        (announce,) = calls(house, "notify", "send_message")
+        assert sorted(announce.data["entity_id"]) == ["notify.hall_echo_announce", "notify.kitchen_echo_announce"]
     finally:
         house.cleanup()

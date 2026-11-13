@@ -2,6 +2,7 @@ import time
 import types
 from unittest.mock import MagicMock, patch
 
+from homeassistant.util.ulid import ulid_to_bytes
 from jinja2 import TemplateError
 
 from custom_components.supernotify.const import CONF_TRANSPORT
@@ -96,9 +97,10 @@ async def test_envelope_without_notification() -> None:
     context = TestingContext()
     await context.test_initialize()
     delivery = context.delivery("notify_entity")
-    # Lines 82-84: no notification branch sets empty _enabled_scenarios and uuid id
+    # no notification branch sets empty _enabled_scenarios and a ULID id of its own
     uut = Envelope(delivery)
     assert uut._enabled_scenarios == {}
+    assert ulid_to_bytes(uut.id)
     assert uut.message is None
     assert uut.notification_id is None
 

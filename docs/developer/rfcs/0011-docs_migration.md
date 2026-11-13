@@ -4,7 +4,7 @@ Move off the unsupported, and potentially disruptive `mkdocs`, and the no longer
 
 At each phase, preserve existing links wherever possible, so that search engines and links from other sites do not break, and in general maintain SEO and agent compatibility.
 
-## Phase 1 - Stabilize
+## Phase 1 - Stabilize - DONE
 
 Use `properdocs` in place of `mkdocs` and `materialX` as the theme. Retain `mike`.
 

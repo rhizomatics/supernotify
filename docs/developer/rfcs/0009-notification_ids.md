@@ -2,7 +2,11 @@
 
 Created: 2026-10-17
 Author: Jey Burrows
-Status: draft
+Status: Complete, technical id implemented in v2.18.1
+
+## Outcome
+
+Switch from `uuid1` to `ulid` as used by Home Assistant, IDs are shorter and more private, since not hashing the MAC address. Don't go any further in implementing complementary IDs, rely on HA contexts and tracing to allow moving from a state -> automation -> notification.
 
 ## Summary
 
@@ -144,8 +148,8 @@ The archive viewer itself, a bundled panel, is on the [roadmap](../roadmap.md#ar
 
 ## Open Questions
 
-- [ ] **ULID or uuid7?** A ULID matches HA's context ids and is shorter (26 characters against 36). `uuid7()` is in the standard library and is still a uuid
-- [ ] **Change the technical id at all?** With a separate reference, uuid1 still works. Sorting by time is the main gain
+- [x] **ULID or uuid7?** A ULID, from `homeassistant.util.ulid`: it matches HA's context ids and is shorter (26 characters against 36). `uuid7()` is in the standard library and is still a uuid. Done in v2.18.1. HA's `ulid_now()` orders by the millisecond only, notifications created within the same millisecond sort in random order
+- [x] **Change the technical id at all?** Yes. With a separate reference, uuid1 would still work, but sorting by time is worth having and the change needs nothing else to move
 - [ ] **Reference in the filename?** `2026-10-17T13-07_7_<id>.json` would let a lookup by reference skip opening files, at the cost of a longer name
 - [ ] **Reference format.** `#7` alone, or with a date prefix where there's no date beside it, e.g. `1017-7`?
 - [x] **Count dry runs?** Yes, from their own count with a marker, e.g. `#D3`, so the real numbering has no gaps

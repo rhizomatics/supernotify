@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import logging
-import uuid
 from dataclasses import dataclass
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
@@ -12,6 +11,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_EXCLUDE
 from homeassistant.helpers.trace import trace_id_get
+from homeassistant.util.ulid import ulid_now
 
 from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
@@ -183,7 +183,8 @@ class Notification(ArchivableObject):
         self._recorded_person_ids: set[str] = set()  # recipients whose notify entity this notification has updated
         self._reached_person_ids: set[str] = set()  # recipients with a target in an envelope, see _attach_person_ids()
         self._title: str | None = title
-        self.id = str(uuid.uuid1())
+        # unique without stored state and sorts by time, the same kind of id as HA's own context ids - see RFC 0009
+        self.id: str = ulid_now()
         self.delivered: int = 0
         self.error_count: int = 0
         self.skipped: int = 0

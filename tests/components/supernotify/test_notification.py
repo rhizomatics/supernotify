@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
 from homeassistant.core import Context as HAContext
 from homeassistant.core import HomeAssistant
+from homeassistant.util.ulid import ulid_to_bytes
 from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
@@ -104,6 +105,21 @@ async def test_simple_create() -> None:
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
     assert list(uut.selected_deliveries) == unordered(["email", "mobile_push", "notify_entity"])
+
+
+async def test_id_is_a_ulid_in_creation_order() -> None:
+    """A ULID, like HA's context ids, so ids are unique without stored state and sort by time,
+    to the millisecond - within one millisecond the order is random (RFC 0009)"""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    ids: list[str] = [Notification(ctx, f"testing {n}").id for n in range(3)]
+    for notification_id in ids:
+        assert len(notification_id) == 26
+        assert ulid_to_bytes(notification_id)
+    # the first 10 characters are the millisecond timestamp
+    timestamps: list[str] = [notification_id[:10] for notification_id in ids]
+    assert timestamps == sorted(timestamps)
+    assert len(set(ids)) == 3
 
 
 async def test_legacy_default_prefixed_delivery_name_resolves_to_current() -> None:

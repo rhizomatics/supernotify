@@ -10,8 +10,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     CONF_INCLUSION,
+    CONF_TARGET_USAGE,
     INCLUSION_EXPLICIT,
     RE_NOTIFY_ENTITY_ID,
+    TARGET_USE_FIXED,
     TRANSPORT_ALEXA,
 )
 from custom_components.supernotify.model import (
@@ -116,12 +118,14 @@ class AlexaDevicesTransport(Transport):
             deliveries[STANDARD_DELIVERY_SPEAK_ALL] = {
                 CONF_TARGET: {ATTR_ENTITY_ID: speak_entities},
                 CONF_INCLUSION: [INCLUSION_EXPLICIT],
+                CONF_TARGET_USAGE: TARGET_USE_FIXED,
             }
         announce_entities = [e for e in entity_ids if "_announce" in e]
         if announce_entities:
             deliveries[STANDARD_DELIVERY_ANNOUNCE_ALL] = {
                 CONF_TARGET: {ATTR_ENTITY_ID: announce_entities},
                 CONF_INCLUSION: [INCLUSION_EXPLICIT],
+                CONF_TARGET_USAGE: TARGET_USE_FIXED,
             }
         return deliveries
 

@@ -4,6 +4,16 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.18.1
+
+## 🐛 Bug fixes
+- *Alexa Devices*: `alexa_devices_announce_all` and `alexa_devices_speak_all` always go to every Echo, rather than finding no target when the action call names someone, as the Frigate blueprint does with `person_id`
+- *Chime*: `chime_siren_all` likewise always sounds every siren, whatever the action call targets
+- *Chime*: a chime delivery with nothing to ring now gives `NO_TARGET` as the reason, rather than `UNKNOWN`
+
+## 📝 Other changes
+- *Notification ids* are now a [ULID](https://github.com/ulid/spec), the same kind of id as Home Assistant's own context ids, e.g. `01KA0Z5N3QX8E2M7T4V6W9YBCD` instead of a uuid1, so they sort by time, are shorter and don't reuse interface IDs. Archive files, media and logbook events already written keep their old ids, and are still found by them.
+
 # v2.18.0
 
 This release continues the move of configuration from YAML into the configuration web page - now for *Recipients* and *Transports*. This makes it easy to add an email address for people so they automatically get mailed, pick which mobile devices get included, tune deliveries and include people who aren't Home Assistant users. It also adds WebOS TV notifications.

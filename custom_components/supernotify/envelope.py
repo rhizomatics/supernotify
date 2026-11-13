@@ -7,11 +7,11 @@ import logging
 import string
 import time
 import typing
-import uuid
 from typing import Any, cast
 
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.helpers.template import is_template_string
+from homeassistant.util.ulid import ulid_now
 from jinja2 import TemplateError
 
 from custom_components.supernotify.people import Recipient
@@ -109,7 +109,7 @@ class Envelope(DupeCheckable):
             # should be testing scenarios only
             delivery_config_data = {}
             self._enabled_scenarios = {}
-            self.id = str(uuid.uuid1())
+            self.id = ulid_now()
         if data:
             self.data = copy.deepcopy(data)
             if delivery_config_data:
