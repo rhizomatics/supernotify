@@ -4071,7 +4071,7 @@ Use `spoken_message` in the notification call to provide a different message for
 | `alexa_devices_speak_all`    | Every `notify.*_speak` entity of the integration    |
 | `alexa_devices_announce_all` | Every `notify.*_announce` entity of the integration |
 
-Each is only generated if there's at least one matching entity. Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
+Each is only generated if there's at least one matching entity, and always announces on all of them: any target on the action call, such as a `person_id`, is ignored for these two (`target_usage: fixed`). Alexa speaker groups are left out, since their member devices are already included, and would otherwise announce twice.
 
 ## References
 
@@ -4472,7 +4472,7 @@ Chimes work well with scenarios, you can easily add a chime for all critical not
 
 **Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several underlying mechanisms (switch, siren, script, rest_command, media_player) with no single integration to discover, so it stays unconfigured until a transport-level `chime_aliases` option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own to use it directly.
 
-The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune.
+The one exception is sirens: if any `siren` entities exist, a `chime_siren_all` delivery is created that targets all of them. It is explicit-only, so it is used only when named in an action call or scenario, and needs no aliases since a siren can be turned on without a tune. It always sounds every siren, ignoring any target on the action call (`target_usage: fixed`).
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording. This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
 
@@ -4649,9 +4649,11 @@ The notification can have a `message_html` supplied for html that will be used i
 
 ## HTML Templates
 
-HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc. Templates are read once and kept, so restart Home Assistant after changing one.
 
-Templates are read once and kept, so restart Home Assistant after changing one.
+Tip
+
+[HTML EMail Renders](https://supernotify.rhizomatics.org.uk/latest/reference/html_email_renders/index.md) show previews of how the default template looks for different priorities.
 
 Padding to nudge e-mail clients from reading too deeply into the e-mail for in-box summaries can be tuned with `preheader_blank` and `preheader_length` configuration in the transport `options`. The other useful option is `strict_template` to switch on or off the stricter Jinja2 template validation.
 
