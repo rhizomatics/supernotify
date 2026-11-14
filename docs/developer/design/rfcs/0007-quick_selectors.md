@@ -1,6 +1,6 @@
 # RFC 0007: Quick Selectors
 
-2026-10-06 · Jey Burrows · Status: draft
+2026-10-06 · Jey Burrows · Status: Ready for Review
 
 ## Summary
 

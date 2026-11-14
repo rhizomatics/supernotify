@@ -1,6 +1,6 @@
 # RFC 0008: Target Groups
 
-2026-10-06 · Jey Burrows · Status: draft
+2026-10-06 · Jey Burrows · Status: Ready for Review
 
 ## Problem
 

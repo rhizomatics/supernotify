@@ -1,6 +1,6 @@
 # RFC 0010: Sensor AutoNotify
 
-2026-11-07 · Jey Burrows · Status: draft
+2026-11-07 · Jey Burrows · Status: Draft
 
 Apply AutoNotify approach to discover and auto configure notifications for PIRs, vibration sensors, smoke alarms, leak dectectors and similar safety/security sensors.
 

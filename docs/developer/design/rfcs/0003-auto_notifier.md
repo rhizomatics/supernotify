@@ -1,6 +1,6 @@
 # RFC 0003: Auto Notifier Packages
 
-2026-10-07 · Jey Burrows · Status: complete
+2026-10-07 · Jey Burrows · Status: Complete
 
 ## Problem
 

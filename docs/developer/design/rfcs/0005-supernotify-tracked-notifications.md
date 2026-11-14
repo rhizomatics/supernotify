@@ -1,6 +1,7 @@
 # RFC 0005: Live Notifications in Supernotify
 
-2026-10-07 · Jey Burrows · Status: draft. Revised 2026-10-12 after Appliance Auto Notify v0.7.0, [#254](https://github.com/rhizomatics/supernotify/issues/254) and [appliances_autonotify#4](https://github.com/rhizomatics/appliances_autonotify/issues/4)
+2026-10-07 · Jey Burrows · Status: Draft.
+Revised 2026-10-12 after Appliance Auto Notify v0.7.0, [#254](https://github.com/rhizomatics/supernotify/issues/254) and [appliances_autonotify#4](https://github.com/rhizomatics/appliances_autonotify/issues/4)
 
 ## Summary
 
