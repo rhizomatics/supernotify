@@ -90,4 +90,4 @@ description: Conceptos avanzados de Supernotify para Home Assistant, incluidos t
 
 ### Desarrolladores { #developers }
 
-Consulta [Developer Concepts](../../developer/concepts.md) para ver cómo fluyen las notificaciones a través de deliveries, destinos y *Envelopes*, y los [Design Principles](../../developer/principles.md).
+Consulta [Developer Concepts](../../developer/concepts.md) para ver cómo fluyen las notificaciones a través de deliveries, destinos y *Envelopes*, y los [Design Principles](../../developer/design/design_principles.md).

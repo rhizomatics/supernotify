@@ -2,7 +2,7 @@
 
 2026-09-10 · Jey Burrows · Status: complete
 
-See also [Principles](../../principles.md).
+See also [Principles](../design_principles.md).
 
 ## Feedback
 

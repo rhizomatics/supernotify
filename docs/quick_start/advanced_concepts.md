@@ -93,4 +93,4 @@ description: Advanced concepts of Supernotify for Home Assistant, including Tran
 
 ### Developers
 
-See [Developer Concepts](../developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](../developer/principles.md).
+See [Developer Concepts](../developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](../developer/design/design_principles.md).

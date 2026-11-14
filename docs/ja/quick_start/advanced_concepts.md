@@ -90,4 +90,4 @@ description: Home Assistant 用 Supernotify の高度なコンセプト。Transp
 
 ### 開発者向け { #developers }
 
-通知がdelivery、ターゲット、*Envelope*をどう流れるかは[Developer Concepts](../../developer/concepts.md)を、あわせて[Design Principles](../../developer/principles.md)もご覧ください。
+通知がdelivery、ターゲット、*Envelope*をどう流れるかは[Developer Concepts](../../developer/concepts.md)を、あわせて[Design Principles](../../developer/design/design_principles.md)もご覧ください。

@@ -90,4 +90,4 @@ description: Zaawansowane pojęcia Supernotify dla Home Assistant, w tym transpo
 
 ### Deweloperzy { #developers }
 
-Zobacz [Developer Concepts](../../developer/concepts.md), aby dowiedzieć się, jak powiadomienia przechodzą przez deliveries, cele i *Envelopes*, oraz [Design Principles](../../developer/principles.md).
+Zobacz [Developer Concepts](../../developer/concepts.md), aby dowiedzieć się, jak powiadomienia przechodzą przez deliveries, cele i *Envelopes*, oraz [Design Principles](../../developer/design/design_principles.md).

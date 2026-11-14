@@ -128,6 +128,8 @@ plugins:
         developer/rfcs/0011-docs_migration.md: developer/design/rfcs/0011-docs_migration.md
         developer/rfcs/0012-prompted_notifications.md: developer/design/rfcs/0012-prompted_notifications.md
         developer/rfcs/index.md: developer/design/rfcs/index.md
+        developer/principles.md: developer/design/design_principles.md
+        developer/design_principles.md: developer/design/design_principles.md
   - pagetree
   - optimize
   - tags:

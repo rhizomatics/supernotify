@@ -90,4 +90,4 @@ description: Concepts avancés de Supernotify pour Home Assistant, dont transpor
 
 ### Développeurs { #developers }
 
-Voir [Developer Concepts](../../developer/concepts.md) pour le cheminement des notifications à travers les deliveries, les cibles et les *Envelopes*, ainsi que les [Design Principles](../../developer/principles.md).
+Voir [Developer Concepts](../../developer/concepts.md) pour le cheminement des notifications à travers les deliveries, les cibles et les *Envelopes*, ainsi que les [Design Principles](../../developer/design/design_principles.md).
