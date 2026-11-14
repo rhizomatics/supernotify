@@ -17,10 +17,10 @@ TAB_ORDER = [
     "changelog.md",
 ]
 HIDDEN_TABS: set[str] = set()
-# Section titles come from folder names, which can't carry capitalization like "RFCs" without it leaking into URLs
-SECTION_TITLES = {"Rfcs": "RFCs", "Quick start": "Quick Start"}
+# Section titles come from folder names, which can't carry capitalization like "Quick Start" without it leaking into URLs
+SECTION_TITLES = {"Quick start": "Quick Start"}
 # Sub-sections to list first within a section, by (retitled) section title; others keep folder order after them
-SUBSECTION_ORDER = {"Developer": ["RFCs"]}
+SUBSECTION_ORDER = {"Developer": ["Design"]}
 # Pages to list in reading order within a section, by (retitled) section title and file name
 PAGE_ORDER = {
     "Quick Start": [
