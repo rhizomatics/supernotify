@@ -90,4 +90,4 @@ description: 适用于 Home Assistant 的 Supernotify 进阶概念，包括 Tran
 
 ### 开发者 { #developers }
 
-有关通知如何流经 deliveries、目标和 *Envelopes*，请参阅 [Developer Concepts](../../developer/concepts.md)，另请参阅 [Design Principles](../../developer/principles.md)。
+有关通知如何流经 deliveries、目标和 *Envelopes*，请参阅 [Developer Concepts](../../developer/concepts.md)，另请参阅 [Design Principles](../../developer/design/design_principles.md)。

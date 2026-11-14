@@ -90,4 +90,4 @@ description: Geavanceerde concepten van Supernotify voor Home Assistant, waarond
 
 ### Ontwikkelaars { #developers }
 
-Zie [Developer Concepts](../../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../../developer/principles.md).
+Zie [Developer Concepts](../../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../../developer/design/design_principles.md).

@@ -1,6 +1,6 @@
 # Roadmap
 
-See also [Principles](./principles.md) for what guides development.
+See also [Principles](./design/design_principles.md) for what guides development.
 
 ## Feedback
 
