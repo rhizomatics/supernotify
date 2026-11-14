@@ -166,72 +166,72 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0001-configflow_approach/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0001-configflow_approach/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0002-deliveries_and_transports/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0002-deliveries_and_transports/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0003-auto_notifier/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0003-auto_notifier/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0003a-auto_notifier_support/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0004-household_appliances_auto_notifier/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0004-household_appliances_auto_notifier/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0005-supernotify-tracked-notifications/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0005-supernotify-tracked-notifications/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0006-frigate_auto_notifier/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0006-frigate_auto_notifier/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0007-quick_selectors/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0007-quick_selectors/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0008-target_groups/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0008-target_groups/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0009-notification_ids/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0009-notification_ids/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0010-sensor_autonotify/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0010-sensor_autonotify/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0011-docs_migration/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0011-docs_migration/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/0012-prompted_notifications/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/0012-prompted_notifications/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/rfcs/appendices/0003a-auto_notifier_support/</loc>
         <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
     </url>
