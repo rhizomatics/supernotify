@@ -55,7 +55,7 @@ For code reviews, produce a single list of findings, graded by risk.
 
 ## Project Context
 
-The design principles are documented at docs/developer/principles.md and the future development at docs/developer/roadmap.md. Any outcomes of sessions that change or add to these should be flagged up and these two documents keep being the primary place where the why, how and what of the project are documented.
+The design principles are documented at docs/developer/design/design_principles.md and the future development at docs/developer/roadmap.md. Any outcomes of sessions that change or add to these should be flagged up and these two documents keep being the primary place where the why, how and what of the project are documented.
 
 The project uses Ruff for formatting and linting, uv and mise for dependency management,
 mypy for type checking (with experimental use of ty), pytest for unit and integration testing, and codespell for spell checking.
