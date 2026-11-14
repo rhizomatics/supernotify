@@ -89,4 +89,4 @@ For the technically minded, there are [Technical Diagrams](https://supernotify.r
 
 ### Developers
 
-See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/quick_start/developer/principles.md).
+See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/design_principles/index.md).
