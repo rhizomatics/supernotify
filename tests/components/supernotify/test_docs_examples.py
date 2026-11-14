@@ -67,7 +67,7 @@ def _yaml_blocks(path: Path) -> Iterator[tuple[int, str]]:
 
 def _doc_paths() -> list[Path]:
     # RFCs describe proposed, not yet implemented, config so are exempt
-    rfcs = ROOT / "docs" / "developer" / "design"
+    rfcs = ROOT / "docs" / "developer" / "design" / "rfcs"
     docs = [p for p in sorted((ROOT / "docs").rglob("*.md")) if not p.is_relative_to(rfcs)]
     return [ROOT / "README.md", *docs, *sorted((ROOT / "examples").rglob("*.yaml"))]
 

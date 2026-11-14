@@ -1,8 +1,6 @@
 # RFC 0009: Notification IDs and Linking to Home Assistant
 
-Created: 2026-10-17
-Author: Jey Burrows
-Status: Complete, technical id implemented in v2.18.1
+2026-10-17 · Jey Burrows · Status: complete. Technical id implemented in v2.18.1
 
 ## Outcome
 
@@ -138,7 +136,7 @@ Where the reference appears:
 | Archive | Activity | `/logbook?start_date=…&end_date=…` around the notification, narrowed to the sender entity when known. The viewer can list related entries itself with `logbook/get_events` and `context_id` |
 | Archive | History | `/history?entity_id=notify.recipient_…&start_date=…` for the recipients reached |
 
-The archive viewer itself, a bundled panel, is on the [roadmap](../roadmap.md#archive-viewer-and-logbook-linkage). The human reference and the exact lookup are useful without it, through the archive enquiry action.
+The archive viewer itself, a bundled panel, is on the [roadmap](../../roadmap.md#archive-viewer-and-logbook-linkage). The human reference and the exact lookup are useful without it, through the archive enquiry action.
 
 ## Compatibility
 

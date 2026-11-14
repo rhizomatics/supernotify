@@ -55,12 +55,12 @@ Test only with Home Assistant's own `pytest-home-assistant` package, which repla
 ### Quick Selectors
 
 Minimize need of scenarios and conditional logic.
-[RFC0007](design/0007-quick_selectors.md)
+[RFC0007](design/rfcs/0007-quick_selectors.md)
 
 ### Live Notifications
 
 Supernotify owns the start, update, end and close of a Live Activity, Live Update or persistent notification, from one `live:` mapping on the notify action and a `mobile_live` transport.
-[RFC0005](design/0005-supernotify-tracked-notifications.md)
+[RFC0005](design/rfcs/0005-supernotify-tracked-notifications.md)
 
 
 ### Rate Limiting
@@ -182,7 +182,7 @@ Might be scope for having 'real time' deliveries sequenced ahead of async ones, 
 
 ### Extended UI Configuration
 
-Second and further phases identified at [ConfigFlow](./design/0001-configflow_approach.md)
+Second and further phases identified at [ConfigFlow](./design/rfcs/0001-configflow_approach.md)
 
 Storage model for deliveries, scenarios and transports, settled in [#166](https://github.com/rhizomatics/supernotify/issues/166):
 
@@ -236,7 +236,7 @@ Something like automation traces would suit delivery selection best, since the r
 
 ### Archive Viewer and Logbook Linkage
 
-See also [RFC0009](design/0009-notification_ids.md) for notification ids and a human-friendly reference.
+See also [RFC0009](design/rfcs/0009-notification_ids.md) for notification ids and a human-friendly reference.
 
 The logbook shows a short `supernotify_notification` event per notification, with the full JSON kept out of the HA database in the file archive. There's no way to get from one to the other.
 
@@ -271,8 +271,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-Companion HACS components, with working term [Auto Notifier](./design/0003-auto_notifier.md), starting with an [MVP](./design/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./design/0006-frigate_auto_notifier.md).
-The Supernotify changes needed first are in [Auto Notifier Support](./design/0003a-auto_notifier_support.md) though expected to be refined after the MVP.
+Companion HACS components, with working term [Auto Notifier](./design/rfcs/0003-auto_notifier.md), starting with an [MVP](./design/rfcs/0003-auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./design/rfcs/0006-frigate_auto_notifier.md).
+The Supernotify changes needed first are in [Auto Notifier Support](./design/rfcs/appendices/0003a-auto_notifier_support.md) though expected to be refined after the MVP.
 
 ### UI
 
@@ -282,7 +282,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Auto Notifier](./design/0003-auto_notifier.md)
+- Other developers able to create add-ons, see also [Auto Notifier](./design/rfcs/0003-auto_notifier.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 
@@ -376,10 +376,10 @@ Scenarios can mess with targets but its complicated in config and in code, and n
 
 ## Completed Roadmap
 
-- [ConfigFlow](./design/0001-configflow_approach.md)
+- [ConfigFlow](./design/rfcs/0001-configflow_approach.md)
    - v2.0.0
    - Partially completed, basic YAML only
-- [Deliveries and Transports](./design/0002-deliveries_and_transports.md)
+- [Deliveries and Transports](./design/rfcs/0002-deliveries_and_transports.md)
    - v2.5.0
 - Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
    - v2.8.0

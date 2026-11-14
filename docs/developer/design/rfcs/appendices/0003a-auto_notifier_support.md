@@ -1,12 +1,9 @@
-# RFC 0003a: Auto Notifier Packages
+# RFC 0003 Appendix: Anticipated Supernotify Changes
 
-2026-10-07 · Jey Burrows · Status: Archived
+2026-10-07 · Jey Burrows · Status: complete. Largely superseded by [RFC 0005](../0005-supernotify-tracked-notifications.md)
 
-# Appendix - Anticipated Changes
-
-
-Changes anticipated in Supernotify before any production [Auto Notifier](./0003-auto_notifier.md) is released, collected from the proposed packages:
-[Frigate](./0006-frigate_auto_notifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
+Changes anticipated in Supernotify before any production [Auto Notifier](../0003-auto_notifier.md) is released, collected from the proposed packages:
+[Frigate](../0006-frigate_auto_notifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
 Packages are built as separate HACS components that work much better with  Supernotify but have some basic functionality without. These can then be attractive to people with a specific requirement to integrate Frigate or want to their phone have a progress bar for the dishwasher.
 
@@ -128,7 +125,7 @@ Let a scenario set the notification's priority, not just a delivery's `data.prio
 "armed and night" raise to `high` and "occupied and not dangerous" drop to `low`. The priority then has to be settled
 before delivery selection, while scenario conditions can themselves use priority - so a scenario's priority applies
 after scenarios are chosen and doesn't re-trigger selection. Relates to *Per-delivery Priority* on the
-[Roadmap](../roadmap.md).
+[Roadmap](../../../roadmap.md).
 
 ## Mobile Push
 

@@ -114,20 +114,20 @@ plugins:
         pl/concepts.md: pl/quick_start/basic_concepts.md
         pt/concepts.md: pt/quick_start/basic_concepts.md
         zh-Hans/concepts.md: zh-Hans/quick_start/basic_concepts.md
-        developer/rfcs/0001-configflow_approach.md: developer/design/0001-configflow_approach.md
-        developer/rfcs/0002-deliveries_and_transports.md: developer/design/0002-deliveries_and_transports.md
-        developer/rfcs/0003-auto_notifier.md: developer/design/0003-auto_notifier.md
-        developer/rfcs/0003a-auto_notifier_support.md: developer/design/0003a-auto_notifier_support.md
-        developer/rfcs/0004-household_appliances_auto_notifier.md: developer/design/0004-household_appliances_auto_notifier.md
-        developer/rfcs/0005-supernotify-tracked-notifications.md: developer/design/0005-supernotify-tracked-notifications.md
-        developer/rfcs/0006-frigate_auto_notifier.md: developer/design/0006-frigate_auto_notifier.md
-        developer/rfcs/0007-quick_selectors.md: developer/design/0007-quick_selectors.md
-        developer/rfcs/0008-target_groups.md: developer/design/0008-target_groups.md
-        developer/rfcs/0009-notification_ids.md: developer/design/0009-notification_ids.md
-        developer/rfcs/0010-sensor_autonotify.md: developer/design/0010-sensor_autonotify.md
-        developer/rfcs/0011-docs_migration.md: developer/design/0011-docs_migration.md
-        developer/rfcs/0012-prompted_notifications.md: developer/design/0012-prompted_notifications.md
-        developer/rfcs/index.md: developer/design/index.md
+        developer/rfcs/0001-configflow_approach.md: developer/design/rfcs/0001-configflow_approach.md
+        developer/rfcs/0002-deliveries_and_transports.md: developer/design/rfcs/0002-deliveries_and_transports.md
+        developer/rfcs/0003-auto_notifier.md: developer/design/rfcs/0003-auto_notifier.md
+        developer/rfcs/0003a-auto_notifier_support.md: developer/design/rfcs/appendices/0003a-auto_notifier_support.md
+        developer/rfcs/0004-household_appliances_auto_notifier.md: developer/design/rfcs/0004-household_appliances_auto_notifier.md
+        developer/rfcs/0005-supernotify-tracked-notifications.md: developer/design/rfcs/0005-supernotify-tracked-notifications.md
+        developer/rfcs/0006-frigate_auto_notifier.md: developer/design/rfcs/0006-frigate_auto_notifier.md
+        developer/rfcs/0007-quick_selectors.md: developer/design/rfcs/0007-quick_selectors.md
+        developer/rfcs/0008-target_groups.md: developer/design/rfcs/0008-target_groups.md
+        developer/rfcs/0009-notification_ids.md: developer/design/rfcs/0009-notification_ids.md
+        developer/rfcs/0010-sensor_autonotify.md: developer/design/rfcs/0010-sensor_autonotify.md
+        developer/rfcs/0011-docs_migration.md: developer/design/rfcs/0011-docs_migration.md
+        developer/rfcs/0012-prompted_notifications.md: developer/design/rfcs/0012-prompted_notifications.md
+        developer/rfcs/index.md: developer/design/rfcs/index.md
   - pagetree
   - optimize
   - tags:

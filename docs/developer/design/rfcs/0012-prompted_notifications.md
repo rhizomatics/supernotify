@@ -1,4 +1,6 @@
-# RFC 0012 - Prompted Notifications
+# RFC 0012: Prompted Notifications
+
+2026-11-08 · Jey Burrows · Status: draft
 
 Use the built-in Home Assistant GenAI integrations to generate notification content or delivery method from prompts.
 

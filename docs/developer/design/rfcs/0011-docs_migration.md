@@ -1,4 +1,6 @@
-# RFC 0011 - Migrate Documentation
+# RFC 0011: Migrate Documentation
+
+2026-11-07 · Jey Burrows · Status: partially complete. Phase 1 done
 
 Move off the unsupported, and potentially disruptive `mkdocs`, and the no longer updated Material for Mkdocs components.
 

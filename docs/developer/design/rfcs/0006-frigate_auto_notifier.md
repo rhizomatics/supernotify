@@ -1,6 +1,6 @@
 # RFC 0006: Frigate Auto Notifier
 
-2026-09-24 · Jey Burrows · Status: Done
+2026-09-24 · Jey Burrows · Status: complete
 
 ## Summary
 
@@ -17,11 +17,11 @@ One of the first [Auto Notifiers](./0003-auto_notifier.md): a new module (with o
   - Same fallback as `appliance_autonotify` without supernotify, call all mobiles
 - Every part of the `supernotify.notify` call can still be tuned, using the same UI as an automation action
 - Supernotify's own YAML still applies, so users can add scenarios or deliveries that react to Frigate notifications
-- The [Apple push fix](../../recipes/fix_frigate_apple_push.md) is built in, with an option to turn it off
+- The [Apple push fix](../../../recipes/fix_frigate_apple_push.md) is built in, with an option to turn it off
 - Use the new notification level click thru for a destination URL
 - All AutoNotify components should look and behave similarly
 - Garner feedback on changes for Supernotify
-  - See [Principle 12](../principles.md) on building out mobile support
+  - See [Principle 12](../../principles.md) on building out mobile support
   - Primary goal is to enhance Supernotify such that automations and blueprints *like* the Frigate one don't require 100s of lines of YAML to handle different phone models, notification options
 - Design for HomeAssistant and Frigate rather than blindly following the Frigate blueprint
   - https://docs.frigate.video/integrations/home-assistant/ is canonical
@@ -98,12 +98,12 @@ Delivery-level inputs from the blueprint are **not** profile settings, because S
 Remaining profile settings, with the fix recipe:
 
 - **Apple-compatible video links** (default on) - Apple devices get the HLS `master.m3u8` link and no `clip.mp4`
-  attachment or `clickAction`, as in the [recipe](../../recipes/fix_frigate_apple_push.md). Off sends the same links to
+  attachment or `clickAction`, as in the [recipe](../../../recipes/fix_frigate_apple_push.md). Off sends the same links to
   every device, as the blueprint does
 
 ## Changes needed in Supernotify
 
-See [Auto Notifier Support](./0003a-auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and live view changes.
+See [Auto Notifier Support](./appendices/0003a-auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and live view changes.
 
 ## Open Questions
 

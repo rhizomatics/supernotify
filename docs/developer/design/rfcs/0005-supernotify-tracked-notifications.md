@@ -1,9 +1,6 @@
-# RFC 0005: Live notifications in Supernotify
+# RFC 0005: Live Notifications in Supernotify
 
-Created: 2026-10-07
-Author: Jey Burrows
-Status: draft
-Revised 2026-10-12 after Appliance Auto Notify v0.7.0, [#254](https://github.com/rhizomatics/supernotify/issues/254) and [appliances_autonotify#4](https://github.com/rhizomatics/appliances_autonotify/issues/4)
+2026-10-07 · Jey Burrows · Status: draft. Revised 2026-10-12 after Appliance Auto Notify v0.7.0, [#254](https://github.com/rhizomatics/supernotify/issues/254) and [appliances_autonotify#4](https://github.com/rhizomatics/appliances_autonotify/issues/4)
 
 ## Summary
 
@@ -515,7 +512,7 @@ Step back to *why* this is needed, or if it is really needed at all:
 ## References
 
 - [Auto Notify](./0003-auto_notifier.md) - The Auto Notify design doc
-- [Auto Notify Support](./0003a-auto_notifier_support.md) - Appendix of changes anticipated before first real use, largely superseded.
+- [Auto Notify Support](./appendices/0003a-auto_notifier_support.md) - Appendix of changes anticipated before first real use, largely superseded.
 - [Household Appliances Auto Notifier](./0004-household_appliances_auto_notifier.md) - The first caller
 - [Mobile platforms](https://github.com/rhizomatics/appliances_autonotify/blob/main/docs/mobile_platforms.md) - Android and iOS behaviour, field by field, from Appliance Auto Notify
 - [Supernotify #254](https://github.com/rhizomatics/supernotify/issues/254) - Ending a notification everywhere it was shown

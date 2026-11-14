@@ -1,6 +1,6 @@
 # RFC 0003: Auto Notifier Packages
 
-2026-10-07 · Jey Burrows · Status: Done
+2026-10-07 · Jey Burrows · Status: complete
 
 ## Problem
 
@@ -59,7 +59,7 @@ The move into generating notifications rather than being a notification engine i
 
 ### Changes Needed in Supernotify
 
-See [Auto Notifier Support](./0003a-auto_notifier_support.md) for the changes needed in Supernotify first.
+See [Auto Notifier Support](./appendices/0003a-auto_notifier_support.md) for the changes needed in Supernotify first.
 
 ### Branding
 
@@ -69,7 +69,7 @@ No user facing use of term 'packages'. These will be XXXX SuperNotifier componen
 
 ### Live Notifications for Appliances
 
-If there's a connected appliance like dishwasher, it will send a start and stop [Live Activity](https://companion.home-assistant.io/docs/notifications/live-activities) notification to mobile devices with an appropriate icon. See the very basic [recipe](../../recipes/dishwasher_live_activity.md) for current usage.
+If there's a connected appliance like dishwasher, it will send a start and stop [Live Activity](https://companion.home-assistant.io/docs/notifications/live-activities) notification to mobile devices with an appropriate icon. See the very basic [recipe](../../../recipes/dishwasher_live_activity.md) for current usage.
 
 If the appliance has a time-remaining and/or progress quantity, these will be passed using the `progress` and `chronometer` values. If these are `unavailable` they're not sent and the simpler style prevails.
 

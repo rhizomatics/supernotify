@@ -1,8 +1,6 @@
 # RFC 0001: Config Flow Migration
 
-2026-08-06 · Jey Burrows · Status: Initial Phases Complete
-
-# ConfigFlow Implementation Approach
+2026-08-06 · Jey Burrows · Status: partially complete. Initial phases done
 
 ## Goals
 
