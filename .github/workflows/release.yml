@@ -13,13 +13,15 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: write
-  # to start deploy.yml for the docs, as a release published with this workflow's token raises no release event
-  actions: write
+# Nothing by default; the job grants what it needs (OpenSSF Scorecard Token-Permissions).
+permissions: {}
 
 jobs:
   publish:
+    permissions:
+      contents: write
+      # to start deploy.yml for the docs, as a release published with this workflow's token raises no release event
+      actions: write
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
