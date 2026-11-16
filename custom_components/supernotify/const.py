@@ -418,18 +418,3 @@ _TRANSPORT_ACRONYMS: Final[dict[str, str]] = {"tts": "TTS", "sms": "SMS", "mqtt"
 def transport_display_name(name: str) -> str:
     """A transport's name to show, such as "Alexa Media Player" for alexa_media_player"""
     return " ".join(_TRANSPORT_ACRONYMS.get(word, word.capitalize()) for word in name.split("_"))
-
-
-# subentry titles were prefixed by their type in English before 2.18.2 - Home Assistant already
-# shows each subentry's type under its title, translated, from `config_subentries.<type>.entry_type`
-LEGACY_RECIPIENT_TITLE_PREFIX: Final[str] = "Recipient - "
-
-
-def recipient_subentry_title(name: str) -> str:
-    """A recipient subentry's title, its name, such as "Alice", without the prefix of before 2.18.2"""
-    return name.removeprefix(LEGACY_RECIPIENT_TITLE_PREFIX)
-
-
-def transport_subentry_title(name: str) -> str:
-    """A transport subentry's title, such as "Alexa Media Player" for alexa_media_player"""
-    return transport_display_name(name)

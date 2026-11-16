@@ -147,14 +147,15 @@ def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfig
     from homeassistant.config_entries import ConfigSubentry
     from homeassistant.const import CONF_ALIAS
 
-    from .const import CONF_PERSON, SUBENTRY_TYPE_RECIPIENT, recipient_subentry_title
+    from .const import CONF_PERSON, SUBENTRY_TYPE_RECIPIENT
     from .people import recipient_key
+    from .titles import subentry_title
 
     existing = set()
     for subentry in [s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_RECIPIENT]:
         existing.add(subentry.unique_id)
-        # titled with its type as an English prefix before 2.18.2
-        if subentry.title != (title := recipient_subentry_title(subentry.title)):
+        # titled without its type's prefix in 2.18.0 betas, and before 2.18.2 with it in English
+        if subentry.title != (title := subentry_title(hass, SUBENTRY_TYPE_RECIPIENT, subentry.title)):
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
     for recipient in recipients:
         key = recipient_key(recipient)
@@ -167,7 +168,9 @@ def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfig
             ConfigSubentry(
                 data=MappingProxyType(dict(recipient)),
                 subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                title=recipient_subentry_title(str(recipient.get(CONF_ALIAS) or (person.name if person else key))),
+                title=subentry_title(
+                    hass, SUBENTRY_TYPE_RECIPIENT, str(recipient.get(CONF_ALIAS) or (person.name if person else key))
+                ),
                 unique_id=key,
             ),
         )
@@ -183,14 +186,17 @@ def async_add_transport_subentries(
 
     from homeassistant.config_entries import ConfigSubentry
 
-    from .const import SUBENTRY_TYPE_TRANSPORT, transport_subentry_title
+    from .const import SUBENTRY_TYPE_TRANSPORT, transport_display_name
+    from .titles import subentry_title
 
     existing = set()
     for subentry in [s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_TRANSPORT]:
         existing.add(subentry.unique_id)
         # titled by an alias before 2.18.0 was released, which is now the transport device's name,
-        # and with its type as an English prefix before 2.18.2
-        if subentry.unique_id and subentry.title != (title := transport_subentry_title(subentry.unique_id)):
+        # without its type's prefix in its betas, and before 2.18.2 with it in English
+        if subentry.unique_id and subentry.title != (
+            title := subentry_title(hass, SUBENTRY_TYPE_TRANSPORT, transport_display_name(subentry.unique_id))
+        ):
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
     for name, transport in transports.items():
         if name in existing:
@@ -201,7 +207,7 @@ def async_add_transport_subentries(
             ConfigSubentry(
                 data=MappingProxyType(dict(transport)),
                 subentry_type=SUBENTRY_TYPE_TRANSPORT,
-                title=transport_subentry_title(name),
+                title=subentry_title(hass, SUBENTRY_TYPE_TRANSPORT, transport_display_name(name)),
                 unique_id=name,
             ),
         )
@@ -300,12 +306,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     from .engine import build_supernotify_engine
     from .notification import set_version
     from .notify import SuperNotificationService
+    from .titles import async_load_titles
 
     _async_remove_legacy_default_entities(hass)
 
     integration: Integration = await async_get_integration(hass, DOMAIN)
     set_version(str(integration.version) if integration.version else "unknown")
 
+    await async_load_titles(hass)
     _async_merge_user_recipients(hass, entry)
     _async_import_yaml_recipients(hass, entry)
     _async_import_yaml_transports(hass, entry)

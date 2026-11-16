@@ -132,8 +132,7 @@ from .const import (
     TARGET_CATEGORY_VALUES,
     TARGET_USAGE_VALUES,
     TRANSPORT_GENERIC,
-    recipient_subentry_title,
-    transport_subentry_title,
+    transport_display_name,
 )
 from .hass_api import HomeAssistantAPI
 from .options import (
@@ -146,6 +145,7 @@ from .options import (
 from .people import PeopleRegistry, recipient_key
 from .schema import RECIPIENT_DELIVERY_SCHEMA, RECIPIENT_SCHEMA, TRANSPORT_SCHEMA, OutcomeSelection
 from .target import Target
+from .titles import subentry_title
 
 if TYPE_CHECKING:
     from .transport import Transport
@@ -768,12 +768,14 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         return bool(self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True))
 
     def _title(self) -> str:
-        """The alias, else the person's name, else the user's"""
+        """The alias, else the person's name, else the user's, prefixed as a recipient"""
         if alias := self._recipient.get(CONF_ALIAS):
-            return recipient_subentry_title(str(alias))
-        if (person := self._recipient.get(CONF_PERSON)) and (state := self.hass.states.get(person)):
-            return recipient_subentry_title(state.name)
-        return recipient_subentry_title(str(self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID)))
+            name = str(alias)
+        elif (person := self._recipient.get(CONF_PERSON)) and (state := self.hass.states.get(person)):
+            name = state.name
+        else:
+            name = str(self._recipient.get(CONF_PERSON) or self._recipient.get(CONF_USER_ID))
+        return subentry_title(self.hass, SUBENTRY_TYPE_RECIPIENT, name)
 
     def _mobile_device_options(self) -> list[SelectOptionDict]:
         """The recipient's discovered mobile devices that can be notified, and any already
@@ -1000,7 +1002,7 @@ class TransportSubentryFlow(ConfigSubentryFlow):
         return self.async_create_entry(title=self._title(), data=self._transport, unique_id=self._name)
 
     def _title(self) -> str:
-        return transport_subentry_title(self._name)
+        return subentry_title(self.hass, SUBENTRY_TYPE_TRANSPORT, transport_display_name(self._name))
 
     def _transport_class(self) -> type[Transport] | None:
         from .static_config import TRANSPORTS

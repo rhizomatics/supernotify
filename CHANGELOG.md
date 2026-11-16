@@ -14,7 +14,7 @@
 - *Email*: the footer's link to Home Assistant uses its external URL, rather than one that only works at home
 
 ## 📝 Other changes
-- *Recipients* and *Transports* are listed under the integration by their name alone, e.g. *Alice* rather than *Recipient - Alice*, as Home Assistant already shows each one's type under it, in your own language. Existing ones are renamed at start up
+- *Recipients* and *Transports*: the type that starts each one's title under the integration, as in *Recipient - Alice*, is now in Home Assistant's language, e.g. *Empfänger - Alice*, keeping recipients together and transports together. Titles change to match at start up if Home Assistant's language changes
 - *Chinese (Simplified)*: a recipient is now 收件人 throughout, as in Home Assistant itself
 - *Scenarios*: the trace of a scenario's conditions is no longer also kept in Home Assistant's own store of traces, where it couldn't be seen. It's still shown with the scenario, as before
 
