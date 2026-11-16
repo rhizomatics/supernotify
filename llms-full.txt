@@ -460,7 +460,7 @@ For the technically minded, there are [Technical Diagrams](https://supernotify.r
 
 ### Developers
 
-See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
+See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/design_principles/index.md).
 
 # Removing Supernotify
 
@@ -1410,19 +1410,21 @@ A **Target Category** identifies what kind of target it is, and how to use it. S
 
 Categories marked *Auto* are recognized from the format of the target itself. The others need to be qualified with a [prefix](#category-prefixes) or given in a [mapping](#category-mapping).
 
-| Category                          | Auto | Used By                                                                                              |
-| --------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
-| `device_id`                       | Y    | Chime                                                                                                |
-| `email`                           | Y    | Email                                                                                                |
-| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                     |
-| `phone`                           | Y    | SMS                                                                                                  |
-| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                     |
-| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                     |
-| `topic`                           | N    | MQTT                                                                                                 |
-| `discord_channel`                 | N    | Discord                                                                                              |
-| `matrix_room`                     | N    | Matrix                                                                                               |
-| `telegram_chat_id`                | N    | Telegram                                                                                             |
+| Category                          | Auto | Used By                                                                                                                                                                           |
+| --------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, Discord, HTML5, Kodi, LaMetric, LG webOS TV, Media Player, Mobile Push (`notify.mobile_app_*` only), Notify Entity, ntfy, Telegram, TTS |
+| `device_id`                       | Y    | Chime                                                                                                                                                                             |
+| `email`                           | Y    | Email                                                                                                                                                                             |
+| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                                                                                                  |
+| `phone`                           | Y    | SMS                                                                                                                                                                               |
+| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                                                                                                  |
+| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                                                                                                  |
+| `topic`                           | N    | MQTT                                                                                                                                                                              |
+| `discord_channel`                 | N    | Discord                                                                                                                                                                           |
+| `matrix_room`                     | N    | Matrix                                                                                                                                                                            |
+| `telegram_chat_id`                | N    | Telegram                                                                                                                                                                          |
+
+The [Generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) transport uses whichever categories its delivery's `target_categories` option names, including made-up ones. Gotify, Persistent and Pushover take no target at all.
 
 ### Notify Entity
 
@@ -5744,7 +5746,7 @@ You can also use the device `select` options if not using auto-discovery - this 
 
 ### Explicit Targets
 
-To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same form used for a device under `recipients` (see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)) - not the dotted `notify.mobile_app_<device>` service-call form:
+To pin a delivery to one specific device, give its `mobile_app_id` - either as a bare value, the same form used for a device under `recipients` (see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)), or as the Companion App's `notify.mobile_app_<device>` action name:
 
 Fixed target on a delivery
 
@@ -5757,7 +5759,7 @@ delivery:
       - mobile_app_my_phone
 ```
 
-`notify.mobile_app_my_phone` is the name of the Companion App's notify action, not a `mobile_app_id` - as a target it's taken as an `entity_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#target-categories)).
+A `notify.mobile_app_<device>` target, here or on a notification, is picked up by mobile_push in preference to the generic [Notify Entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport, and is only sent once if the same device is also reached through a recipient. `target_usage: fixed` is needed if you don't want the recipient-based targets as well - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#target-categories)).
 
 ## Discovery
 
@@ -5892,7 +5894,7 @@ This transport uses the new style Home Assistant notify entities, through the `n
 
 Any `notify.*` entity can be a target. An `area_id`, `floor_id` or `label_id` can also be used, and is turned into the notify entities in it before delivery, as is a `group` into its members. This is an easy way of calling several notify entities at once. Devices can't be used as targets for this transport.
 
-This is the catch-all for notify entities. Ones that belong to an integration with its own transport, such as [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md) or [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md), are left to that transport.
+This is the catch-all for notify entities. Ones that belong to an integration with its own transport, such as [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md) or [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md), are left to that transport - as are the Companion App's `notify.mobile_app_<device>` actions, to [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md).
 
 Supernotify's own notify entities - for a recipient, or for a scenario or delivery with a `notify_entity` - are not called when given as a target in a notification action. The recipient is targeted, or the scenario applied or delivery selected, directly instead.
 
@@ -5917,7 +5919,7 @@ Example Notification
   data:
     message: "Motion detected at the front door"
     target:
-        - notify.mobile_app_pixel
+        - notify.hall_display
 ```
 
 Example Notification to every notify entity in the kitchen, and those labelled display
@@ -8672,7 +8674,7 @@ Which target categories each transport accepts - see [Targets](https://supernoti
 | [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | entity_id (domain=notify, platform=lametric)                                | -                         | -                                                                                 |
 | [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | matrix_room                                                                 | -                         | -                                                                                 |
 | [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | -                                                                           | -                         | entity_id (domain=media_player)                                                   |
-| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | mobile_app_id                                                               | -                         | -                                                                                 |
+| [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | mobile_app_id, entity_id (domain=notify, platform=mobile_app)               | -                         | -                                                                                 |
 | [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | topic                                                                       | -                         | -                                                                                 |
 | [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | -                                                                           | entity_id (domain=notify) | -                                                                                 |
 | [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | entity_id (domain=notify, platform=ntfy)                                    | -                         | -                                                                                 |
