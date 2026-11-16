@@ -20,7 +20,8 @@ is turned into the notify entities in it before delivery, as is a `group` into i
 easy way of calling several notify entities at once. Devices can't be used as targets for this transport.
 
 This is the catch-all for notify entities. Ones that belong to an integration with its own transport,
-such as [HTML5](html5.md) or [Alexa Devices](alexa_devices.md), are left to that transport.
+such as [HTML5](html5.md) or [Alexa Devices](alexa_devices.md), are left to that transport - as are
+the Companion App's `notify.mobile_app_<device>` actions, to [Mobile Push](mobile_push.md).
 
 Supernotify's own notify entities - for a recipient, or for a scenario or delivery with a
 `notify_entity` - are not called when given as a target in a notification action. The recipient is
@@ -50,7 +51,7 @@ transports:
   data:
     message: "Motion detected at the front door"
     target:
-        - notify.mobile_app_pixel
+        - notify.hall_display
 ```
 
 ```yaml title="Example Notification to every notify entity in the kitchen, and those labelled display"

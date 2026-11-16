@@ -323,12 +323,18 @@ class HomeAssistantAPI:
         return result
 
     def platform_for_entity(self, entity_id: str) -> str | None:
-        """The integration that registered this entity (RegistryEntry.platform), if any."""
+        """The integration that registered this entity (RegistryEntry.platform), if any.
+
+        A mobile app's `notify.mobile_app_<x>` is a legacy notify action, not a registered
+        entity, so it's identified from the mobile app cache instead.
+        """
         entity_registry: EntityRegistry | None = self._entity_registry()
         if entity_registry:
             reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
             if reg_entry:
                 return reg_entry.platform
+        if entity_id.startswith("notify.") and self.mobile_app_by_id(entity_id) is not None:
+            return MOBILE_APP_DOMAIN
         return None
 
     def config_path(self, path: str) -> str:

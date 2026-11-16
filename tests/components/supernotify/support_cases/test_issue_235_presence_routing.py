@@ -7,16 +7,13 @@ one delivery per person, gated by a `conditions:` state check on that person's o
 entity, plus a third delivery meant as the "nobody home" catch-all, given `inclusion:
 [scenario, fallback]`. Two things went wrong, both config mistakes rather than bugs:
 
-1. Each per-person delivery's `target:` used dotted `notify.mobile_app_<x>` syntax, e.g.
-   `notify.mobile_app_phone_alex`. That's the service call form used by the `notify_entity`
-   transport (see docs/transports/notify_entity.md) - everywhere else (docs/usage/targets.md,
-   docs/configuration/people.md), a `mobile_app_id` target is the bare value,
-   `mobile_app_phone_alex`. The dotted form isn't recognised as a `mobile_app_id`, so the
-   delivery's own `target:` never resolves to anything on its own. The default
-   `target_usage: no_action` then means the delivery's only *other* target source -
-   `default_person_ids()`, which (with no `occupancy` set, i.e. the "all" default) expands to
-   *every* recipient regardless of presence - fills in by accident, notifying every mobile
-   device of every recipient rather than just the one named phone.
+1. Each per-person delivery's `target:` names one phone, e.g. `notify.mobile_app_phone_alex`
+   (`mobile_push` accepts this dotted form as well as the bare `mobile_app_phone_alex`). But
+   the default `target_usage: no_action` means that, with no target on the action call, the
+   delivery's own `target:` is *added to* `default_person_ids()` rather than replacing it -
+   and that (with no `occupancy` set, i.e. the "all" default) expands to *every* recipient
+   regardless of presence, notifying every mobile device of every recipient rather than just
+   the one named phone.
 
 2. `inclusion: [scenario, fallback]` does not mean "last resort, only if nothing else
    delivered" *within* this scenario. `fallback` only wires a delivery into a separate,
@@ -242,8 +239,8 @@ async def simplified_config(hass: HomeAssistant) -> TestingContext:
 async def test_reported_config_notifies_every_device_not_just_the_configured_one(
     reported_config: TestingContext, hass: HomeAssistant
 ) -> None:
-    """The dotted `notify.mobile_app_phone_alex` target never resolves, so recipient-based
-    expansion fills in instead - reaching Alex's other phone, and even Sam's, although
+    """`target_usage: no_action` adds the configured phone to recipient-based expansion,
+    rather than using it instead - reaching Alex's other phone, and even Sam's, although
     they're away and not the delivery this is meant to be."""
     uut = Notification(reported_config, "Test presence dependent", action_data={"apply_scenarios": ["presence_dependent"]})
     await uut.initialize()
@@ -253,6 +250,7 @@ async def test_reported_config_notifies_every_device_not_just_the_configured_one
     envelope = first_envelope(uut, "presence_alex")
     assert envelope.target.as_dict() == {
         "mobile_app_id": ["mobile_app_spare_alex", "mobile_app_phone_alex", "mobile_app_phone_sam"],
+        "entity_id": ["notify.mobile_app_phone_alex"],
         "person_id": ["person.alex", "person.sam"],
     }
 

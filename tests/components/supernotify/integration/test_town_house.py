@@ -80,6 +80,33 @@ async def test_notify_email_target_does_nothing(hass: HomeAssistant, town_house:
     )
 
 
+async def test_notify_mobile_app_action_target_goes_to_mobile_push(hass: HomeAssistant, town_house: House) -> None:
+    """mobile_push claims `notify.mobile_app_<x>` ahead of the generic notify_entity transport"""
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target: notify.mobile_app_bob_phone
+    """,
+        expected_calls={"notify": ["mobile_app_bob_phone"]},
+        expected_entities={},
+    )
+
+
+async def test_notify_mobile_app_action_target_not_sent_twice_to_recipient_device(
+    hass: HomeAssistant, town_house: House
+) -> None:
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target:
+          - person.bob
+          - notify.mobile_app_bob_phone
+    """,
+        expected_calls={"notify": ["mobile_app_bob_phone"]},
+        expected_entities={},
+    )
+
+
 async def test_notify_targets_ground_floor_alexa_devices(hass: HomeAssistant, town_house: House) -> None:
     await town_house.assert_e2e(
         """

@@ -176,7 +176,9 @@ class MobilePushTransport(Transport):
 
     @property
     def unique_target_categories(self) -> list[str | TargetEntityCategory]:
-        return [ATTR_MOBILE_APP_ID]
+        # `notify.mobile_app_<x>` is claimed here in preference to the generic notify_entity
+        # transport, same as html5/ntfy etc. do for their own notify entities
+        return [ATTR_MOBILE_APP_ID, TargetEntityCategory(domain="notify", platform="mobile_app")]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data("mobile_app") is not None
@@ -313,7 +315,12 @@ class MobilePushTransport(Transport):
         return None
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        if not envelope.target.mobile_app_ids:
+        # selection only lets through `notify.mobile_app_<x>` entity_ids, so as bare ids they
+        # dedupe against the same device reached by mobile_app_id, e.g. from a recipient
+        mobile_targets: list[str] = list(
+            dict.fromkeys([*envelope.target.mobile_app_ids, *(e.removeprefix("notify.") for e in envelope.target.entity_ids)])
+        )
+        if not mobile_targets:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False
 
@@ -322,7 +329,7 @@ class MobilePushTransport(Transport):
         push_data = self._extract_push_data(raw_data)
 
         action_groups = envelope.action_groups
-        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, envelope.target.mobile_app_ids)
+        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, mobile_targets)
 
         # 2. Build iOS interruption_level
         ios_level = push_data["critical_level_ios"] or IOS_INTERRUPTION_MAP.get(
@@ -458,7 +465,7 @@ class MobilePushTransport(Transport):
         hits = 0
         tts_pending: list[tuple[str, dict[str, Any]]] = []
 
-        for mobile_target in envelope.target.mobile_app_ids:
+        for mobile_target in mobile_targets:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
             mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(mobile_target)
             if mobile_info is not None and not model_filter.match(mobile_info.model):

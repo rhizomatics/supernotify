@@ -220,7 +220,7 @@ You can also use the device `select` options if not using auto-discovery - this 
 
 ### Explicit Targets
 
-To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same form used for a device under `recipients` (see [People](../configuration/people.md)) - not the dotted `notify.mobile_app_<device>` service-call form:
+To pin a delivery to one specific device, give its `mobile_app_id` - either as a bare value, the same form used for a device under `recipients` (see [People](../configuration/people.md)), or as the Companion App's `notify.mobile_app_<device>` action name:
 
 ```yaml title="Fixed target on a delivery"
 delivery:
@@ -231,7 +231,7 @@ delivery:
       - mobile_app_my_phone
 ```
 
-`notify.mobile_app_my_phone` is the name of the Companion App's notify action, not a `mobile_app_id` - as a target it's taken as an `entity_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
+A `notify.mobile_app_<device>` target, here or on a notification, is picked up by mobile_push in preference to the generic [Notify Entity](notify_entity.md) transport, and is only sent once if the same device is also reached through a recipient. `target_usage: fixed` is needed if you don't want the recipient-based targets as well - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](../configuration/deliveries.md#controlling-targets)
 and [Targets](../usage/targets.md#target-categories)).
 
 ## Discovery

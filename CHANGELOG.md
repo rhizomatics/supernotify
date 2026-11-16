@@ -4,6 +4,11 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.18.2
+
+## 🐛 Bug fixes
+- *Mobile Push*: a `notify.mobile_app_<device>` target, the Companion App's own notify action, now goes to Mobile Push, the same as the bare `mobile_app_<device>` id, rather than to the *Notify Entity* transport, which can't send to it as it isn't an entity. A device given both ways, or also reached through a recipient, is only sent the notification once
+
 # v2.18.1
 
 ## 🐛 Bug fixes

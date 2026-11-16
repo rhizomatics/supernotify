@@ -22,7 +22,7 @@ Categories marked *Auto* are recognized from the format of the target itself. Th
 
 | Category                          | Auto | Used By |
 | --------------------------------- | ---- | ------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, Discord, HTML5, Kodi, LaMetric, LG webOS TV, Media Player, Mobile Push (`notify.mobile_app_*` only), Notify Entity, ntfy, Telegram, TTS |
 | `device_id`                       | Y    | Chime   |
 | `email`                           | Y    | Email   |
 | `mobile_app_id`                   | Y    | Mobile Push, TTS |
@@ -33,6 +33,8 @@ Categories marked *Auto* are recognized from the format of the target itself. Th
 | `discord_channel`                 | N    | Discord |
 | `matrix_room`                     | N    | Matrix  |
 | `telegram_chat_id`                | N    | Telegram |
+
+The [Generic](../transports/generic.md) transport uses whichever categories its delivery's `target_categories` option names, including made-up ones. Gotify, Persistent and Pushover take no target at all.
 
 ### Notify Entity
 
