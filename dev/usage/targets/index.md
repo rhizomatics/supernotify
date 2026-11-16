@@ -20,19 +20,21 @@ A **Target Category** identifies what kind of target it is, and how to use it. S
 
 Categories marked *Auto* are recognized from the format of the target itself. The others need to be qualified with a [prefix](#category-prefixes) or given in a [mapping](#category-mapping).
 
-| Category                          | Auto | Used By                                                                                              |
-| --------------------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
-| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, LG webOS TV, Media Player, Notify Entity, TTS |
-| `device_id`                       | Y    | Chime                                                                                                |
-| `email`                           | Y    | Email                                                                                                |
-| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                     |
-| `phone`                           | Y    | SMS                                                                                                  |
-| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                     |
-| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                     |
-| `topic`                           | N    | MQTT                                                                                                 |
-| `discord_channel`                 | N    | Discord                                                                                              |
-| `matrix_room`                     | N    | Matrix                                                                                               |
-| `telegram_chat_id`                | N    | Telegram                                                                                             |
+| Category                          | Auto | Used By                                                                                                                                                                           |
+| --------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, Discord, HTML5, Kodi, LaMetric, LG webOS TV, Media Player, Mobile Push (`notify.mobile_app_*` only), Notify Entity, ntfy, Telegram, TTS |
+| `device_id`                       | Y    | Chime                                                                                                                                                                             |
+| `email`                           | Y    | Email                                                                                                                                                                             |
+| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                                                                                                                  |
+| `phone`                           | Y    | SMS                                                                                                                                                                               |
+| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                                                                                                                  |
+| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                                                                                                                  |
+| `topic`                           | N    | MQTT                                                                                                                                                                              |
+| `discord_channel`                 | N    | Discord                                                                                                                                                                           |
+| `matrix_room`                     | N    | Matrix                                                                                                                                                                            |
+| `telegram_chat_id`                | N    | Telegram                                                                                                                                                                          |
+
+The [Generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) transport uses whichever categories its delivery's `target_categories` option names, including made-up ones. Gotify, Persistent and Pushover take no target at all.
 
 ### Notify Entity
 

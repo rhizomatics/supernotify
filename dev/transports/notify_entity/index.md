@@ -12,7 +12,7 @@ This transport uses the new style Home Assistant notify entities, through the `n
 
 Any `notify.*` entity can be a target. An `area_id`, `floor_id` or `label_id` can also be used, and is turned into the notify entities in it before delivery, as is a `group` into its members. This is an easy way of calling several notify entities at once. Devices can't be used as targets for this transport.
 
-This is the catch-all for notify entities. Ones that belong to an integration with its own transport, such as [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md) or [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md), are left to that transport.
+This is the catch-all for notify entities. Ones that belong to an integration with its own transport, such as [HTML5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md) or [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md), are left to that transport - as are the Companion App's `notify.mobile_app_<device>` actions, to [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md).
 
 Supernotify's own notify entities - for a recipient, or for a scenario or delivery with a `notify_entity` - are not called when given as a target in a notification action. The recipient is targeted, or the scenario applied or delivery selected, directly instead.
 
@@ -37,7 +37,7 @@ Example Notification
   data:
     message: "Motion detected at the front door"
     target:
-        - notify.mobile_app_pixel
+        - notify.hall_display
 ```
 
 Example Notification to every notify entity in the kitchen, and those labelled display
