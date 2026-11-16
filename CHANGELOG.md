@@ -23,7 +23,7 @@ A security release, from a review of what a notification, or whoever sends it, c
 - *Archive*: passwords, tokens and API keys in the data of a notification are left out of the archive files, events and MQTT messages, and out of `enquire_configuration` and `enquire_last_notification`
 
 ## 📝 Other changes
-- *Dependencies*: `beautifulsoup4` is required by its own name rather than as `bs4`, and it and `aiofiles` are pinned to the versions Home Assistant uses
+- *Dependencies*: `beautifulsoup4` is required by its own name rather than as `bs4`, and it and `aiofiles` have a minimum version, that of the oldest supported Home Assistant, so they follow the versions Home Assistant ships
 - *Development*: every GitHub workflow action is pinned to a commit, and the tests of a pull request run with a read-only token, badges and documentation being published by a separate job
 - *Documentation*: a [security policy](https://github.com/rhizomatics/supernotify/blob/main/SECURITY.md), and advice on protecting the SMTP password and on who can snooze
 

@@ -4398,8 +4398,8 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiofiles", specifier = "==25.1.0" },
-    { name = "beautifulsoup4", specifier = "==4.13.3" },
+    { name = "aiofiles", specifier = ">=24.1.0" },
+    { name = "beautifulsoup4", specifier = ">=4.13.3" },
     { name = "homeassistant", specifier = ">=2026.5.0" },
 ]
 

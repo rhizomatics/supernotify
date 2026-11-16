@@ -54,7 +54,8 @@ Assistant can do. It has no login or network service of its own.
   pull requests get a dependency review.
 - Every GitHub Action is pinned to a commit. Workflow tokens have no permissions unless a job needs them, and
   the tests of a pull request run with a read-only token.
-- Runtime dependencies are pinned, and kept to versions Home Assistant itself ships.
+- Runtime dependencies are packages Home Assistant itself ships, with a minimum version rather than a pin,
+  so they follow its security updates, checked by hassfest.
 - Releases are built and published by GitHub Actions, not from a developer's machine.
 - Ruff, mypy, Bandit and a test suite with over 90% coverage run on every change, with a regression test for each fix.
 
