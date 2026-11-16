@@ -616,6 +616,14 @@
               "png_opts": {
                 "type": "object",
                 "additionalProperties": true
+              },
+              "reprocess": {
+                "type": "string",
+                "enum": [
+                  "always",
+                  "never",
+                  "preserve"
+                ]
               }
             },
             "additionalProperties": false
