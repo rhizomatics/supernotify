@@ -1,0 +1,355 @@
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/notifying/
+
+## Sending Notifications
+
+Use the `supernotify.notify` action to send notifications. In the Actions and Automations UI, it gives guidance and selectors for each main part of the `data` section.
+
+Basic Example
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        priority: high
+        delivery: mobile_push
+```
+
+`supernotify.notify` also retains the original context of the action, and propagates that down to any actions it calls, such as for underlying notification transports or moving a PTZ camera. (See the [original Home Assistant blog post](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on tracing context.)
+
+There are lots more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
+
+## Simplest Example
+
+In this example, there's no configuration, target or anything more than the standard `message`.
+
+This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry in Home Assistant.
+
+Message to All Devices
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+```
+
+## Adding Targets
+
+Targets can be direct addresses, like an email address, phone number or notify entity, or something indirect like a person, area or label.
+
+Message to One Person
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target: person.john_mcdoe
+```
+
+In this case, the notification will go only to John: to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
+
+### Simple Targeting
+
+`target` can take a single value, or a big mixed list, and Supernotify works out which notification transport each one belongs to. Targets with an obvious format, like an e-mail address, phone number or entity ID, are recognized automatically. Anything else gets a *target category* prefix, such as `topic:` for MQTT or `discord_channel:` for Discord.
+
+Mixed Targets
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            - person.john_mcdoe
+            - jane@mcdoe.co.bn
+            - +4398708123987
+            - notify.kitchen_alexa
+            - discord_channel:9585
+            - topic:security/basement/alert
+```
+
+Home Assistant's `area_id`, `floor_id` and `label_id` targets work too, so a notification can go to "whatever is in the kitchen".
+
+Simple targeting covers most notifications. When you need more precise control, such as giving two e-mail deliveries different addresses, see [Precise Targeting](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#precise-targeting). [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) also lists all the target categories.
+
+## Notification Priority
+
+Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) ( for example a siren to accompany 'critical' notifications).
+
+It will also be mapped to delivery priority flags where the underlying transport allows, for example Mobile Push, Gotify, Ntfy, SMTP, Telegram.
+
+Valid Priorities:
+
+- critical
+- high
+- medium
+- low
+- minimum
+
+Example Message
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something boring happened
+        priority: low
+```
+
+## Duplicate Notifications
+
+Notifications are checked for duplicates based on a selected policy. This can also be turned off for individual notifications using `force_resend`.
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something happened
+        force_resend: true
+```
+
+See [Duplicate Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md) for more information.
+
+## Controlling Delivery Selection
+
+Delivery selection can be passed in the `data` of an action call using the `delivery_selection` key, or implied from the *shape* of the `delivery:` key itself. It can be set to one of three values:
+
+- `implicit` - The default
+  - All deliveries whose own `inclusion` includes `default` are enabled, plus any switched on by an active scenario
+  - This is implied if `delivery:` is a dictionary mapping, or is left out entirely
+- `explicit` - Switch off delivery defaulting
+  - Only deliveries listed on the action call are enabled, *plus* ones switched on by a scenario
+  - This is implied automatically if `delivery:` is given as a list or a single value
+- `fixed` - Switch off delivery defaulting and scenario delivery selection
+  - Only the list of deliveries in the action call will be used, even if a scenario condition were to select another one
+  - Deliveries with `priority` or `condition` filtering will have this overridden - only a disabled `delivery`/`transport` stops a fixed selection
+  - This is never implied from `delivery:`'s shape - it must always be set explicitly
+
+An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
+
+Implicit (default) - implied by a mapping
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            mobile_push: # tunes an existing (default or scenario) delivery
+                data:
+                    clickAction: https://my.home.net/dashboard
+```
+
+In this example, `mobile_push` is tuned but not selected - the default deliveries, and any switched on by a scenario, go out as normal.
+
+Explicit - implied by a list
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            - mobile_push
+            - email
+```
+
+In this case only `mobile_push` and `email` are selected, even if they're `explicit` or `scenario` inclusion only, plus any deliveries switched on by a scenario. Each delivery's own `condition` and `priority` still apply.
+
+Fixed - always set explicitly
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery_selection: fixed
+        delivery:
+            - email
+```
+
+Here `email` is chosen even if its `condition` or `priority` is not met, and every other delivery is switched off. You get just the fixed list you asked for.
+
+### Delivery and Delivery Control
+
+In the action editor, `supernotify.notify` has a **Delivery** picker of the configured deliveries. When added, it starts with the implicit deliveries used by default, and you can add to or take away from these as needed.
+
+Under **Advanced**, a free-form **Delivery Control** (`delivery_control`) takes anything `delivery:` would. The two are merged into one `delivery:` before the notification is made. A delivery in both takes its form from Delivery Control, so it can be picked in the dropdown and tuned in Delivery Control:
+
+Delivery picked, and tuned in Delivery Control
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            - mobile_push
+            - email
+        delivery_control:
+            mobile_push:
+                data:
+                    clickAction: https://my.home.net/dashboard
+```
+
+Names picked in the dropdown mean "only these", so when Delivery Control holds a mapping, the merged selection is `explicit`. **Delivery Selection** (`delivery_selection`), also under Advanced, changes that. Left out entirely, delivery selection stays `implicit`, as before.
+
+`delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a list or a mapping directly, as in the examples above.
+
+!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` works the same as `inclusion: scenario` when sending, except that explicit deliveries are offered in the action editor's Delivery list, and scenario-only ones aren't.
+
+### When Scenarios Disagree
+
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#overriding-delivery-selection-and-configuration).
+
+If more than one scenario is active at once and they disagree on the same delivery, **`false` always wins**, regardless of how many other active scenarios enabled it - there's no priority or ordering between scenarios.
+
+The only way to override a scenario's `false` is for the action call itself to explicitly re-enable that delivery in its own `delivery:` data. This is a deliberate fail-safe default (a scenario that says "don't send this" is never silently overruled by another scenario), but it also means there's currently no way for a scenario author to mark their `enabled: true` as one that should win a conflict.
+
+## Using from an Automation
+
+In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`.
+
+```yaml
+- id: action_red_alert
+  alias: Action Red Alert
+  initial_state: true
+  triggers:
+  - trigger: event
+    event_type: ios.action_fired
+    event_data:
+      actionName: Red Alert
+  actions:
+  - action: supernotify.notify
+    data:
+      apply_scenarios: red_alert
+```
+
+In this example, a mobile notification goes out to notify of the dishwasher finishing, and email is switched off.
+
+```yaml
+- id: '1762520266950'
+  alias: Dishwasher Finished
+  description: 'Push alert when dishwasher done'
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.dishwasher_operation_state
+    to:
+    - finished
+  actions:
+  - action: supernotify.notify
+    data:
+      message: Dishwasher is finished
+      delivery:
+        email:
+          enabled: false
+```
+
+### Automation and Templates
+
+Templates can be used freely, as in other `notify` integrations.
+
+```yaml
+- id: ups-overloaded
+  alias: Send notification when UPS is overloaded
+  triggers:
+  - entity_id:
+    - sensor.cyberpower_status
+    to: Overloaded
+    trigger: state
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  actions:
+  - action: supernotify.notify
+    data:
+      title: 'ALERT: UPS Overloaded'
+      message: UPS is overloaded, output voltage {{states('sensor.cyberpower_output_voltage')}}
+      priority: high
+```
+
+## Adding a Link to Mobile Push Notification
+
+More Advanced Action Call
+
+```yaml
+  - action: supernotify.notify
+    data:
+        title: Security Notification
+        message: Garden sensor triggered
+        delivery:
+            mobile_push:
+                data:
+                    clickAction: https://my.home.net/dashboard
+```
+
+Note here that the `clickAction` is defined only on the `mobile_push` delivery. However it is also possible to simply define everything at the top level `extra_data` section and let the individual transport adaptors pick out the attributes they need. This is helpful either if you don't care about fine tuning delivery configurations, or using existing notification blueprints, such as the popular [Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications).
+
+## Customizing message per channel
+
+Channel Specific Messages
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        title: Something has happened
+        delivery:
+            email: # only affects the delivery called `email`
+                data:
+                    message: Garden sensor was triggered
+            sms: # refers to a transport, so affects all deliveries based on SMS transport
+                data:
+                    message: Garden Activity
+                    title: HASS
+```
+
+## Extra Data
+
+The top level `extra_data` can hold anything that isn't a Supernotify action field, and is offered to every delivery. It is used for two things:
+
+- **Values for the underlying integration**, passed straight through. If there are multiple integrations, all of them will get this data ( other than where Supernotify knows the integration and that they can't handle extra data items).
+- **Tuning for Supernotify's own transports**, such as `chime_tune` for the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport. Each transport takes out the keys it recognizes, and passes the rest on to the integration.
+
+Extra Data for Integration
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        title: Something has happened
+        delivery: zify
+        extra_data:
+          zify_back_channel: 1041
+```
+
+Since `extra_data` goes to every delivery, transport tuning is better defined in the `data` section of the specific delivery, so it only affects that delivery. This can be done in the delivery configuration, or for a single notification in a `delivery` override, as in the `mobile_push` example above.
+
+Transport Tuning in a Delivery
+
+```yaml
+supernotify:
+  delivery:
+    xmas_chime:
+      transport: chime
+      data:
+        chime_tune: christmas_05
+```
+
+## Notify Entities and Legacy Notify Platform Compatibility
+
+For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
+
+The legacy action is `notify.supernotify`, assuming you've named the platform `supernotify` when setting it up. It only takes `message`, `title` and `target` at the top level, so everything else from the examples on this page goes in a nested `data:` section:
+
+Legacy notify.supernotify
+
+```yaml
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        target: person.john_mcdoe
+        data:
+            priority: high
+            delivery: mobile_push
+```
+
+A notify entity can also be made for any scenario or delivery, which is a way to get more of Supernotify from something that only takes a notify entity. Each of these, and each recipient's `notify.recipient_<name>` entity, also has a legacy action of the same name, taking the same as `notify.supernotify`, for anything that only takes the name of a `notify` action, like the Alert integration. See [Scenario Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#notify-entity) and [Delivery Notify Entity](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#notify-entity).
+
+## References
+
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)
