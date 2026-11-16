@@ -326,17 +326,19 @@ async def test_notify_follows_a_re_paired_phone(hass: HomeAssistant, town_house:
     """A phone re-paired under a new name has a new notify action, and its old device and action
     go - once that settles, its owner is notified through the new one"""
     device_registry = dr.async_get(hass)
-    old_phone = next(d for d in device_registry.devices if ("mobile_app", "device-id_bob_phone") in d.identifiers)
+    hass_api = HomeAssistantAPI(hass)
+    # discover_devices() reads the device registry in the way of whichever HA version is running
+    old_phone = next(d for d in hass_api.discover_devices("mobile_app") if d.device_name == "bob_phone")
 
     register_mobile_app(
-        HomeAssistantAPI(hass),
+        hass_api,
         person="person.bob",
         manufacturer="Cheapo",
         os_name="Android",
         device_name="bob_new_phone",
         user_id=town_house.user_ids["bob"],
     )
-    device_registry.async_remove_device(old_phone.id)
+    device_registry.async_remove_device(old_phone.device_id)
     hass.services.async_remove("notify", "mobile_app_bob_phone")
 
     async def record(call: ServiceCall) -> None:
