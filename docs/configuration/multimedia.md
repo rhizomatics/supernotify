@@ -181,16 +181,20 @@ homeassistant:
 
 ## Controlling Image Reprocessing
 
-If you don't want to have images reprocessed, perhaps for performance or other reasons, then use this configuration
-in the delivery or transport configuration, or in the action call.
+If you don't want to have images reprocessed, perhaps for performance or other reasons, then set `reprocess`
+under `media` in the action call, or under `options` in the delivery or transport configuration.
 
-```yaml
+```yaml title="Action call"
 ...
 data:
   media:
-    options:
-      reprocess: never
+    reprocess: never
+```
 
+```yaml title="Delivery or transport configuration"
+...
+options:
+  reprocess: never
 ```
 
 `reprocess` defaults to `always`. It can also be set to `preserve` where the original image with any comments and

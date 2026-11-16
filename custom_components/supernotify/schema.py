@@ -71,6 +71,7 @@ from .const import (
     ATTR_PNG_OPTS,
     ATTR_PRIORITY,
     ATTR_RECIPIENTS,
+    ATTR_REPROCESS,
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
@@ -469,6 +470,7 @@ MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_SNAPSHOT_PATH): cv.path,
     vol.Optional(ATTR_JPEG_OPTS): dict,
     vol.Optional(ATTR_PNG_OPTS): dict,
+    vol.Optional(ATTR_REPROCESS): vol.In(["always", "never", "preserve"]),
 })
 
 

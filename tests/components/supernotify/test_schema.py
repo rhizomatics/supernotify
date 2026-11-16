@@ -62,6 +62,19 @@ def test_notify_action_schema_accepts_media_snapshot_image_path() -> None:
     assert validated[ATTR_MEDIA][ATTR_MEDIA_SNAPSHOT_PATH] == "/config/media/supernotify/image/shot.jpg"
 
 
+@pytest.mark.parametrize("reprocess", ["always", "never", "preserve"])
+def test_notify_action_schema_accepts_media_reprocess(reprocess: str) -> None:
+    """Regression test: reprocess is documented and read by media_grab from media, but was
+    missing from MEDIA_SCHEMA so validation rejected it as an extra key."""
+    validated = NOTIFY_ACTION_SCHEMA({"message": "hello", ATTR_MEDIA: {"reprocess": reprocess}})
+    assert validated[ATTR_MEDIA]["reprocess"] == reprocess
+
+
+def test_notify_action_schema_rejects_invalid_media_reprocess() -> None:
+    with pytest.raises(vol.Invalid):
+        NOTIFY_ACTION_SCHEMA({"message": "hello", ATTR_MEDIA: {"reprocess": "bogus"}})
+
+
 def test_recipient_schema_accepts_user_id_without_person() -> None:
     """A household that only sets up HA Users (no Person records) can still be a recipient."""
     validated = RECIPIENT_SCHEMA({CONF_USER_ID: "abc123"})

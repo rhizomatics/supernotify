@@ -22,6 +22,9 @@ A security release, from a review of what a notification, or whoever sends it, c
 - *Media*: a new *Only Local Snapshot URLs* setting, on for new installs and off for existing ones until switched on, limits a `snapshot_url` to Home Assistant itself or a subdomain of its address, a device on the same network, or a URL in `allowlist_external_urls`, and follows no redirects, see [Snapshot URLs](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#snapshot-urls)
 - *Archive*: passwords, tokens and API keys in the data of a notification are left out of the archive files, events and MQTT messages, and out of `enquire_configuration` and `enquire_last_notification`
 
+## 🐛 Bug fixes
+- *Media*: `reprocess` is accepted under `media` in a notify call or a scenario, where it was rejected as an unknown key, so could only be set in the `options` of a delivery or transport. The documentation showed it under `media: options:`, which has never been read, and now shows `media: reprocess:`
+
 ## 📝 Other changes
 - *Dependencies*: `beautifulsoup4` is required by its own name rather than as `bs4`, and it and `aiofiles` have a minimum version, that of the oldest supported Home Assistant, so they follow the versions Home Assistant ships
 - *Development*: every GitHub workflow action is pinned to a commit, and the tests of a pull request run with a read-only token, badges and documentation being published by a separate job

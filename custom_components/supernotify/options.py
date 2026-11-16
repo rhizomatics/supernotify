@@ -115,11 +115,11 @@ MEDIA_OPTIONS: list[DeliveryOption] = [
     ),
     DeliveryOption(
         MEDIA_OPTION_REPROCESS,
-        "Whether to regenerate a camera snapshot already grabbed for this notification",
+        "Whether to rewrite a camera snapshot before it is saved or attached",
         value_type=vol.In({
-            "always": "Always regenerate",
-            "never": "Reuse the existing grab",
-            "preserve": "Keep the original file",
+            "always": "Rewrite, stripping comments and other metadata",
+            "never": "Use the snapshot as grabbed",
+            "preserve": "Rewrite, keeping comments and other metadata",
         }),
     ),
 ]
