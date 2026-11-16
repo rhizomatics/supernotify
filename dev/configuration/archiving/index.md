@@ -40,6 +40,8 @@ If file archiving is on but its path can't be created or written to, a repair is
 
 Each notification is a JSON file named for the local time it was created, to the minute, and its id, for example `2026-10-30T05-57_6f129330-d461-11f1-9aab-3343dedd5bbc.json`. A housekeeping job runs each night to remove files older than `file_retention_days`, and the [`purge_archive`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action can do it immediately, with `days: 0` removing everything.
 
+The archive holds what each notification said and who it went to, in plain text, and is included in Home Assistant backups. Passwords, tokens and API keys in the `data` passed to an integration are replaced with `**REDACTED**`, by the name of their key, such as `password`, `token` or `api_key`. Searching the archive with `enquire_archive` is for administrators only.
+
 Tip
 
 Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archive files, or the `enquire_archive` action to search them by date, outcome or priority.

@@ -34,6 +34,10 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | `unsnooze`                       | Remove a snooze or silence                                                                                                                               |
 | `clear_snoozes`                  | Clear all active snoozes                                                                                                                                 |
 
+Administrators only
+
+`enquire_configuration`, `enquire_archive`, `enquire_last_notification`, `reload`, `reset_overrides`, `purge_archive`, `purge_media` and `clear_snoozes` can only be called by an administrator, or by an automation or script. Home Assistant otherwise lets any user call any action, and these give back configuration and the content of notifications, or remove things. Passwords, tokens and API keys are left out of what they give back.
+
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides** button (`button.supernotify_reset_overrides`) on the SuperNotify device.
 
 ### Counts per day from the archive

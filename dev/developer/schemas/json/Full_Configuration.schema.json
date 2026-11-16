@@ -1182,6 +1182,19 @@
       "type": "string",
       "default": "/supernotify/media"
     },
+    "media_max_size": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 20
+    },
+    "snapshot_url_local": {
+      "type": "boolean",
+      "default": false
+    },
+    "caller_templates": {
+      "type": "boolean",
+      "default": true
+    },
     "archive": {
       "type": "object",
       "properties": {

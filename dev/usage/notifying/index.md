@@ -240,7 +240,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
 
 ### Automation and Templates
 
-Templates can be used freely, as in other `notify` integrations.
+Templates can be used freely, as in other `notify` integrations. Home Assistant renders them before the action is called, so Supernotify gets the finished text.
 
 ```yaml
 - id: ups-overloaded
@@ -261,6 +261,15 @@ Templates can be used freely, as in other `notify` integrations.
       message: UPS is overloaded, output voltage {{states('sensor.cyberpower_output_voltage')}}
       priority: high
 ```
+
+#### Templates that arrive unrendered
+
+Supernotify also renders templates itself, in a delivery's `message` or `data`, and in a scenario's `message_template` and `title_template`. Those are always rendered, as they come from your configuration.
+
+Whether it also renders a template that is still in the message or `data` of a notify call is the **Render Templates in Notify Calls** setting, with the paths under *Reconfigure* on the integration.
+
+- **Off**, as for new installs, is the safe choice. An automation's templates are already rendered, so text that still looks like a template came from somewhere else: an incoming SMS or e-mail, a calendar entry, a webhook, an AI agent. Rendering it would let whoever wrote that text read any entity's state.
+- **On**, as for installs from before v2.19.0, keeps a template working that reaches Supernotify unrendered, such as one passed by Python script or AppDaemon. Move such templates into the delivery or scenario configuration, or render them before the call, then switch it off.
 
 ## Adding a Link to Mobile Push Notification
 
