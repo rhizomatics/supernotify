@@ -391,6 +391,9 @@
                     "template_path": "Vorlagenpfad",
                     "media_path": "Medienpfad",
                     "media_url_prefix": "Medien-URL-Präfix",
+                    "media_max_size": "Größter Snapshot-Download (MB)",
+                    "snapshot_url_local": "Nur lokale Snapshot-URLs",
+                    "caller_templates": "Templates in Notify-Aufrufen rendern",
                     "mobile_discovery": "Mobilgeräteerkennung",
                     "recipients_discovery": "Empfängererkennung",
                     "name": "Name"
@@ -399,6 +402,9 @@
                     "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_url_prefix": "URL-Pfadpräfix, unter dem gespeicherte Medien, z. B. Kamera-Snapshots, bereitgestellt werden",
+                    "media_max_size": "Die maximale Größe in Megabyte, die für eine mit einer Benachrichtigung angegebene Snapshot-URL heruntergeladen wird. Alles, was größer oder kein Bild ist, wird nicht verwendet",
+                    "snapshot_url_local": "Ruft eine Snapshot-URL nur von Home Assistant selbst oder einer Subdomain seiner Adresse, von einem Gerät im selben Netzwerk wie Home Assistant oder von einer URL in allowlist_external_urls ab. Weiterleitungen wird nicht gefolgt",
+                    "caller_templates": "Rendert zusätzlich zu den Templates der Konfiguration auch Templates in der Nachricht und den Daten eines Notify-Aufrufs. Automatisierungen rendern ihre eigenen Templates bereits, daher ausgeschaltet lassen, sofern nicht etwas Templates ungerendert weitergibt, und niemals einschalten, wenn Nachrichtentext von außerhalb von Home Assistant stammen kann",
                     "mobile_discovery": "Automatische Erkennung von in Home Assistant registrierten mobilen App-Geräten für Push-Benachrichtigungen",
                     "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten",
                     "name": "Bestimmt den Namen der registrierten notify-Aktion (notify.NAME) - nur ändern, wenn du etwas anderes als notify.supernotify benötigst, z. B. um eine bestehende Automatisierung anzupassen"
@@ -410,6 +416,9 @@
                     "template_path": "Vorlagenpfad",
                     "media_path": "Medienpfad",
                     "media_url_prefix": "Medien-URL-Präfix",
+                    "media_max_size": "Größter Snapshot-Download (MB)",
+                    "snapshot_url_local": "Nur lokale Snapshot-URLs",
+                    "caller_templates": "Templates in Notify-Aufrufen rendern",
                     "mobile_discovery": "Mobilgeräteerkennung",
                     "recipients_discovery": "Empfängererkennung",
                     "name": "Name"
@@ -418,6 +427,9 @@
                     "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_url_prefix": "URL-Pfadpräfix, unter dem gespeicherte Medien, z. B. Kamera-Snapshots, bereitgestellt werden",
+                    "media_max_size": "Die maximale Größe in Megabyte, die für eine mit einer Benachrichtigung angegebene Snapshot-URL heruntergeladen wird. Alles, was größer oder kein Bild ist, wird nicht verwendet",
+                    "snapshot_url_local": "Ruft eine Snapshot-URL nur von Home Assistant selbst oder einer Subdomain seiner Adresse, von einem Gerät im selben Netzwerk wie Home Assistant oder von einer URL in allowlist_external_urls ab. Weiterleitungen wird nicht gefolgt",
+                    "caller_templates": "Rendert zusätzlich zu den Templates der Konfiguration auch Templates in der Nachricht und den Daten eines Notify-Aufrufs. Automatisierungen rendern ihre eigenen Templates bereits, daher ausgeschaltet lassen, sofern nicht etwas Templates ungerendert weitergibt, und niemals einschalten, wenn Nachrichtentext von außerhalb von Home Assistant stammen kann",
                     "mobile_discovery": "Automatische Erkennung von in Home Assistant registrierten mobilen App-Geräten für Push-Benachrichtigungen",
                     "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten",
                     "name": "Bestimmt den Namen der registrierten notify-Aktion (notify.NAME) - nur ändern, wenn du etwas anderes als notify.supernotify benötigst, z. B. um eine bestehende Automatisierung anzupassen"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "Vorlagenpfad konnte nicht erstellt oder erreicht werden - prüfen Sie den Speicherort und die Berechtigungen",
-            "media_path_invalid": "Medienpfad konnte nicht erstellt oder erreicht werden - prüfen Sie den Speicherort und die Berechtigungen"
+            "media_path_invalid": "Medienpfad konnte nicht erstellt oder erreicht werden - prüfen Sie den Speicherort und die Berechtigungen",
+            "media_path_unsafe": "Der Medienpfad darf nicht der Home Assistant Konfigurationsordner, ein Ordner, der ihn enthält, oder ein Ordner innerhalb von .storage sein"
         }
     },
     "issues": {

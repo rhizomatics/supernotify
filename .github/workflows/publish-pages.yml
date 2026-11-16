@@ -17,7 +17,7 @@ jobs:
       name: github-pages
       url: https://supernotify.rhizomatics.org.uk/
     steps:
-    - uses: actions/checkout@v7.0.1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: gh-pages
     - name: Get gh-pages commit
@@ -25,14 +25,14 @@ jobs:
       run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
     - name: Upload Pages artifact
       id: artifact
-      uses: actions/upload-pages-artifact@v5
+      uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: .
     - name: Deploy to GitHub Pages
       # not actions/deploy-pages, which versions the deployment by the workflow commit, and Pages silently
       # skips a version it has already deployed - so a release tagged on a commit main had already published,
       # or a prune run from an unchanged main, would never go live
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
         BUILD_VERSION: ${{ steps.site.outputs.sha }}

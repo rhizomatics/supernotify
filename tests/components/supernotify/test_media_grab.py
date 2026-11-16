@@ -44,6 +44,7 @@ from custom_components.supernotify.media_grab import (
     snap_image_entity,
     snap_notification_image,
     snapshot_from_url,
+    unsafe_media_path,
     write_image_from_bitmap,
 )
 from custom_components.supernotify.notification import Notification
@@ -453,7 +454,7 @@ def test_select_untracked_alt_camera(mock_hass_api) -> None:
 
 async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
 
-    uut = MediaStorage(tmp_path, days=7)
+    uut = MediaStorage(tmp_path / "media", days=7)
     await uut.initialize(mock_hass_api)
     with patch("aiofiles.os.listdir", return_value=["abc", "def", "xyz"]) as _scan:
         assert await uut.size() == 3
@@ -1038,3 +1039,101 @@ async def test_media_storage_initialize_with_url_prefix_registers_http_path(
     uut = MediaStorage(str(tmp_aiopath), "/supernotify-media", 7)
     await uut.initialize(mock_hass_api)
     mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]
+
+
+@pytest.mark.enable_socket
+async def test_snapshot_url_over_size_limit_not_kept(
+    unmocked_hass_api: HomeAssistantAPI, local_server: HTTPServer, sample_image: TestImage, tmp_aiopath: Path
+) -> None:
+    media_path: Path = tmp_aiopath / "media"
+    local_server.expect_request("/big_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
+
+    retrieved_image_path = await snapshot_from_url(
+        unmocked_hass_api, local_server.url_for("/big_image"), "notify-uuid-1", anyio.Path(media_path), None, max_bytes=100
+    )
+
+    assert retrieved_image_path is None
+    assert not [p async for p in (media_path / "raw").iterdir()]
+
+
+async def test_snapshot_url_read_stops_at_size_limit(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    """Where the size isn't declared up front, no more than the limit, and a byte, is read"""
+    response = Mock(status=200, content_length=None)
+    response.content.read = AsyncMock(side_effect=lambda n: b"x" * min(n, 40))
+    mock_hass_api.http_session.return_value.get = AsyncMock(return_value=response)  # type: ignore[attr-defined]
+
+    assert await snapshot_from_url(mock_hass_api, "http://cam/endless", "nid", tmp_aiopath, None, max_bytes=100) is None
+
+    assert sum(call.args[0] for call in response.content.read.call_args_list) <= 40 * 3 + 100
+
+
+@pytest.mark.enable_socket
+async def test_snapshot_url_that_is_not_an_image_not_kept(
+    unmocked_hass_api: HomeAssistantAPI, local_server: HTTPServer, tmp_aiopath: Path
+) -> None:
+    """A snapshot URL can't be used to fetch and pass on some other page Home Assistant can reach"""
+    media_path: Path = tmp_aiopath / "media"
+    local_server.expect_request("/admin").respond_with_data("<html>router admin page</html>", content_type="text/html")  # type: ignore
+
+    retrieved_image_path = await snapshot_from_url(
+        unmocked_hass_api, local_server.url_for("/admin"), "notify-uuid-1", anyio.Path(media_path), None
+    )
+
+    assert retrieved_image_path is None
+    assert not [p async for p in (media_path / "raw").iterdir()]
+
+
+def test_unsafe_media_path(tmp_path) -> None:
+    config_dir = tmp_path / "config"
+    (config_dir / ".storage").mkdir(parents=True)
+
+    assert unsafe_media_path(str(config_dir), str(config_dir)) is not None
+    assert unsafe_media_path(str(tmp_path), str(config_dir)) is not None
+    assert unsafe_media_path(str(config_dir / "media" / ".." / ".."), str(config_dir)) is not None
+    assert unsafe_media_path(str(config_dir / ".storage" / "media"), str(config_dir)) is not None
+    assert unsafe_media_path(str(config_dir / "media" / "supernotify"), str(config_dir)) is None
+    assert unsafe_media_path(str(tmp_path / "elsewhere"), str(config_dir)) is None
+
+
+async def test_media_storage_refuses_config_dir(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
+    """Everything in the media folder is served without a login, so it can't be the config folder"""
+    uut = MediaStorage(str(tmp_path), media_url_prefix="/supernotify/media")
+    await uut.initialize(mock_hass_api)
+
+    assert uut.media_path is None
+    mock_hass_api.raise_issue.assert_called_once()  # type: ignore[attr-defined]
+    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]
+
+
+async def test_local_only_snapshot_url_not_fetched_from_elsewhere(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    mock_hass_api.is_local_url = AsyncMock(return_value=False)  # type: ignore[method-assign]
+
+    assert (
+        await snapshot_from_url(mock_hass_api, "http://elsewhere.example/x.jpg", "nid", tmp_aiopath, None, local_only=True)
+        is None
+    )
+
+    mock_hass_api.http_session.return_value.get.assert_not_called()  # type: ignore[attr-defined]
+
+
+async def test_local_only_snapshot_url_follows_no_redirect(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    """A local device could otherwise pass the fetch on to anywhere"""
+    mock_hass_api.is_local_url = AsyncMock(return_value=True)  # type: ignore[method-assign]
+    get = AsyncMock(return_value=Mock(status=302, content_length=None))
+    mock_hass_api.http_session.return_value.get = get  # type: ignore[attr-defined]
+
+    assert (
+        await snapshot_from_url(mock_hass_api, "http://192.168.1.20/x.jpg", "nid", tmp_aiopath, None, local_only=True) is None
+    )
+
+    assert get.call_args.kwargs["allow_redirects"] is False
+
+
+async def test_snapshot_url_follows_redirects_unless_local_only(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    get = AsyncMock(return_value=Mock(status=404, content_length=None))
+    mock_hass_api.http_session.return_value.get = get  # type: ignore[attr-defined]
+
+    await snapshot_from_url(mock_hass_api, "http://elsewhere.example/x.jpg", "nid", tmp_aiopath, None)
+
+    assert get.call_args.kwargs["allow_redirects"] is True
+    mock_hass_api.is_local_url.assert_not_called()  # type: ignore[attr-defined]

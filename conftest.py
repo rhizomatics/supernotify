@@ -286,7 +286,10 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
 
 @pytest.fixture
 def tmp_aiopath(tmp_path: pathlib.Path):
-    return Path(tmp_path)
+    # within tmp_path, which is the mock Home Assistant's config dir, and so can't itself hold media
+    media_path: pathlib.Path = tmp_path / "aio"
+    media_path.mkdir()
+    return Path(media_path)
 
 
 @pytest.fixture

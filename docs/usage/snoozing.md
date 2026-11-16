@@ -61,6 +61,13 @@ type is one of `USER`,`EVERYONE`, and target type is one of `NONCRITICAL`,`EVERY
 The user is determined by matching the mobile device id in the event to the registry of mobile devices per
 person in Supernotify, either manually configured or automatically discovered.
 
+!!! note "Who can snooze"
+    Snoozing is open to everyone in the household. Any Home Assistant user can call the `snooze` and `silence`
+    actions, and any phone with the Companion App can send a snooze for `EVERYONE`, whether or not it was
+    offered that button, as Home Assistant lets a registered app fire any event. A snooze for one `USER` only
+    ever applies to the person the phone belongs to. A `NONCRITICAL` snooze leaves critical notifications
+    alone, an `EVERYTHING` one does not. `clear_snoozes` is for administrators only.
+
 #### Action structure
 
 `SUPERNOTIFY_<COMMAND>_<RecipientType>_<TargetType>`

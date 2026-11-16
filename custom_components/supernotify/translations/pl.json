@@ -391,6 +391,9 @@
                     "template_path": "Ścieżka szablonu",
                     "media_path": "Ścieżka mediów",
                     "media_url_prefix": "Prefiks URL mediów",
+                    "media_max_size": "Największe pobieranie migawki (MB)",
+                    "snapshot_url_local": "Tylko lokalne adresy URL migawek",
+                    "caller_templates": "Renderuj szablony w wywołaniach powiadomień",
                     "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                     "recipients_discovery": "Wykrywanie odbiorców",
                     "name": "Nazwa"
@@ -399,6 +402,9 @@
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
                     "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
                     "media_url_prefix": "Prefiks ścieżki URL, pod którym udostępniane są przechowywane media, np. zrzuty z kamery",
+                    "media_max_size": "Maksymalny rozmiar, w megabajtach, pobierany dla adresu URL migawki podanego z powiadomieniem. Nic większego ani niebędącego obrazem nie jest używane",
+                    "snapshot_url_local": "Pobiera adres URL migawki tylko z samego Home Assistant lub subdomeny jego adresu, z urządzenia w tej samej sieci co Home Assistant albo z adresu URL w allowlist_external_urls. Przekierowania nie są śledzone",
+                    "caller_templates": "Renderuje także szablony znalezione w wiadomości i danych wywołania powiadomienia, oprócz tych z konfiguracji. Automatyzacje renderują już własne szablony, więc pozostaw to wyłączone, chyba że coś przekazuje szablony bez renderowania, i nigdy nie włączaj, gdy tekst wiadomości może pochodzić spoza Home Assistant",
                     "mobile_discovery": "Automatycznie wykrywa urządzenia aplikacji mobilnej zarejestrowane w Home Assistant do powiadomień push",
                     "recipients_discovery": "Automatycznie wykrywa odbiorców na podstawie encji osób Home Assistant",
                     "name": "Określa nazwę zarejestrowanej akcji notify (notify.NAME) - zmień tylko wtedy, gdy potrzebujesz czegoś innego niż notify.supernotify, np. aby dopasować do istniejącej automatyzacji"
@@ -410,6 +416,9 @@
                     "template_path": "Ścieżka szablonu",
                     "media_path": "Ścieżka mediów",
                     "media_url_prefix": "Prefiks URL mediów",
+                    "media_max_size": "Największe pobieranie migawki (MB)",
+                    "snapshot_url_local": "Tylko lokalne adresy URL migawek",
+                    "caller_templates": "Renderuj szablony w wywołaniach powiadomień",
                     "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                     "recipients_discovery": "Wykrywanie odbiorców",
                     "name": "Nazwa"
@@ -418,6 +427,9 @@
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
                     "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
                     "media_url_prefix": "Prefiks ścieżki URL, pod którym udostępniane są przechowywane media, np. zrzuty z kamery",
+                    "media_max_size": "Maksymalny rozmiar, w megabajtach, pobierany dla adresu URL migawki podanego z powiadomieniem. Nic większego ani niebędącego obrazem nie jest używane",
+                    "snapshot_url_local": "Pobiera adres URL migawki tylko z samego Home Assistant lub subdomeny jego adresu, z urządzenia w tej samej sieci co Home Assistant albo z adresu URL w allowlist_external_urls. Przekierowania nie są śledzone",
+                    "caller_templates": "Renderuje także szablony znalezione w wiadomości i danych wywołania powiadomienia, oprócz tych z konfiguracji. Automatyzacje renderują już własne szablony, więc pozostaw to wyłączone, chyba że coś przekazuje szablony bez renderowania, i nigdy nie włączaj, gdy tekst wiadomości może pochodzić spoza Home Assistant",
                     "mobile_discovery": "Automatycznie wykrywa urządzenia aplikacji mobilnej zarejestrowane w Home Assistant do powiadomień push",
                     "recipients_discovery": "Automatycznie wykrywa odbiorców na podstawie encji osób Home Assistant",
                     "name": "Określa nazwę zarejestrowanej akcji notify (notify.NAME) - zmień tylko wtedy, gdy potrzebujesz czegoś innego niż notify.supernotify, np. aby dopasować do istniejącej automatyzacji"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "Nie można utworzyć ani uzyskać dostępu do ścieżki szablonów - sprawdź lokalizację i uprawnienia",
-            "media_path_invalid": "Nie można utworzyć ani uzyskać dostępu do ścieżki multimediów - sprawdź lokalizację i uprawnienia"
+            "media_path_invalid": "Nie można utworzyć ani uzyskać dostępu do ścieżki multimediów - sprawdź lokalizację i uprawnienia",
+            "media_path_unsafe": "Ścieżka multimediów nie może być folderem konfiguracji Home Assistant, folderem, który go zawiera, ani znajdować się w jego folderze .storage"
         }
     },
     "issues": {

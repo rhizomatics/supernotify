@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import logging
+import os.path
 from asyncio import sleep
 from enum import StrEnum, auto
 from http import HTTPStatus
@@ -17,7 +18,7 @@ import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
 import homeassistant.util.dt as dt_util
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
-from anyio import Path
+from anyio import Path, to_thread
 from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE
 from PIL import Image
 
@@ -38,6 +39,7 @@ from custom_components.supernotify.const import (
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
     CONF_SNAP_WAIT,
+    MEDIA_MAX_SIZE_DEFAULT,
     PLATFORM_FRIGATE,
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
@@ -60,6 +62,10 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+# the file extension where the format of an image can't be found
+NOT_AN_IMAGE = "img"
+
+
 class ReprocessOption(StrEnum):
     ALWAYS = auto()
     NEVER = auto()
@@ -73,22 +79,44 @@ async def snapshot_from_url(
     media_path: Path,
     hass_base_url: str | None,
     remote_timeout: int = 15,
+    max_bytes: int = MEDIA_MAX_SIZE_DEFAULT * 1024 * 1024,
+    local_only: bool = False,
 ) -> Path | None:
-    """Download a snapshot URL and save raw bytes. No reprocessing."""
+    """Download a snapshot URL and save raw bytes. No reprocessing.
+
+    Only an image is kept, and no more than `max_bytes` is read, since the URL comes with the
+    notification and could be for anything Home Assistant can reach. With `local_only`, that is
+    narrowed to Home Assistant itself and its own network, see HomeAssistantAPI.is_local_url(),
+    and a redirect is not followed, as it could lead anywhere."""
     hass_base_url = hass_base_url or ""
     try:
         raw_dir: Path = Path(media_path) / "raw"
         await raw_dir.mkdir(parents=True, exist_ok=True)
 
         image_url = snapshot_url if snapshot_url.startswith("http") else f"{hass_base_url}{snapshot_url}"
+        if local_only and not await hass_api.is_local_url(image_url):
+            _LOGGER.warning("SUPERNOTIFY Not fetching %s, only local snapshot URLs are allowed", image_url)
+            return None
         websession: ClientSession = hass_api.http_session()
-        r: ClientResponse = await websession.get(image_url, timeout=ClientTimeout(total=remote_timeout))
+        r: ClientResponse = await websession.get(
+            image_url, timeout=ClientTimeout(total=remote_timeout), allow_redirects=not local_only
+        )
         if r.status != HTTPStatus.OK:
             _LOGGER.warning("SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
+        elif r.content_length is not None and r.content_length > max_bytes:
+            _LOGGER.warning(
+                "SUPERNOTIFY Not fetching %s, %s bytes is over the %s limit", image_url, r.content_length, max_bytes
+            )
         else:
-            bitmap: bytes | None = await r.content.read()
-            if bitmap:
+            # one more than the limit, to tell a response that is over it from one that just fits
+            bitmap: bytes | None = await _read_up_to(r, max_bytes + 1)
+            if bitmap and len(bitmap) > max_bytes:
+                _LOGGER.warning("SUPERNOTIFY Not keeping %s, it is over the %s byte limit", image_url, max_bytes)
+            elif bitmap:
                 ext = await _detect_image_ext(hass_api, bitmap)
+                if ext == NOT_AN_IMAGE:
+                    _LOGGER.warning("SUPERNOTIFY Not keeping %s, it is not an image", image_url)
+                    return None
                 raw_path: Path = raw_dir / f"{notification_id}.{ext}"
                 async with aiofiles.open(raw_path, "wb") as f:
                     await f.write(bitmap)
@@ -99,6 +127,35 @@ async def snapshot_from_url(
     except Exception:
         _LOGGER.exception("SUPERNOTIFY Image snap fail")
 
+    return None
+
+
+async def _read_up_to(response: ClientResponse, limit: int) -> bytes:
+    """The response body, read no further than `limit` bytes"""
+    chunks: list[bytes] = []
+    size: int = 0
+    while size < limit:
+        chunk: bytes = await response.content.read(limit - size)
+        if not chunk:
+            break
+        chunks.append(chunk)
+        size += len(chunk)
+    return b"".join(chunks)
+
+
+def unsafe_media_path(media_path: str, config_dir: str) -> str | None:
+    """Why this folder can't be used for media, or None if it can.
+
+    Everything in the media folder is served from the media URL prefix and removed by housekeeping
+    once old, so it can't be, or hold, the Home Assistant config folder, or be within its `.storage`.
+    Blocking, since it resolves links."""
+    real_path: str = os.path.realpath(media_path)
+    real_config: str = os.path.realpath(config_dir)
+    if os.path.commonpath([real_path, real_config]) == real_path:
+        return "contains the Home Assistant config folder"
+    storage: str = os.path.join(real_config, ".storage")
+    if os.path.commonpath([real_path, storage]) == storage:
+        return "is within Home Assistant's own storage"
     return None
 
 
@@ -299,10 +356,10 @@ async def _detect_image_ext(hass_api: HomeAssistantAPI, bitmap: bytes) -> str:
     try:
         img = await hass_api.create_job(Image.open, io.BytesIO(bitmap))
         fmt = (img.format or "").lower()
-        return "jpg" if fmt in ("jpg", "jpeg") else fmt or "img"
+        return "jpg" if fmt in ("jpg", "jpeg") else fmt or NOT_AN_IMAGE
     except Exception as e:
         _LOGGER.warning("SUPERNOTIFY unable to detect image, defaulting to 'img': %s", e)
-        return "img"
+        return NOT_AN_IMAGE
 
 
 async def snap_notification_image(
@@ -331,7 +388,13 @@ async def snap_notification_image(
     raw_path: Path | None = None
     if snapshot_url:
         raw_path = await snapshot_from_url(
-            context.hass_api, snapshot_url, notification.id, media_path, context.hass_api.internal_url
+            context.hass_api,
+            snapshot_url,
+            notification.id,
+            media_path,
+            context.hass_api.internal_url,
+            max_bytes=context.media_storage.max_size * 1024 * 1024,
+            local_only=context.media_storage.snapshot_url_local,
         )
     elif camera_entity_id.startswith("image."):
         raw_path = await snap_image_entity(
@@ -541,7 +604,13 @@ class MediaStorage:
         media_path: str | None,
         media_url_prefix: str | None = None,
         days: int = 7,
+        max_size: int = MEDIA_MAX_SIZE_DEFAULT,
+        snapshot_url_local: bool = False,
     ) -> None:
+        # megabytes, the most that is fetched for a `snapshot_url`
+        self.max_size: int = max_size
+        # whether a `snapshot_url` has to be for Home Assistant itself or its own network
+        self.snapshot_url_local: bool = snapshot_url_local
         self.media_path: Path | None = Path(media_path) if media_path else None
         self.last_purge: dt.datetime | None = None
         self.media_url_prefix = media_url_prefix
@@ -553,6 +622,16 @@ class MediaStorage:
         if self.media_path is not None:
             # a relative path is within the Home Assistant config directory
             self.media_path = Path(hass_api.config_path(str(self.media_path)))
+            unsafe: str | None = await to_thread.run_sync(unsafe_media_path, str(self.media_path), hass_api.config_path(""))
+            if unsafe:
+                _LOGGER.error("SUPERNOTIFY Media path %s %s, so is not used", self.media_path, unsafe)
+                hass_api.raise_issue(
+                    "media_path",
+                    "media_path",
+                    {"path": str(self.media_path), "error": unsafe},
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/",
+                )
+                self.media_path = None
         if self.media_path and not await self.media_path.exists():
             _LOGGER.info("SUPERNOTIFY Media path not found at %s, attempting to create.", self.media_path)
             try:

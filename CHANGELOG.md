@@ -4,6 +4,29 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
 
+# v2.19.0
+
+A security release, from a review of what a notification, or whoever sends it, can make Supernotify do. See [Security](https://github.com/rhizomatics/supernotify/blob/main/SECURITY.md).
+
+## 🚨 Breaking changes
+- *Actions*: `enquire_configuration`, `enquire_archive`, `enquire_last_notification`, `purge_archive`, `purge_media`, `clear_snoozes` and `reset_overrides` are now for administrators only. Automations and scripts can still call them, and the *Reset overrides* button is unchanged. A dashboard that calls one of them for a user who isn't an administrator will no longer get a response
+- *Email*: a direct SMTP email only attaches files from the media path, or from a folder Home Assistant allows, in `allowlist_external_dirs` or `media_dirs`, as Home Assistant's own SMTP integration requires. Anything else given in `images` or `snapshot_image_path` is left out with a warning, where before any file Home Assistant could read was sent
+- *Email*: `footer` only replaces `{e.delivery_name}`, `{e.notification_id}`, `{e.id}`, `{e.priority}`, `{e.title}` and `{e.message}`. It was formatted against the whole envelope, which could be used to read the SMTP password
+- *Email*: the default HTML template escapes the message, title and links, so HTML in a `message` is shown as text. Use `message_html` for HTML
+- *Media*: a `snapshot_url` is only kept if it is an image, and no bigger than the new *Largest Snapshot Download* setting, 20MB unless changed
+- *Media*: the media path can't be the Home Assistant config folder, a folder that holds it, or within `.storage`, since everything in it is served from the media URL and removed when old. One that is gets a repair, and media is switched off until it is changed
+- *Archive*: `enquire_archive` needs the whole `id` of a notification, where part of one used to match
+
+## ✨ Enhancements
+- *Templates*: a new *Render Templates in Notify Calls* setting decides whether templates in the message and data of a notify call are rendered, as well as those in the configuration. An automation has already rendered its own templates before Supernotify sees them, so anything left looking like a template came from somewhere else, such as the text of an incoming message. It is off for new installs and stays on for existing ones, see [Automation and Templates](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#automation-and-templates)
+- *Media*: a new *Only Local Snapshot URLs* setting, on for new installs and off for existing ones until switched on, limits a `snapshot_url` to Home Assistant itself or a subdomain of its address, a device on the same network, or a URL in `allowlist_external_urls`, and follows no redirects, see [Snapshot URLs](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#snapshot-urls)
+- *Archive*: passwords, tokens and API keys in the data of a notification are left out of the archive files, events and MQTT messages, and out of `enquire_configuration` and `enquire_last_notification`
+
+## 📝 Other changes
+- *Dependencies*: `beautifulsoup4` is required by its own name rather than as `bs4`, and it and `aiofiles` are pinned to the versions Home Assistant uses
+- *Development*: every GitHub workflow action is pinned to a commit, and the tests of a pull request run with a read-only token, badges and documentation being published by a separate job
+- *Documentation*: a [security policy](https://github.com/rhizomatics/supernotify/blob/main/SECURITY.md), and advice on protecting the SMTP password and on who can snooze
+
 # v2.18.2
 
 ## 🐛 Bug fixes

@@ -19,14 +19,14 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.service import async_register_admin_service, async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
-from .archive import summarize_by_day, summarize_notification
+from .archive import redact_secrets, summarize_by_day, summarize_notification
 from .common import ensure_list
 from .compat import vol
 from .const import (
@@ -218,6 +218,8 @@ SNOOZE_ACTIONS: Final[dict[str, tuple[CommandType, vol.Schema]]] = {
 
 ATTR_KIND: Final[str] = "kind"
 RESET_OVERRIDES_SCHEMA: Final = vol.Schema({vol.Optional(ATTR_KIND): vol.In(OVERRIDE_KINDS)})
+# as for an action registered with no schema, where the default for an admin action is to take no data
+ANY_DATA_SCHEMA: Final = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 def _json_safe(v: Any) -> Any:  # ruff: ignore[any-type]
@@ -250,6 +252,10 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     """
     if hass.services.has_service(DOMAIN, "enquire_configuration"):
         return
+
+    # The actions that give back configuration or what notifications said, or that delete or reset,
+    # are for administrators only, as Home Assistant has no other way to limit who calls an action -
+    # an automation or script, having no user, can still call them
 
     async def action_notify(call: ServiceCall) -> JsonObjectType | None:
         """supernotify.notify - an alternative to notify.supernotify with each option that would
@@ -297,33 +303,35 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return notification.contents() if notification else None
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
-        return _json_safe({
-            CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
-            CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
-            CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
-            CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
-            CONF_MOBILE_DISCOVERY: config.get(CONF_MOBILE_DISCOVERY, ()),
-            CONF_RECIPIENTS_DISCOVERY: config.get(CONF_RECIPIENTS_DISCOVERY, ()),
-            CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
-            CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
-            CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
-            CONF_ACTION_GROUPS: config.get(CONF_ACTION_GROUPS, {}),
-            CONF_SCENARIOS: list(config.get(CONF_SCENARIOS, {}).keys()),
-            CONF_SCENARIO_CONTROL: config.get(CONF_SCENARIO_CONTROL, {}),
-            CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
-            CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
-            CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
-            CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
-        })
+        return redact_secrets(
+            _json_safe({
+                CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
+                CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
+                CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
+                CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
+                CONF_MOBILE_DISCOVERY: config.get(CONF_MOBILE_DISCOVERY, ()),
+                CONF_RECIPIENTS_DISCOVERY: config.get(CONF_RECIPIENTS_DISCOVERY, ()),
+                CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
+                CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
+                CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
+                CONF_ACTION_GROUPS: config.get(CONF_ACTION_GROUPS, {}),
+                CONF_SCENARIOS: list(config.get(CONF_SCENARIOS, {}).keys()),
+                CONF_SCENARIO_CONTROL: config.get(CONF_SCENARIO_CONTROL, {}),
+                CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
+                CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
+                CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
+                CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
+            })
+        )
 
     @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
         # a callback, so run in the event loop - it writes entity state
         engine.refresh_entities()
 
-    @callback
-    def supplemental_action_reset_overrides(call: ServiceCall) -> dict[str, Any]:
-        # a callback, so run in the event loop - it writes entity state
+    async def supplemental_action_reset_overrides(call: ServiceCall) -> dict[str, Any]:
+        # a coroutine, so run in the event loop - it writes entity state - and not a callback, as an
+        # admin action gives no response from one
         kind: str | None = call.data.get(ATTR_KIND)
         return {"reset": engine.reset_overrides((kind,) if kind else OVERRIDE_KINDS, call.context)}
 
@@ -335,7 +343,9 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
 
     def supplemental_action_enquire_last_notification(call: ServiceCall) -> dict[str, Any]:
         diagnostics = call.data.get("diagnostics", False)
-        return engine.last_notification.contents(diagnostics=diagnostics) if engine.last_notification else {}
+        if engine.last_notification is None:
+            return {}
+        return redact_secrets(engine.last_notification.contents(diagnostics=diagnostics))
 
     async def supplemental_action_enquire_active_scenarios(call: ServiceCall) -> dict[str, Any]:
         trace = call.data.get("trace", False)
@@ -476,10 +486,12 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         schema=NOTIFY_ACTION_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "enquire_configuration",
         supplemental_action_enquire_configuration,
+        schema=ANY_DATA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
@@ -494,17 +506,20 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         supplemental_action_enquire_deliveries_by_scenario,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "enquire_archive",
         supplemental_action_enquire_archive,
         schema=ENQUIRE_ARCHIVE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "enquire_last_notification",
         supplemental_action_enquire_last_notification,
+        schema=ANY_DATA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
@@ -537,10 +552,12 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         supplemental_action_enquire_snoozes,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "clear_snoozes",
         supplemental_action_clear_snoozes,
+        schema=ANY_DATA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     for action_name, (cmd, schema) in SNOOZE_ACTIONS.items():
@@ -551,16 +568,20 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             schema=schema,
             supports_response=SupportsResponse.OPTIONAL,
         )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "purge_archive",
         supplemental_action_purge_archive,
+        schema=ANY_DATA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "purge_media",
         supplemental_action_purge_media,
+        schema=ANY_DATA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
@@ -569,7 +590,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         supplemental_action_refresh_entities,
         supports_response=SupportsResponse.NONE,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         "reset_overrides",
         supplemental_action_reset_overrides,

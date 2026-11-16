@@ -82,6 +82,7 @@ from .const import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
+    CONF_CALLER_TEMPLATES,
     CONF_CONNECTION,
     CONF_DATA,
     CONF_DEFAULT_INCLUSION,
@@ -103,6 +104,7 @@ from .const import (
     CONF_LLM_DIAGNOSTIC_TOOLS,
     CONF_LLM_TOOLS,
     CONF_LOAD,
+    CONF_MEDIA_MAX_SIZE,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
@@ -117,6 +119,7 @@ from .const import (
     CONF_SELECTION,
     CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
+    CONF_SNAPSHOT_URL_LOCAL,
     CONF_TARGET_USAGE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORT,
@@ -125,6 +128,7 @@ from .const import (
     CONF_VOICE_OCCUPANCY,
     DEFAULT_INCLUSION_VALUES,
     INCLUSION_VALUES,
+    MEDIA_MAX_SIZE_DEFAULT,
     OCCUPANCY_VALUES,
     PRIORITY_VALUES,
     SUBENTRY_TYPE_RECIPIENT,
@@ -135,6 +139,7 @@ from .const import (
     transport_display_name,
 )
 from .hass_api import HomeAssistantAPI
+from .media_grab import unsafe_media_path
 from .options import (
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
@@ -148,6 +153,8 @@ from .target import Target
 from .titles import subentry_title
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
@@ -276,12 +283,20 @@ def extract_legacy_data(import_data: dict[str, Any]) -> dict[str, Any]:
         CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
         CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
         CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
+        CONF_MEDIA_MAX_SIZE: import_data.get(CONF_MEDIA_MAX_SIZE, MEDIA_MAX_SIZE_DEFAULT),
+        # nor has a legacy config had its snapshot URLs limited
+        CONF_SNAPSHOT_URL_LOCAL: import_data.get(CONF_SNAPSHOT_URL_LOCAL, False),
+        # a legacy config is an existing install, which has always had templates from callers rendered
+        CONF_CALLER_TEMPLATES: import_data.get(CONF_CALLER_TEMPLATES, True),
         CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
         CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
     }
 
 
-def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+def _user_schema(defaults: dict[str, Any] | None = None, existing: bool = False) -> vol.Schema:
+    """`existing` is for an install set up before there was a choice of `caller_templates` or
+    `snapshot_url_local`, which is offered them as it has always behaved where `defaults` has neither -
+    a new install is offered the safer of each"""
     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion used by
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
     defaults = defaults or {}
@@ -292,6 +307,9 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         vol.Optional(CONF_TEMPLATE_PATH, default=defaults.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_PATH, default=defaults.get(CONF_MEDIA_PATH, MEDIA_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_URL_PREFIX, default=defaults.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media")): cv.string,
+        vol.Optional(CONF_MEDIA_MAX_SIZE, default=defaults.get(CONF_MEDIA_MAX_SIZE, MEDIA_MAX_SIZE_DEFAULT)): cv.positive_int,
+        vol.Optional(CONF_SNAPSHOT_URL_LOCAL, default=defaults.get(CONF_SNAPSHOT_URL_LOCAL, not existing)): cv.boolean,
+        vol.Optional(CONF_CALLER_TEMPLATES, default=defaults.get(CONF_CALLER_TEMPLATES, existing)): cv.boolean,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=defaults.get(CONF_MOBILE_DISCOVERY, True)): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=defaults.get(CONF_RECIPIENTS_DISCOVERY, True)): cv.boolean,
     })
@@ -312,7 +330,7 @@ async def _ensure_directory_exists(path_str: str) -> str | None:
     return None
 
 
-async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
+async def _validate_user_input(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str, str]:
     """Validate template_path/media_path at config-flow submission time, creating each
     directory if it doesn't exist yet. Catching a genuine failure here surfaces a typo'd or
     unwritable path immediately in the wizard, instead of leaving the user to discover it
@@ -329,6 +347,12 @@ async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
 
     media_path = user_input.get(CONF_MEDIA_PATH)
     if media_path:
+        # checked before it's created, and as it will be used, within the config directory if relative
+        unsafe = await hass.async_add_executor_job(unsafe_media_path, hass.config.path(media_path), hass.config.config_dir)
+        if unsafe:
+            errors[CONF_MEDIA_PATH] = "media_path_unsafe"
+            _LOGGER.debug("SUPERNOTIFY Unsafe media_path %s: %s", media_path, unsafe)
+            return errors
         error = await _ensure_directory_exists(media_path)
         if error:
             errors[CONF_MEDIA_PATH] = "media_path_invalid"
@@ -345,7 +369,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await _validate_user_input(user_input)
+            errors = await _validate_user_input(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(title="Supernotify", data=user_input)
         return self.async_show_form(step_id="user", data_schema=_user_schema(user_input), errors=errors)
@@ -360,7 +384,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await _validate_user_input(user_input)
+            errors = await _validate_user_input(self.hass, user_input)
             if not errors:
                 # async_update_and_abort, not async_update_reload_and_abort: async_setup_entry
                 # registers an update listener, which async_update_entry already fires (and
@@ -368,7 +392,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 # would reload twice and log an HA deprecation warning about the redundancy.
                 return self.async_update_and_abort(entry, data_updates=user_input)
         defaults = user_input if user_input is not None else dict(entry.data)
-        return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults), errors=errors)
+        return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults, existing=True), errors=errors)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Bootstrap a config entry, optionally seeded from a legacy YAML config dict.
@@ -388,6 +412,11 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: import_data.get(CONF_NAME, DOMAIN),
             **extract_legacy_data(import_data),
         }
+        if not import_data:
+            # a new install, with nothing relying on templates from callers being rendered, or on
+            # snapshots from beyond its own network
+            data[CONF_CALLER_TEMPLATES] = False
+            data[CONF_SNAPSHOT_URL_LOCAL] = True
 
         options = extract_legacy_options(import_data)
 

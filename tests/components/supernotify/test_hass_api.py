@@ -1055,3 +1055,66 @@ def test_entity_spoken_names_include_full_entity_name(hass: HomeAssistant) -> No
         names = HomeAssistantAPI(hass).entity_spoken_names(entry.entity_id)
     assert "doorbell porch" in names
     assert "porch" in names
+
+
+ADAPTERS = [
+    {"name": "eth0", "ipv4": [{"address": "192.168.1.10", "network_prefix": 24}], "ipv6": []},
+    {"name": "hassio", "ipv4": [{"address": "172.30.32.1", "network_prefix": 23}], "ipv6": []},
+]
+
+
+@pytest.mark.parametrize(
+    ("url", "local"),
+    [
+        ("http://homeassistant.home.example:8123/api/camera_proxy/camera.drive", True),  # Home Assistant itself
+        ("https://my.home.example/local/snap.jpg", True),  # its external URL
+        ("https://frigate.my.home.example/api/events/1/snapshot.jpg", True),  # a subdomain of it
+        ("https://other.home.example/snap.jpg", False),  # only under the same parent domain
+        ("https://my.home.example.evil.test/snap.jpg", False),
+        ("https://cdn.example.org/snapshots/1.jpg", True),  # in allowlist_external_urls
+        ("https://cdn.example.org/other/1.jpg", False),
+        ("http://192.168.1.20/snap.jpg", True),  # on the same network
+        ("http://172.30.33.5:5000/api/snap.jpg", True),
+        ("http://127.0.0.1:5000/snap.jpg", True),
+        ("http://192.168.2.20/snap.jpg", False),
+        ("http://169.254.169.254/latest/meta-data/", False),
+        ("http://8.8.8.8/snap.jpg", False),
+        ("not a url", False),
+    ],
+)
+async def test_is_local_url(hass: HomeAssistant, url: str, local: bool) -> None:
+    hass.config.allowlist_external_urls = {"https://cdn.example.org/snapshots/"}
+    uut = HomeAssistantAPI(hass)
+    uut.internal_url = "http://homeassistant.home.example:8123"
+    uut.external_url = "https://my.home.example"
+
+    async def resolve(host: str, _port: int | None) -> list[tuple]:
+        # an address as itself, and any name as somewhere on the internet
+        literal = host.replace(".", "").isdigit()
+        return [(socket.AF_INET, 0, 0, "", (host if literal else "8.8.8.8", 0))]
+
+    with (
+        patch("custom_components.supernotify.hass_api.network.async_get_adapters", AsyncMock(return_value=ADAPTERS)),
+        patch.object(hass.loop, "getaddrinfo", resolve),
+    ):
+        assert await uut.is_local_url(url) is local
+
+
+async def test_is_local_url_for_unresolvable_host(hass: HomeAssistant) -> None:
+    uut = HomeAssistantAPI(hass)
+    with (
+        patch("custom_components.supernotify.hass_api.network.async_get_adapters", AsyncMock(return_value=ADAPTERS)),
+        patch.object(hass.loop, "getaddrinfo", AsyncMock(side_effect=socket.gaierror("no such host"))),
+    ):
+        assert await uut.is_local_url("http://no-such-host.invalid/snap.jpg") is False
+
+
+async def test_is_local_url_needs_every_address_local(hass: HomeAssistant) -> None:
+    """A name that resolves both locally and elsewhere isn't local"""
+    uut = HomeAssistantAPI(hass)
+    resolved = [(socket.AF_INET, 0, 0, "", ("192.168.1.20", 0)), (socket.AF_INET, 0, 0, "", ("8.8.8.8", 0))]
+    with (
+        patch("custom_components.supernotify.hass_api.network.async_get_adapters", AsyncMock(return_value=ADAPTERS)),
+        patch.object(hass.loop, "getaddrinfo", AsyncMock(return_value=resolved)),
+    ):
+        assert await uut.is_local_url("http://mixed.example/snap.jpg") is False

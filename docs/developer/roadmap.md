@@ -267,6 +267,45 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
   - See also extracted core version support data - https://claude.ai/artifact/7aGj3qD4uJXa8g3MFvuvNx
 - No obvious way to find out which transport or features are used, other than HA stats on underlying transport usage, e.g. hardly anyone uses SMTP
 
+## Security
+
+From the security review for v2.19.0, see [SECURITY.md](https://github.com/rhizomatics/supernotify/blob/main/SECURITY.md) for what is in place now.
+
+### Templates from Callers
+
+Home Assistant renders an automation's templates before the notify action is called, and its own notify actions take the message as plain text. Supernotify renders the message and `data` of a call again, so text that came from outside, like an incoming SMS, is rendered as a template: it can read any state, and a heavy loop holds up Home Assistant.
+
+v2.19.0 made this the `caller_templates` setting, off for new installs and on for existing ones. Still to do:
+
+- A repair, or a note in the release, to move existing installs to off, then remove the setting and the rendering
+- Find out who relies on it, perhaps by logging once when a caller's template is rendered
+- `action_template`, `title_template` and `uri_template` of a mobile action given in the call are still rendered, since their name asks for it
+- A time limit on rendering the templates that are left, those in the configuration
+
+### Media Access
+
+Camera snapshots are served from `media_url_prefix` by a Home Assistant static path, which has no login. Only the id in the file name protects them, and the link goes to the services delivering the notification.
+
+- Serve media from a view that needs a login, with signed paths that expire for links sent to other services, as Home Assistant does for its camera proxy
+- Check what each transport needs: the Companion App sends its login for paths on the Home Assistant URL, e-mail and ntfy clients can't
+- `snapshot_url` is limited to images of a size since v2.19.0, and to Home Assistant's own address, network and `allowlist_external_urls` where *Only Local Snapshot URLs* is on, as it is for new installs. Move existing installs to it, as for [Templates from Callers](#templates-from-callers)
+
+### Snooze Events
+
+A snooze from a mobile action arrives as a `mobile_app_notification_action` event, which any phone with the Companion App can fire with any content, as can anything else able to fire events. A snooze for one user is tied to the owner of the phone, but one for `EVERYONE` is taken from anyone.
+
+- Decide whether an `EVERYONE` snooze should need the action to have been offered, by keeping the actions sent with recent notifications and only accepting those
+- Or an option for who may snooze for everyone, as recipients have for themselves
+- Show who made each snooze, from the event's user, in `enquire_snoozes`
+
+### Stored Credentials
+
+The SMTP password of a transport's `connection` is kept as Home Assistant keeps every config entry, in plain text in `.storage` and in backups. There is no Home Assistant secret store to move to.
+
+- Prefer reusing the connection of Home Assistant's SMTP integration, so there is one copy, see [Email Using Home Assistant's SMTP Entries](#email-using-home-assistants-smtp-entries)
+- Support OAuth for the providers that have it, so no password is kept
+- A reauthentication flow when the SMTP server refuses the password, rather than editing the transport
+
 ## Ecosystem
 
 ### Packages

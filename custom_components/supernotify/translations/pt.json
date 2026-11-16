@@ -391,6 +391,9 @@
                     "template_path": "Caminho do modelo",
                     "media_path": "Caminho de mídia",
                     "media_url_prefix": "Prefixo de URL de mídia",
+                    "media_max_size": "Maior download de instantâneo (MB)",
+                    "snapshot_url_local": "Apenas URLs de instantâneo locais",
+                    "caller_templates": "Renderizar modelos nas chamadas de notificação",
                     "mobile_discovery": "Descoberta de dispositivos móveis",
                     "recipients_discovery": "Descoberta de destinatários",
                     "name": "Nome"
@@ -399,6 +402,9 @@
                     "template_path": "Localização opcional dos modelos Jinja2 para e-mails HTML. Caminhos relativos são resolvidos dentro do diretório de configuração do Home Assistant",
                     "media_path": "Caminho de armazenamento para mídia criada durante notificações, por exemplo capturas de câmera para anexos. Caminhos relativos são resolvidos dentro do diretório de configuração do Home Assistant",
                     "media_url_prefix": "Prefixo do caminho de URL sob o qual a mídia armazenada, como capturas de câmera, é servida",
+                    "media_max_size": "O máximo, em megabytes, que é descarregado para um URL de instantâneo indicado com uma notificação. Nada que seja maior, ou que não seja uma imagem, é utilizado",
+                    "snapshot_url_local": "Obtém um URL de instantâneo apenas do próprio Home Assistant ou de um subdomínio do seu endereço, de um dispositivo na mesma rede que o Home Assistant, ou de um URL em allowlist_external_urls. Os redirecionamentos não são seguidos",
+                    "caller_templates": "Renderiza também os modelos encontrados na mensagem e nos dados de uma chamada de notificação, além dos da configuração. As automações já renderizam os seus próprios modelos, por isso deixe desligado a menos que algo passe modelos sem renderizar, e nunca ligue quando o texto da mensagem puder vir de fora do Home Assistant",
                     "mobile_discovery": "Descobre automaticamente dispositivos do aplicativo móvel registrados no Home Assistant para notificações push",
                     "recipients_discovery": "Descobre automaticamente destinatários a partir das entidades de pessoa do Home Assistant",
                     "name": "Determina o nome da ação notify registada (notify.NAME) - altere apenas se precisar de algo diferente de notify.supernotify, por exemplo, para corresponder a uma automação existente"
@@ -410,6 +416,9 @@
                     "template_path": "Caminho do modelo",
                     "media_path": "Caminho de mídia",
                     "media_url_prefix": "Prefixo de URL de mídia",
+                    "media_max_size": "Maior download de instantâneo (MB)",
+                    "snapshot_url_local": "Apenas URLs de instantâneo locais",
+                    "caller_templates": "Renderizar modelos nas chamadas de notificação",
                     "mobile_discovery": "Descoberta de dispositivos móveis",
                     "recipients_discovery": "Descoberta de destinatários",
                     "name": "Nome"
@@ -418,6 +427,9 @@
                     "template_path": "Localização opcional dos modelos Jinja2 para e-mails HTML. Caminhos relativos são resolvidos dentro do diretório de configuração do Home Assistant",
                     "media_path": "Caminho de armazenamento para mídia criada durante notificações, por exemplo capturas de câmera para anexos. Caminhos relativos são resolvidos dentro do diretório de configuração do Home Assistant",
                     "media_url_prefix": "Prefixo do caminho de URL sob o qual a mídia armazenada, como capturas de câmera, é servida",
+                    "media_max_size": "O máximo, em megabytes, que é descarregado para um URL de instantâneo indicado com uma notificação. Nada que seja maior, ou que não seja uma imagem, é utilizado",
+                    "snapshot_url_local": "Obtém um URL de instantâneo apenas do próprio Home Assistant ou de um subdomínio do seu endereço, de um dispositivo na mesma rede que o Home Assistant, ou de um URL em allowlist_external_urls. Os redirecionamentos não são seguidos",
+                    "caller_templates": "Renderiza também os modelos encontrados na mensagem e nos dados de uma chamada de notificação, além dos da configuração. As automações já renderizam os seus próprios modelos, por isso deixe desligado a menos que algo passe modelos sem renderizar, e nunca ligue quando o texto da mensagem puder vir de fora do Home Assistant",
                     "mobile_discovery": "Descobre automaticamente dispositivos do aplicativo móvel registrados no Home Assistant para notificações push",
                     "recipients_discovery": "Descobre automaticamente destinatários a partir das entidades de pessoa do Home Assistant",
                     "name": "Determina o nome da ação notify registada (notify.NAME) - altere apenas se precisar de algo diferente de notify.supernotify, por exemplo, para corresponder a uma automação existente"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "Não foi possível criar ou aceder ao caminho de modelos - verifique a localização e as permissões",
-            "media_path_invalid": "Não foi possível criar ou aceder ao caminho de multimédia - verifique a localização e as permissões"
+            "media_path_invalid": "Não foi possível criar ou aceder ao caminho de multimédia - verifique a localização e as permissões",
+            "media_path_unsafe": "O caminho de multimédia não pode ser a pasta de configuração do Home Assistant, uma pasta que a contenha, nem estar dentro da sua pasta .storage"
         }
     },
     "issues": {

@@ -418,3 +418,43 @@ async def test_message_usage_combine_title_without_message() -> None:
     uut = Envelope(delivery, Notification(ctx, title="Dinner"))
     assert uut._compute_message() == "Dinner"
     assert uut._compute_title() is None
+
+
+async def test_caller_message_template_rendered_where_switched_on() -> None:
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(context.delivery("notify_entity"), Notification(context, message="{{ 1 + 1 }}"), context=context)
+    assert uut.message == "2"
+
+
+async def test_caller_message_template_left_alone_where_switched_off() -> None:
+    """Text passed on from outside Home Assistant can't have a template in it rendered"""
+    context = TestingContext()
+    await context.test_initialize()
+    context.caller_templates = False
+    uut = Envelope(context.delivery("notify_entity"), Notification(context, message="{{ 1 + 1 }}"), context=context)
+    assert uut.message == "{{ 1 + 1 }}"
+
+
+async def test_configured_message_template_rendered_with_caller_templates_off() -> None:
+    context = TestingContext(deliveries={"fixed": {CONF_TRANSPORT: "persistent", "message": "{{ 1 + 1 }}"}})
+    await context.test_initialize()
+    context.caller_templates = False
+    uut = Envelope(context.delivery("fixed"), Notification(context, message="{{ 3 + 3 }}"), context=context)
+    assert uut.message == "2"
+
+
+async def test_only_configured_data_templates_rendered_with_caller_templates_off() -> None:
+    context = TestingContext()
+    await context.test_initialize()
+    context.caller_templates = False
+    uut = Envelope(
+        context.delivery("notify_entity"),
+        Notification(context, message="hello there", action_data={"data": {"from_call": "{{ 1 + 1 }}"}}),
+        # as put together by Notification.generate_envelopes(), the call's data over the configuration's
+        data={"configured": "{{ 2 + 2 }}", "from_call": "{{ 1 + 1 }}"},
+        context=context,
+    )
+    assert str(uut.data["configured"]) == "4"
+    assert uut.data["from_call"] == "{{ 1 + 1 }}"
+    assert uut.contents()["data"]["from_call"] == "{{ 1 + 1 }}"

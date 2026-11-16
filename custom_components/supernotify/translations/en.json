@@ -427,6 +427,9 @@
                     "template_path": "Template Path",
                     "media_path": "Media Path",
                     "media_url_prefix": "Media URL Prefix",
+                    "media_max_size": "Largest Snapshot Download (MB)",
+                    "snapshot_url_local": "Only Local Snapshot URLs",
+                    "caller_templates": "Render Templates in Notify Calls",
                     "mobile_discovery": "Mobile Device Discovery",
                     "recipients_discovery": "Recipient Discovery"
                 },
@@ -435,6 +438,9 @@
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
+                    "media_max_size": "The most, in megabytes, that is downloaded for a snapshot URL given with a notification. Anything larger, or that is not an image, is not used",
+                    "snapshot_url_local": "Only fetch a snapshot URL from Home Assistant itself or a subdomain of its address, from a device on the same network as Home Assistant, or from a URL in allowlist_external_urls. Redirects are not followed",
+                    "caller_templates": "Also render templates found in the message and data of a notify call, as well as those in the configuration. Automations already render their own templates, so leave this off unless something passes templates through unrendered, and never switch it on where message text can come from outside Home Assistant",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
                 }
@@ -446,6 +452,9 @@
                     "template_path": "Template Path",
                     "media_path": "Media Path",
                     "media_url_prefix": "Media URL Prefix",
+                    "media_max_size": "Largest Snapshot Download (MB)",
+                    "snapshot_url_local": "Only Local Snapshot URLs",
+                    "caller_templates": "Render Templates in Notify Calls",
                     "mobile_discovery": "Mobile Device Discovery",
                     "recipients_discovery": "Recipient Discovery"
                 },
@@ -454,6 +463,9 @@
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
+                    "media_max_size": "The most, in megabytes, that is downloaded for a snapshot URL given with a notification. Anything larger, or that is not an image, is not used",
+                    "snapshot_url_local": "Only fetch a snapshot URL from Home Assistant itself or a subdomain of its address, from a device on the same network as Home Assistant, or from a URL in allowlist_external_urls. Redirects are not followed",
+                    "caller_templates": "Also render templates found in the message and data of a notify call, as well as those in the configuration. Automations already render their own templates, so leave this off unless something passes templates through unrendered, and never switch it on where message text can come from outside Home Assistant",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
                 }
@@ -465,7 +477,8 @@
         },
         "error": {
             "template_path_invalid": "Template path could not be created or accessed - check the location and permissions",
-            "media_path_invalid": "Media path could not be created or accessed - check the location and permissions"
+            "media_path_invalid": "Media path could not be created or accessed - check the location and permissions",
+            "media_path_unsafe": "Media path can't be the Home Assistant config folder, a folder containing it, or within its .storage folder"
         }
     },
     "options": {

@@ -5,7 +5,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import TYPE_CHECKING, cast
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from anyio import Path
@@ -79,6 +79,9 @@ def _direct_smtp_uut(transport_config: dict | None = None) -> EmailTransport:
     context.hass_api.translations = english_translations
     context.hass_api.hass_name = "Our Home"
     context.hass_api.has_service.return_value = False
+    context.hass_api.create_job = AsyncMock(side_effect=lambda func, *args: func(*args))
+    context.hass_api.is_allowed_path.return_value = True
+    context.media_storage.media_path = None
     return EmailTransport(context, transport_config if transport_config is not None else SMTP_TRANSPORT_CONFIG)
 
 
@@ -1287,3 +1290,70 @@ async def test_data_keys_select_prunes_passed_on_data() -> None:
     })
 
     assert sent["data"] == {"html": "<b>hi</b>"}
+
+
+async def test_attachment_outside_allowed_paths_is_left_out(tmp_path: object) -> None:
+    """A file from anywhere can't be mailed out, such as `secrets.yaml` given as an image"""
+    secret_path = tmp_path / "secrets.yaml"  # type: ignore[operator]  # ty: ignore[unsupported-operator]
+    secret_path.write_text("smtp_password: hunter2")
+    uut = _direct_smtp_uut()
+    uut.hass_api.is_allowed_path.return_value = False  # type: ignore[attr-defined]
+
+    msg = await uut._build_message(
+        {ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(secret_path)]}}, ["tester1@assert.com"], None, "007"
+    )
+
+    assert isinstance(msg, MIMEMultipart)
+    assert len(msg.get_payload()) == 1  # type: ignore[arg-type]  # only the text, no attachment
+    assert "hunter2" not in msg.as_string()
+
+
+async def test_attachment_in_media_path_is_sent(tmp_path: object) -> None:
+    media_path = tmp_path / "media"  # type: ignore[operator]  # ty: ignore[unsupported-operator]
+    (media_path / "image").mkdir(parents=True)
+    image_path = media_path / "image" / "picture.jpg"
+    image_path.write_bytes(b"\xff\xd8\xff\xe0notreallyajpegbutclosenough")
+    uut = _direct_smtp_uut()
+    uut.hass_api.is_allowed_path.return_value = False  # type: ignore[attr-defined]
+    uut.context.media_storage.media_path = Path(media_path)
+
+    msg = await uut._build_message(
+        {ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(image_path)]}}, ["tester1@assert.com"], None, "008"
+    )
+
+    assert len(msg.get_payload()) == 2  # type: ignore[arg-type]
+
+
+def test_footer_only_gives_named_envelope_fields() -> None:
+    """The footer used to be formatted against the envelope itself, so could read the SMTP password"""
+    uut = _direct_smtp_uut()
+    envelope = Mock(delivery_name="plain_email", priority="high", notification_id=None)
+
+    footer = uut.render_footer(
+        "{e.delivery_name}/{e.priority}/{e.notification_id}/{e.delivery.transport.password}/{e.context}/{e.__class__}",
+        envelope,
+    )
+
+    assert footer == "plain_email/high//{e.delivery.transport.password}/{e.context}/{e.__class__}"
+
+
+async def test_default_template_escapes_message_and_title(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"test_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
+        services={"notify": ["smtp"]},
+    )
+    await ctx.test_initialize()
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+
+    result = await uut.render_template(
+        "default.html.j2",
+        Envelope(Delivery("test_email", ctx.delivery_config("test_email"), uut), Notification(ctx, message="test")),
+        {ATTR_MESSAGE: '<a href="http://evil.example">click</a>', ATTR_TITLE: "<script>alert(1)</script>"},
+        snapshot_url='http://cam.example/x.jpg"><script>alert(2)</script>',
+    )
+
+    assert result is not None
+    assert "<script>" not in result
+    assert '<a href="http://evil.example">' not in result
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in result

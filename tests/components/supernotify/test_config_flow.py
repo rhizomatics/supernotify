@@ -18,6 +18,7 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
+    CONF_CALLER_TEMPLATES,
     CONF_DELIVERY,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
@@ -26,6 +27,7 @@ from custom_components.supernotify.const import (
     CONF_LLM_ACTION_TOOLS,
     CONF_LLM_DIAGNOSTIC_TOOLS,
     CONF_LLM_TOOLS,
+    CONF_MEDIA_MAX_SIZE,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
@@ -33,10 +35,12 @@ from custom_components.supernotify.const import (
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
+    CONF_SNAPSHOT_URL_LOCAL,
     CONF_TEMPLATE_PATH,
     CONF_TTL,
 )
 from custom_components.supernotify.schema import OutcomeSelection
+from tests.components.supernotify.ha_testing import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -67,6 +71,10 @@ async def test_user_step_defaults_create_entry(hass: HomeAssistant) -> None:
         CONF_TEMPLATE_PATH: TEMPLATE_DIR,
         CONF_MEDIA_PATH: MEDIA_DIR,
         CONF_MEDIA_URL_PREFIX: "/supernotify/media",
+        CONF_MEDIA_MAX_SIZE: 20,
+        # the safer of each for a new install
+        CONF_SNAPSHOT_URL_LOCAL: True,
+        CONF_CALLER_TEMPLATES: False,
         CONF_MOBILE_DISCOVERY: True,
         CONF_RECIPIENTS_DISCOVERY: True,
     }
@@ -499,3 +507,42 @@ async def test_reconfigure_step_rejects_unusable_media_path(hass: HomeAssistant,
     assert result2["errors"] == {CONF_MEDIA_PATH: "media_path_invalid"}
     # entry untouched - the invalid submission was never applied
     assert entry.data[CONF_MEDIA_PATH] == MEDIA_DIR
+
+
+async def test_user_step_rejects_media_path_holding_config(hass: HomeAssistant) -> None:
+    """The media folder is served without a login, and old files in it removed, so it can't be
+    the config folder, whether named outright or reached by climbing out of it"""
+    for unsafe_path in (".", "media/../..", hass.config.config_dir, ".storage/media"):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_MEDIA_PATH: unsafe_path})
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {CONF_MEDIA_PATH: "media_path_unsafe"}
+
+
+async def test_import_of_new_install_has_caller_templates_off(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
+    assert result["result"].data[CONF_CALLER_TEMPLATES] is False
+    assert result["result"].data[CONF_SNAPSHOT_URL_LOCAL] is True
+
+
+async def test_import_of_legacy_config_keeps_caller_templates_on(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={CONF_NAME: "supernotify"})
+    assert result["result"].data[CONF_CALLER_TEMPLATES] is True
+    assert result["result"].data[CONF_SNAPSHOT_URL_LOCAL] is False
+
+
+async def test_reconfigure_offers_caller_templates_on_for_existing_install(hass: HomeAssistant) -> None:
+    """An entry from before there was a choice has always had templates from callers rendered"""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.context.caller_templates is True
+    assert entry.runtime_data.context.media_storage.snapshot_url_local is False
+
+    reconfigure = await entry.start_reconfigure_flow(hass)
+    marker = next(m for m in reconfigure["data_schema"].schema if m == CONF_CALLER_TEMPLATES)
+    assert marker.default() is True
+    marker = next(m for m in reconfigure["data_schema"].schema if m == CONF_SNAPSHOT_URL_LOCAL)
+    assert marker.default() is False

@@ -10,12 +10,13 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.actions import lift_legacy_nested_data
+from custom_components.supernotify.archive import redact_secrets
 from custom_components.supernotify.const import CONF_MEDIA_PATH, EVENT_NOTIFICATION
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
@@ -24,6 +25,7 @@ from tests.components.supernotify.ha_testing import MockConfigEntry
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from homeassistant.auth.models import User
     from homeassistant.core import HomeAssistant
 
 
@@ -1014,3 +1016,61 @@ async def test_delivery_block_backward_compatible(
     assert engine.last_notification is not None
     assert set(engine.last_notification.selected_deliveries) == expected
     assert engine.last_notification.unknown_names == {}
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        "enquire_configuration",
+        "enquire_archive",
+        "enquire_last_notification",
+        "clear_snoozes",
+        "purge_archive",
+        "purge_media",
+        "reset_overrides",
+    ],
+)
+async def test_admin_actions_refused_for_other_users(hass: HomeAssistant, hass_read_only_user: User, action: str) -> None:
+    """Home Assistant lets any user call any action, so those that give back configuration or
+    notifications, or that delete or reset, check for an administrator themselves"""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, action, {}, blocking=True, return_response=True, context=Context(user_id=hass_read_only_user.id)
+        )
+
+
+async def test_admin_actions_respond_to_admin_and_automations(hass: HomeAssistant, hass_admin_user: User) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    for context in (Context(user_id=hass_admin_user.id), Context()):
+        config = await hass.services.async_call(
+            DOMAIN, "enquire_configuration", {}, blocking=True, return_response=True, context=context
+        )
+        assert config is not None
+        assert "transports" in config
+        # a callback's response would be lost by an admin action
+        reset = await hass.services.async_call(
+            DOMAIN, "reset_overrides", {}, blocking=True, return_response=True, context=context
+        )
+        assert reset is not None
+        assert "reset" in reset
+
+
+def test_redact_secrets_at_any_depth() -> None:
+    config = {
+        "transports": {"email": {"connection": {"host": "smtp.example", "password": "hunter2"}}},
+        "list": [{"token": "t"}],
+    }
+
+    assert redact_secrets(config) == {
+        "transports": {"email": {"connection": {"host": "smtp.example", "password": "**REDACTED**"}}},
+        "list": [{"token": "**REDACTED**"}],
+    }

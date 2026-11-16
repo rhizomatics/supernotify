@@ -24,6 +24,9 @@ SUBENTRY_TYPE_TRANSPORT: Final[str] = "transport"
 CONF_TEMPLATE_PATH: Final[str] = "template_path"
 CONF_MEDIA_PATH: Final[str] = "media_path"
 CONF_MEDIA_URL_PREFIX: Final[str] = "media_url_prefix"
+CONF_MEDIA_MAX_SIZE: Final[str] = "media_max_size"
+CONF_SNAPSHOT_URL_LOCAL: Final[str] = "snapshot_url_local"
+CONF_CALLER_TEMPLATES: Final[str] = "caller_templates"
 CONF_HOUSEKEEPING: Final[str] = "housekeeping"
 CONF_HOUSEKEEPING_TIME: Final[str] = "housekeeping_time"
 # keep the deprecated recipient, delivery and transport binary_sensors an install already has
@@ -178,6 +181,7 @@ PTZ_METHOD_FRIGATE = "frigate"
 PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
 PTZ_DELAY_DEFAULT = 10
 SNAP_WAIT_DEFAULT = 15
+MEDIA_MAX_SIZE_DEFAULT = 20  # megabytes
 
 INCLUSION_FALLBACK_ON_ERROR = "fallback_on_error"
 INCLUSION_FALLBACK = "fallback"

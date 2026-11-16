@@ -100,6 +100,35 @@ The application of this principle in the `mobile_push` case is:
 - Try to avoid slipping into a low level os-neutral schema
   - If Samsung phones need an extra field to make them work, then that's probably worth including, since they are a massively popular brand, though that remains a slippery slope
 
+13. Trust the administrator, not the notification
+
+    Supernotify runs inside Home Assistant with everything Home Assistant can do, so who and what it trusts is
+    decided for each feature, not assumed.
+
+    a. Administrators
+
+    Whoever sets Supernotify up is trusted completely. Configuration, including its templates, is theirs.
+
+    b. Other users, and whatever calls the actions
+
+    Home Assistant lets any user call any action, so sending and snoozing notifications is open to the household.
+    Anything that gives back configuration or the content of notifications, removes things, or reads files
+    from the server, is for administrators, and Supernotify checks that itself.
+
+    c. The content of a notification
+
+    Message text, links and images often start outside Home Assistant, in an incoming message, a camera, a
+    calendar or an AI agent, so nothing in a notify call is trusted. It isn't rendered as a template, used as
+    HTML, read as a file path, or fetched from anywhere, without a check that fits, and the safer behaviour is
+    the default.
+
+    Where Home Assistant has a protection, such as `allowlist_external_dirs` or admin-only actions, use it rather
+    than invent one (Principle 7). Where the safer behaviour would break existing installs, make it the default
+    for new ones and put the rest on the [roadmap](../roadmap.md#security).
+
+    Credentials are never given back, logged or archived. See [SECURITY.md](https://github.com/rhizomatics/supernotify/blob/main/SECURITY.md)
+    for the measures in place.
+
 ## How the design changes
 
 - Major changes are planned as [RFCs](rfcs/index.md) ([design policy](https://hq.rhizomatics.org.uk/policies/design/)). They're

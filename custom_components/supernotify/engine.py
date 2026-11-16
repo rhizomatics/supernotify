@@ -31,12 +31,14 @@ from .const import (
     ATTR_DATA,
     CONF_ACTION_GROUPS,
     CONF_ARCHIVE,
+    CONF_CALLER_TEMPLATES,
     CONF_CAMERAS,
     CONF_DELIVERY,
     CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_MEDIA_MAX_SIZE,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
@@ -45,11 +47,13 @@ from .const import (
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SCENARIO_CONTROL,
     CONF_SCENARIOS,
+    CONF_SNAPSHOT_URL_LOCAL,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     DRY_RUN_LIVE,
     EVENT_NOTIFICATION,
+    MEDIA_MAX_SIZE_DEFAULT,
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_RECIPIENT,
     OVERRIDE_KIND_SCENARIO,
@@ -115,6 +119,9 @@ class SupernotifyEngine:
         snooze: dict[str, Any] | None = None,
         scenario_control: dict[str, Any] | None = None,
         delivery_control: dict[str, Any] | None = None,
+        media_max_size: int = MEDIA_MAX_SIZE_DEFAULT,
+        snapshot_url_local: bool = False,
+        caller_templates: bool = True,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
@@ -141,6 +148,8 @@ class SupernotifyEngine:
             MediaStorage(
                 media_path,
                 media_url_prefix=media_url_prefix,
+                max_size=media_max_size,
+                snapshot_url_local=snapshot_url_local,
                 days=self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7),
             ),
             Snoozer(snooze),
@@ -149,6 +158,7 @@ class SupernotifyEngine:
             # like the media and archive paths, relative to the Home Assistant config directory
             hass_api.config_path(template_path) if template_path else None,
             cameras=cameras,
+            caller_templates=caller_templates,
         )
 
     async def initialize(self) -> None:
@@ -502,4 +512,7 @@ def build_supernotify_engine(hass: HomeAssistant, config: ConfigType) -> Superno
         snooze=config[CONF_SNOOZE],
         scenario_control=config.get(CONF_SCENARIO_CONTROL),
         delivery_control=config.get(CONF_DELIVERY_CONTROL),
+        media_max_size=config.get(CONF_MEDIA_MAX_SIZE, MEDIA_MAX_SIZE_DEFAULT),
+        snapshot_url_local=config.get(CONF_SNAPSHOT_URL_LOCAL, False),
+        caller_templates=config.get(CONF_CALLER_TEMPLATES, True),
     )

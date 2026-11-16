@@ -391,6 +391,9 @@
                     "template_path": "模板路径",
                     "media_path": "媒体路径",
                     "media_url_prefix": "媒体 URL 前缀",
+                    "media_max_size": "最大快照下载大小 (MB)",
+                    "snapshot_url_local": "仅限本地快照 URL",
+                    "caller_templates": "渲染通知调用中的模板",
                     "mobile_discovery": "移动设备发现",
                     "recipients_discovery": "收件人发现",
                     "name": "名称"
@@ -399,6 +402,9 @@
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
+                    "media_max_size": "为通知中给出的快照 URL 下载的最大大小（以兆字节为单位）。更大的内容或非图像内容将不会被使用",
+                    "snapshot_url_local": "仅从 Home Assistant 自身或其地址的子域、与 Home Assistant 位于同一网络的设备，或 allowlist_external_urls 中的 URL 获取快照 URL。不会跟随重定向",
+                    "caller_templates": "除配置中的模板外，还渲染通知调用的消息和数据中的模板。自动化已经渲染了自己的模板，因此除非有内容未经渲染就传递模板，否则请保持关闭；如果消息文本可能来自 Home Assistant 外部，切勿开启",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
                     "name": "决定注册的 notify 操作名称（notify.NAME）——仅在需要使用 notify.supernotify 以外的名称时更改，例如以匹配现有的自动化"
@@ -410,6 +416,9 @@
                     "template_path": "模板路径",
                     "media_path": "媒体路径",
                     "media_url_prefix": "媒体 URL 前缀",
+                    "media_max_size": "最大快照下载大小 (MB)",
+                    "snapshot_url_local": "仅限本地快照 URL",
+                    "caller_templates": "渲染通知调用中的模板",
                     "mobile_discovery": "移动设备发现",
                     "recipients_discovery": "收件人发现",
                     "name": "名称"
@@ -418,6 +427,9 @@
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
+                    "media_max_size": "为通知中给出的快照 URL 下载的最大大小（以兆字节为单位）。更大的内容或非图像内容将不会被使用",
+                    "snapshot_url_local": "仅从 Home Assistant 自身或其地址的子域、与 Home Assistant 位于同一网络的设备，或 allowlist_external_urls 中的 URL 获取快照 URL。不会跟随重定向",
+                    "caller_templates": "除配置中的模板外，还渲染通知调用的消息和数据中的模板。自动化已经渲染了自己的模板，因此除非有内容未经渲染就传递模板，否则请保持关闭；如果消息文本可能来自 Home Assistant 外部，切勿开启",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
                     "name": "决定注册的 notify 操作名称（notify.NAME）——仅在需要使用 notify.supernotify 以外的名称时更改，例如以匹配现有的自动化"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "无法创建或访问模板路径 - 请检查位置和权限",
-            "media_path_invalid": "无法创建或访问媒体路径 - 请检查位置和权限"
+            "media_path_invalid": "无法创建或访问媒体路径 - 请检查位置和权限",
+            "media_path_unsafe": "媒体路径不能是 Home Assistant 配置文件夹、包含它的文件夹，或位于其 .storage 文件夹内"
         }
     },
     "issues": {

@@ -28,8 +28,9 @@ jobs:
       # PRs don't publish, so they get a per-PR group and a newer push supersedes an older run
       group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'gh-pages-deploy' }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    # read-only: this job runs PR code, so nothing here can write - see the publish job
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
 
     strategy:
@@ -38,7 +39,7 @@ jobs:
         python-version: ["3.14"]
 
     steps:
-    - uses: actions/checkout@v7.0.1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
@@ -65,12 +66,53 @@ jobs:
         uv run pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.supernotify --cov-report=xml --cov-report=html
 
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: pytest-results-${{ matrix.python-version }}
-        path: junit/test-results-${{ matrix.python-version }}.xml
+        path: |
+          junit/test-results-${{ matrix.python-version }}.xml
+          coverage.xml
         # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
+    - name: Verify docs build
+      # PRs only verify the docs build, the publish job deploys them for everything else
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        uv sync --group docs
+        uv run properdocs build
+
+  publish:
+    # badges and docs, never for a PR, so the only job with a writable token runs no PR code
+    needs: build
+    if: ${{ always() && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publish
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
+    - name: Install tools
+      uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+      env:
+        MISE_LOCKED: 1
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y pngquant libturbojpeg0
+        uv sync --group docs
+    - name: Download pytest test results
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: pytest-results-${{ matrix.python-version }}
     - name: Generate badges
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,14 +133,10 @@ jobs:
         else
           echo "No changes to badges"
         fi
-      # PRs from forks get a read-only token, and PR results shouldn't overwrite main's badges
-      if: ${{ always() && github.event_name != 'pull_request' }}
     - name: Deploy docs
-      # run in the build workflow since schemagen has homeassistant dependency
+      # only once the tests have passed, unlike the badges, which also show a failure
+      if: ${{ needs.build.result == 'success' }}
       run: |
-        sudo apt-get install pngquant
-        uv sync --group docs
-        # mike commits to gh-pages, and the badges step that also sets this is skipped for PRs
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config push.autoSetupRemote true
@@ -127,17 +165,14 @@ jobs:
           echo "Deploying development docs"
           uv run mike deploy --update-aliases dev
         fi
-        # PRs only verify the docs build; forks get a read-only token and shouldn't publish dev docs
-        if [ "${{ github.event_name }}" != "pull_request" ]; then
-          git push origin gh-pages --force-with-lease
-        fi
+        git push origin gh-pages --force-with-lease
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-pages:
-    needs: build
-    if: ${{ github.event_name != 'pull_request' }}
+    needs: publish
+    if: ${{ github.event_name != 'pull_request' && needs.publish.result == 'success' }}
     permissions:
       contents: read
       pages: write

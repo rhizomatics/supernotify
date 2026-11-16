@@ -14,6 +14,7 @@
         "mikrotik_sms",
         "mobile_app",
         "mqtt",
+        "network",
         "ntfy",
         "persistent",
         "person",
@@ -44,9 +45,9 @@
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
     "quality_scale": "silver",
     "requirements": [
-        "bs4",
-        "aiofiles"
+        "beautifulsoup4==4.13.3",
+        "aiofiles==25.1.0"
     ],
     "single_config_entry": true,
-    "version": "2.18.2"
+    "version": "2.19.0"
 }

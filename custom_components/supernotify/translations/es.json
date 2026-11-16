@@ -391,6 +391,9 @@
                     "template_path": "Ruta de plantillas",
                     "media_path": "Ruta de medios",
                     "media_url_prefix": "Prefijo de URL de medios",
+                    "media_max_size": "Descarga máxima de instantánea (MB)",
+                    "snapshot_url_local": "Solo URL de instantáneas locales",
+                    "caller_templates": "Renderizar plantillas en las llamadas de notificación",
                     "mobile_discovery": "Descubrimiento de dispositivos móviles",
                     "recipients_discovery": "Descubrimiento de destinatarios",
                     "name": "Nombre"
@@ -399,6 +402,9 @@
                     "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",
                     "media_path": "Ruta de almacenamiento para los medios creados durante las notificaciones, por ejemplo capturas de cámara para adjuntos. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",
                     "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
+                    "media_max_size": "El máximo, en megabytes, que se descarga para una URL de instantánea indicada con una notificación. No se usa nada que sea mayor o que no sea una imagen",
+                    "snapshot_url_local": "Obtiene una URL de instantánea solo del propio Home Assistant o de un subdominio de su dirección, de un dispositivo en la misma red que Home Assistant o de una URL en allowlist_external_urls. No se siguen las redirecciones",
+                    "caller_templates": "Renderiza también las plantillas que haya en el mensaje y en los datos de una llamada de notificación, además de las de la configuración. Las automatizaciones ya renderizan sus propias plantillas, así que déjalo desactivado salvo que algo pase plantillas sin renderizar, y no lo actives nunca si el texto del mensaje puede venir de fuera de Home Assistant",
                     "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
                     "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant",
                     "name": "Determina el nombre de la acción notify registrada (notify.NAME) - cámbialo solo si necesitas algo distinto de notify.supernotify, por ejemplo, para coincidir con una automatización existente"
@@ -410,6 +416,9 @@
                     "template_path": "Ruta de plantillas",
                     "media_path": "Ruta de medios",
                     "media_url_prefix": "Prefijo de URL de medios",
+                    "media_max_size": "Descarga máxima de instantánea (MB)",
+                    "snapshot_url_local": "Solo URL de instantáneas locales",
+                    "caller_templates": "Renderizar plantillas en las llamadas de notificación",
                     "mobile_discovery": "Descubrimiento de dispositivos móviles",
                     "recipients_discovery": "Descubrimiento de destinatarios",
                     "name": "Nombre"
@@ -418,6 +427,9 @@
                     "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",
                     "media_path": "Ruta de almacenamiento para los medios creados durante las notificaciones, por ejemplo capturas de cámara para adjuntos. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",
                     "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
+                    "media_max_size": "El máximo, en megabytes, que se descarga para una URL de instantánea indicada con una notificación. No se usa nada que sea mayor o que no sea una imagen",
+                    "snapshot_url_local": "Obtiene una URL de instantánea solo del propio Home Assistant o de un subdominio de su dirección, de un dispositivo en la misma red que Home Assistant o de una URL en allowlist_external_urls. No se siguen las redirecciones",
+                    "caller_templates": "Renderiza también las plantillas que haya en el mensaje y en los datos de una llamada de notificación, además de las de la configuración. Las automatizaciones ya renderizan sus propias plantillas, así que déjalo desactivado salvo que algo pase plantillas sin renderizar, y no lo actives nunca si el texto del mensaje puede venir de fuera de Home Assistant",
                     "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
                     "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant",
                     "name": "Determina el nombre de la acción notify registrada (notify.NAME) - cámbialo solo si necesitas algo distinto de notify.supernotify, por ejemplo, para coincidir con una automatización existente"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "No se pudo crear o acceder a la ruta de plantillas - compruebe la ubicación y los permisos",
-            "media_path_invalid": "No se pudo crear o acceder a la ruta de medios - compruebe la ubicación y los permisos"
+            "media_path_invalid": "No se pudo crear o acceder a la ruta de medios - compruebe la ubicación y los permisos",
+            "media_path_unsafe": "La ruta de medios no puede ser la carpeta de configuración de Home Assistant, una carpeta que la contenga ni estar dentro de su carpeta .storage"
         }
     },
     "issues": {

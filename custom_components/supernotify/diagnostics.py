@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.redact import REDACTED, async_redact_data, partial_redact
 
+from .archive import SECRET_KEYS
+
 if TYPE_CHECKING:
     from . import SupernotifyConfigEntry
 
@@ -32,6 +34,8 @@ TO_REDACT = {
     "phone_number": _partial_redact,
     "user_id": lambda _value: REDACTED,
     "alias": lambda _value: REDACTED,
+    # credentials in the data of the last notification
+    **dict.fromkeys(SECRET_KEYS, lambda _value: REDACTED),
 }
 
 

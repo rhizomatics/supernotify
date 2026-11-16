@@ -15,6 +15,7 @@ from anyio import Path
 from homeassistant.const import (
     CONF_ENABLED,
 )
+from homeassistant.helpers.redact import async_redact_data
 
 from .const import (
     CONF_ARCHIVE_DAYS,
@@ -42,6 +43,23 @@ _LOGGER = logging.getLogger(__name__)
 ARCHIVE_DEFAULT_DAYS = 1
 WRITE_TEST = ".startup"
 ARCHIVE_PATH_ISSUE = "archive_path"
+# keys whose values are credentials wherever they turn up, such as in the `data` passed on to an
+# integration - kept out of the archive, and out of what the enquire actions give back
+SECRET_KEYS: frozenset[str] = frozenset({
+    "password",
+    "token",
+    "access_token",
+    "api_key",
+    "apikey",
+    "secret",
+    "client_secret",
+    "authorization",
+})
+
+
+def redact_secrets(contents: dict[str, Any]) -> dict[str, Any]:
+    """A copy with the value of every key in SECRET_KEYS, at any depth, replaced"""
+    return async_redact_data(contents, SECRET_KEYS)
 
 
 def _filename_period(filename: str) -> tuple[float, float] | None:
@@ -157,7 +175,7 @@ class EventArchiver(ArchiveDestination):
         if not archive_object.selected(self.selection):
             return False
         try:
-            payload = archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics))
+            payload = redact_secrets(archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics)))
             self.hass_api.fire_event(self.event_name, payload, context=archive_object.ha_context)
             return True
         except Exception:
@@ -194,7 +212,7 @@ class ArchiveTopic(ArchiveDestination):
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
             return False
-        payload = archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics))
+        payload = redact_secrets(archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics)))
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
@@ -257,7 +275,7 @@ class ArchiveDirectory(ArchiveDestination):
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_filepath = self.archive_path.joinpath(filename)
-                serialized: str = json.dumps(archive_object.contents(diagnostics=diagnostics), indent=2)
+                serialized: str = json.dumps(redact_secrets(archive_object.contents(diagnostics=diagnostics)), indent=2)
                 async with aiofiles.open(archive_filepath, mode="w") as file:
                     await file.write(serialized)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", await archive_filepath.absolute())
@@ -266,7 +284,7 @@ class ArchiveDirectory(ArchiveDestination):
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 if diagnostics and archive_filepath:
                     try:
-                        serialized = json.dumps(archive_object.contents(diagnostics=False), indent=2)
+                        serialized = json.dumps(redact_secrets(archive_object.contents(diagnostics=False)), indent=2)
                         async with aiofiles.open(archive_filepath, mode="w") as file:
                             await file.write(serialized)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", await archive_filepath.absolute())
@@ -313,7 +331,8 @@ class ArchiveDirectory(ArchiveDestination):
         try:
             raw_scan = await aiofiles.os.scandir(self.archive_path)
             for entry in raw_scan:
-                if entry.name.endswith(".json") and notification_id in entry.name:
+                # the whole id, as base_filename() puts it after the time, not just some part of it
+                if entry.name.endswith(f"_{notification_id}.json"):
                     async with aiofiles.open(entry.path, mode="r") as fh:
                         return json.loads(await fh.read())
         except Exception as exc:

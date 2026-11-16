@@ -43,6 +43,7 @@ class Context:
         mobile_actions: ConfigType | None = None,
         template_path: str | None = None,
         cameras: list[ConfigType] | None = None,
+        caller_templates: bool = True,
         **kwargs: Any,
     ) -> None:
         self.delivery_registry: DeliveryRegistry = delivery_registry
@@ -56,6 +57,8 @@ class Context:
 
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.mobile_actions: ConfigType = mobile_actions or {}
+        # whether templates in the message and data of a notify call are rendered, as well as those in the configuration
+        self.caller_templates: bool = caller_templates
         self.custom_template_path: Path | None = Path(template_path) if template_path else None
 
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}

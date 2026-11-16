@@ -127,6 +127,10 @@ async def test_media_shows_camera_image(hass: HomeAssistant) -> None:
 async def test_alexa_media_player_volume_from_template_set_and_restored(hass: HomeAssistant) -> None:
     house = await spoken_house(hass)
     try:
+        # a template in the call itself, rather than the configuration, is only rendered where that's switched on
+        entry = hass.config_entries.async_entries("supernotify")[0]
+        hass.config_entries.async_update_entry(entry, data={**entry.data, "caller_templates": True})
+        await hass.async_block_till_done()
         # no waiting for the speech to finish or music to resume, without changing the clock for all of HA
         with (
             patch("custom_components.supernotify.transports.alexa_media_player._estimate_tts_duration", return_value=0),

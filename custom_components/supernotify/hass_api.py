@@ -23,6 +23,7 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.util import slugify
+from yarl import URL
 
 from .compat import vol
 
@@ -43,10 +44,12 @@ import socket
 import threading
 from contextlib import contextmanager
 from datetime import timedelta
+from ipaddress import ip_address, ip_network
 from typing import cast
 
 import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
+from homeassistant.components import network
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.models import ActionTrace
@@ -379,6 +382,43 @@ class HomeAssistantAPI:
     def config_path(self, path: str) -> str:
         """A path relative to the Home Assistant config directory, or the path itself if absolute."""
         return self._hass.config.path(path)
+
+    async def is_local_url(self, url: str) -> bool:
+        """Whether this URL is for Home Assistant itself or somewhere local to it:
+
+        - the host of Home Assistant's internal or external URL, or a subdomain of it - not just a
+          host under the same parent domain, which for a shared one like `ui.nabu.casa` is anyone's
+        - a URL allowed in `allowlist_external_urls`
+        - a host all of whose addresses are on a network Home Assistant has an adapter on, or loopback
+        """
+        host: str | None = URL(url).host
+        if not host:
+            return False
+        host = host.lower()
+        for own_url in (self.internal_url, self.external_url):
+            own_host: str | None = URL(own_url).host if own_url else None
+            if own_host and (host == own_host.lower() or host.endswith(f".{own_host.lower()}")):
+                return True
+        if self._hass.config.is_allowed_external_url(url):
+            return True
+        try:
+            resolved = await self._hass.loop.getaddrinfo(host, None)
+            # without the scope an IPv6 link-local address comes with
+            addresses = {ip_address(str(info[4][0]).partition("%")[0]) for info in resolved}
+            networks = [
+                ip_network(f"{ip['address']}/{ip['network_prefix']}", strict=False)
+                for adapter in await network.async_get_adapters(self._hass)
+                for ip in (*adapter["ipv4"], *adapter["ipv6"])
+            ]
+        except (OSError, ValueError) as e:
+            _LOGGER.debug("SUPERNOTIFY Unable to tell if %s is local: %s", host, e)
+            return False
+        return bool(addresses) and all(a.is_loopback or any(a in n for n in networks) for a in addresses)
+
+    def is_allowed_path(self, path: str) -> bool:
+        """Whether Home Assistant allows files to be read from here - its media folders, `www`, and
+        `allowlist_external_dirs`. Blocking, so run as a job."""
+        return self._hass.config.is_allowed_path(path)
 
     def config_entry_title_for_entity(self, entity_id: str) -> str | None:
         """The title of the config entry that registered this entity, if any."""

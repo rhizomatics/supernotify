@@ -391,6 +391,9 @@
                     "template_path": "Chemin des modèles",
                     "media_path": "Chemin des médias",
                     "media_url_prefix": "Préfixe d'URL des médias",
+                    "media_max_size": "Téléchargement maximal d'un instantané (Mo)",
+                    "snapshot_url_local": "URL d'instantanés locales uniquement",
+                    "caller_templates": "Rendre les modèles des appels de notification",
                     "mobile_discovery": "Découverte des appareils mobiles",
                     "recipients_discovery": "Découverte des destinataires",
                     "name": "Nom"
@@ -399,6 +402,9 @@
                     "template_path": "Emplacement optionnel des modèles Jinja2 pour les e-mails HTML. Les chemins relatifs sont résolus dans le répertoire de configuration de Home Assistant",
                     "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes. Les chemins relatifs sont résolus dans le répertoire de configuration de Home Assistant",
                     "media_url_prefix": "Préfixe de chemin d'URL sous lequel les médias stockés, comme les captures de caméra, sont servis",
+                    "media_max_size": "Le maximum, en mégaoctets, téléchargé pour une URL d'instantané fournie avec une notification. Tout ce qui est plus volumineux, ou qui n'est pas une image, n'est pas utilisé",
+                    "snapshot_url_local": "Ne récupère une URL d'instantané que depuis Home Assistant lui-même ou un sous-domaine de son adresse, depuis un appareil sur le même réseau que Home Assistant, ou depuis une URL de allowlist_external_urls. Les redirections ne sont pas suivies",
+                    "caller_templates": "Rend aussi les modèles présents dans le message et les données d'un appel de notification, en plus de ceux de la configuration. Les automatisations rendent déjà leurs propres modèles, donc laissez cette option désactivée sauf si quelque chose transmet des modèles non rendus, et ne l'activez jamais lorsque le texte du message peut provenir de l'extérieur de Home Assistant",
                     "mobile_discovery": "Découvre automatiquement les appareils de l'application mobile enregistrés dans Home Assistant pour les notifications push",
                     "recipients_discovery": "Découvre automatiquement les destinataires à partir des entités personne de Home Assistant",
                     "name": "Détermine le nom de l'action notify enregistrée (notify.NAME) - à modifier uniquement si vous avez besoin d'autre chose que notify.supernotify, par exemple pour correspondre à une automatisation existante"
@@ -410,6 +416,9 @@
                     "template_path": "Chemin des modèles",
                     "media_path": "Chemin des médias",
                     "media_url_prefix": "Préfixe d'URL des médias",
+                    "media_max_size": "Téléchargement maximal d'un instantané (Mo)",
+                    "snapshot_url_local": "URL d'instantanés locales uniquement",
+                    "caller_templates": "Rendre les modèles des appels de notification",
                     "mobile_discovery": "Découverte des appareils mobiles",
                     "recipients_discovery": "Découverte des destinataires",
                     "name": "Nom"
@@ -418,6 +427,9 @@
                     "template_path": "Emplacement optionnel des modèles Jinja2 pour les e-mails HTML. Les chemins relatifs sont résolus dans le répertoire de configuration de Home Assistant",
                     "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes. Les chemins relatifs sont résolus dans le répertoire de configuration de Home Assistant",
                     "media_url_prefix": "Préfixe de chemin d'URL sous lequel les médias stockés, comme les captures de caméra, sont servis",
+                    "media_max_size": "Le maximum, en mégaoctets, téléchargé pour une URL d'instantané fournie avec une notification. Tout ce qui est plus volumineux, ou qui n'est pas une image, n'est pas utilisé",
+                    "snapshot_url_local": "Ne récupère une URL d'instantané que depuis Home Assistant lui-même ou un sous-domaine de son adresse, depuis un appareil sur le même réseau que Home Assistant, ou depuis une URL de allowlist_external_urls. Les redirections ne sont pas suivies",
+                    "caller_templates": "Rend aussi les modèles présents dans le message et les données d'un appel de notification, en plus de ceux de la configuration. Les automatisations rendent déjà leurs propres modèles, donc laissez cette option désactivée sauf si quelque chose transmet des modèles non rendus, et ne l'activez jamais lorsque le texte du message peut provenir de l'extérieur de Home Assistant",
                     "mobile_discovery": "Découvre automatiquement les appareils de l'application mobile enregistrés dans Home Assistant pour les notifications push",
                     "recipients_discovery": "Découvre automatiquement les destinataires à partir des entités personne de Home Assistant",
                     "name": "Détermine le nom de l'action notify enregistrée (notify.NAME) - à modifier uniquement si vous avez besoin d'autre chose que notify.supernotify, par exemple pour correspondre à une automatisation existante"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "Impossible de créer ou d'accéder au chemin des modèles - vérifiez l'emplacement et les autorisations",
-            "media_path_invalid": "Impossible de créer ou d'accéder au chemin des médias - vérifiez l'emplacement et les autorisations"
+            "media_path_invalid": "Impossible de créer ou d'accéder au chemin des médias - vérifiez l'emplacement et les autorisations",
+            "media_path_unsafe": "Le chemin des médias ne peut pas être le dossier de configuration de Home Assistant, un dossier qui le contient, ni se trouver dans son dossier .storage"
         }
     },
     "issues": {

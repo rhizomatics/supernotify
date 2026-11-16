@@ -22,6 +22,11 @@ In order to handle attachments, Supernotify needs to temporarily store images on
 * A valid `media_path` directory, usually somewhere under the main `/config` directory
 * Add this directory to the `allowlist_external_dirs` in the main HomeAssistant config
 
+The media path is a folder of its own. It can't be the `/config` directory itself, a folder that holds it,
+or within `.storage`, however the path is written, since everything in the media path is served from the
+[media URL](#accessing-media-via-web) and removed when old. A path like that is refused in the UI, and one already configured gets a repair
+and is not used.
+
 ![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
 
 ```yaml title="Home Assistant Configuration"
@@ -61,6 +66,30 @@ A PTZ delay can be set to wait for camera movement before snapshot taken, and a 
 ### Accessing Media via Web
 
 By default the media storage is made available via the Home Assistant web interface with the prefix `/supernotify/media/`
+
+!!! warning
+    Home Assistant serves these files without a login, so anyone who has the link to a snapshot can
+    see it. The file names are long random ids that can't be guessed, but the links are passed to the services
+    that deliver the notification. Set an empty `media_url_prefix` to switch this off.
+
+### Snapshot URLs
+
+A `snapshot_url` is fetched by Home Assistant itself, so it can be for anything Home Assistant can reach,
+not only a camera. To stop that being used to fetch something else, only an image is kept, and
+no more than **Largest Snapshot Download** megabytes is read, 20 unless changed with the paths in the UI config shown above.
+
+**Only Local Snapshot URLs**, in the same place, narrows where a `snapshot_url` can be fetched from. It is on
+for new installs, and off for installs from before v2.19.0 until switched on. With it on, that is only:
+
+- Home Assistant itself, by its internal or external URL, or a subdomain of that address, such as
+  `frigate.my.home.example` where Home Assistant is `my.home.example`
+- A device on the same network as Home Assistant, by IP address or by a name that resolves to one, which
+  includes apps (add-ons) like Frigate on the same machine
+- A URL listed in Home Assistant's [`allowlist_external_urls`](https://www.home-assistant.io/integrations/homeassistant/#allowlist_external_urls)
+
+Redirects are not followed when it is on, and anything else is not fetched, with a warning in the log. A
+host that only shares a parent domain with Home Assistant, like another `ui.nabu.casa` address, doesn't count:
+add it to `allowlist_external_urls`.
 
 This prefix can be changed using the `media_url_prefix` setting, from the UI config shown above (where `media_path` is also configured) or the equivalent YAML. If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
 

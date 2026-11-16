@@ -426,6 +426,9 @@
                     "template_path": "Percorso Template",
                     "media_path": "Percorso Media",
                     "media_url_prefix": "Prefisso URL media",
+                    "media_max_size": "Download massimo dello snapshot (MB)",
+                    "snapshot_url_local": "Solo URL di snapshot locali",
+                    "caller_templates": "Renderizza i template nelle chiamate di notifica",
                     "mobile_discovery": "Rilevamento automatico app mobile",
                     "recipients_discovery": "Rilevamento automatico destinatari",
                     "name": "Nome"
@@ -434,6 +437,9 @@
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_url_prefix": "Prefisso del percorso URL con cui vengono serviti i media archiviati, come le istantanee della fotocamera",
+                    "media_max_size": "Il massimo, in megabyte, che viene scaricato per un URL di snapshot fornito con una notifica. Tutto ciò che è più grande, o che non è un'immagine, non viene usato",
+                    "snapshot_url_local": "Recupera un URL di snapshot solo da Home Assistant stesso o da un sottodominio del suo indirizzo, da un dispositivo sulla stessa rete di Home Assistant, o da un URL in allowlist_external_urls. I reindirizzamenti non vengono seguiti",
+                    "caller_templates": "Renderizza anche i template presenti nel messaggio e nei dati di una chiamata di notifica, oltre a quelli della configurazione. Le automazioni renderizzano già i propri template, quindi lascialo disattivato a meno che qualcosa non passi template non renderizzati, e non attivarlo mai se il testo del messaggio può provenire dall'esterno di Home Assistant",
                     "mobile_discovery": "Rileva automaticamente i dispositivi dell'app mobile registrati in Home Assistant per le notifiche push",
                     "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant",
                     "name": "Determina il nome dell'azione notify registrata (notify.NAME) - modificalo solo se hai bisogno di qualcosa di diverso da notify.supernotify, ad esempio per adattarlo a un'automazione esistente"
@@ -445,6 +451,9 @@
                     "template_path": "Percorso Template",
                     "media_path": "Percorso Media",
                     "media_url_prefix": "Prefisso URL media",
+                    "media_max_size": "Download massimo dello snapshot (MB)",
+                    "snapshot_url_local": "Solo URL di snapshot locali",
+                    "caller_templates": "Renderizza i template nelle chiamate di notifica",
                     "mobile_discovery": "Rilevamento automatico app mobile",
                     "recipients_discovery": "Rilevamento automatico destinatari",
                     "name": "Nome"
@@ -453,6 +462,9 @@
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_url_prefix": "Prefisso del percorso URL con cui vengono serviti i media archiviati, come le istantanee della fotocamera",
+                    "media_max_size": "Il massimo, in megabyte, che viene scaricato per un URL di snapshot fornito con una notifica. Tutto ciò che è più grande, o che non è un'immagine, non viene usato",
+                    "snapshot_url_local": "Recupera un URL di snapshot solo da Home Assistant stesso o da un sottodominio del suo indirizzo, da un dispositivo sulla stessa rete di Home Assistant, o da un URL in allowlist_external_urls. I reindirizzamenti non vengono seguiti",
+                    "caller_templates": "Renderizza anche i template presenti nel messaggio e nei dati di una chiamata di notifica, oltre a quelli della configurazione. Le automazioni renderizzano già i propri template, quindi lascialo disattivato a meno che qualcosa non passi template non renderizzati, e non attivarlo mai se il testo del messaggio può provenire dall'esterno di Home Assistant",
                     "mobile_discovery": "Rileva automaticamente i dispositivi dell'app mobile registrati in Home Assistant per le notifiche push",
                     "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant",
                     "name": "Determina il nome dell'azione notify registrata (notify.NAME) - modificalo solo se hai bisogno di qualcosa di diverso da notify.supernotify, ad esempio per adattarlo a un'automazione esistente"
@@ -465,7 +477,8 @@
         },
         "error": {
             "template_path_invalid": "Impossibile creare o accedere al percorso dei modelli - verifica la posizione e i permessi",
-            "media_path_invalid": "Impossibile creare o accedere al percorso dei media - verifica la posizione e i permessi"
+            "media_path_invalid": "Impossibile creare o accedere al percorso dei media - verifica la posizione e i permessi",
+            "media_path_unsafe": "Il percorso dei media non può essere la cartella di configurazione di Home Assistant, una cartella che la contiene, né trovarsi nella sua cartella .storage"
         }
     },
     "issues": {

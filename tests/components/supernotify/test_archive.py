@@ -435,3 +435,41 @@ async def test_cleanup_with_zero_days_purges_everything(mock_hass_api: HomeAssis
     await uut.initialize()
     (tmp_path / "2026-10-30T05-57_abc.json").write_text("{}")
     assert await uut.cleanup(days=0) == 1
+
+
+class SecretiveDummy(ArchivableObject):
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
+        return {
+            "message": "the token is in the data",
+            "deliveries": {
+                "events": {"success": [{"calls": [{"action_data": {"data": {"token": "s3cr3t", "level": "info"}}}]}]}
+            },
+        }
+
+    def base_filename(self) -> str:
+        return "2026-11-16T10-30_01JABCDEFGHJKMNPQRSTVWXYZ0"
+
+
+async def test_file_archive_leaves_out_credentials(hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: str(tmp_path), CONF_ARCHIVE_DAYS: "7"}, hass_api)
+    await uut.initialize()
+    assert await uut.archive(SecretiveDummy())
+
+    archived: str = (tmp_path / "2026-11-16T10-30_01JABCDEFGHJKMNPQRSTVWXYZ0.json").read_text()
+    assert "s3cr3t" not in archived
+    call_data = json.loads(archived)["deliveries"]["events"]["success"][0]["calls"][0]["action_data"]["data"]
+    assert call_data == {"token": "**REDACTED**", "level": "info"}
+
+
+async def test_read_entry_needs_the_whole_id(hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    """Part of an id, like a single digit, used to give back whichever notification had it in its file name"""
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: str(tmp_path), CONF_ARCHIVE_DAYS: "7"}, hass_api)
+    await uut.initialize()
+    assert await uut.archive(SecretiveDummy())
+    assert uut.archive_directory is not None
+
+    assert await uut.archive_directory.read_entry("2") is None
+    assert await uut.archive_directory.read_entry("01JABCDEFGHJKMNPQRSTVWXYZ") is None
+    entry = await uut.archive_directory.read_entry("01JABCDEFGHJKMNPQRSTVWXYZ0")
+    assert entry is not None
+    assert entry["message"] == "the token is in the data"

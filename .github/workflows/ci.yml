@@ -18,7 +18,7 @@ jobs:
         python-version: ["3.14"]
 
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # mise.toml and mise.lock are the one source of the tools - ruff, ty, codespell, prek, uv and Python
       - name: Install tools
@@ -46,7 +46,7 @@ jobs:
         python-version: ["3.14"]
 
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # mise.toml and mise.lock are the one source of the tools - ruff, ty, prek, uv and Python
       - name: Install tools
@@ -86,7 +86,7 @@ jobs:
             ha-test-package: pytest-homeassistant
 
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
@@ -121,7 +121,7 @@ jobs:
             --cov-report=html
 
       - name: Upload test results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: pytest-results-${{ matrix.python-version }}-ha${{ matrix.ha-version }}

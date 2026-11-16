@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import datetime as dt
 import email.utils
+import html as html_lib
 import logging
 import mimetypes
 import os.path
+import re
 import smtplib
 import time
 from contextlib import suppress
@@ -155,6 +157,10 @@ X_PRIORITY_HEADER_MAP: dict[str, str] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+# what a `footer` can refer to as `{e.<field>}`
+FOOTER_FIELDS: frozenset[str] = frozenset({"delivery_name", "notification_id", "id", "priority", "title", "message"})
+FOOTER_FIELD = re.compile(r"\{e\.(\w+)\}")
 
 
 class AlertServer(TypedDict):
@@ -386,12 +392,7 @@ class EmailTransport(Transport):
         template_data: dict[str, Any] = {k: data.pop(k) for k in (ATTR_ACTION_URL, ATTR_ACTION_URL_TITLE) if k in data}
         # TODO: centralize in config
         footer_template = data.pop("footer", None)
-        footer = None
-        if footer_template:
-            try:
-                footer = footer_template.format(e=envelope)
-            except (KeyError, ValueError, AttributeError) as ex:  # py3.13 compat
-                _LOGGER.warning("SUPERNOTIFY email: failed to render footer template: %s", ex)
+        footer: str | None = self.render_footer(str(footer_template), envelope) if footer_template else None
 
         action_data: dict[str, Any] = envelope.core_action_data()
 
@@ -415,7 +416,7 @@ class EmailTransport(Transport):
                         image_name = image_path.name
                         if not html.rstrip().endswith("</html>"):
                             if snapshot_url:
-                                html += f'<div><p><a href="{snapshot_url}">'
+                                html += f'<div><p><a href="{html_lib.escape(snapshot_url)}">'
                                 html += f'<img src="cid:{image_name}"/></a>'
                                 html += "</p></div>"
                             else:
@@ -647,7 +648,25 @@ class EmailTransport(Transport):
             msg["X-MSMail-Priority"] = X_MSMAIL_PRIORITY_HEADER_MAP.get(priority, "Normal")
         return msg
 
+    def _attachable(self, image_path: str) -> bool:
+        """Whether a file may be sent out as an attachment - only from Supernotify's own media folder, or
+        where Home Assistant allows files to be read from, as its own SMTP integration requires.
+
+        Blocking, since it resolves links, so run as a job."""
+        real_path: str = os.path.realpath(image_path)
+        media_path: Path | None = self.context.media_storage.media_path
+        if media_path is not None:
+            root_path: str = os.path.realpath(str(media_path))
+            if os.path.commonpath([real_path, root_path]) == root_path:
+                return True
+        return self.hass_api.is_allowed_path(real_path)
+
     async def _attach_file(self, image_path: str) -> MIMEImage | MIMEApplication | None:
+        if not await self.hass_api.create_job(self._attachable, image_path):
+            _LOGGER.warning(
+                "SUPERNOTIFY SMTP attachment %s is outside the media path and allowlist_external_dirs, skipping", image_path
+            )
+            return None
         try:
             async with aiofiles.open(image_path, "rb") as attachment_file:
                 file_bytes = await attachment_file.read()
@@ -731,7 +750,8 @@ class EmailTransport(Transport):
             alert = Alert(
                 message=message,
                 title=title,
-                preheader=self.pack_preheader(preheader, envelope.delivery.options),
+                # escaped here, since the padding added to it is HTML
+                preheader=self.pack_preheader(html_lib.escape(preheader), envelope.delivery.options),
                 priority=envelope.priority,
                 action_url=extra_data.get(ATTR_ACTION_URL),
                 action_url_title=extra_data.get(ATTR_ACTION_URL_TITLE),
@@ -778,6 +798,14 @@ class EmailTransport(Transport):
             if debug_trace:
                 debug_trace.record_delivery_exception(envelope.delivery.name, "html_template", e)
         return None
+
+    def render_footer(self, footer_template: str, envelope: Envelope) -> str:
+        """The footer with each `{e.<field>}` replaced, for the fields in FOOTER_FIELDS only - anything
+        else is left as written, rather than formatted against the envelope itself, which let a
+        footer read whatever the envelope could reach"""
+        return FOOTER_FIELD.sub(
+            lambda m: str(getattr(envelope, m[1]) or "") if m[1] in FOOTER_FIELDS else m[0], footer_template
+        )
 
     def pack_preheader(self, preheader: str, options: dict[str, Any]) -> str:
         preheader = preheader or ""

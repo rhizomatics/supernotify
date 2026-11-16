@@ -391,6 +391,9 @@
                     "template_path": "Sjabloonpad",
                     "media_path": "Mediapad",
                     "media_url_prefix": "Media-URL-voorvoegsel",
+                    "media_max_size": "Grootste snapshot-download (MB)",
+                    "snapshot_url_local": "Alleen lokale snapshot-URL's",
+                    "caller_templates": "Templates in notify-aanroepen renderen",
                     "mobile_discovery": "Detectie van mobiele apparaten",
                     "recipients_discovery": "Detectie van ontvangers",
                     "name": "Naam"
@@ -399,6 +402,9 @@
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
                     "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
                     "media_url_prefix": "URL-padvoorvoegsel waaronder opgeslagen media, zoals camera-snapshots, wordt aangeboden",
+                    "media_max_size": "Het maximum, in megabytes, dat wordt gedownload voor een snapshot-URL die bij een melding is opgegeven. Alles wat groter is, of geen afbeelding is, wordt niet gebruikt",
+                    "snapshot_url_local": "Haal een snapshot-URL alleen op van Home Assistant zelf of een subdomein van het adres ervan, van een apparaat op hetzelfde netwerk als Home Assistant, of van een URL in allowlist_external_urls. Omleidingen worden niet gevolgd",
+                    "caller_templates": "Render ook templates in het bericht en de data van een notify-aanroep, naast die in de configuratie. Automatiseringen renderen hun eigen templates al, dus laat dit uit tenzij iets templates ongerenderd doorgeeft, en zet het nooit aan waar berichttekst van buiten Home Assistant kan komen",
                     "mobile_discovery": "Detecteert automatisch mobiele-app-apparaten die in Home Assistant zijn geregistreerd voor pushmeldingen",
                     "recipients_discovery": "Detecteert automatisch ontvangers op basis van Home Assistant person-entiteiten",
                     "name": "Bepaalt de naam van de geregistreerde notify-actie (notify.NAME) - wijzig dit alleen als je iets anders dan notify.supernotify nodig hebt, bijvoorbeeld om aan te sluiten bij een bestaande automatisering"
@@ -410,6 +416,9 @@
                     "template_path": "Sjabloonpad",
                     "media_path": "Mediapad",
                     "media_url_prefix": "Media-URL-voorvoegsel",
+                    "media_max_size": "Grootste snapshot-download (MB)",
+                    "snapshot_url_local": "Alleen lokale snapshot-URL's",
+                    "caller_templates": "Templates in notify-aanroepen renderen",
                     "mobile_discovery": "Detectie van mobiele apparaten",
                     "recipients_discovery": "Detectie van ontvangers",
                     "name": "Naam"
@@ -418,6 +427,9 @@
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
                     "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
                     "media_url_prefix": "URL-padvoorvoegsel waaronder opgeslagen media, zoals camera-snapshots, wordt aangeboden",
+                    "media_max_size": "Het maximum, in megabytes, dat wordt gedownload voor een snapshot-URL die bij een melding is opgegeven. Alles wat groter is, of geen afbeelding is, wordt niet gebruikt",
+                    "snapshot_url_local": "Haal een snapshot-URL alleen op van Home Assistant zelf of een subdomein van het adres ervan, van een apparaat op hetzelfde netwerk als Home Assistant, of van een URL in allowlist_external_urls. Omleidingen worden niet gevolgd",
+                    "caller_templates": "Render ook templates in het bericht en de data van een notify-aanroep, naast die in de configuratie. Automatiseringen renderen hun eigen templates al, dus laat dit uit tenzij iets templates ongerenderd doorgeeft, en zet het nooit aan waar berichttekst van buiten Home Assistant kan komen",
                     "mobile_discovery": "Detecteert automatisch mobiele-app-apparaten die in Home Assistant zijn geregistreerd voor pushmeldingen",
                     "recipients_discovery": "Detecteert automatisch ontvangers op basis van Home Assistant person-entiteiten",
                     "name": "Bepaalt de naam van de geregistreerde notify-actie (notify.NAME) - wijzig dit alleen als je iets anders dan notify.supernotify nodig hebt, bijvoorbeeld om aan te sluiten bij een bestaande automatisering"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "Sjabloonpad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen",
-            "media_path_invalid": "Mediapad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen"
+            "media_path_invalid": "Mediapad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen",
+            "media_path_unsafe": "Het mediapad mag niet de configuratiemap van Home Assistant zijn, een map die deze bevat, of binnen de .storage-map ervan liggen"
         }
     },
     "issues": {

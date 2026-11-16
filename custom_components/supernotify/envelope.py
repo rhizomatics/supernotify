@@ -95,6 +95,7 @@ class Envelope(DupeCheckable):
         self._title: str | None = None
         self.message_html: str | None = None
         self.spoken_message: str | None = None
+        self._spoken_from_caller: bool = True
         self.force_resend: bool = False
         self.data: dict[str, Any] = {}  # delivery/target/scenario/action data
         self.actions: list[dict[str, Any]] = []
@@ -110,6 +111,10 @@ class Envelope(DupeCheckable):
             delivery_config_data = {}
             self._enabled_scenarios = {}
             self.id = ulid_now()
+        # the keys of `data` given in the notify call, rather than set in the configuration
+        self._caller_data_keys: set[str] = set(delivery_config_data)
+        if notification:
+            self._caller_data_keys.update(getattr(notification, "extra_data", None) or {})
         if data:
             self.data = copy.deepcopy(data)
             if delivery_config_data:
@@ -125,6 +130,8 @@ class Envelope(DupeCheckable):
             self.actions = notification.actions
             self.priority = canonical_priority(self.data.pop(ATTR_PRIORITY, notification.priority))
             self.message_html = self.data.pop(ATTR_MESSAGE_HTML, notification.message_html)
+            # a spoken message set on the delivery or by a scenario is configuration
+            self._spoken_from_caller = ATTR_SPOKEN_MESSAGE not in self.data or ATTR_SPOKEN_MESSAGE in self._caller_data_keys
             self.spoken_message = self.data.pop(ATTR_SPOKEN_MESSAGE, notification.spoken_message)
             self.force_resend = self.data.pop(ATTR_FORCE_RESEND, notification.force_resend)
 
@@ -332,10 +339,14 @@ class Envelope(DupeCheckable):
 
         # self._message could be top level `message` or `message` set in delivery override
         msg: str | None = self.delivery.message if self.delivery.message is not None else self._message
+        # the delivery's own message is configuration, anything else came with the notify call
+        from_caller: bool = self.delivery.message is None
         if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
+            if self.spoken_message is not None:
+                from_caller = self._spoken_from_caller
             msg = self._spoken_message(msg)
 
-        if msg and self.context and is_template_string(msg):
+        if msg and self.context and (self.context.caller_templates or not from_caller) and is_template_string(msg):
             try:
                 context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
                 template = self.context.hass_api.template(msg)
@@ -445,6 +456,14 @@ class Envelope(DupeCheckable):
         )
         return hashlib.blake2b(content.encode(), digest_size=8).hexdigest()
 
+    def _is_data_template(self, key: str, value: Any) -> bool:  # ruff: ignore[any-type]
+        """Whether this `data` value is a template to render - one given in the notify call only where
+        `caller_templates` is on, since its text may have come from outside Home Assistant, and an
+        automation has already rendered any template of its own"""
+        if not isinstance(value, str) or "{{" not in value:
+            return False
+        return self.context is None or self.context.caller_templates or key not in self._caller_data_keys
+
     def _render_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
         """Render Jinja2 templates in delivery `data` before the transport call.
 
@@ -465,7 +484,7 @@ class Envelope(DupeCheckable):
                 # context, not literal data values - rendering them here
                 # would use the wrong (stale) context and produce unused junk.
                 rendered[key] = value
-            elif isinstance(value, str) and "{{" in value:
+            elif self._is_data_template(key, value):
                 try:
                     rendered[key] = self.context.hass_api.template(value).async_render(variables=context_vars)
                 except Exception as e:
@@ -489,7 +508,7 @@ class Envelope(DupeCheckable):
         resolved: dict[str, Any] = {}
         context_vars = cast("dict[str, Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
         for key, value in data.items():
-            if isinstance(value, str) and "{{" in value:
+            if self._is_data_template(key, value):
                 try:
                     rendered = self.context.hass_api.template(value).async_render(variables=context_vars)
                     resolved[key] = rendered

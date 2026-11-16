@@ -391,6 +391,9 @@
                     "template_path": "テンプレートパス",
                     "media_path": "メディアパス",
                     "media_url_prefix": "メディアURLプレフィックス",
+                    "media_max_size": "スナップショットの最大ダウンロードサイズ (MB)",
+                    "snapshot_url_local": "ローカルのスナップショットURLのみ",
+                    "caller_templates": "通知呼び出し内のテンプレートをレンダリング",
                     "mobile_discovery": "モバイルデバイス検出",
                     "recipients_discovery": "受信者検出",
                     "name": "名前"
@@ -399,6 +402,9 @@
                     "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
+                    "media_max_size": "通知で指定されたスナップショットURLからダウンロードする最大サイズ（メガバイト）。これより大きいもの、または画像でないものは使用されません",
+                    "snapshot_url_local": "スナップショットURLは、Home Assistant 自体またはそのアドレスのサブドメイン、Home Assistant と同じネットワーク上のデバイス、または allowlist_external_urls にあるURLからのみ取得します。リダイレクトには従いません",
+                    "caller_templates": "設定内のテンプレートに加えて、通知呼び出しのメッセージとデータに含まれるテンプレートもレンダリングします。オートメーションは自身のテンプレートをすでにレンダリングしているため、テンプレートが未レンダリングのまま渡される場合を除いてオフのままにし、メッセージの文面が Home Assistant の外部から来る可能性がある場合は決してオンにしないでください",
                     "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
                     "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します",
                     "name": "登録される notify アクション名（notify.NAME）を決定します。notify.supernotify以外が必要な場合のみ変更してください（例: 既存のオートメーションに合わせる場合など）"
@@ -410,6 +416,9 @@
                     "template_path": "テンプレートパス",
                     "media_path": "メディアパス",
                     "media_url_prefix": "メディアURLプレフィックス",
+                    "media_max_size": "スナップショットの最大ダウンロードサイズ (MB)",
+                    "snapshot_url_local": "ローカルのスナップショットURLのみ",
+                    "caller_templates": "通知呼び出し内のテンプレートをレンダリング",
                     "mobile_discovery": "モバイルデバイス検出",
                     "recipients_discovery": "受信者検出",
                     "name": "名前"
@@ -418,6 +427,9 @@
                     "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
+                    "media_max_size": "通知で指定されたスナップショットURLからダウンロードする最大サイズ（メガバイト）。これより大きいもの、または画像でないものは使用されません",
+                    "snapshot_url_local": "スナップショットURLは、Home Assistant 自体またはそのアドレスのサブドメイン、Home Assistant と同じネットワーク上のデバイス、または allowlist_external_urls にあるURLからのみ取得します。リダイレクトには従いません",
+                    "caller_templates": "設定内のテンプレートに加えて、通知呼び出しのメッセージとデータに含まれるテンプレートもレンダリングします。オートメーションは自身のテンプレートをすでにレンダリングしているため、テンプレートが未レンダリングのまま渡される場合を除いてオフのままにし、メッセージの文面が Home Assistant の外部から来る可能性がある場合は決してオンにしないでください",
                     "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
                     "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します",
                     "name": "登録される notify アクション名（notify.NAME）を決定します。notify.supernotify以外が必要な場合のみ変更してください（例: 既存のオートメーションに合わせる場合など）"
@@ -430,7 +442,8 @@
         },
         "error": {
             "template_path_invalid": "テンプレートパスを作成またはアクセスできませんでした - 場所と権限を確認してください",
-            "media_path_invalid": "メディアパスを作成またはアクセスできませんでした - 場所と権限を確認してください"
+            "media_path_invalid": "メディアパスを作成またはアクセスできませんでした - 場所と権限を確認してください",
+            "media_path_unsafe": "メディアパスには、Home Assistant の設定フォルダ、それを含むフォルダ、またはその .storage フォルダ内を指定できません"
         }
     },
     "issues": {

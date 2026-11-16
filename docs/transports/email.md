@@ -51,7 +51,7 @@ These keys in `data` are Supernotify's own, and not passed on:
 | Key                | Usage                                                                                                  |
 |--------------------|--------------------------------------------------------------------------------------------------------|
 | `template`         | Template to use instead of the delivery's `template`                                                   |
-| `footer`           | Text added at the end of a plain email, with `{e}` for the delivery envelope, for example `{e.delivery_name}`. Not used with a template |
+| `footer`           | Text added at the end of a plain email, where `{e.delivery_name}`, `{e.notification_id}`, `{e.id}`, `{e.priority}`, `{e.title}` and `{e.message}` are replaced. Not used with a template |
 | `action_url`       | `action_url` for the template                                                                          |
 | `action_url_title` | `action_url_title` for the template                                                                    |
 
@@ -126,6 +126,14 @@ not to dig into the message contents when showing a preview in the in-box.
 Where the image is snapped rather than being only a URL, it will be included as an attachment and
 an `cid:XXXX` URL generated to point to the attachment name.
 
+Only files in Supernotify's media path are attached, or in a folder Home Assistant allows files to be read
+from: its `media_dirs`, `www`, and `allowlist_external_dirs`. A file from anywhere else, given in `images` or
+as a `snapshot_image_path`, is left out of the email with a warning, so that a notification can't be used to
+send out a file like `secrets.yaml`.
+
+The default template escapes the message, title and links, so HTML in a `message` is shown as text
+rather than used. HTML goes in `message_html`, see [Pre-generated HTML](#pre-generated-html).
+
 ## Direct Connection
 
 By default, Supernotify uses its own SMTP connection rather than the Home Assistant one. The Home Assistant SMTP integration is moving to recipients set up one by one as notify entities, rather than any address given at the time, and its notify action has no e-mail priority.
@@ -164,6 +172,16 @@ As for the Home Assistant SMTP integration, a `sender` is needed: without one, d
 no default delivery is generated, and a warning is logged at startup. Without a `sender_name`, the email is
 from the home's name, as set in Home Assistant's settings. `sender`, `sender_name` and `default_title` can
 also be set in the `options` of a single delivery, to send that delivery's emails from a different address.
+
+!!! tip "Protecting the SMTP password"
+    Home Assistant has no secure store for credentials. The password of a connection is kept in plain text in
+    `.storage/core.config_entries`, the same as for Home Assistant's own SMTP integration, and is in
+    every backup. So:
+
+    - Use an app password, or an account only for sending mail, rather than the password of a mailbox
+    - Where the provider allows, limit it to sending
+    - Encrypt backups, and take care who has access to the config folder
+    - Supernotify leaves the password out of `enquire_configuration`, diagnostics and the archive
 
 This avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality but without setting up each email address in Home Assistant first.
 
