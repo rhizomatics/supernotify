@@ -12,7 +12,7 @@ Review the functionality across the code base, including architecture alignment 
 | Snoozing                      |               |             |
 | Media Grab                    |               |             |
 | Diagnostics                   |               |             |
-| Home Assistant API            |               |             |
+| Home Assistant API            | 16th Nov 2026 | `v2.18.2`   |
 | Home Assistant Entities       |               |             |
 | LLM and Conversation          |               |             |
 | Person and User               |               |             |

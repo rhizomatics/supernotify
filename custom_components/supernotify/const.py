@@ -420,16 +420,16 @@ def transport_display_name(name: str) -> str:
     return " ".join(_TRANSPORT_ACRONYMS.get(word, word.capitalize()) for word in name.split("_"))
 
 
-# subentry titles are prefixed by their type, to tell them apart in the integration's list of them
-RECIPIENT_TITLE_PREFIX: Final[str] = "Recipient - "
-TRANSPORT_TITLE_PREFIX: Final[str] = "Transport - "
+# subentry titles were prefixed by their type in English before 2.18.2 - Home Assistant already
+# shows each subentry's type under its title, translated, from `config_subentries.<type>.entry_type`
+LEGACY_RECIPIENT_TITLE_PREFIX: Final[str] = "Recipient - "
 
 
 def recipient_subentry_title(name: str) -> str:
-    """A recipient subentry's title, such as "Recipient - Alice" for alice"""
-    return name if name.startswith(RECIPIENT_TITLE_PREFIX) else f"{RECIPIENT_TITLE_PREFIX}{name}"
+    """A recipient subentry's title, its name, such as "Alice", without the prefix of before 2.18.2"""
+    return name.removeprefix(LEGACY_RECIPIENT_TITLE_PREFIX)
 
 
 def transport_subentry_title(name: str) -> str:
-    """A transport subentry's title, such as "Transport - Alexa Media Player" for alexa_media_player"""
-    return f"{TRANSPORT_TITLE_PREFIX}{transport_display_name(name)}"
+    """A transport subentry's title, such as "Alexa Media Player" for alexa_media_player"""
+    return transport_display_name(name)

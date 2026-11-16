@@ -36,7 +36,7 @@ Go to *Settings → Devices & services → Supernotify → Add recipient*.
     - **E-mail address** - `granny@example.com`
     - **Custom targets** - `telegram_chat_id:215678938`
 
-That's it. They're listed under the integration as *Recipient - Granny Smith*, with `notify.recipient_granny_smith` and `switch.supernotify_recipient_granny_smith` entities.
+That's it. They're listed under the integration as *Granny Smith*, a *Recipient*, with `notify.recipient_granny_smith` and `switch.supernotify_recipient_granny_smith` entities.
 
 ## Sending Notifications
 

@@ -8,6 +8,15 @@
 
 ## 🐛 Bug fixes
 - *Mobile Push*: a `notify.mobile_app_<device>` target, the Companion App's own notify action, now goes to Mobile Push, the same as the bare `mobile_app_<device>` id, rather than to the *Notify Entity* transport, which can't send to it as it isn't an entity. A device given both ways, or also reached through a recipient, is only sent the notification once
+- *Links*: image and click-action links now use your Home Assistant Cloud remote URL even when Cloud connects after Supernotify starts, rather than the internal URL until the next restart, and follow any change to Home Assistant's network settings straight away
+- *Links*: where Home Assistant has no URL at all, the fallback now includes its port, e.g. `http://homeassistant:8123`, rather than giving links that don't work
+- *Snoozing*: snoozes changed in quick succession can no longer be saved out of order, which could bring back an old set of snoozes after a restart
+- *Email*: the footer's link to Home Assistant uses its external URL, rather than one that only works at home
+
+## 📝 Other changes
+- *Recipients* and *Transports* are listed under the integration by their name alone, e.g. *Alice* rather than *Recipient - Alice*, as Home Assistant already shows each one's type under it, in your own language. Existing ones are renamed at start up
+- *Chinese (Simplified)*: a recipient is now 收件人 throughout, as in Home Assistant itself
+- *Scenarios*: the trace of a scenario's conditions is no longer also kept in Home Assistant's own store of traces, where it couldn't be seen. It's still shown with the scenario, as before
 
 # v2.18.1
 

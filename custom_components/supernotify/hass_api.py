@@ -43,20 +43,17 @@ import socket
 import threading
 from contextlib import contextmanager
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
-import homeassistant.components.trace
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.group import expand_entity_ids
-from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
-from homeassistant.components.trace.util import async_store_trace
 from homeassistant.const import ATTR_DOMAIN, ATTR_SERVICE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import Event, HomeAssistant, SupportsResponse, callback
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer, HomeAssistantError, IntegrationError
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, HomeAssistantError
 from homeassistant.helpers import condition as condition_helper
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -187,12 +184,12 @@ def _describe_unsubscribe(unsub: Callable[[], Any]) -> str:
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass: HomeAssistant = hass
-        self.internal_url: str = ""
-        self.external_url: str = ""
+        # set explicitly, else worked out by Home Assistant each time they're used
+        self._internal_url: str | None = None
+        self._external_url: str | None = None
         self.language: str = ""
         self.hass_name: str = "!UNDEFINED!"
-        self.__entity_registry: er.EntityRegistry | None = None
-        self.__device_registry: dr.DeviceRegistry | None = None
+        self._stores: dict[str, Store[Any]] = {}
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self._mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
@@ -201,18 +198,13 @@ class HomeAssistantAPI:
         self._mobile_apps_by_user_id: dict[str, list[TrackedDeviceDetails]] = {}
 
     def initialize(self) -> None:
+        """Read Home Assistant's name and language, check its URLs, and find its mobile apps"""
         self.hass_name = self._hass.config.location_name
         self.language = self._hass.config.language
-        try:
-            self.internal_url = get_url(self._hass, prefer_external=False)
-        except Exception as e:
-            self.internal_url = f"http://{socket.gethostname()}"
-            _LOGGER.warning("SUPERNOTIFY Internal hass url not available, defaulting to %s: %s", self.internal_url, e)
-        try:
-            self.external_url = get_url(self._hass, prefer_external=True)
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY External hass url not available, defaulting to internal url: %s", e)
-            self.external_url = self.internal_url
+        if self._url(prefer_external=False) is None:
+            _LOGGER.warning("SUPERNOTIFY Internal hass url not available, defaulting to %s", self.internal_url)
+        if self._url(prefer_external=True) is None:
+            _LOGGER.warning("SUPERNOTIFY External hass url not available, defaulting to internal url")
 
         self.build_mobile_app_cache()
 
@@ -226,7 +218,44 @@ class HomeAssistantAPI:
         if not self.internal_url or not self.internal_url.startswith("http"):
             _LOGGER.warning("SUPERNOTIFY Invalid internal hass url %s", self.internal_url)
 
+    @property
+    def internal_url(self) -> str:
+        """Home Assistant's URL on the local network, else `http://<host name>:<port>`.
+
+        Worked out each time, so it follows changes to Home Assistant's network settings.
+        """
+        if self._internal_url is not None:
+            return self._internal_url
+        port = getattr(getattr(self._hass, "http", None), "server_port", None) or 8123
+        return self._url(prefer_external=False) or f"http://{socket.gethostname()}:{port}"
+
+    @internal_url.setter
+    def internal_url(self, url: str) -> None:
+        self._internal_url = url
+
+    @property
+    def external_url(self) -> str:
+        """Home Assistant's URL from outside the local network, else its internal one.
+
+        Worked out each time, so it follows changes to Home Assistant's network settings, and
+        includes a Home Assistant Cloud remote URL even when Cloud connects after Supernotify starts.
+        """
+        if self._external_url is not None:
+            return self._external_url
+        return self._url(prefer_external=True) or self.internal_url
+
+    @external_url.setter
+    def external_url(self, url: str) -> None:
+        self._external_url = url
+
+    def _url(self, prefer_external: bool) -> str | None:
+        try:
+            return get_url(self._hass, prefer_external=prefer_external)
+        except Exception:
+            return None
+
     def disconnect(self) -> None:
+        """Cancel every listener and timer subscribed through this API"""
         while self.unsubscribes:
             unsub = self.unsubscribes.pop()
             try:
@@ -237,6 +266,7 @@ class HomeAssistantAPI:
         _LOGGER.debug("SUPERNOTIFY Disconnection complete")
 
     def subscribe_event(self, event: EventType[Any] | str, callback: Callable) -> None:
+        """Listen for an event on Home Assistant's bus, until disconnect()"""
         self.unsubscribes.append(self._hass.bus.async_listen(event, callback))
 
     def subscribe_mobile_app_changes(self, on_change: Callable[[], Awaitable[None]], cooldown: float = 10) -> None:
@@ -272,28 +302,36 @@ class HomeAssistantAPI:
         self.unsubscribes.append(debouncer.async_cancel)
 
     def subscribe_state(self, entity_ids: str | Iterable[str], callback: Callable) -> None:
+        """Listen for state changes of these entities, until disconnect()"""
         self.unsubscribes.append(async_track_state_change_event(self._hass, entity_ids, callback))
 
     def subscribe_time(self, hour: int, minute: int, second: int, callback: Callable) -> None:
+        """Call back daily at this time of day, until disconnect()"""
         self.unsubscribes.append(async_track_time_change(self._hass, callback, hour=hour, minute=minute, second=second))
 
     def subscribe_interval(self, seconds: int, callback: Callable) -> None:
+        """Call back every so many seconds, until disconnect()"""
         self.unsubscribes.append(async_track_time_interval(self._hass, callback, timedelta(seconds=seconds)))
 
     def in_hass_loop(self) -> bool:
+        """Whether running on Home Assistant's event loop, rather than in an executor thread"""
         return self.hass_avail("loop_thread_id") and self._hass.loop_thread_id == threading.get_ident()
 
     def get_state(self, entity_id: str) -> State | None:
+        """The current state of an entity, or None if it has none"""
         return self._hass.states.get(entity_id)
 
     def is_state(self, entity_id: str, state: str) -> bool:
+        """Whether an entity is currently in this state"""
         return self._hass.states.is_state(entity_id, state)
 
     def has_service(self, domain: str, service: str) -> bool:
+        """Whether this action, e.g. notify.mobile_app_pixel, is registered"""
         return self._hass.services.has_service(domain, service)
 
     def integration_loaded(self, domain: str) -> bool:
         # guarded like hass_avail(), as tests and docgen may run with a mock hass
+        """Whether this integration has been set up in Home Assistant"""
         components = getattr(self._hass.config, "components", None) if self.hass_avail("config") else None
         return isinstance(components, set) and domain in components
 
@@ -303,6 +341,7 @@ class HomeAssistantAPI:
         return self.has_service("notify", action) or self.get_state(f"notify.{action}") is not None
 
     def entity_ids_for_domain(self, domain: str) -> list[str]:
+        """The entity_ids, with a state, in this domain"""
         return self._hass.states.async_entity_ids(domain)
 
     async def async_real_user_ids(self) -> dict[str, str]:
@@ -449,7 +488,7 @@ class HomeAssistantAPI:
         """Load integration state previously persisted to Home Assistant's .storage/ area,
         via HA's own Store helper, or None if nothing has been persisted yet for this key."""
         try:
-            return await Store[Any](self._hass, version, key).async_load()
+            return await self._store(key, version).async_load()
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to load storage %s: %s", key, e)
             return None
@@ -459,12 +498,19 @@ class HomeAssistantAPI:
         helper. Fire-and-forget: the write happens in a tracked background task rather than
         blocking the caller, since this is called from both sync and async contexts.
         Sync callers include actions without @callback (e.g. clear_snoozes), which Home Assistant
-        runs in its executor, so off the event loop the thread-safe hass.create_task is used."""
-        store: Store[Any] = Store(self._hass, version, key)
+        runs in its executor, so off the event loop the thread-safe hass.create_task is used.
+        One Store per key, so that saves made in quick succession are written in turn, the last
+        one last, rather than racing each other to the file."""
+        store: Store[Any] = self._store(key, version)
         if self.in_hass_loop():
             self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
         else:
             self._hass.create_task(store.async_save(data), f"supernotify_save_{key}")
+
+    def _store(self, key: str, version: int) -> Store[Any]:
+        if key not in self._stores:
+            self._stores[key] = Store(self._hass, version, key)
+        return self._stores[key]
 
     def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
@@ -473,6 +519,7 @@ class HomeAssistantAPI:
     def fire_event(
         self, event_name: str, event_data: dict[str, Any] | None = None, context: HomeAssistantContext | None = None
     ) -> None:
+        """Fire an event on Home Assistant's bus"""
         self._hass.bus.async_fire(event_name, event_data, context=context)
 
     async def call_service(
@@ -486,7 +533,11 @@ class HomeAssistantAPI:
         debug: bool = False,
         context: HomeAssistantContext | None = None,
     ) -> ServiceResponse | None:
+        """Call a Home Assistant action, returning its response, if any.
 
+        Where `return_response` isn't given, a response is only asked for if the action always
+        gives one, or may give one and `debug` is on. Where `blocking` isn't given, the call
+        only waits for the action to finish if a response is wanted, or `debug` is on."""
         if return_response is None:
             # unknown service, for example defined in generic action, check if it supports response
             supports_response: SupportsResponse = self.service_info(domain, service)
@@ -513,6 +564,8 @@ class HomeAssistantAPI:
         return response
 
     def coerce_schema(self, domain: str, service: str, data: ConfigType) -> ConfigType:
+        """This action data, cut down to what the action's own schema accepts, so that extra keys
+        don't fail the call - unchanged if the action or its schema can't be found"""
         if not data:
             return data
         try:
@@ -562,6 +615,7 @@ class HomeAssistantAPI:
             return data
 
     def service_info(self, domain: str, service: str) -> SupportsResponse:
+        """Whether an action gives a response, cached along with its schema - SupportsResponse.NONE if it can't be found"""
         supports_response: SupportsResponse | None = None
         try:
             if (domain, service) not in self._service_info:
@@ -629,6 +683,8 @@ class HomeAssistantAPI:
         return entity_ids, set(selected.referenced_devices)
 
     def find_service(self, domain: str, module: str) -> str | None:
+        """The action, as `domain.service`, implemented by code in this Python module, e.g. a legacy
+        notify platform's, skipping per-target actions that ignore any target given"""
         try:
             service_objs: dict[str, Service] = self._hass.services.async_services_for_domain(domain)
             if service_objs:
@@ -698,6 +754,7 @@ class HomeAssistantAPI:
         return await async_get_translations(self._hass, language or self._hass.config.language, category, [DOMAIN])
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
+        """These entity_ids, with any groups among them replaced by their members"""
         return expand_entity_ids(self._hass, entity_ids)
 
     def group_members(self, entity_id: str, _seen: set[str] | None = None) -> list[str] | None:
@@ -728,6 +785,7 @@ class HomeAssistantAPI:
         return expanded
 
     def template(self, template_format: str) -> Template:
+        """A Home Assistant template for this text"""
         return Template(template_format, self._hass)
 
     def hass_avail(self, property: str) -> bool:
@@ -735,6 +793,7 @@ class HomeAssistantAPI:
         return self._hass is not None and getattr(self._hass, property, None) is not None
 
     async def register_web_path(self, media_web_path: Path | None, url_prefix: str) -> bool:
+        """Serve files from this folder under this URL path, returning whether it could be done"""
         if media_web_path is None or not self.hass_avail("http"):
             return False
         try:
@@ -754,13 +813,9 @@ class HomeAssistantAPI:
         condition_variables: ConditionVariables,
         trace_name: str | None = None,
     ) -> tuple[bool | None, ActionTrace | None]:
-
+        """Evaluate conditions, as evaluate_conditions() does, with a trace of how they were evaluated"""
         result: bool | None = None
         this_trace: ActionTrace | None = None
-        if DATA_TRACE not in self._hass.data:
-            _LOGGER.warning("SUPERNOTIFY Tracing not configured, attempting to set up")
-
-            await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
         with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
             cond_trace.set_trace(trace_get())
             this_trace = cond_trace
@@ -772,6 +827,12 @@ class HomeAssistantAPI:
     async def build_conditions(
         self, condition_config: list[ConfigType], strict: bool = False, validate: bool = False, name: str = DOMAIN
     ) -> ConditionsFunc | None:
+        """A function evaluating these conditions, from their configuration.
+
+        `validate` checks the configuration against Home Assistant's condition schemas first.
+        `strict` also warns about entities that don't exist yet, and evaluates every template
+        once in strict mode, even those a compound condition would skip, so that an undefined
+        variable fails now rather than when a notification is sent. Raises the first problem found."""
         capturing_logger: ConditionErrorLoggingAdaptor = ConditionErrorLoggingAdaptor(_LOGGER)
         condition_variables: ConditionVariables = ConditionVariables()
         cond_list: list[ConfigType]
@@ -797,8 +858,6 @@ class HomeAssistantAPI:
             test: ConditionsFunc = await condition_helper.async_conditions_from_config(
                 self._hass, cond_list, cast("logging.Logger", capturing_logger), name
             )
-            if test is None:
-                raise IntegrationError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
             if strict:
                 # compound conditions short-circuit, so a nested template may never have been
@@ -832,6 +891,7 @@ class HomeAssistantAPI:
         conditions: ConditionsFunc,
         condition_variables: ConditionVariables,
     ) -> bool | None:
+        """Evaluate conditions built by build_conditions() with these variables, raising any error"""
         try:
             if not condition_variables:
                 _LOGGER.warning("SUPERNOTIFY No cond vars provided for condition")
@@ -841,6 +901,8 @@ class HomeAssistantAPI:
             raise
 
     def abs_url(self, fragment: str | None, prefer_external: bool = True) -> str | None:
+        """An absolute URL for this path, against the external URL, else the internal one -
+        unchanged if it's already absolute, None if there's no path"""
         base_url = self.external_url if prefer_external else self.internal_url
         if fragment:
             if fragment.startswith("http"):
@@ -859,6 +921,7 @@ class HomeAssistantAPI:
         learn_more_url: str = "https://supernotify.rhizomatics.org.uk",
         is_fixable: bool = False,
     ) -> None:
+        """Raise a repair, its text from the `issues.<issue_key>` translation, filled in from `issue_map`"""
         ir.async_create_issue(
             self._hass,
             DOMAIN,
@@ -871,26 +934,31 @@ class HomeAssistantAPI:
         )
 
     def delete_issue(self, issue_id: str) -> None:
+        """Remove a repair raised by raise_issue(), if it's there"""
         ir.async_delete_issue(self._hass, DOMAIN, issue_id)
 
     def mobile_app_by_tracker(self, device_tracker: str) -> TrackedDeviceDetails | None:
+        """The mobile app with this device_tracker entity, if any"""
         return self._mobile_apps_by_tracker.get(device_tracker)
 
     def mobile_app_by_id(self, mobile_app_id: str) -> TrackedDeviceDetails | None:
+        """The mobile app with this id, e.g. `mobile_app_pixel`, or its notify action, `notify.mobile_app_pixel`"""
         mobile_app_id = mobile_app_id.replace("notify.", "", 1) if mobile_app_id.startswith("notify.") else mobile_app_id
         return self._mobile_apps_by_app_id.get(mobile_app_id)
 
     def mobile_app_by_device_id(self, device_id: str) -> TrackedDeviceDetails | None:
+        """The mobile app of this device, if any"""
         return self._mobile_apps_by_device_id.get(device_id)
 
     def mobile_app_by_user_id(self, user_id: str) -> list[TrackedDeviceDetails] | None:
+        """The mobile apps registered by this Home Assistant user, if any"""
         return self._mobile_apps_by_user_id.get(user_id)
 
     def build_mobile_app_cache(self) -> None:
         """All enabled mobile apps"""
         entity_registry: EntityRegistry | None = self._entity_registry()
         if not entity_registry:
-            _LOGGER.warning("SUPERNOTIFY Unable to discover devices for - no entity registry found")
+            _LOGGER.warning("SUPERNOTIFY Unable to discover mobile apps - no entity registry found")
             return
 
         # rebuilt from scratch, so a device that has gone, or been re-paired under a new name, goes too
@@ -934,9 +1002,10 @@ class HomeAssistantAPI:
             except Exception as e:
                 _LOGGER.error("SUPERNOTIFY Failure examining device %s: %s", mobile_app_info, e)
 
-        _LOGGER.info(f"SUPERNOTIFY Found {found} enabled mobile app devices, {complete} complete config")
+        _LOGGER.info("SUPERNOTIFY Found %s enabled mobile app devices, %s complete config", found, complete)
 
     def device_config_info(self, device: DeviceEntry) -> dict[str, str | None]:
+        """A device's OS name and version, app version and user, from the config entry that registered it"""
         results: dict[str, str | None] = {ATTR_OS_NAME: None, ATTR_OS_VERSION: None, CONF_USER_ID: None, ATTR_APP_VERSION: None}
         try:
             # HA 2026.8+ restricts devices to a single config entry
@@ -960,10 +1029,12 @@ class HomeAssistantAPI:
         device_area_select: SelectionRule | None = None,
         device_label_select: SelectionRule | None = None,
     ) -> list[TrackedDeviceDetails]:
+        """Enabled devices registered by this integration, e.g. `mobile_app`, that every given
+        selection rule matches, by model, manufacturer, OS, area and labels"""
         devices: list[TrackedDeviceDetails] = []
         dev_reg: DeviceRegistry | None = self._device_registry()
         if dev_reg is None or not hasattr(dev_reg, "devices"):
-            _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
+            _LOGGER.warning("SUPERNOTIFY Unable to discover devices for %s - no device registry found", discover_domain)
             return []
 
         all_devs = enabled_devs = found_devs = skipped_devs = 0
@@ -1031,14 +1102,13 @@ class HomeAssistantAPI:
                             "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
                         )
 
-        _LOGGER.debug("SUPERNOTIFY {discover_domain} device discovery, all=%s,enabled=%s ", all_devs, enabled_devs)
-        _LOGGER.debug("SUPERNOTIFY {discover_domain} skipped=%s, found=%s", skipped_devs, found_devs)
+        _LOGGER.debug("SUPERNOTIFY %s device discovery, all=%s, enabled=%s", discover_domain, all_devs, enabled_devs)
+        _LOGGER.debug("SUPERNOTIFY %s device discovery, skipped=%s, found=%s", discover_domain, skipped_devs, found_devs)
 
         return devices
 
     def domain_for_device(self, device_id: str, domains: list[str]) -> str | None:
-        # discover domain from device registry
-        verified_domain: str | None = None
+        """The first of these domains that the device is registered by, if any"""
         device_registry: DeviceRegistry | None = self._device_registry()
         if device_registry:
             device: DeviceEntry | None = self.find_device(device_id)
@@ -1051,33 +1121,26 @@ class HomeAssistantAPI:
                 "SUPERNOTIFY A target that looks like a device_id can't be matched to supported integration: %s",
                 device_id,
             )
-        return verified_domain
+        return None
 
     def _entity_registry(self) -> er.EntityRegistry | None:
-        """Hass entity registry is weird, every component ends up creating its own, with a store, subscribing
-        to all entities, so do it once here
-        """
-        if self.__entity_registry is not None:
-            return self.__entity_registry
+        """Home Assistant's entity registry, or None where there's none, as with a mock hass in tests"""
         try:
-            self.__entity_registry = er.async_get(self._hass)
+            return er.async_get(self._hass)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
-        return self.__entity_registry
+            return None
 
     def _device_registry(self) -> dr.DeviceRegistry | None:
-        """Hass device registry is weird, every component ends up creating its own, with a store, subscribing
-        to all devices, so do it once here
-        """
-        if self.__device_registry is not None:
-            return self.__device_registry
+        """Home Assistant's device registry, or None where there's none, as with a mock hass in tests"""
         try:
-            self.__device_registry = dr.async_get(self._hass)
+            return dr.async_get(self._hass)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
-        return self.__device_registry
+            return None
 
     def find_device(self, device_id: str) -> DeviceEntry | None:
+        """The device with this id, if any"""
         reg: DeviceRegistry | None = self._device_registry()
         if reg is None:
             return None
@@ -1093,6 +1156,7 @@ class HomeAssistantAPI:
         return device is not None and any(domain == DOMAIN for domain, _identifier in device.identifiers)
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
+        """Whether MQTT is set up and connected, waiting for it if it's still starting"""
         from homeassistant.components import mqtt
 
         try:
@@ -1111,6 +1175,7 @@ class HomeAssistantAPI:
         retain: bool = False,
         raise_on_error: bool = True,
     ) -> None:
+        """Publish this payload, as JSON, to an MQTT topic"""
         from homeassistant.components import mqtt
 
         try:
@@ -1122,7 +1187,7 @@ class HomeAssistantAPI:
                 retain=retain,
             )
         except Exception:
-            _LOGGER.exception(f"SUPERNOTIFY MQTT publish failed to {topic}")
+            _LOGGER.exception("SUPERNOTIFY MQTT publish failed to %s", topic)
             if raise_on_error:
                 raise
 
@@ -1195,11 +1260,10 @@ def trace_action(
     item_id: str,
     config: dict[str, Any] | None = None,
     context: HomeAssistantContext | None = None,
-    stored_traces: int = 5,
 ) -> Generator[ActionTrace]:
-    """Trace execution of a condition"""
+    """Trace execution of a condition. The trace is kept by its caller, not in Home Assistant's own
+    store of traces, whose UI only lists those of automations and scripts"""
     trace = ActionTrace(item_id, config, None, context or HomeAssistantContext())
-    async_store_trace(hass, trace, stored_traces)
 
     try:
         yield trace

@@ -768,7 +768,7 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
         return bool(self._get_entry().data.get(CONF_MOBILE_DISCOVERY, True))
 
     def _title(self) -> str:
-        """The alias, else the person's name, else the user's, prefixed as a recipient"""
+        """The alias, else the person's name, else the user's"""
         if alias := self._recipient.get(CONF_ALIAS):
             return recipient_subentry_title(str(alias))
         if (person := self._recipient.get(CONF_PERSON)) and (state := self.hass.states.get(person)):

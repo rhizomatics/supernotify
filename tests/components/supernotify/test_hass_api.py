@@ -13,7 +13,6 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorMessage,
     HomeAssistantError,
-    IntegrationError,
     ServiceNotFound,
 )
 from homeassistant.helpers import config_validation as cv
@@ -64,7 +63,7 @@ def test_basic_setup(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     hass_api.initialize()
     assert hass_api.hass_name == "test home"
-    assert hass_api.internal_url == f"http://{socket.gethostname()}"
+    assert hass_api.internal_url == f"http://{socket.gethostname()}:8123"
     assert hass_api.external_url == hass_api.internal_url
 
 
@@ -647,13 +646,27 @@ def test_mobile_app_by_tracker_unknown(hass: HomeAssistant) -> None:
     assert hass_api.mobile_app_by_tracker("device_tracker.nope") is None
 
 
-def test_initialize_warns_on_invalid_internal_url(hass: HomeAssistant) -> None:
-    # Line 150
+def test_initialize_warns_on_invalid_internal_url(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     hass_api = HomeAssistantAPI(hass)
-    with patch("custom_components.supernotify.hass_api.get_url", side_effect=["ftp://nope", "https://ext.example"]):
+    with patch("custom_components.supernotify.hass_api.get_url", return_value="ftp://nope"):
         hass_api.initialize()
-    assert hass_api.internal_url == "ftp://nope"
-    assert hass_api.external_url == "https://ext.example"
+    assert "Invalid internal hass url ftp://nope" in caplog.text
+
+
+def test_urls_follow_home_assistant_when_used(hass: HomeAssistant) -> None:
+    """Worked out when used, so a URL that only comes later, like a Home Assistant Cloud one
+    when Cloud connects after Supernotify starts, is still used"""
+    hass_api = HomeAssistantAPI(hass)
+    urls: dict[bool, str] = {False: "http://ha.local:8123", True: "http://ha.local:8123"}
+    with patch(
+        "custom_components.supernotify.hass_api.get_url",
+        side_effect=lambda _hass, prefer_external: urls[prefer_external],
+    ):
+        hass_api.initialize()
+        assert hass_api.external_url == "http://ha.local:8123"
+        urls[True] = "https://abcdef.ui.nabu.casa"
+        assert hass_api.internal_url == "http://ha.local:8123"
+        assert hass_api.external_url == "https://abcdef.ui.nabu.casa"
 
 
 def test_find_config_entry_data_unavailable() -> None:
@@ -693,20 +706,6 @@ async def test_build_conditions_validate_failure_reraises(hass: HomeAssistant) -
         await hass_api.build_conditions(condition, validate=True)
 
 
-async def test_build_conditions_raises_when_no_test_built(hass: HomeAssistant) -> None:
-    # Line 412
-    hass_api = HomeAssistantAPI(hass)
-    condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ true }}"})
-    with (
-        patch(
-            "custom_components.supernotify.hass_api.condition_helper.async_conditions_from_config",
-            AsyncMock(return_value=None),
-        ),
-        pytest.raises(IntegrationError),
-    ):
-        await hass_api.build_conditions(condition)
-
-
 def test_evaluate_conditions_warns_on_missing_vars(hass: HomeAssistant) -> None:
     # Lines 433-434: warns and passes None through when condition_variables is None
     hass_api = HomeAssistantAPI(hass)
@@ -733,6 +732,30 @@ async def test_trace_conditions_propagates_exception(hass: HomeAssistant) -> Non
 
     with pytest.raises(RuntimeError):
         await hass_api.trace_conditions(bad_conditions, ConditionVariables())
+
+
+async def test_trace_conditions_returns_trace_without_storing_it(hass: HomeAssistant) -> None:
+    """The trace goes back to the caller, not into Home Assistant's store of automation and script traces"""
+    hass_api = HomeAssistantAPI(hass)
+    checker = await hass_api.build_conditions(cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ true }}"}))
+    assert checker
+
+    result, trace = await hass_api.trace_conditions(checker, ConditionVariables(), trace_name="scenario_bedtime")
+
+    assert result is True
+    assert trace is not None
+    assert trace.as_extended_dict()["trace"]
+    assert not any(str(key).endswith("scenario_bedtime") for key in hass.data.get("trace", {}))
+
+
+async def test_saves_in_quick_succession_keep_the_last(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+
+    hass_api.save_storage("supernotify_test", ["first"])
+    hass_api.save_storage("supernotify_test", ["second"])
+    await hass.async_block_till_done()
+
+    assert await hass_api.load_storage("supernotify_test") == ["second"]
 
 
 def test_build_mobile_app_cache_warns_when_no_notify_service(hass: HomeAssistant) -> None:

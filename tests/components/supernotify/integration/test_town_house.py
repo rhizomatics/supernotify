@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
+
+from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.hass_api import HomeAssistantAPI
+from tests.components.supernotify.ha_testing import async_fire_time_changed
+from tests.components.supernotify.hass_setup_lib import register_mobile_app
+
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import HomeAssistant, ServiceCall
 
     from .framework import House
 
@@ -295,6 +304,70 @@ async def test_notify_default_recipients_excluding_person(hass: HomeAssistant, t
         target:
             exclude:
                 entity_id: person.bob
+    """,
+        expected_calls={"notify": ["mobile_app_alice_phone"]},
+        expected_entities={},
+    )
+
+
+async def test_notify_targets_members_of_a_group(hass: HomeAssistant, town_house: House) -> None:
+    hass.states.async_set("group.downstairs_speakers", "on", {"entity_id": ["notify.kitchen", "notify.lounge"]})
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target: group.downstairs_speakers
+    """,
+        expected_calls={"notify": ["send_message"]},
+        expected_entities={"notify": ["notify.kitchen", "notify.lounge"]},
+    )
+
+
+async def test_notify_follows_a_re_paired_phone(hass: HomeAssistant, town_house: House) -> None:
+    """A phone re-paired under a new name has a new notify action, and its old device and action
+    go - once that settles, its owner is notified through the new one"""
+    device_registry = dr.async_get(hass)
+    old_phone = next(d for d in device_registry.devices if ("mobile_app", "device-id_bob_phone") in d.identifiers)
+
+    register_mobile_app(
+        HomeAssistantAPI(hass),
+        person="person.bob",
+        manufacturer="Cheapo",
+        os_name="Android",
+        device_name="bob_new_phone",
+        user_id=town_house.user_ids["bob"],
+    )
+    device_registry.async_remove_device(old_phone.id)
+    hass.services.async_remove("notify", "mobile_app_bob_phone")
+
+    async def record(call: ServiceCall) -> None:
+        town_house.service_calls.setdefault(call.domain, []).append(call)
+
+    hass.services.async_remove("notify", "mobile_app_bob_new_phone")
+    hass.services.async_register("notify", "mobile_app_bob_new_phone", record)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
+        target: person.bob
+    """,
+        expected_calls={"notify": ["mobile_app_bob_new_phone"]},
+        expected_entities={},
+    )
+
+
+async def test_snooze_survives_a_restart(hass: HomeAssistant, town_house: House) -> None:
+    await hass.services.async_call(DOMAIN, "snooze", {"person": "person.bob", "minutes": 60}, blocking=True)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await town_house.assert_e2e(
+        """
+        message: Tea's up
     """,
         expected_calls={"notify": ["mobile_app_alice_phone"]},
         expected_entities={},
