@@ -60,6 +60,8 @@ Targets in the notification that no alias entry covers are still chimed, using t
 
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
+A chime delivery defaults to `target_usage: no_delivery`, so when the notification only has targets it can't chime, such as a `person_id` from a camera blueprint, it falls back to its own `target` and discovered Alexa devices rather than having nothing to chime. A chime target on the action call, such as a `siren` or `switch`, still replaces them. See [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) for the other options.
+
 The formal schema is published as [Chime Aliases Definition](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md). Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
 
 ## Device Types
