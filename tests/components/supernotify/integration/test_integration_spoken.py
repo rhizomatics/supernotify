@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.supernotify.ha_testing import MockConfigEntry
@@ -180,5 +181,53 @@ async def test_alexa_announce_all_keeps_its_targets_when_call_targets_a_person(h
         """)
         (announce,) = calls(house, "notify", "send_message")
         assert sorted(announce.data["entity_id"]) == ["notify.hall_echo_announce", "notify.kitchen_echo_announce"]
+    finally:
+        house.cleanup()
+
+
+async def test_chime_keeps_its_targets_and_aliases_when_call_targets_a_person(hass: HomeAssistant) -> None:
+    """A person target on the call (as a Frigate blueprint sends) can't be chimed, so a chime
+    delivery switched on by a scenario falls back to its own target and discovered Alexa devices,
+    rather than finding nothing to chime"""
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    alexa_entry = hass.config_entries.async_entries("alexa_devices")[0]
+    echo = dr.async_get(hass).async_get_or_create(
+        config_entry_id=alexa_entry.entry_id, identifiers={("alexa_devices", "echo_serial")}, name="Echo"
+    )
+    house = House(
+        users={"Bob": "bob"},
+        alexa_per_area=False,
+        stub_actions=["switch.turn_on", "alexa_devices.send_sound"],
+        config="""
+delivery:
+  high_chime_alert:
+    transport: chime
+    target:
+      - switch.chime_tubular
+    inclusion: scenario
+    data:
+      chime_tune: high_alert
+    options:
+      chime_aliases:
+        high_alert:
+          alexa_devices: buzzers_pistols_01
+scenarios:
+  high_alert:
+    conditions: "{{ notification_priority == 'high' }}"
+    delivery:
+      high_chime_alert:
+""",
+    )
+    await house.setup(hass)
+    try:
+        await house.call("""
+            message: Vehicle detected
+            priority: high
+            target: person.bob
+        """)
+        (switch_on,) = calls(house, "switch", "turn_on")
+        assert switch_on.data["entity_id"] == "switch.chime_tubular"
+        (sound,) = calls(house, "alexa_devices", "send_sound")
+        assert sound.data == {"device_id": echo.id, "sound": "buzzers_pistols_01"}
     finally:
         house.cleanup()

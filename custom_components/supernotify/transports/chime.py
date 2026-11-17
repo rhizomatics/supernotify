@@ -30,6 +30,7 @@ from custom_components.supernotify.const import (
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
     TARGET_USE_FIXED,
+    TARGET_USE_ON_NO_DELIVERY_TARGETS,
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.model import (
@@ -349,6 +350,10 @@ class ChimeTransport(Transport):
         # need one resolved from the call - one of the few transports where this needs to
         # stay an explicit override rather than the inferred default
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        # a person or email on the call (as a Frigate blueprint sends) has nothing to chime,
+        # so fall back to the delivery's own target and discovered devices, which the
+        # chime_aliases then apply to, rather than ending up with nothing
+        config.delivery_defaults.target_usage = TARGET_USE_ON_NO_DELIVERY_TARGETS
         config.delivery_defaults.options = {
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
