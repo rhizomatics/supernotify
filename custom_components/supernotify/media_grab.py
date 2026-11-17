@@ -19,7 +19,7 @@ import homeassistant.components.image as ha_image
 import homeassistant.util.dt as dt_util
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from anyio import Path, to_thread
-from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE
+from homeassistant.const import CONF_URL, STATE_HOME, STATE_UNAVAILABLE
 from PIL import Image
 
 from custom_components.supernotify.const import (
@@ -27,6 +27,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_CAMERA_DELAY,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CAMERA_PTZ_PRESET,
+    ATTR_MEDIA_HELP_URL,
     ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PNG_OPTS,
@@ -48,7 +49,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.options import MEDIA_OPTION_REPROCESS, OPTION_JPEG, OPTION_PNG
 
-from .common import int_or_none
+from .common import ensure_list, int_or_none
 
 if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
@@ -81,51 +82,60 @@ async def snapshot_from_url(
     remote_timeout: int = 15,
     max_bytes: int = MEDIA_MAX_SIZE_DEFAULT * 1024 * 1024,
     local_only: bool = False,
+    failures: list[str] | None = None,
 ) -> Path | None:
     """Download a snapshot URL and save raw bytes. No reprocessing.
 
     Only an image is kept, and no more than `max_bytes` is read, since the URL comes with the
     notification and could be for anything Home Assistant can reach. With `local_only`, that is
     narrowed to Home Assistant itself and its own network, see HomeAssistantAPI.is_local_url(),
-    and a redirect is not followed, as it could lead anywhere."""
+    and a redirect is not followed, as it could lead anywhere. Why it gave no image is added to
+    `failures`, if given."""
     hass_base_url = hass_base_url or ""
+
+    def failed(reason: str) -> None:
+        _LOGGER.warning("SUPERNOTIFY No image from %s: %s", snapshot_url, reason)
+        if failures is not None:
+            failures.append(reason)
+
     try:
         raw_dir: Path = Path(media_path) / "raw"
         await raw_dir.mkdir(parents=True, exist_ok=True)
 
         image_url = snapshot_url if snapshot_url.startswith("http") else f"{hass_base_url}{snapshot_url}"
         if local_only and not await hass_api.is_local_url(image_url):
-            _LOGGER.warning("SUPERNOTIFY Not fetching %s, only local snapshot URLs are allowed", image_url)
+            failed("only local snapshot URLs are allowed")
             return None
         websession: ClientSession = hass_api.http_session()
         r: ClientResponse = await websession.get(
             image_url, timeout=ClientTimeout(total=remote_timeout), allow_redirects=not local_only
         )
         if r.status != HTTPStatus.OK:
-            _LOGGER.warning("SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
+            failed(f"HTTP {r.status}")
         elif r.content_length is not None and r.content_length > max_bytes:
-            _LOGGER.warning(
-                "SUPERNOTIFY Not fetching %s, %s bytes is over the %s limit", image_url, r.content_length, max_bytes
-            )
+            failed(f"{r.content_length} bytes is over the {max_bytes} byte limit")
         else:
             # one more than the limit, to tell a response that is over it from one that just fits
             bitmap: bytes | None = await _read_up_to(r, max_bytes + 1)
-            if bitmap and len(bitmap) > max_bytes:
-                _LOGGER.warning("SUPERNOTIFY Not keeping %s, it is over the %s byte limit", image_url, max_bytes)
-            elif bitmap:
+            if not bitmap:
+                failed("nothing was returned")
+            elif len(bitmap) > max_bytes:
+                failed(f"it is over the {max_bytes} byte limit")
+            else:
                 ext = await _detect_image_ext(hass_api, bitmap)
                 if ext == NOT_AN_IMAGE:
-                    _LOGGER.warning("SUPERNOTIFY Not keeping %s, it is not an image", image_url)
+                    failed("it is not an image")
                     return None
                 raw_path: Path = raw_dir / f"{notification_id}.{ext}"
                 async with aiofiles.open(raw_path, "wb") as f:
                     await f.write(bitmap)
                 _LOGGER.debug("SUPERNOTIFY Fetched raw image from %s to %s", image_url, raw_path)
                 return raw_path
-
-        _LOGGER.warning("SUPERNOTIFY Failed to snap image from %s", snapshot_url)
-    except Exception:
-        _LOGGER.exception("SUPERNOTIFY Image snap fail")
+    except TimeoutError:
+        failed("timed out")
+    except Exception as e:
+        _LOGGER.debug("SUPERNOTIFY Image snap fail", exc_info=True)
+        failed(f"{type(e).__name__} {e}".strip())
 
     return None
 
@@ -362,6 +372,26 @@ async def _detect_image_ext(hass_api: HomeAssistantAPI, bitmap: bytes) -> str:
         return NOT_AN_IMAGE
 
 
+def snapshot_sources(snapshot_url: str | list[str | dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """`snapshot_url` as a list of `{url: ..., reprocess: ...}`, in the order to try them"""
+    return [source if isinstance(source, dict) else {CONF_URL: source} for source in ensure_list(snapshot_url)]
+
+
+def report_snapshot_failures(
+    hass_api: HomeAssistantAPI, help_url: str | None, failures: list[str], raw_path: Path | None
+) -> None:
+    """A repair linking to `help_url` while none of the snapshot URLs gives an image, removed once one does
+
+    One per `help_url`, since a setting that's wrong fails every notification it's used for."""
+    if not help_url:
+        return
+    issue_id = f"snapshot_unavailable_{hashlib.sha256(help_url.encode()).hexdigest()[:16]}"
+    if raw_path is not None:
+        hass_api.delete_issue(issue_id)
+    else:
+        hass_api.raise_issue(issue_id, "snapshot_unavailable", {"failures": "\n".join(failures)}, learn_more_url=help_url)
+
+
 async def snap_notification_image(
     notification: Notification, context: Context, ha_context: HAContext | None = None
 ) -> Path | None:
@@ -376,84 +406,106 @@ async def snap_notification_image(
     if notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH) is not None:
         return Path(notification.media[ATTR_MEDIA_SNAPSHOT_PATH])
 
-    snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
+    sources: list[dict[str, Any]] = notification.snapshot_sources or snapshot_sources(
+        notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
+    )
     camera_entity_id = cast("str", notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID))
     media_path: Path | None = context.media_storage.media_path
 
-    if not media_path or (not snapshot_url and not camera_entity_id):
+    if not media_path or (not sources and not camera_entity_id):
         return None
     if not context.hass_api:
         return None
 
     raw_path: Path | None = None
-    if snapshot_url:
+    failures: list[str] = []
+    for source in sources:
+        url: str = source[CONF_URL]
+        reasons: list[str] = []
         raw_path = await snapshot_from_url(
             context.hass_api,
-            snapshot_url,
+            url,
             notification.id,
             media_path,
             context.hass_api.internal_url,
             max_bytes=context.media_storage.max_size * 1024 * 1024,
             local_only=context.media_storage.snapshot_url_local,
+            failures=reasons,
         )
-    elif camera_entity_id.startswith("image."):
-        raw_path = await snap_image_entity(
-            context.hass_api, camera_entity_id, media_path, notification.id, max_image_wait=SNAP_WAIT_DEFAULT
-        )
-    else:
-        active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
-        if active_camera_entity_id:
-            camera_config = context.cameras.get(active_camera_entity_id, {})
-            camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
-            camera_delay: int | None = int_or_none(notification.media.get(ATTR_MEDIA_CAMERA_DELAY))
-            camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
-            camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
-            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
-            if camera_ptz_method is None:
-                camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
+        if raw_path is not None:
+            notification._raw_image_reprocess = source.get(MEDIA_OPTION_REPROCESS)  # type: ignore[attr-defined]  # ty: ignore[missing-attribute]
+            if notification.media.get(ATTR_MEDIA_SNAPSHOT_URL) != url:
+                # deliveries that pass the URL on, rather than fetch it, get the one that worked
+                notification.media[ATTR_MEDIA_SNAPSHOT_URL] = url
+            break
+        failures.extend(f"- `{url}`: {reason}" for reason in reasons)
+    if sources:
+        report_snapshot_failures(context.hass_api, notification.media.get(ATTR_MEDIA_HELP_URL), failures, raw_path)
 
-            if camera_ptz_preset:
-                camera_delay = (
-                    camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY, PTZ_DELAY_DEFAULT)
-                )
+    if raw_path is None and camera_entity_id:
+        # the camera is the last resort, its live image not being the event a URL is for
+        if camera_entity_id.startswith("image."):
+            raw_path = await snap_image_entity(
+                context.hass_api, camera_entity_id, media_path, notification.id, max_image_wait=SNAP_WAIT_DEFAULT
+            )
+        else:
+            active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
+            if active_camera_entity_id:
+                camera_config = context.cameras.get(active_camera_entity_id, {})
+                camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
+                camera_delay: int | None = int_or_none(notification.media.get(ATTR_MEDIA_CAMERA_DELAY))
+                camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
+                camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
+                camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
+                if camera_ptz_method is None:
+                    camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
+
+                if camera_ptz_preset:
+                    camera_delay = (
+                        camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY, PTZ_DELAY_DEFAULT)
+                    )
+                    _LOGGER.debug(
+                        "SUPERNOTIFY Moving camera %s, ptz %s->%s (%s), delay %s secs",
+                        active_camera_entity_id,
+                        camera_ptz_preset,
+                        camera_ptz_preset_default,
+                        camera_ptz_entity_id,
+                        camera_delay,
+                    )
+                    await move_camera_to_ptz_preset(
+                        context.hass_api,
+                        camera_ptz_entity_id,
+                        camera_ptz_preset,
+                        method=camera_ptz_method,
+                        ha_context=ha_context,
+                    )
+                if camera_delay:
+                    # pause if there's a PTZ movement, or notification explicitly asked for `camera_delay`
+                    _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
+                    await sleep(camera_delay)
+
+                max_camera_wait: int = camera_config.get(CONF_SNAP_WAIT, SNAP_WAIT_DEFAULT)
                 _LOGGER.debug(
-                    "SUPERNOTIFY Moving camera %s, ptz %s->%s (%s), delay %s secs",
-                    active_camera_entity_id,
-                    camera_ptz_preset,
-                    camera_ptz_preset_default,
-                    camera_ptz_entity_id,
-                    camera_delay,
+                    "SUPERNOTIFY Snapping camera %s, max_wait: %s, to: %s", active_camera_entity_id, max_camera_wait, media_path
                 )
-                await move_camera_to_ptz_preset(
-                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method, ha_context=ha_context
-                )
-            if camera_delay:
-                # pause if there's a PTZ movement, or notification explicitly asked for `camera_delay`
-                _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
-                await sleep(camera_delay)
-
-            max_camera_wait: int = camera_config.get(CONF_SNAP_WAIT, SNAP_WAIT_DEFAULT)
-            _LOGGER.debug(
-                "SUPERNOTIFY Snapping camera %s, max_wait: %s, to: %s", active_camera_entity_id, max_camera_wait, media_path
-            )
-            raw_path = await snap_camera(
-                context.hass_api,
-                active_camera_entity_id,
-                notification.id,
-                media_path=media_path,
-                max_camera_wait=max_camera_wait,
-            )
-            if camera_ptz_preset and camera_ptz_preset_default:
-                await move_camera_to_ptz_preset(
+                raw_path = await snap_camera(
                     context.hass_api,
-                    camera_ptz_entity_id,
-                    camera_ptz_preset_default,
-                    method=camera_ptz_method,
-                    ha_context=ha_context,
+                    active_camera_entity_id,
+                    notification.id,
+                    media_path=media_path,
+                    max_camera_wait=max_camera_wait,
                 )
+                if camera_ptz_preset and camera_ptz_preset_default:
+                    await move_camera_to_ptz_preset(
+                        context.hass_api,
+                        camera_ptz_entity_id,
+                        camera_ptz_preset_default,
+                        method=camera_ptz_method,
+                        ha_context=ha_context,
+                    )
 
     if raw_path is None:
-        _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
+        _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", sources, camera_entity_id)
     notification._raw_image_path = raw_path  # type: ignore[attr-defined]
     return raw_path
 
@@ -485,8 +537,10 @@ async def grab_image(
     delivery_config = notification.delivery_data(delivery)
     jpeg_opts = notification.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_JPEG))
     png_opts = notification.media.get(ATTR_PNG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_PNG))
+    # a `reprocess` given with the snapshot URL that worked comes first
     reprocess_option = (
-        notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
+        getattr(notification, "_raw_image_reprocess", None)
+        or notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
         or "always"
     )
     reprocess: ReprocessOption = ReprocessOption.ALWAYS

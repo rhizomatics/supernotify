@@ -589,6 +589,10 @@
         "transport_deprecated_config": {
             "title": "Il transport {transport} di Supernotify usa impostazioni deprecate",
             "description": "Il transport {transport} ha {keys}, che sono deprecate. Per ora funzionano ancora.\n\nApri il transport in **Impostazioni → Dispositivi e servizi → Supernotify** e salvalo, il che le sposta sui loro sostituti: `device_domain`, `device_discovery`, `device_model_include` e `device_model_exclude` nelle sue opzioni, e `selection` in `inclusion`."
+        },
+        "snapshot_unavailable": {
+            "title": "Gli URL di snapshot di Supernotify non danno alcuna immagine",
+            "description": "Nessuno degli URL di snapshot di una notifica ha dato un'immagine:\n\n{failures}\n\nFinché non viene corretto, le notifiche partono senza questa immagine, o con l'immagine dal vivo della telecamera se c'è. Il link qui sotto porta alle impostazioni da cui vengono questi URL."
         }
     },
     "exceptions": {

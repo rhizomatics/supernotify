@@ -554,6 +554,10 @@
         "transport_deprecated_config": {
             "title": "Supernotify の {transport} トランスポートが非推奨の設定を使っています",
             "description": "{transport} トランスポートには非推奨の {keys} があります。今のところはまだ動作します。\n\n**設定 → デバイスとサービス → Supernotify** でトランスポートを開いて保存すると、代わりの設定に移されます: `device_domain`、`device_discovery`、`device_model_include`、`device_model_exclude` はオプションへ、`selection` は `inclusion` へ。"
+        },
+        "snapshot_unavailable": {
+            "title": "Supernotify のスナップショット URL から画像が得られません",
+            "description": "通知のスナップショット URL のどれからも画像が得られませんでした:\n\n{failures}\n\n修正されるまで、通知はこの画像なしで、カメラがあればそのライブ画像を付けて送られます。下のリンクから、これらの URL を設定している画面を開けます。"
         }
     },
     "exceptions": {

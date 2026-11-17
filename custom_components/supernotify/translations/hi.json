@@ -554,6 +554,10 @@
         "transport_deprecated_config": {
             "title": "Supernotify {transport} ट्रांसपोर्ट अप्रचलित सेटिंग्स का उपयोग करता है",
             "description": "{transport} ट्रांसपोर्ट में {keys} हैं, जो अप्रचलित हैं। वे अभी भी काम करते हैं।\n\n**सेटिंग्स → डिवाइस और सेवाएँ → Supernotify** में ट्रांसपोर्ट खोलें और सहेजें, जिससे वे अपने प्रतिस्थापनों में चले जाते हैं: `device_domain`, `device_discovery`, `device_model_include` और `device_model_exclude` इसके विकल्पों में, और `selection` से `inclusion` में।"
+        },
+        "snapshot_unavailable": {
+            "title": "Supernotify के स्नैपशॉट URL से कोई छवि नहीं मिली",
+            "description": "किसी सूचना के किसी भी स्नैपशॉट URL से छवि नहीं मिली:\n\n{failures}\n\nइसे ठीक होने तक सूचनाएँ इस छवि के बिना जाएँगी, या जहाँ कैमरा हो वहाँ उसकी लाइव छवि के साथ। नीचे दिया लिंक उन सेटिंग्स पर ले जाता है जिनसे ये URL आते हैं।"
         }
     },
     "exceptions": {

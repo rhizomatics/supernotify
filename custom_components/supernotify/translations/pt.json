@@ -554,6 +554,10 @@
         "transport_deprecated_config": {
             "title": "O transporte {transport} do Supernotify usa definições obsoletas",
             "description": "O transporte {transport} tem {keys}, que estão obsoletas. Por agora ainda funcionam.\n\nAbra o transporte em **Definições → Dispositivos e serviços → Supernotify** e guarde-o, o que as move para as suas substituições: `device_domain`, `device_discovery`, `device_model_include` e `device_model_exclude` para as suas opções, e `selection` para `inclusion`."
+        },
+        "snapshot_unavailable": {
+            "title": "Os URLs de captura do Supernotify não dão nenhuma imagem",
+            "description": "Nenhum dos URLs de captura de uma notificação deu uma imagem:\n\n{failures}\n\nAté que isto seja corrigido, as notificações seguem sem esta imagem, ou com a imagem ao vivo da câmara, quando há uma. A ligação abaixo leva às definições de onde vêm estes URLs."
         }
     },
     "exceptions": {

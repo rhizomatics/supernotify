@@ -62,6 +62,7 @@ from .const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CAMERA_PTZ_PRESET,
     ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_HELP_URL,
     ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
@@ -460,17 +461,29 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),
     vol.Optional(CONF_SNAP_WAIT, default=SNAP_WAIT_DEFAULT): int,
 })
+REPROCESS_VALUES = ["always", "never", "preserve"]
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
     vol.Optional(ATTR_MEDIA_CAMERA_DELAY): int,
     vol.Optional(ATTR_MEDIA_CAMERA_PTZ_PRESET): vol.Any(cv.positive_int, cv.string),
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
-    vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
+    # a list is tried in turn, see media_grab.snap_notification_image()
+    vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(
+        cv.url,
+        cv.string,
+        [
+            vol.Any(
+                {vol.Required(CONF_URL): cv.string, vol.Optional(ATTR_REPROCESS): vol.In(REPROCESS_VALUES)},
+                cv.string,
+            )
+        ],
+    ),
+    vol.Optional(ATTR_MEDIA_HELP_URL): cv.string,
     vol.Optional(ATTR_MEDIA_SNAPSHOT_PATH): cv.path,
     vol.Optional(ATTR_JPEG_OPTS): dict,
     vol.Optional(ATTR_PNG_OPTS): dict,
-    vol.Optional(ATTR_REPROCESS): vol.In(["always", "never", "preserve"]),
+    vol.Optional(ATTR_REPROCESS): vol.In(REPROCESS_VALUES),
 })
 
 

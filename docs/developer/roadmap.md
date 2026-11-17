@@ -91,6 +91,22 @@ A scenario whose delivery and target configuration is generated for each notific
 - Latency and cost: a model call per notification is slow next to the rest of delivery, so it suits scenarios that are selected occasionally, not every notification, and needs a timeout
 - The prompt, the answer and what was applied go in the archive and the delivery explanations, so a surprising choice can be traced, and `dry_run` shows what would be done without sending
 
+### Image Notes
+
+Since v2.19.0 a `snapshot_url` that gives no image falls back to the next URL in its list, then to snapping `camera_entity_id`. The camera's live view is taken at send time, not when the event happened. In an e-mail read later, the car or person may be gone, or something else may be in view, and nothing in the notification says the picture isn't of the event. Camera Auto Notify asks for the notification to say so ([#331](https://github.com/rhizomatics/supernotify/issues/331) follow-up):
+
+- A note on the camera fallback, translated, such as "Camera view at 14:32, not the event". With an optional `media.event_time`, as epoch seconds or ISO, it could say "Camera view 6 minutes after the event" instead
+- An optional `note` on an item of a `snapshot_url` list, the caller's own text, already translated, used only when that item supplies the image
+- The archive records which source supplied the image, by its index in the list or as the camera
+
+Supernotify doesn't add text to a caller's message anywhere at present, so this needs thinking through before it's built:
+
+- **Templates**: the note, the source and how long after the event the image was taken should be template variables, for the HTML e-mail template, message templates and the `footer`. Then a template places the note itself, rather than Supernotify deciding where it goes. Decide what's shown when no template uses it
+- **Plain e-mail**: no caption to put it in, so it goes in the body or the `footer`. Which one, and whether to rethink `footer` at the same time, see [Footer](#footer)
+- **Other transports**: a caption where the transport has one, as with a Telegram photo, the e-mail image's alt text, or Discord and Matrix image messages. Otherwise a line added to the message, as for *Mobile Push*, ntfy, gotify and Pushover. Decide whether that's on by default, an option per delivery, or only through templates. Spoken transports would leave it out
+- **Where Supernotify didn't choose the image**: a transport that passes `snapshot_url` on to the phone can't know whether the phone's fetch worked, so it can't say anything. Label only images Supernotify fetched or snapped itself
+- **One note for each notification**: set once, when the image is chosen in `snap_notification_image()`, so every delivery says the same thing. It's in the language of Home Assistant, as recipients have no language of their own yet
+
 ### Other Features
 
 - Transport overrides for scenarios

@@ -91,6 +91,37 @@ Redirects are not followed when it is on, and anything else is not fetched, with
 host that only shares a parent domain with Home Assistant, like another `ui.nabu.casa` address, doesn't count:
 add it to `allowlist_external_urls`.
 
+#### Backup Snapshot URLs
+
+`snapshot_url` can also be a list, tried in turn until one gives an image. A URL fails if it gives an HTTP
+error, times out or can't be reached, isn't an image, is over the size limit, or isn't allowed by
+**Only Local Snapshot URLs**. If none of them works, the camera in `camera_entity_id` is snapped instead.
+
+Each URL can have its own `reprocess`, used instead of the notification's when that URL gives the image,
+so an animated GIF can be kept as it is while a JPEG to fall back on is still reprocessed.
+
+A delivery that passes the URL on, such as *Mobile Push*, where the phone fetches the image itself, gets
+the first URL, or the one that worked if the image has already been fetched for another delivery of the
+same notification.
+
+`help_url` raises a repair in Home Assistant when none of the URLs gives an image, listing why each one
+failed, with a link to `help_url`, such as the page where whatever sends the notification sets the URLs up.
+It isn't part of the notification, and isn't fetched. There's one repair for each `help_url`, removed once
+one of the URLs works again. Like `snapshot_url`, it can be relative to Home Assistant's own URL.
+
+```yaml
+ -  action: supernotify.notify
+    data:
+      message: "Person in the courtyard"
+      media:
+          snapshot_url:
+            - url: /api/frigate/notifications/1792602227.86265-dyoaxn/event_preview.gif
+              reprocess: never
+            - /api/frigate/notifications/1792602227.86265-dyoaxn/snapshot.jpg?bbox=1
+          camera_entity_id: camera.courtyard
+          help_url: /config/integrations/integration/camera_autonotify
+```
+
 This prefix can be changed using the `media_url_prefix` setting, from the UI config shown above (where `media_path` is also configured) or the equivalent YAML. If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
 
 ### Automatically Fixing Camera Issues

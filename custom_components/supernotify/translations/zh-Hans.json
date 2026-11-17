@@ -554,6 +554,10 @@
         "transport_deprecated_config": {
             "title": "Supernotify 的 {transport} 传输使用了已弃用的设置",
             "description": "{transport} 传输含有已弃用的 {keys}。目前它们仍然有效。\n\n在 **设置 → 设备与服务 → Supernotify** 中打开该传输并保存，即可将它们移到替代设置：`device_domain`、`device_discovery`、`device_model_include` 和 `device_model_exclude` 移到其选项，`selection` 移到 `inclusion`。"
+        },
+        "snapshot_unavailable": {
+            "title": "Supernotify 快照 URL 未能提供图像",
+            "description": "通知的所有快照 URL 都没有提供图像：\n\n{failures}\n\n在修复之前，通知将不带此图像发送，有摄像头时则带上摄像头的实时图像。下面的链接指向提供这些 URL 的设置。"
         }
     },
     "exceptions": {

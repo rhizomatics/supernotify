@@ -554,6 +554,10 @@
         "transport_deprecated_config": {
             "title": "Transport {transport} Supernotify używa przestarzałych ustawień",
             "description": "Transport {transport} ma {keys}, które są przestarzałe. Na razie nadal działają.\n\nOtwórz transport w **Ustawienia → Urządzenia i usługi → Supernotify** i zapisz go, co przeniesie je do ich zamienników: `device_domain`, `device_discovery`, `device_model_include` i `device_model_exclude` do jego opcji, a `selection` do `inclusion`."
+        },
+        "snapshot_unavailable": {
+            "title": "Adresy URL migawek Supernotify nie dają obrazu",
+            "description": "Żaden z adresów URL migawki powiadomienia nie dał obrazu:\n\n{failures}\n\nDopóki nie zostanie to naprawione, powiadomienia idą bez tego obrazu albo z obrazem na żywo z kamery, jeśli jest. Link poniżej prowadzi do ustawień, z których pochodzą te adresy URL."
         }
     },
     "exceptions": {

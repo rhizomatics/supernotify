@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_EXCLUDE
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_EXCLUDE, CONF_URL
 from homeassistant.helpers.trace import trace_id_get
 from homeassistant.util.ulid import ulid_now
 
@@ -57,6 +57,7 @@ from .const import (
 )
 from .envelope import Envelope
 from .media_grab import snap_notification_image as _snap_notification_image
+from .media_grab import snapshot_sources
 from .model import (
     ConditionVariables,
     DebugTrace,
@@ -248,6 +249,7 @@ class Notification(ArchivableObject):
 
         self.action_groups: list[str] | None = nullable_ensure_list(action_data.get(ATTR_ACTION_GROUPS))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
+        self.snapshot_sources: list[dict[str, Any]] = []
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
 
@@ -339,6 +341,12 @@ class Notification(ArchivableObject):
 
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
+        # a list of snapshot URLs is tried in turn by snap_notification_image(), the first left in
+        # media for the transports that pass the URL on rather than fetch it - in a copy of media,
+        # which can be the caller's own or a scenario's
+        self.snapshot_sources = snapshot_sources(self.media.get(ATTR_MEDIA_SNAPSHOT_URL))
+        if isinstance(self.media.get(ATTR_MEDIA_SNAPSHOT_URL), list) and self.snapshot_sources:
+            self.media = {**self.media, ATTR_MEDIA_SNAPSHOT_URL: self.snapshot_sources[0][CONF_URL]}
         # a scenario may have chosen the camera, too late for conditions but in time for templates
         self.condition_variables.camera = self.camera_variables()
 
