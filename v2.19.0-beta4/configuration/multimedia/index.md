@@ -1,0 +1,198 @@
+# Images, Streaming and Cameras
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/
+
+## Basic Configuration
+
+In order to handle attachments, Supernotify needs to temporarily store images on the file system, so some extra configuration is needed. This includes camera snapshots, a `snapshot_url`, or any other image source.
+
+- A valid `media_path` directory, usually somewhere under the main `/config` directory
+- Add this directory to the `allowlist_external_dirs` in the main HomeAssistant config
+
+The media path is a folder of its own. It can't be the `/config` directory itself, a folder that holds it, or within `.storage`, however the path is written, since everything in the media path is served from the [media URL](#accessing-media-via-web) and removed when old. A path like that is refused in the UI, and one already configured gets a repair and is not used.
+
+Home Assistant Configuration
+
+```yaml
+homeassistant:
+  ...
+  allowlist_external_dirs:
+    - "/config/media/supernotify"
+```
+
+## Images and Video
+
+These are most commonly used with *Mobile Push* and *Email* delivery transports.
+
+Images can be included by:
+
+- Camera Entity
+- As created by any [Camera Integration](https://www.home-assistant.io/integrations/camera/)
+- Image Entity
+  - For example an [MQTT Image](https://www.home-assistant.io/integrations/image.mqtt/), ideal for Frigate or cameras that stream to MQTT
+- Web Image
+  - Use `snapshot_url` in the `media` section to grab from any HTTP(S) address
+- Local Image
+  - Use `snapshot_image_path` in the `media` section to grab from any file system path accessible by Home Assistant
+
+Additionally a video clip can be referenced by `clip_url` where supported by a transport (currently mobile push only).
+
+The media content type will be automatically determined from the grabbed image.
+
+### PTZ ( Pan, Tilt, Zoom ) Camera Support
+
+Supernotify can ask a camera to move and zoom to a pre-set position before an image snapshot is taken. So for example, if a person rings the doorbell, a camera could zoom in to take a close-up for the notification. This image will taken once and then reused across all supporting delivery transports.
+
+Set the (optional) PTZ preset referenced in the `data` section, whether in transport, delivery or scenario config, or in the notify `action` call.
+
+A PTZ delay can be set to wait for camera movement before snapshot taken, and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an additional PTZ movement will be commanded to return to the `ptz_default_preset` defined for the camera.
+
+### Accessing Media via Web
+
+By default the media storage is made available via the Home Assistant web interface with the prefix `/supernotify/media/`
+
+Warning
+
+Home Assistant serves these files without a login, so anyone who has the link to a snapshot can see it. The file names are long random ids that can't be guessed, but the links are passed to the services that deliver the notification. Set an empty `media_url_prefix` to switch this off.
+
+### Snapshot URLs
+
+A `snapshot_url` is fetched by Home Assistant itself, so it can be for anything Home Assistant can reach, not only a camera. To stop that being used to fetch something else, only an image is kept, and no more than **Largest Snapshot Download** megabytes is read, 20 unless changed with the paths in the UI config shown above.
+
+**Only Local Snapshot URLs**, in the same place, narrows where a `snapshot_url` can be fetched from. It is on for new installs, and off for installs from before v2.19.0 until switched on. With it on, that is only:
+
+- Home Assistant itself, by its internal or external URL, or a subdomain of that address, such as `frigate.my.home.example` where Home Assistant is `my.home.example`
+- A device on the same network as Home Assistant, by IP address or by a name that resolves to one, which includes apps (add-ons) like Frigate on the same machine
+- A URL listed in Home Assistant's [`allowlist_external_urls`](https://www.home-assistant.io/integrations/homeassistant/#allowlist_external_urls)
+
+Redirects are not followed when it is on, and anything else is not fetched, with a warning in the log. A host that only shares a parent domain with Home Assistant, like another `ui.nabu.casa` address, doesn't count: add it to `allowlist_external_urls`.
+
+#### Backup Snapshot URLs
+
+`snapshot_url` can also be a list, tried in turn until one gives an image. A URL fails if it gives an HTTP error, times out or can't be reached, isn't an image, is over the size limit, or isn't allowed by **Only Local Snapshot URLs**. If none of them works, the camera in `camera_entity_id` is snapped instead.
+
+Each URL can have its own `reprocess`, used instead of the notification's when that URL gives the image, so an animated GIF can be kept as it is while a JPEG to fall back on is still reprocessed.
+
+A delivery that passes the URL on, such as *Mobile Push*, where the phone fetches the image itself, gets the first URL, or the one that worked if the image has already been fetched for another delivery of the same notification.
+
+`help_url` raises a repair in Home Assistant when none of the URLs gives an image, listing why each one failed, with a link to `help_url`, such as the page where whatever sends the notification sets the URLs up. It isn't part of the notification, and isn't fetched. There's one repair for each `help_url`, removed once one of the URLs works again. Like `snapshot_url`, it can be relative to Home Assistant's own URL.
+
+```yaml
+ -  action: supernotify.notify
+    data:
+      message: "Person in the courtyard"
+      media:
+          snapshot_url:
+            - url: /api/frigate/notifications/1792602227.86265-dyoaxn/event_preview.gif
+              reprocess: never
+            - /api/frigate/notifications/1792602227.86265-dyoaxn/snapshot.jpg?bbox=1
+          camera_entity_id: camera.courtyard
+          help_url: /config/integrations/integration/camera_autonotify
+```
+
+This prefix can be changed using the `media_url_prefix` setting, from the UI config shown above (where `media_path` is also configured) or the equivalent YAML. If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
+
+### Automatically Fixing Camera Issues
+
+Some cameras, like Hikvision, add JPEG comment blocks which confuse the very simplistic media detection in the SMTP integration, and leads to spurious log entries. Supernotify will automatically rewrite and optimize JPEGs, stripping out comments, to avoid this.
+
+There is a default set of `jpeg_opts` and `png_opts` set for email attachments, to optimize and make progressive, and you can set your own for e-mail or other integrations that use attachments. See the *Saving* section under **JPEG** and **PNG** on the [PIL Image Writer documentation](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#)\] for the full set of options available.
+
+These options can be set in the `delivery` or `transport` configuration, or in the action call as below. See also [Controlling Image Reprocessing](#controlling-image-reprocessing) to switch this off altogether.
+
+### Example Action
+
+```yaml
+ -  action: supernotify.notify
+    data:
+      title: "My Home Notification"
+      message: "Notify with image snapshot taking close-up of vehicle on driveway"
+      media:
+          camera_entity_id: camera.driveway
+          camera_ptz_preset: closeup
+          camera_delay: 10
+          jpeg_opts:
+            progressive: true
+            optimize: true
+            quality: 50
+```
+
+## Cameras
+
+Additional information can be provided for cameras, such as PTZ control and backup cameras. It is entirely optional, and if omitted sensible defaults will used.
+
+Home Assistant default camera entities have built-in device tracking, so the entity state will be `idle`, `recording` or `unavailable` if the camera is not available. Supernotify can use this state to switch to an alternative camera if the first choice isn't up. It's also possible to associate a separate `device_tracker` to the camera, for example using a Unifi or similar integration to track that the camera network device is up.
+
+- Link an alternative `device_tracker` to the camera
+- Notifications will first check its online, then use an alternative if primary is down
+- Define alternative cameras to use if first fails using `alt_camera`
+- How long to wait for a snapshot file to appear after requesting one can be set using `snap_wait`
+- Defaults to `15` seconds if not provided
+- For ONVIF or Frigate cameras set up for PTZ
+- Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
+- Delay between PTZ command and snapshot can be defined using `ptz_delay`
+  - Defaults to `10` if not provided
+- An alternative camera entity can be chosen for the PTZ command using `ptz_camera`
+  - This can be helpful if there are multiple Home Assistant entities for the same camera
+- Choose between ONVIF or Frigate PTZ control using `ptz_method`
+  - Note that ONVIF may have numeric reference for presets while Frigate uses text labels
+  - The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
+  - This will automatically default if not provided based on the camera's platform
+- Configuration documentation for [Camera Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Camera_Definition/index.md).
+
+Example Camera Enhanced Configuration
+
+```yaml
+ cameras:
+    - camera: camera.driveway
+      alt_camera:
+        - camera.doorbell
+        - camera.courtyard
+      device_tracker: device_tracker.driveway_camera
+      snap_wait: 30
+      ptz_method: frigate
+      ptz_delay: 10
+      ptz_default_preset: Front Door
+```
+
+## Purging
+
+The media storage directory can grow, so a regular job will purge images older than so many days.
+
+If you want to change the defaults, do this, or set to `0` to switch off
+
+There's also an action, `purge_media`, to run this on demand, with a configurable number of expiry days.
+
+## Browse Snapshots via Home Assistant
+
+The [Media Source](https://www.home-assistant.io/integrations/media_source/) integration can be configured to include the Supernotify media directory, so snapshots used for e-mail, mobile push etc can be viewed via the Home Assistant UI. This integration is switched on as part of the Home Assistant default configuration so all you need is to declare the `media_dirs`, like this:
+
+```yaml
+homeassistant:
+  name: My Lovely House
+  media_dirs:
+    supernotify: /config/media/supernotify
+```
+
+## Controlling Image Reprocessing
+
+If you don't want to have images reprocessed, perhaps for performance or other reasons, then set `reprocess` under `media` in the action call, or under `options` in the delivery or transport configuration.
+
+Action call
+
+```yaml
+...
+data:
+  media:
+    reprocess: never
+```
+
+Delivery or transport configuration
+
+```yaml
+...
+options:
+  reprocess: never
+```
+
+`reprocess` defaults to `always`. It can also be set to `preserve` where the original image with any comments and other metadata is preserved, and then `jpeg_opts` or `png_opts` applied on top.
