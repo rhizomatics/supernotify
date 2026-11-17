@@ -431,7 +431,12 @@ class ChimeTransport(Transport):
         })
         # resolve and include chime aliases
         expanded_targets.update(
-            self.resolve_tune(chime_tune, envelope.delivery.transport_data.get("chime_aliases", {}), target)
+            self.resolve_tune(
+                chime_tune,
+                envelope.delivery.transport_data.get("chime_aliases", {}),
+                target,
+                delivery_device_ids=envelope.delivery.target.device_ids if envelope.delivery.target else None,
+            )
         )  # overwrite and extend
 
         chimes = 0
@@ -508,7 +513,11 @@ class ChimeTransport(Transport):
         return action_call
 
     def resolve_tune(
-        self, tune_or_alias: str | None, chime_config: dict[str, Any], target: Target | None = None
+        self,
+        tune_or_alias: str | None,
+        chime_config: dict[str, Any],
+        target: Target | None = None,
+        delivery_device_ids: list[str] | None = None,
     ) -> dict[str, ChimeTargetConfig]:
         target_configs: dict[str, ChimeTargetConfig] = {}
         if tune_or_alias is not None:
@@ -522,11 +531,13 @@ class ChimeTransport(Transport):
                         for t in self.hass_api.expand_group(alias_target.entity_ids)
                     })
                     target_configs.update({t: ChimeTargetConfig(device_id=t, **alias_kwargs) for t in alias_target.device_ids})
-                elif alias_config[CONF_DOMAIN] in DEVICE_DOMAINS and target is not None:
-                    # bulk apply to all known target devices of this domain
+                elif alias_config[CONF_DOMAIN] in DEVICE_DOMAINS:
+                    # the alias is a target in its own right, so with no devices on the notification
+                    # it sounds on the delivery's own (discovered) devices rather than nothing
+                    devices: list[str] = (target.device_ids if target else []) or (delivery_device_ids or [])
                     bulk_apply = {
                         dev: ChimeTargetConfig(device_id=dev, **alias_kwargs)
-                        for dev in target.device_ids
+                        for dev in devices
                         if dev not in target_configs  # don't overwrite existing specific targets
                     }
                     # TODO: Constrain to device domain

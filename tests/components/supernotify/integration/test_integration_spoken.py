@@ -185,20 +185,7 @@ async def test_alexa_announce_all_keeps_its_targets_when_call_targets_a_person(h
         house.cleanup()
 
 
-async def test_chime_keeps_its_targets_and_aliases_when_call_targets_a_person(hass: HomeAssistant) -> None:
-    """A person target on the call (as a Frigate blueprint sends) can't be chimed, so a chime
-    delivery switched on by a scenario falls back to its own target and discovered Alexa devices,
-    rather than finding nothing to chime"""
-    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    alexa_entry = hass.config_entries.async_entries("alexa_devices")[0]
-    echo = dr.async_get(hass).async_get_or_create(
-        config_entry_id=alexa_entry.entry_id, identifiers={("alexa_devices", "echo_serial")}, name="Echo"
-    )
-    house = House(
-        users={"Bob": "bob"},
-        alexa_per_area=False,
-        stub_actions=["switch.turn_on", "alexa_devices.send_sound"],
-        config="""
+CHIME_CONFIG = """
 delivery:
   high_chime_alert:
     transport: chime
@@ -216,7 +203,27 @@ scenarios:
     conditions: "{{ notification_priority == 'high' }}"
     delivery:
       high_chime_alert:
-""",
+"""
+
+
+def register_echo(hass: HomeAssistant) -> dr.DeviceEntry:
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    alexa_entry = hass.config_entries.async_entries("alexa_devices")[0]
+    return dr.async_get(hass).async_get_or_create(
+        config_entry_id=alexa_entry.entry_id, identifiers={("alexa_devices", "echo_serial")}, name="Echo"
+    )
+
+
+async def test_chime_keeps_its_targets_and_aliases_when_call_targets_a_person(hass: HomeAssistant) -> None:
+    """A person target on the call (as a Frigate blueprint sends) can't be chimed, so a chime
+    delivery switched on by a scenario falls back to its own target and discovered Alexa devices,
+    rather than finding nothing to chime"""
+    echo = register_echo(hass)
+    house = House(
+        users={"Bob": "bob"},
+        alexa_per_area=False,
+        stub_actions=["switch.turn_on", "alexa_devices.send_sound"],
+        config=CHIME_CONFIG,
     )
     await house.setup(hass)
     try:
@@ -227,6 +234,30 @@ scenarios:
         """)
         (switch_on,) = calls(house, "switch", "turn_on")
         assert switch_on.data["entity_id"] == "switch.chime_tubular"
+        (sound,) = calls(house, "alexa_devices", "send_sound")
+        assert sound.data == {"device_id": echo.id, "sound": "buzzers_pistols_01"}
+    finally:
+        house.cleanup()
+
+
+async def test_chime_alias_sounds_its_alexa_devices_when_call_targets_another_chime(hass: HomeAssistant) -> None:
+    """A chime alias is a target in its own right: when the call names a siren, the alias's
+    discovered Alexa devices still play its sound alongside, not only devices on the call"""
+    echo = register_echo(hass)
+    house = House(
+        alexa_per_area=False,
+        stub_actions=["switch.turn_on", "siren.turn_on", "alexa_devices.send_sound"],
+        config=CHIME_CONFIG,
+    )
+    await house.setup(hass)
+    try:
+        await house.call("""
+            message: Vehicle detected
+            priority: high
+            target: siren.gate
+        """)
+        (siren_on,) = calls(house, "siren", "turn_on")
+        assert siren_on.data["entity_id"] == "siren.gate"
         (sound,) = calls(house, "alexa_devices", "send_sound")
         assert sound.data == {"device_id": echo.id, "sound": "buzzers_pistols_01"}
     finally:

@@ -76,9 +76,9 @@ itself as the tune - for example `chime_tune: doorbell` plays `doorbell` on a me
 isn't in the alias. Switches ignore the tune, but other devices may not recognize it, so give each
 kind of device you target an entry in the alias.
 
-For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
+For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. An `alexa_devices` entry without a `target` plays on the Alexa devices in the notification if there are any, and otherwise on all the discovered ones, even when the notification targets a different chime such as a `siren`. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
-A chime delivery defaults to `target_usage: no_delivery`, so when the notification only has targets it can't chime, such as a `person_id` from a camera blueprint, it falls back to its own `target` and discovered Alexa devices rather than having nothing to chime. A chime target on the action call, such as a `siren` or `switch`, still replaces them. See [Controlling Targets](../configuration/deliveries.md#controlling-targets) for the other options.
+A chime delivery defaults to `target_usage: no_delivery`, so when the notification only has targets it can't chime, such as a `person_id` from a camera blueprint, it falls back to its own `target` rather than having nothing to chime. A chime target on the action call, such as a `siren` or `switch`, replaces the delivery's `target`. See [Controlling Targets](../configuration/deliveries.md#controlling-targets) for the other options.
 
 The formal schema is published as [Chime Aliases Definition](../developer/reference/schemas/Chime_Aliases_Definition.md).
 Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.

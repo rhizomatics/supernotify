@@ -24,6 +24,8 @@ A security release, from a review of what a notification, or whoever sends it, c
 - *Archive*: passwords, tokens and API keys in the data of a notification are left out of the archive files, events and MQTT messages, and out of `enquire_configuration` and `enquire_last_notification`
 
 ## 🐛 Bug fixes
+- *Chime*: a chime delivery whose notification targets only a person, as a camera blueprint does, now falls back to its own `target` and discovered Alexa devices rather than chiming nothing. Chime deliveries default to `target_usage: no_delivery`, where it was `no_action`, see [Chime Aliases](https://supernotify.rhizomatics.org.uk/latest/transports/chime/)
+- *Chime*: an `alexa_devices` entry in a chime alias without a `target` plays on all the discovered Alexa devices when the notification has none of its own, such as when it targets a siren, where before it played nowhere
 - *Media*: `reprocess` is accepted under `media` in a notify call or a scenario, where it was rejected as an unknown key, so could only be set in the `options` of a delivery or transport. The documentation showed it under `media: options:`, which has never been read, and now shows `media: reprocess:` ([#331](https://github.com/rhizomatics/supernotify/issues/331))
 
 ## 📝 Other changes

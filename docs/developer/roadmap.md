@@ -131,6 +131,7 @@ Supernotify doesn't add text to a caller's message anywhere at present, so this 
 ### Chime
 
 - Chime Aliases should be targets in their own right, so a target list could call chime:doorbells.
+  - Partly there: an alias entry with a `target` always chimes it, and an `alexa_devices` entry without one falls back to the delivery's discovered devices when the notification has none. Still to do is naming an alias as a target, e.g. `chime:doorbells`, and domain-only entries for entity domains (`switch`, `media_player`) still only tune targets already on the notification, since all entities of the domain would be far too broad.
   - Possibly chime aliases should be able to have labels, areas etc and probably they are really Notify Entities and wouldn't suffer from the paucity of functionality offered by those
 
 ### Email
