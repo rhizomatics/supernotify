@@ -41,6 +41,43 @@
           "type": "string"
         },
         "snapshot_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "reprocess": {
+                        "type": "string",
+                        "enum": [
+                          "always",
+                          "never",
+                          "preserve"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "help_url": {
           "type": "string"
         },
         "snapshot_image_path": {},
