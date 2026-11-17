@@ -2,7 +2,7 @@
 
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
 
-[Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) working beta for automatic notifications from security cameras, so far supporting Frigate. No blueprints, no automations, no YAML.
+[Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) automatic notifications from security cameras, so far supporting Frigate and ANPR2MQTT. No blueprints, no automations, no YAML.
 
 # v2.19.0
 
