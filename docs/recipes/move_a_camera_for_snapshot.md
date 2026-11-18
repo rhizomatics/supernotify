@@ -12,14 +12,9 @@ description: Move a CCTV camera to a preset PTZ position, take a snapshot image 
 
 ## Purpose
 
-When an alert is generated from a location, for example a Frigate zone, or a motion PIR, make a CCTV
-camera move and/or zoom to that place, before taking a snapshot image and attaching it to an email
-or mobile push message.
+When an alert is generated from a location, for example a Frigate zone, or a motion PIR, make a CCTV camera move and/or zoom to that place, before taking a snapshot image and attaching it to an email or mobile push message.
 
-This requires what's known as a "PTZ" camera, for pan-tilt-zoom, though some fisheye cameras can
-do something similar without motors, and some cameras have only zoom, or only pan/tilt. You will
-also need to set up labelled PTZ pre-sets, which can be done through the camera's own setup
-screens, DVR or CCTV app.
+This requires what's known as a "PTZ" camera, for pan-tilt-zoom, though some fisheye cameras can do something similar without motors, and some cameras have only zoom, or only pan/tilt. You will also need to set up labelled PTZ pre-sets, which can be done through the camera's own setup screens, DVR or CCTV app.
 
 ## Implementation
 

@@ -11,15 +11,13 @@ Hints and suggestions for configuring non-SuperNotify notification in HomeAssist
 
 ## Self-hosted SMS
 
-If you have a Mikrotik 4G router for broadband or fallback, then you can probably
-send SMS notifications through it, using *Mikrotik SMS* custom component.
+If you have a Mikrotik 4G router for broadband or fallback, then you can probably send SMS notifications through it, using *Mikrotik SMS* custom component.
 
 Set it up by adding `https://github.com/jeyrb/hass_mikrotik_sms` as a custom repository in the Marketplace, with **Add from link**, or in HACS before Home Assistant 2026.11.
 
 ## Configuring an MQTT Siren with Zigbee2MQTT
 
-Home Assistant added MQTT Siren support in 2022, though as of writing its not
-yet automatically provisioned by Zigbee2MQTT, and its fussy to set up.
+Home Assistant added MQTT Siren support in 2022, though as of writing its not yet automatically provisioned by Zigbee2MQTT, and its fussy to set up.
 
 Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
 
@@ -61,5 +59,4 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
 
 ### Other Ideas
 
-See the `maximal.yaml` example configuration in the `examples` directory of this repo
-for more ideas of how to use SuperNotify.
+See the `maximal.yaml` example configuration in the `examples` directory of this repo for more ideas of how to use SuperNotify.

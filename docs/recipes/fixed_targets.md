@@ -10,13 +10,11 @@ description: Define a Supernotify delivery with a fixed list of targets which wi
 
 ## Purpose
 
-A delivery has its own special list of targets, which must not be overridden by
-anything else, including explicit targets set in a notification action call.
+A delivery has its own special list of targets, which must not be overridden by anything else, including explicit targets set in a notification action call.
 
 ## Implementation
 
-Define a target on the `delivery` configuration, and set the `target_usage` to `fixed`,
-so these addresses are fixed and not overridden.
+Define a target on the `delivery` configuration, and set the `target_usage` to `fixed`, so these addresses are fixed and not overridden.
 
 ## Example Configuration
 ```yaml

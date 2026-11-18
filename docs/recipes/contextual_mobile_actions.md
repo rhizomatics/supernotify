@@ -16,12 +16,9 @@ description: Select the mobile actions to appear on notifications based on alarm
 
 ## Purpose
 
-When mobile actions are included in an *Actionable Notification*, only include ones that are currently
-relevant. So if the Alarm Control Panel is disarmed, don't show the *Disarm* action, and likewise if
-the panel is armed.
+When mobile actions are included in an *Actionable Notification*, only include ones that are currently relevant. So if the Alarm Control Panel is disarmed, don't show the *Disarm* action, and likewise if the panel is armed.
 
-This avoids the mobile notification being messy and cluttered, and also the inevitable incorrect
-selections by the inhabitants.
+This avoids the mobile notification being messy and cluttered, and also the inevitable incorrect selections by the inhabitants.
 
 ## Implementation
 
