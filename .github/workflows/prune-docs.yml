@@ -3,6 +3,9 @@ name: Prune Docs
 on:
   workflow_dispatch:
 
+# Nothing by default; each job grants only what it needs (OpenSSF Scorecard Token-Permissions).
+permissions: {}
+
 jobs:
   prune:
     runs-on: ubuntu-latest

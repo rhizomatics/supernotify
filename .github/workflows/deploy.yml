@@ -21,6 +21,9 @@ on:
         type: boolean
         default: false
 
+# Nothing by default; each job grants only what it needs (OpenSSF Scorecard Token-Permissions).
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-latest
