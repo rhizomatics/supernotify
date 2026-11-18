@@ -2,6 +2,10 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/
 
+Tip
+
+[Auto Arm](https://autoarm.rhizomatics.org.uk) will automatically set the Alarm Control Panel to `armed_night` for bedtime, which can then be used by Supernotify and automations. It will also drive panel arming by calendar, sun state and physical buttons.
+
 ## Purpose
 
 Regardless of where the sun is in the sky, my bed times stay much the same, so use this in working out how to make notifications, and don't disturb me!
