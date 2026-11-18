@@ -13,8 +13,7 @@ description: Send out multiple notification types with the Frigate Blueprint, in
 # Recipe - Frigate Blueprint Emails
 
 !!! info
-    There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which automatically handles the broken Apple notifications and does away with the need for blueprints
-    and automations, and automatically configures all the Frigate cameras it finds.
+    There is now a much simpler alternative, [Camera Autonotify](https://camera-autonotify.rhizomatics.org.uk) which does away with the need for blueprints and automations, automatically configures all the Frigate cameras it finds and adds GenAI emails and camera health check notifications.
 
 ## Purpose
 
