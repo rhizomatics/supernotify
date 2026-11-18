@@ -182,12 +182,22 @@ class Envelope(DupeCheckable):
             )
         return image_path
 
-    def render_action(self, action: dict[str, Any]) -> dict[str, Any]:
-        """Mobile action with its `action_template`, `title_template` and `uri_template` rendered, and `level` dropped"""
+    def render_action(self, action: dict[str, Any], caller: bool = False) -> dict[str, Any]:
+        """Mobile action with its `action_template`, `title_template` and `uri_template` rendered, and `level` dropped
+
+        `caller` is for an action given in the notify call rather than an action group, whose templates
+        are only rendered where `caller_templates` is on, and otherwise left out"""
         rendered: dict[str, Any] = {k: v for k, v in action.items() if k != CONF_LEVEL}
         for field in (ATTR_ACTION, CONF_TITLE, CONF_URI):
             template_format = rendered.pop(f"{field}_template", None)
             if template_format is None or self.context is None:
+                continue
+            if caller and not self.context.caller_templates:
+                _LOGGER.warning(
+                    "SUPERNOTIFY %s_template in a notify call action for %s not rendered, as Render Templates in Notify Calls is off",
+                    field,
+                    self.delivery_name,
+                )
                 continue
             try:
                 context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
@@ -206,9 +216,13 @@ class Envelope(DupeCheckable):
         """
         groups: dict[str, list[dict[str, Any]]] = self.context.mobile_actions if self.context else {}
         group_names: list[str] = list(groups) if self.action_groups is None else self.action_groups
-        for action in [*self.actions, *(action for name in group_names for action in groups.get(name, []))]:
+        candidates: list[tuple[dict[str, Any], bool]] = [
+            *((action, True) for action in self.actions),
+            *((action, False) for name in group_names for action in groups.get(name, [])),
+        ]
+        for action, caller in candidates:
             if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
-                uri: str | None = self.render_action(action).get(CONF_URI)
+                uri: str | None = self.render_action(action, caller=caller).get(CONF_URI)
                 if uri and absolute and self.context and str(uri).startswith("/"):
                     return self.context.hass_api.abs_url(str(uri))
                 if uri:

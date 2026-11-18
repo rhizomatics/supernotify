@@ -114,6 +114,32 @@ async def test_action_group_templates_rendered(fixture: TestingContext) -> None:
     assert data["actions"] == [{"action": "ALARM_HIGH", "title": "Alarm at high"}]
 
 
+CALLER_TEMPLATED_ACTIONS: list[dict[str, Any]] = [
+    {"action_template": "OPEN_{{ notification_priority | upper }}", "title_template": "Open {{ notification_priority }}"},
+    {"level": "notification", "uri_template": "https://my.home/{{ notification_priority }}"},
+]
+
+
+async def test_notify_call_action_templates_rendered_with_caller_templates_on(fixture: TestingContext) -> None:
+    fixture.caller_templates = True
+    data = await _push_data(fixture, {"actions": CALLER_TEMPLATED_ACTIONS, "priority": "high"})
+    assert data["actions"] == [{"action": "OPEN_HIGH", "title": "Open high"}]
+    assert data["url"] == "https://my.home/high"
+
+
+async def test_notify_call_action_templates_not_rendered_with_caller_templates_off(
+    fixture: TestingContext, caplog: pytest.LogCaptureFixture
+) -> None:
+    fixture.caller_templates = False
+    data = await _push_data(
+        fixture, {"actions": CALLER_TEMPLATED_ACTIONS, "action_groups": ["alarm_actions"], "priority": "high"}
+    )
+    # the notify call's own templates are left out, while the configured action group's are still rendered
+    assert data["actions"] == [{"action": "ALARM_HIGH", "title": "Alarm at high"}]
+    assert data["url"] == "https://my.home/alarm"
+    assert "not rendered" in caplog.text
+
+
 async def test_explicit_url_wins_over_notification_level_action(fixture: TestingContext) -> None:
     data = await _push_data(
         fixture, {"action_groups": ["alarm_actions"], "data": {"url": "/lovelace/own", "clickAction": "/lovelace/mine"}}

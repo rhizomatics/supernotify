@@ -423,7 +423,9 @@ class MobilePushTransport(Transport):
         for action in envelope.actions:
             if action.get(CONF_LEVEL) == ACTION_LEVEL_NOTIFICATION:
                 continue
-            button = envelope.render_action(action)
+            button = envelope.render_action(action, caller=True)
+            if not button:
+                continue  # only templates, left out as not rendered
             app_url: str | None = self.hass_api.abs_url(button.get(ATTR_ACTION_URL))
             if app_url:
                 app_url_title = (

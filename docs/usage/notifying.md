@@ -271,18 +271,25 @@ the action is called, so Supernotify gets the finished text.
 
 #### Templates that arrive unrendered
 
-Supernotify also renders templates itself, in a delivery's `message` or `data`, and in a scenario's
-`message_template` and `title_template`. Those are always rendered, as they come from your configuration.
+Supernotify also renders templates itself, in a delivery's `message` or `data`, in a scenario's `message_template` and `title_template`, and in an action group's `action_template`, `title_template` and `uri_template`. Those are always rendered, as they come from your configuration.
 
-Whether it also renders a template that is still in the message or `data` of a notify call is the
-**Render Templates in Notify Calls** setting, with the paths under *Reconfigure* on the integration.
+These are also the places to use Supernotify's own variables, such as `notification_message`, `notification_priority`, `applied_scenarios`, `occupancy` and `camera`, which an automation doesn't have when it renders its templates. For example, a scenario's `message_template` of `"{{ notification_message }} ({{ notification_priority }})"` adds the priority to the message.
 
-- **Off**, as for new installs, is the safe choice. An automation's templates are already rendered, so
-  text that still looks like a template came from somewhere else: an incoming SMS or e-mail, a calendar
-  entry, a webhook, an AI agent. Rendering it would let whoever wrote that text read any entity's state.
-- **On**, as for installs from before v2.19.0, keeps a template working that reaches Supernotify
-  unrendered, such as one passed by Python script or AppDaemon. Move such templates into the delivery or
-  scenario configuration, or render them before the call, then switch it off.
+Whether it also renders a template that is still in the message, `data` or `actions` of a notify call is the **Render Templates in Notify Calls** setting, with the paths under *Reconfigure* on the integration.
+
+- **Off**, as for new installs, is the safe choice. An automation's templates are already rendered, so text that still looks like a template came from somewhere else: an incoming SMS or e-mail, a calendar entry, a webhook, an AI agent. Rendering it would let whoever wrote that text read any entity's state.
+- **On**, as for installs from before v2.19.0, keeps a template working that reaches Supernotify unrendered, such as one passed by Python script or AppDaemon. Move such templates into the delivery or scenario configuration, or render them before the call, then switch it off.
+
+An automation can also pass a template through unrendered on purpose, by wrapping it in `{% raw %}` and `{% endraw %}`, so that Supernotify renders it with its own variables:
+
+```yaml title="Template left for Supernotify to render"
+- action: supernotify.notify
+  data:
+    message: "{% raw %}Garage door open, {{ notification_priority }} priority{% endraw %}"
+    priority: high
+```
+
+Home Assistant renders `{% raw %}...{% endraw %}` as the text inside it, so Supernotify gets `{{ notification_priority }}` as it was written. This only works with **Render Templates in Notify Calls** on. With it off, the message is sent with `{{ notification_priority }}` as plain text. A scenario's `message_template` or `title_template`, or an action group, does the same from the configuration and works whatever the setting.
 
 ## Adding a Link to Mobile Push Notification
 

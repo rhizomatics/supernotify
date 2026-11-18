@@ -43,6 +43,10 @@ Recognized fields per action:
 | `level`                     | `action` for a button, which is the default, or `notification` for a [notification level action](#notification-level-actions) |
 | anything else (`icon`, `uri`, `destructive`, `behavior`, `textInputButtonTitle`, `textInputPlaceholder`, `activationMode`, `authenticationRequired`, ...) | Passed straight through to the Companion App - see its [action fields reference](https://companion.home-assistant.io/docs/notifications/actionable-notifications/#building-notifications-with-actions) |
 
+`action_template`, `title_template` and `uri_template` in a notify call are only rendered where
+**Render Templates in Notify Calls** is on, see [Templates that arrive unrendered](notifying.md#templates-that-arrive-unrendered).
+Otherwise they're left out with a warning, so use an [action group](#action-groups) for a templated action.
+
 
 ## Action Groups
 
