@@ -336,6 +336,16 @@ There must be a better way of sharing dashboards than manual copy and paste of Y
 
 SignalK has nice idea of having recommended plugins, could be feature PR for HACS [DONE] Supernotify Cards now ships with a dashboard
 
+### Notifying People in Home Assistant Core
+
+Home Assistant is moving towards notifying a person rather than their devices, in architecture discussion [#1552](https://github.com/home-assistant/architecture/discussions/1552). Each person gets an optional `notify_entities` list, and `notify.send_message` takes `person.*` targets, which core expands to those entities. A frontend proposal for a notification action that shows the Companion App options was closed ([frontend#55722](https://github.com/home-assistant/frontend/pull/55722)), to wait for this to be done in core first. Nothing has been merged in core yet.
+
+Supernotify already works with this as it stands. A person's `notify.recipient_<name>` can go in their `notify_entities`, so `notify.send_message` to the person goes through Supernotify, as a Notify Group does today. When core supports this:
+
+- Add a recipe for linking `notify.recipient_<name>` to the person
+- Read a person's `notify_entities` as another way to discover their targets, alongside device trackers and mobile_app, and leave out Supernotify's own entities, as `_short_circuit_own_entities()` already does
+- If `notify.send_message` gets a `data` field, it will need a feature flag, as `title` has. `RecipientNotifyEntity` and `ExposedNotifyEntity` could then accept it, with Companion App keys such as `tag` and `actions` mapped to `mobile_push`, and not read as Supernotify's own `data`
+
 ### Extensibility
 
 - Other developers able to create add-ons, see also [Auto Notifier](./design/rfcs/0003-auto_notifier.md)
