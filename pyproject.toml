@@ -207,6 +207,8 @@ invalid-argument-type = "ignore"
 not-subscriptable = "ignore"
 missing-attribute = "ignore"
 missing-union-attribute = "ignore"
+# imports that differ between Home Assistant versions need a `ty: ignore` that only some ty versions use
+unused-ignore-comment = "ignore"
 
 # only one of the two test helper packages is installed at a time
 [[tool.ty.overrides]]
