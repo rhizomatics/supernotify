@@ -6,11 +6,17 @@ minimum_release_age = "7d"
 
 [tools]
 "pipx:codespell" = "latest"
+"pipx:pngquant-cli" = "latest"
 prek = "latest"
 python = "3.14"
 ruff = { version = "latest", minimum_release_age = "2d" }
 ty = { version = "latest", minimum_release_age = "2d" }
 uv = { version = "latest", minimum_release_age = "2d" }
+vscode-cli = "latest"
+
+[bootstrap.packages]
+# libturbojpeg for PyTurboJPEG; `mise bootstrap packages apply` (CI uses apt libturbojpeg0)
+"brew:jpeg-turbo" = { version = "latest", os = "macos" }
 
 [tasks.preview-start]
 description = "Start the Docker preview, seeding it as the preview house the first time"

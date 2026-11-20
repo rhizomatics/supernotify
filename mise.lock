@@ -8,6 +8,12 @@ backend = "pipx:codespell"
 specifiers = ["latest"]
 uv = { path = ".mise/locks/pipx-codespell/2.4.3", digest = "sha256:3311ec9bc18bdbd537ec5b8238265e0b6bb83873180958f46026fefb49f267c3" }
 
+[[tools."pipx:pngquant-cli"]]
+version = "3.0.3"
+backend = "pipx:pngquant-cli"
+specifiers = ["latest"]
+uv = { path = ".mise/locks/pipx-pngquant-cli/3.0.3", digest = "sha256:05c58ef59cdc15c19c1ae06b822e02a23eaf877313aaf5169334cc5002df9d5a" }
+
 [[tools.prek]]
 version = "0.5.10"
 backend = "aqua:j178/prek"
@@ -235,3 +241,36 @@ checksum = "sha256:edd61f7f5728a56cc62455386661860bdfc7bab65872f39b0c25bdcc1d8e1
 url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513940"
 provenance = "github-attestations"
+
+[[tools.vscode-cli]]
+version = "1.146.0"
+backend = "aqua:microsoft/vscode/code"
+specifiers = ["latest"]
+
+[tools.vscode-cli."platforms.linux-arm64"]
+checksum = "sha256:a20c90d3b048396508ba8ddd2532413e1c2e67ba2adb659d2b1cd100d0cefe3a"
+url = "https://update.code.visualstudio.com/1.146.0/cli-linux-arm64/stable"
+
+[tools.vscode-cli."platforms.linux-arm64-musl"]
+checksum = "sha256:a20c90d3b048396508ba8ddd2532413e1c2e67ba2adb659d2b1cd100d0cefe3a"
+url = "https://update.code.visualstudio.com/1.146.0/cli-linux-arm64/stable"
+
+[tools.vscode-cli."platforms.linux-x64"]
+checksum = "sha256:f6240bd0d53e7e1ae7bff206221b7aa2ce28f7ffa9a9197289957b32a41368a0"
+url = "https://update.code.visualstudio.com/1.146.0/cli-linux-x64/stable"
+
+[tools.vscode-cli."platforms.linux-x64-musl"]
+checksum = "sha256:f6240bd0d53e7e1ae7bff206221b7aa2ce28f7ffa9a9197289957b32a41368a0"
+url = "https://update.code.visualstudio.com/1.146.0/cli-linux-x64/stable"
+
+[tools.vscode-cli."platforms.macos-arm64"]
+checksum = "sha256:170a3a310bb24e686ab114d211e94aff98c627e1c8de0c0ae10881b12b81d075"
+url = "https://update.code.visualstudio.com/1.146.0/cli-darwin-arm64/stable"
+
+[tools.vscode-cli."platforms.macos-x64"]
+checksum = "sha256:db69ec360cebccfc120f1b147720accfe37371a4623f79a1c5063136215f3b2a"
+url = "https://update.code.visualstudio.com/1.146.0/cli-darwin-x64/stable"
+
+[tools.vscode-cli."platforms.windows-x64"]
+checksum = "sha256:1f0c399ff53ba890a4c6a1984c794319809a4c53d0b67b7cb4caa881100e0969"
+url = "https://update.code.visualstudio.com/1.146.0/cli-win32-x64/stable"
