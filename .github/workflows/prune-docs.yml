@@ -17,10 +17,19 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Install uv
-      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
     - name: Prune superseded docs versions
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
+        # The token as actions/checkout would give it, but in this step's environment only, not .git/config
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+        GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+        export GIT_CONFIG_VALUE_0
         uv sync --group docs
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
