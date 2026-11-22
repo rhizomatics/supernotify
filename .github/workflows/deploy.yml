@@ -21,7 +21,7 @@ on:
         type: boolean
         default: false
   # a release's docs are deployed by release.yml, which publishes the release with its zip and then calls this.
-  # Its event is workflow_dispatch, so github.event_name below is the same as for a run by hand
+  # A run with tag_name deploys that release's docs, by hand or from release.yml; any other run deploys `dev`
   workflow_call:
     inputs:
       tag_name:
@@ -54,8 +54,9 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
+        persist-credentials: false
         fetch-depth: 0
-        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
+        ref: ${{ inputs.tag_name || github.ref }}
     - name: HACS Action
       uses: "hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa"
       with:
@@ -112,8 +113,9 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
+        persist-credentials: false
         fetch-depth: 0
-        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
+        ref: ${{ inputs.tag_name || github.ref }}
     - name: Install tools
       uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
       env:
@@ -129,16 +131,17 @@ jobs:
     - name: Generate badges
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
         uv run genbadge coverage -i coverage.xml -o badges/coverage.svg
-        uv run genbadge tests -i junit/test-results-${{ matrix.python-version }}.xml -o badges/tests.svg
+        uv run genbadge tests -i "junit/test-results-${PYTHON_VERSION}.xml" -o badges/tests.svg
 
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         TEMP_DIR=$(mktemp -d)
-        cd $TEMP_DIR
-        git clone --single-branch --branch badges https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git . 2>/dev/null
-        cp -r ${{ github.workspace }}/badges .
+        cd "$TEMP_DIR"
+        git clone --single-branch --branch badges "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" . 2>/dev/null
+        cp -r "$GITHUB_WORKSPACE/badges" .
         git add badges
         if git commit -m "Update badges [skip ci]"; then
           git push origin badges --force
@@ -153,11 +156,9 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config push.autoSetupRemote true
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
         git fetch origin gh-pages
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          TAG="${{ inputs.tag_name }}"
-          IS_PRERELEASE="${{ inputs.prerelease }}"
+        if [ -n "$TAG" ]; then
           if [[ "$IS_PRERELEASE" = "true" ]]; then
             echo "Deploying prerelease version: $TAG"
             uv run mike deploy --update-aliases "$TAG" beta
@@ -182,6 +183,9 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # set when deploying a release's docs, by hand or from release.yml
+        TAG: ${{ inputs.tag_name }}
+        IS_PRERELEASE: ${{ inputs.prerelease }}
 
   deploy-pages:
     needs: publish
