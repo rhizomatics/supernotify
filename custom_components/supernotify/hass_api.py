@@ -70,7 +70,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 from .common import spoken_name
-from .const import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID
+from .const import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_IN_USE_ENTITY, CONF_MOBILE_APP_ID, IN_USE_SENSOR_IDS
 from .model import ConditionVariables, SelectionRule
 
 if TYPE_CHECKING:
@@ -107,6 +107,7 @@ class TrackedDeviceDetails:
     os_version: str | None = None
     app_version: str | None = None
     identifiers: set[tuple[str, str]] | None = None
+    in_use_entity: str | None = None
 
     def as_dict(self) -> dict[str, str | list[str] | None]:
         return {
@@ -122,6 +123,7 @@ class TrackedDeviceDetails:
             ATTR_MANUFACTURER: self.manufacturer,
             ATTR_MODEL: self.model,
             CONF_DEVICE_LABELS: self.device_labels,
+            CONF_IN_USE_ENTITY: self.in_use_entity,
         }
 
     def __eq__(self, other: object) -> bool:
@@ -141,6 +143,17 @@ class TargetSelectorResolution:
 
     def has_missing(self) -> bool:
         return bool(self.missing_areas or self.missing_floors or self.missing_labels)
+
+
+def companion_sensor_id(unique_id: str | None) -> str | None:
+    """The sensor's own id in the Companion app, from a `mobile_app` entity's unique id
+
+    mobile_app registers each sensor as `<webhook_id>_<sensor id>`, and a webhook id is
+    hex, so has no underscore of its own
+    """
+    if not unique_id or "_" not in unique_id:
+        return None
+    return unique_id.split("_", 1)[1]
 
 
 def ha_device_info(entry_id: str) -> dr.DeviceInfo:
@@ -1018,10 +1031,18 @@ class HomeAssistantAPI:
                 else:
                     _LOGGER.debug("SUPERNOTIFY No notify action <%s>, so not a notifiable mobile app", mobile_app_id)
 
+                in_use_entity: str | None = None
                 registry_entries = entity_registry.entities.get_entries_for_device_id(mobile_app_info.device_id)
                 for reg_entry in registry_entries:
                     if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
                         device_tracker = reg_entry.entity_id
+                    elif (
+                        reg_entry.platform == "mobile_app"
+                        and reg_entry.domain == "binary_sensor"
+                        and not reg_entry.disabled_by
+                        and companion_sensor_id(reg_entry.unique_id) in IN_USE_SENSOR_IDS
+                    ):
+                        in_use_entity = reg_entry.entity_id
 
                 if device_tracker and notify_action:
                     complete += 1
@@ -1029,6 +1050,7 @@ class HomeAssistantAPI:
                 mobile_app_info.mobile_app_id = mobile_app_id
                 mobile_app_info.device_tracker = device_tracker
                 mobile_app_info.action = notify_action
+                mobile_app_info.in_use_entity = in_use_entity
 
                 found += 1
                 self._mobile_apps_by_app_id[mobile_app_id] = mobile_app_info

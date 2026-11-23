@@ -156,6 +156,10 @@
                     "name": "Erneutes Senden erzwingen",
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
+                "include_idle_devices": {
+                    "name": "Inaktive Geräte einbeziehen",
+                    "description": "Auch an die Mobilgeräte der Empfänger senden, die gerade niemand verwendet, etwa ein schlafender Mac oder eine nicht getragene Uhr."
+                },
                 "dry_run": {
                     "name": "Testlauf",
                     "description": "Simulieren ermittelt, welche Zustellungen verwendet würden und wen sie erreichen würden, ohne tatsächlich etwas zu senden. Der Live-Modus ist der übliche Betriebsmodus."
@@ -853,6 +857,7 @@
                         "enabled": "Aktiviert",
                         "mobile_discovery": "Mobilgeräte-Erkennung",
                         "mobile_devices": "Mobilgeräte",
+                        "send_when_idle": "Auch ohne Nutzung benachrichtigen",
                         "target": "Ziele",
                         "custom_target": "Benutzerdefinierte Ziele"
                     },
@@ -863,6 +868,7 @@
                         "enabled": "Ob dieser Empfänger überhaupt benachrichtigt wird",
                         "mobile_discovery": "Neu für diesen Empfänger registrierte Mobile-App-Geräte verwenden",
                         "mobile_devices": "Die zu benachrichtigenden Mobile-App-Geräte - nicht angehakte werden ausgelassen",
+                        "send_when_idle": "Geräte, die auch benachrichtigt werden, wenn ihr Nutzungssensor meldet, dass niemand sie verwendet - ein schlafender Mac, eine nicht getragene Uhr",
                         "target": "Entitäten, Geräte, Bereiche, Etagen oder Labels, die als dieser Empfänger benachrichtigt werden, wie in der Aktion supernotify.notify",
                         "custom_target": "Ziele, die die Auswahl nicht bietet, eines pro Zeile - eine E-Mail-Adresse, eine Telefonnummer oder Kategorie:Wert, etwa telegram_chat_id:12345. Die Kategorien sind: {categories}"
                     },

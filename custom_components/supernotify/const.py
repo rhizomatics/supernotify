@@ -120,6 +120,8 @@ ATTR_REPLY_TEXT = "reply_text"
 ATTR_SCENARIOS_REQUIRE = "require_scenarios"
 ATTR_SCENARIOS_APPLY = "apply_scenarios"
 ATTR_FORCE_RESEND: Final[str] = "force_resend"
+# a standard action-data field, to send to a person's mobile devices even when not in use
+ATTR_INCLUDE_IDLE_DEVICES: Final[str] = "include_idle_devices"
 # a standard action-data field, same as force_resend/debug - Notification.call_transport() is what
 # actually skips sending for SIMULATE, so nothing else needs to special-case it. An enum, not a
 # boolean, so a future mode (e.g. SIMULATE_PLUS_MEDIA, also simulating the camera/media grab) can
@@ -264,6 +266,14 @@ ATTR_DUPE_POLICY_MTSLP: Final[str] = "dupe_policy_message_title_same_or_lower_pr
 ATTR_DUPE_POLICY_MT: Final[str] = "dupe_policy_message_title_same"
 ATTR_DUPE_POLICY_NONE: Final[str] = "dupe_policy_none"
 CONF_MOBILE_APP_ID: Final[str] = "mobile_app_id"
+# binary_sensor saying whether anyone is using a mobile device, found from the Companion app
+# or given in its `mobile_devices` entry, and whether to notify it all the same when it's off
+CONF_IN_USE_ENTITY: Final[str] = "in_use_entity"
+CONF_SEND_WHEN_IDLE: Final[str] = "send_when_idle"
+# Companion app sensors that are off when nobody is using the device: macOS `active` (asleep,
+# screensaver, locked) and Wear OS `on_body` (watch not worn). Android's `is_interactive` isn't
+# one, as a phone in a pocket has its screen off, but can be given as an `in_use_entity`
+IN_USE_SENSOR_IDS: Final[tuple[str, ...]] = ("active", "on_body")
 CONF_TRANSPORT_DATA: Final[str] = "transport_data"
 
 

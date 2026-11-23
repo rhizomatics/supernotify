@@ -191,6 +191,10 @@
                     "name": "Forza reinvio",
                     "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
                 },
+                "include_idle_devices": {
+                    "name": "Includi i dispositivi inattivi",
+                    "description": "Invia anche ai dispositivi mobili dei destinatari che nessuno sta usando, come un Mac in stop o un orologio non indossato."
+                },
                 "dry_run": {
                     "name": "Simulazione",
                     "description": "Simula calcola quali consegne verrebbero usate e chi raggiungerebbero, senza inviare realmente nulla. La modalità live è la normale modalità operativa."
@@ -888,6 +892,7 @@
                         "enabled": "Abilitato",
                         "mobile_discovery": "Rilevamento dispositivi mobili",
                         "mobile_devices": "Dispositivi mobili",
+                        "send_when_idle": "Notifica anche quando non in uso",
                         "target": "Destinazioni",
                         "custom_target": "Destinazioni personalizzate"
                     },
@@ -898,6 +903,7 @@
                         "enabled": "Se questo recipient viene notificato",
                         "mobile_discovery": "Usa i dispositivi dell'app mobile appena registrati per questo recipient",
                         "mobile_devices": "I dispositivi dell'app mobile da notificare - quelli non selezionati vengono esclusi",
+                        "send_when_idle": "Dispositivi da notificare anche quando il loro sensore di utilizzo dice che nessuno li sta usando - un Mac in stop, un orologio non indossato",
                         "target": "Entità, dispositivi, aree, piani o etichette da notificare come questo recipient, come nell'azione supernotify.notify",
                         "custom_target": "Destinazioni che il selettore non offre, una per riga - un indirizzo e-mail, un numero di telefono o categoria:valore, come telegram_chat_id:12345. Le categorie sono: {categories}"
                     },

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
+    STATE_OFF,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,11 +36,13 @@ from .const import (
     ATTR_USER_ID,
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_IN_USE_ENTITY,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
     CONF_PERSON,
     CONF_PHONE_NUMBER,
+    CONF_SEND_WHEN_IDLE,
     CONF_USER_ID,
     OCCUPANCY_ALL,
     OCCUPANCY_ALL_IN,
@@ -331,6 +334,30 @@ class Recipient:
     @property
     def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:
         return {k: v for k, v in self.mobile_devices.items() if v.get(CONF_ENABLED, True)}
+
+    def idle_mobile_app_ids(self, mobile_app_ids: list[str], hass_api: HomeAssistantAPI) -> dict[str, str]:
+        """Which of these mobile devices nobody is using, each with the sensor that says so
+
+        Only a device whose in-use sensor is plainly `off` counts: no sensor, or one that's
+        `unknown` or `unavailable`, and the device is notified as before. A device set to
+        `send_when_idle` is never idle. If every one of them is idle, none is left out, so the
+        notification still reaches the person somewhere.
+        """
+        idle: dict[str, str] = {}
+        for mobile_app_id in mobile_app_ids:
+            device = self.mobile_devices.get(mobile_app_id.removeprefix("notify."))
+            if not device or device.get(CONF_SEND_WHEN_IDLE):
+                continue
+            in_use_entity = device.get(CONF_IN_USE_ENTITY)
+            if not isinstance(in_use_entity, str):
+                continue
+            state = hass_api.get_state(in_use_entity)
+            if state is not None and state.state == STATE_OFF:
+                idle[mobile_app_id] = in_use_entity
+        if idle and len(idle) == len(mobile_app_ids):
+            _LOGGER.debug("SUPERNOTIFY All of %s mobile devices idle, so notifying them all", self.entity_id)
+            return {}
+        return idle
 
     def enabling_delivery_names(self) -> list[str]:
         """Explicitly overriding enabled state"""

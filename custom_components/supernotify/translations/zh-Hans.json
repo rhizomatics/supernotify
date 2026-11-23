@@ -156,6 +156,10 @@
                     "name": "强制重新发送",
                     "description": "即使重复检测原本会抑制此通知，也发送。"
                 },
+                "include_idle_devices": {
+                    "name": "包括闲置设备",
+                    "description": "也发送到无人使用的接收者移动设备，例如休眠的 Mac 或未佩戴的手表。"
+                },
                 "dry_run": {
                     "name": "演练",
                     "description": "模拟会计算将使用哪些投递方式以及它们会送达给谁，而不实际发送任何内容。正式发送模式是通常的运行模式。"
@@ -853,6 +857,7 @@
                         "enabled": "已启用",
                         "mobile_discovery": "移动设备发现",
                         "mobile_devices": "移动设备",
+                        "send_when_idle": "未使用时也通知",
                         "target": "目标",
                         "custom_target": "自定义目标"
                     },
@@ -863,6 +868,7 @@
                         "enabled": "是否通知此收件人",
                         "mobile_discovery": "使用为此收件人新注册的移动应用设备",
                         "mobile_devices": "要通知的移动应用设备 - 未勾选的会被排除",
+                        "send_when_idle": "即使使用状态传感器显示无人使用也要通知的设备 - 例如休眠的 Mac、未佩戴的手表",
                         "target": "作为此收件人通知的实体、设备、区域、楼层或标签，与 supernotify.notify 动作中相同",
                         "custom_target": "选择器无法选择的目标，每行一个 - 电子邮件地址、电话号码，或 类别:值，例如 telegram_chat_id:12345。类别有：{categories}"
                     },

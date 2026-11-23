@@ -119,6 +119,9 @@ notify:
         force_resend:
           selector:
             boolean:
+        include_idle_devices:
+          selector:
+            boolean:
         dry_run:
           required: false
           default: live
