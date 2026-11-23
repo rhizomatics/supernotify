@@ -156,6 +156,10 @@
                     "name": "Wymuś ponowne wysłanie",
                     "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
                 },
+                "include_idle_devices": {
+                    "name": "Uwzględnij nieaktywne urządzenia",
+                    "description": "Wyślij także na urządzenia mobilne odbiorców, z których nikt nie korzysta, np. uśpiony Mac lub niezałożony zegarek."
+                },
                 "dry_run": {
                     "name": "Próba",
                     "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek. Tryb rzeczywisty jest zwykłym trybem działania."
@@ -853,6 +857,7 @@
                         "enabled": "Włączony",
                         "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                         "mobile_devices": "Urządzenia mobilne",
+                        "send_when_idle": "Powiadamiaj także, gdy nieużywane",
                         "target": "Cele",
                         "custom_target": "Własne cele"
                     },
@@ -863,6 +868,7 @@
                         "enabled": "Czy ten odbiorca jest w ogóle powiadamiany",
                         "mobile_discovery": "Używaj urządzeń aplikacji mobilnej nowo zarejestrowanych dla tego odbiorcy",
                         "mobile_devices": "Urządzenia aplikacji mobilnej do powiadamiania - niezaznaczone są pomijane",
+                        "send_when_idle": "Urządzenia powiadamiane także wtedy, gdy ich czujnik użycia wskazuje, że nikt z nich nie korzysta - uśpiony Mac, niezałożony zegarek",
                         "target": "Encje, urządzenia, obszary, piętra lub etykiety powiadamiane jako ten odbiorca, jak w akcji supernotify.notify",
                         "custom_target": "Cele, których selektor nie oferuje, po jednym w wierszu - adres e-mail, numer telefonu lub kategoria:wartość, np. telegram_chat_id:12345. Kategorie to: {categories}"
                     },

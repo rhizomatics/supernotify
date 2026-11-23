@@ -191,6 +191,10 @@
                     "name": "Force Resend",
                     "description": "Send even if duplicate-detection would otherwise suppress this notification."
                 },
+                "include_idle_devices": {
+                    "name": "Include idle devices",
+                    "description": "Also send to the recipients' mobile devices that nobody is using, like a sleeping Mac or a watch not worn."
+                },
                 "dry_run": {
                     "name": "Simulation",
                     "description": "Simulate mode works out which deliveries would be used and who they would reach, without actually sending anything. Live mode is the usual operating mode."
@@ -888,6 +892,7 @@
                         "enabled": "Enabled",
                         "mobile_discovery": "Mobile Device Discovery",
                         "mobile_devices": "Mobile devices",
+                        "send_when_idle": "Notify even when not in use",
                         "target": "Targets",
                         "custom_target": "Custom targets"
                     },
@@ -898,6 +903,7 @@
                         "enabled": "Whether this recipient is notified at all",
                         "mobile_discovery": "Use mobile app devices newly registered to this recipient",
                         "mobile_devices": "The mobile app devices to notify - unticked ones are left out",
+                        "send_when_idle": "Devices to notify even when their in-use sensor says nobody is using them - a sleeping Mac, a watch not worn",
                         "target": "Entities, devices, areas, floors or labels to notify as this recipient, as in the supernotify.notify action",
                         "custom_target": "Targets the selector can't pick, one per line - an e-mail address, a phone number, or category:value, such as telegram_chat_id:12345. The categories are: {categories}"
                     },

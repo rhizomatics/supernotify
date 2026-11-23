@@ -117,6 +117,7 @@ from .const import (
     CONF_PRIORITY,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SELECTION,
+    CONF_SEND_WHEN_IDLE,
     CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
     CONF_SNAPSHOT_URL_LOCAL,
@@ -734,9 +735,17 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
                     else:
                         self._recipient.pop(key, None)
                 selected = user_input.get(CONF_MOBILE_DEVICES, [])
-                self._recipient[CONF_MOBILE_DEVICES] = [
-                    {CONF_MOBILE_APP_ID: d["value"], CONF_ENABLED: d["value"] in selected} for d in devices
-                ]
+                send_when_idle = user_input.get(CONF_SEND_WHEN_IDLE, [])
+                # anything else set for a device in YAML, like its in_use_entity, is kept
+                configured = {d.get(CONF_MOBILE_APP_ID): d for d in self._recipient.get(CONF_MOBILE_DEVICES, [])}
+                mobile_devices: list[dict[str, Any]] = []
+                for d in devices:
+                    device = {k: v for k, v in configured.get(d["value"], {}).items() if k != CONF_SEND_WHEN_IDLE}
+                    device.update({CONF_MOBILE_APP_ID: d["value"], CONF_ENABLED: d["value"] in selected})
+                    if d["value"] in send_when_idle:
+                        device[CONF_SEND_WHEN_IDLE] = True
+                    mobile_devices.append(device)
+                self._recipient[CONF_MOBILE_DEVICES] = mobile_devices
                 return await self.async_step_save()
 
         selected_target, custom_target = target_to_fields(self._recipient.get(CONF_TARGET))
@@ -750,6 +759,7 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             vol.Optional(CONF_ENABLED, default=True): cv.boolean,
             vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
             vol.Optional(CONF_MOBILE_DEVICES): SelectSelector(SelectSelectorConfig(options=devices, multiple=True)),
+            vol.Optional(CONF_SEND_WHEN_IDLE): SelectSelector(SelectSelectorConfig(options=devices, multiple=True)),
             vol.Optional(CONF_TARGET): TargetSelector(),
             vol.Optional(ATTR_CUSTOM_TARGET): TextSelector(TextSelectorConfig(multiple=True)),
             vol.Optional(SECTION_DELIVERY_OVERRIDES): section(
@@ -764,6 +774,10 @@ class RecipientSubentryFlow(ConfigSubentryFlow):
             CONF_ENABLED: self._recipient.get(CONF_ENABLED, True),
             CONF_MOBILE_DISCOVERY: self._recipient.get(CONF_MOBILE_DISCOVERY, self._mobile_discovery_default()),
             CONF_MOBILE_DEVICES: [d["value"] for d in devices if d["value"] not in disabled],
+            CONF_SEND_WHEN_IDLE: [
+                d.get(CONF_MOBILE_APP_ID) for d in self._recipient.get(CONF_MOBILE_DEVICES, []) if d.get(CONF_SEND_WHEN_IDLE)
+            ]
+            or None,
             CONF_TARGET: selected_target or None,
             ATTR_CUSTOM_TARGET: custom_target or None,
             SECTION_DELIVERY_OVERRIDES: {CONF_DELIVERY: self._recipient.get(CONF_DELIVERY) or None},

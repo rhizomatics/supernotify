@@ -156,6 +156,10 @@
                     "name": "Forçar reenvio",
                     "description": "Envia mesmo que a deteção de duplicados suprimisse esta notificação."
                 },
+                "include_idle_devices": {
+                    "name": "Incluir dispositivos inativos",
+                    "description": "Envia também para os dispositivos móveis dos destinatários que ninguém está a usar, como um Mac em repouso ou um relógio que não está no pulso."
+                },
                 "dry_run": {
                     "name": "Simulação",
                     "description": "Simular calcula quais entregas seriam usadas e quem alcançariam, sem realmente enviar nada. O modo real é o modo de funcionamento habitual."
@@ -853,6 +857,7 @@
                         "enabled": "Ativado",
                         "mobile_discovery": "Descoberta de dispositivos móveis",
                         "mobile_devices": "Dispositivos móveis",
+                        "send_when_idle": "Notificar mesmo sem estar em uso",
                         "target": "Destinos",
                         "custom_target": "Destinos personalizados"
                     },
@@ -863,6 +868,7 @@
                         "enabled": "Se este destinatário é notificado",
                         "mobile_discovery": "Usar dispositivos da app móvel registados recentemente para este destinatário",
                         "mobile_devices": "Os dispositivos da app móvel a notificar - os não marcados são excluídos",
+                        "send_when_idle": "Dispositivos a notificar mesmo quando o sensor de utilização indica que ninguém os está a usar - um Mac em repouso, um relógio que não está no pulso",
                         "target": "Entidades, dispositivos, áreas, pisos ou etiquetas a notificar como este destinatário, como na ação supernotify.notify",
                         "custom_target": "Destinos que o seletor não oferece, um por linha - um endereço de e-mail, um número de telefone ou categoria:valor, como telegram_chat_id:12345. As categorias são: {categories}"
                     },

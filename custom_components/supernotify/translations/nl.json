@@ -156,6 +156,10 @@
                     "name": "Opnieuw verzenden forceren",
                     "description": "Verzend zelfs als detectie van duplicaten deze melding anders zou onderdrukken."
                 },
+                "include_idle_devices": {
+                    "name": "Inactieve apparaten meenemen",
+                    "description": "Ook verzenden naar mobiele apparaten van de ontvangers die niemand gebruikt, zoals een slapende Mac of een horloge dat niet gedragen wordt."
+                },
                 "dry_run": {
                     "name": "Testrun",
                     "description": "Simuleren berekent welke bezorgingen gebruikt zouden worden en wie ze zouden bereiken, zonder daadwerkelijk iets te verzenden. De live-modus is de gebruikelijke werkingsmodus."
@@ -853,6 +857,7 @@
                         "enabled": "Ingeschakeld",
                         "mobile_discovery": "Detectie van mobiele apparaten",
                         "mobile_devices": "Mobiele apparaten",
+                        "send_when_idle": "Ook melden als niet in gebruik",
                         "target": "Doelen",
                         "custom_target": "Aangepaste doelen"
                     },
@@ -863,6 +868,7 @@
                         "enabled": "Of deze ontvanger überhaupt een melding krijgt",
                         "mobile_discovery": "Mobiele-app-apparaten gebruiken die nieuw voor deze ontvanger zijn geregistreerd",
                         "mobile_devices": "De mobiele-app-apparaten om te melden - niet aangevinkte worden overgeslagen",
+                        "send_when_idle": "Apparaten die ook een melding krijgen als hun gebruikssensor zegt dat niemand ze gebruikt - een slapende Mac, een horloge dat niet gedragen wordt",
                         "target": "Entiteiten, apparaten, ruimtes, verdiepingen of labels om als deze ontvanger te melden, zoals in de actie supernotify.notify",
                         "custom_target": "Doelen die de kiezer niet biedt, één per regel - een e-mailadres, een telefoonnummer of categorie:waarde, zoals telegram_chat_id:12345. De categorieën zijn: {categories}"
                     },

@@ -28,11 +28,13 @@ from .const import (
     ATTR_DRY_RUN,
     ATTR_FORCE_RESEND,
     ATTR_IMAGE,
+    ATTR_INCLUDE_IDLE_DEVICES,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
+    ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_RECIPIENTS,
@@ -47,6 +49,7 @@ from .const import (
     DRY_RUN_LIVE,
     DRY_RUN_SIMULATE,
     INCLUSION_DEFAULT,
+    PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     TARGET_USE_FIXED,
@@ -212,6 +215,7 @@ class Notification(ArchivableObject):
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
         self.spoken_message: str | None = action_data.get(ATTR_SPOKEN_MESSAGE)
         self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
+        self.include_idle_devices: bool = action_data.get(ATTR_INCLUDE_IDLE_DEVICES, False)
         self.dry_run: str = action_data.get(ATTR_DRY_RUN, DRY_RUN_LIVE)
         self.required_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_REQUIRE))
         self.applied_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_APPLY))
@@ -1547,6 +1551,7 @@ class Notification(ArchivableObject):
                 recipient_target = self.context.snoozer.filter_mobile_app_ids(
                     recipient.target(delivery.name), self.priority, delivery
                 )
+                recipient_target = self._without_idle_mobile_devices(recipient, recipient_target, delivery)
                 if recipient_target.target_specific_data:
                     additional.append(recipient_target)
                 else:
@@ -1555,6 +1560,23 @@ class Notification(ArchivableObject):
                 _LOGGER.debug("SUPERNOTIFY Skipping recipient %s with enabled switched off", person_id)
 
         return [resolved, *additional]
+
+    def _without_idle_mobile_devices(self, recipient: Recipient, target: Target, delivery: Delivery) -> Target:
+        """Drop the person's mobile devices that nobody is using, such as a sleeping Mac or a
+        watch that isn't worn - unless critical, or asked for with `include_idle_devices`
+
+        Only the person's own devices, as they're resolved: a mobile_app_id given directly in
+        the action is always notified
+        """
+        if not target.mobile_app_ids or self.include_idle_devices or self.priority == PRIORITY_CRITICAL:
+            return target
+        idle: dict[str, str] = recipient.idle_mobile_app_ids(target.mobile_app_ids, self.context.hass_api)
+        if not idle:
+            return target
+        _LOGGER.debug("SUPERNOTIFY Skipping idle mobile devices of %s: %s", recipient.entity_id, idle)
+        skipped: dict[str, str] = self.debug_trace.delivery_artefacts.get(delivery.name, {}).get("idle_mobile_devices", {})
+        self.debug_trace.record_delivery_artefact(delivery.name, "idle_mobile_devices", {**skipped, **idle})
+        return target - Target({ATTR_MOBILE_APP_ID: list(idle)})
 
     def generate_envelopes(self, delivery: Delivery, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities
