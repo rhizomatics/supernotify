@@ -2,6 +2,8 @@ name: Prune Docs
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "33 4 * * 0"
 
 # Nothing by default; each job grants only what it needs (OpenSSF Scorecard Token-Permissions).
 permissions: {}
@@ -15,6 +17,8 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write
+    outputs:
+      pruned: ${{ steps.prune.outputs.pruned }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -22,6 +26,7 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
     - name: Prune superseded docs versions
+      id: prune
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
@@ -65,9 +70,11 @@ jobs:
         echo "Pruning: $PRUNE"
         uv run mike delete $PRUNE
         git push origin gh-pages
+        echo "pruned=true" >> "$GITHUB_OUTPUT"
 
   publish:
     needs: prune
+    if: needs.prune.outputs.pruned == 'true'
     permissions:
       contents: read
       pages: write
