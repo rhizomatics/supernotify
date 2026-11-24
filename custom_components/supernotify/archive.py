@@ -5,6 +5,7 @@ import json
 import logging
 import math
 import os
+import sys
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
 
@@ -77,6 +78,22 @@ def _filename_period(filename: str) -> tuple[float, float] | None:
     return min(stamps), max(stamps) + 60
 
 
+def _daily_record(data: dict[str, Any]) -> dict[str, Any]:
+    """The part of an archived notification that ``summarize_by_day`` and the list filters read:
+    a few hundred bytes instead of the whole file."""
+    deliveries: dict[str, dict[str, bool]] = {}
+    for name, outcomes in (data.get("deliveries") or {}).items():
+        if isinstance(outcomes, dict):
+            deliveries[name] = {"success": bool(outcomes.get("success")), "error": bool(outcomes.get("error"))}
+    return {
+        "created": data.get("created"),
+        "outcome": data.get("outcome"),
+        "priority": data.get("priority"),
+        "deliveries": deliveries,
+        "enabled_scenarios": _scenario_names(data.get("enabled_scenarios")),
+    }
+
+
 def _list_entries_sync(
     archive_path: str,
     limit: int,
@@ -84,14 +101,23 @@ def _list_entries_sync(
     before: dt.datetime | None,
     outcome: str | None,
     priority: list[str] | None = None,
+    daily_cache: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """The body of ``ArchiveDirectory.list_entries``, run in the executor as one job."""
+    """The body of ``ArchiveDirectory.list_entries``, run in the executor as one job.
+
+    With *daily_cache* the entries are daily records (``_daily_record``), kept in that cache by
+    file name: an archive file is written once and never changed, so only files not seen before
+    are opened. Names no longer in the directory (purged) are dropped from the cache."""
     entries: list[dict[str, Any]] = []
     priorities: set[str] | None = {str(p).lower() for p in priority} if priority else None
     try:
         with os.scandir(archive_path) as scan:
             files = [e for e in scan if e.name.endswith(".json") and e.name != WRITE_TEST]
         files.sort(key=lambda e: e.stat().st_ctime, reverse=True)
+        if daily_cache is not None:
+            present: set[str] = {e.name for e in files}
+            for gone in [name for name in daily_cache if name not in present]:
+                del daily_cache[gone]
         earliest: float = after.timestamp() if after else -math.inf
         latest: float = before.timestamp() if before else math.inf
         for entry in files:
@@ -99,12 +125,17 @@ def _list_entries_sync(
                 break
             if (after or before) and (named := _filename_period(entry.name)) and (named[1] < earliest or named[0] > latest):
                 continue
-            try:
-                with open(entry.path, encoding="utf-8") as fh:
-                    data: dict[str, Any] = json.load(fh)
-            except Exception as exc:
-                _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
-                continue
+            data: dict[str, Any] | None = daily_cache.get(entry.name) if daily_cache is not None else None
+            if data is None:
+                try:
+                    with open(entry.path, encoding="utf-8") as fh:
+                        data = json.load(fh)
+                except Exception as exc:
+                    _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
+                    continue
+                if daily_cache is not None:
+                    data = _daily_record(data)
+                    daily_cache[entry.name] = data
             created: dt.datetime | None = dt_util.parse_datetime(data.get("created") or "")
             if after is not None and created is not None and created < after:
                 continue
@@ -242,6 +273,8 @@ class ArchiveDirectory(ArchiveDestination):
         # why the path can't be used, if it can't
         self.error: str | None = None
         self.diagnostics: OutcomeSelection = diagnostics
+        # daily records by file name, for enquire_archive verbosity daily (see _list_entries_sync)
+        self.daily_cache: dict[str, dict[str, Any]] = {}
 
     async def initialize(self) -> None:
         verify_archive_path: Path = Path(self.configured_path)
@@ -323,6 +356,24 @@ class ArchiveDirectory(ArchiveDestination):
             _list_entries_sync, str(self.archive_path), limit, after, before, outcome, priority
         )
         return entries
+
+    async def list_daily_records(
+        self,
+        after: dt.datetime | None = None,
+        before: dt.datetime | None = None,
+        outcome: str | None = None,
+        priority: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Like ``list_entries`` with no limit, but each notification as its daily record
+        (``_daily_record``), which is what ``summarize_by_day`` needs. Records are kept in memory
+        by file name, so a file is opened only the first time it is asked for."""
+        if not self.archive_path or not await self.archive_path.exists():
+            return []
+        args = (str(self.archive_path), sys.maxsize, after, before, outcome, priority, self.daily_cache)
+        if self.hass_api is None:  # only a directory made outside Home Assistant, as in some tests
+            return _list_entries_sync(*args)
+        records: list[dict[str, Any]] = await self.hass_api.create_job(_list_entries_sync, *args)
+        return records
 
     async def read_entry(self, notification_id: str) -> dict[str, Any] | None:
         """Return the full JSON of one archived notification by its id, or ``None``."""

@@ -441,6 +441,12 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         before: dt.datetime | None = dt_util.as_local(call.data["before"]) if "before" in call.data else None
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
+        if daily and "limit" not in call.data:
+            # each file read once, then its daily record from memory: a month of archive in a moment
+            records = await archive.archive_directory.list_daily_records(
+                after=after, before=before, outcome=outcome, priority=priority
+            )
+            return summarize_by_day(records)
         entries = await archive.archive_directory.list_entries(
             limit=limit, after=after, before=before, outcome=outcome, priority=priority
         )
