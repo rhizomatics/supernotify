@@ -199,3 +199,95 @@ async def test_summary_lists_scenarios_however_they_were_stored(
 
     assert response is not None
     assert response["notifications"][0]["scenarios"] == names
+
+
+async def test_action_reads_each_file_once(
+    hass: HomeAssistant, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import builtins
+
+    await hass.config.async_set_time_zone("Europe/Rome")
+    now = dt_util.now()
+    for i in range(6):
+        _write(tmp_path, now - dt.timedelta(hours=i * 5))
+    await _setup(hass, str(tmp_path))
+    opened: list[str] = []
+    real_open = builtins.open
+
+    def counting_open(file: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401 - as builtins.open
+        if str(file).endswith(".json") and str(tmp_path) in str(file):
+            opened.append(str(file))
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", counting_open)
+
+    first = await _daily(hass, {})
+    assert len(opened) == 6
+    second = await _daily(hass, {})
+    assert len(opened) == 6, "the second time every file comes from memory"
+    assert second == first
+
+    _write(tmp_path, now + dt.timedelta(minutes=1), "latest")
+    third = await _daily(hass, {})
+    assert len(opened) == 7, "only the new file is read"
+    assert third["count"] == 7
+
+
+async def test_action_cached_matches_filters_and_purge(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    await hass.config.async_set_time_zone("Europe/Rome")
+    now = dt_util.now()
+    names: list[pathlib.Path] = []
+    for i, (outcome, priority) in enumerate([("success", "high"), ("error", "medium"), ("success", "low"), ("dupe", "medium")]):
+        created = now - dt.timedelta(hours=i * 7)
+        entry = _entry(created, outcome=outcome, priority=priority)
+        entry["id"] = f"f{i}"
+        path = tmp_path / (created.isoformat()[:16].replace(":", "-") + f"_f{i}.json")
+        path.write_text(json.dumps(entry))
+        names.append(path)
+    await _setup(hass, str(tmp_path))
+
+    assert (await _daily(hass, {}))["count"] == 4  # fills the memory
+    assert (await _daily(hass, {"outcome": "SUCCESS"}))["count"] == 2
+    assert (await _daily(hass, {"priority": ["medium"]}))["count"] == 2
+    assert (await _daily(hass, {"after": (now - dt.timedelta(hours=10)).isoformat()}))["count"] == 2
+
+    names[0].unlink()  # as purge_archive does
+    after_purge = await _daily(hass, {})
+    assert after_purge["count"] == 3
+    assert sum(day["priority"].get("high", 0) for day in after_purge["days"]) == 0
+
+
+def test_daily_record_keeps_what_the_summary_needs(rome: None) -> None:
+    from custom_components.supernotify.archive import _daily_record
+
+    entry = _entry(
+        dt.datetime(2026, 10, 4, 9, 15, tzinfo=ROME),
+        outcome="partial_delivery",
+        deliveries={"push": {"success": [{}]}, "alexa": {"error": [{}]}, "email": {"skipped": {"x": 1}}, "odd": "?"},
+        scenarios={"morning": {}},
+    )
+    entry["message"] = "x" * 5000
+
+    record = _daily_record(entry)
+
+    assert "message" not in record
+    assert summarize_by_day([record]) == summarize_by_day([entry])
+
+
+async def test_daily_records_outside_home_assistant(tmp_path: pathlib.Path) -> None:
+    from custom_components.supernotify.archive import ArchiveDirectory
+
+    missing = ArchiveDirectory(str(tmp_path / "never"))
+    assert await missing.list_daily_records() == []
+
+    directory = ArchiveDirectory(str(tmp_path))
+    await directory.initialize()
+    now = dt_util.now()
+    _write(tmp_path, now)
+    _write(tmp_path, now - dt.timedelta(hours=2))
+
+    records = await directory.list_daily_records()
+
+    assert len(records) == 2
+    assert len(directory.daily_cache) == 2
+    assert set(records[0]) == {"created", "outcome", "priority", "deliveries", "enabled_scenarios"}

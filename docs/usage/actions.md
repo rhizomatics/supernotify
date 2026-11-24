@@ -54,7 +54,9 @@ button (`button.supernotify_reset_overrides`) on the SuperNotify device.
 
 `enquire_archive` with `verbosity: daily` gives totals for each local day instead of the notifications
 themselves, for usage charts or a template sensor. Every notification in the range is counted unless a `limit`
-is given, so a month is a few kilobytes however busy it was.
+is given, so a month is a few kilobytes however busy it was. Without a `limit`, each archive file is read
+once and what the totals need of it is kept in memory, so asking again only reads the notifications archived
+since; files removed by `purge_archive` drop out on the next ask.
 
 ```yaml
 action: supernotify.enquire_archive
