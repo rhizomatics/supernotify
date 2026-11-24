@@ -16,6 +16,8 @@ Supernotify kan worden geïnstalleerd en gebruikt zonder YAML te schrijven. Deze
 3. [Wat je daarna kunt doen](next_steps.md) - te beginnen met een automatisering en een dashboard
 4. [Basisconcepten](basic_concepts.md) - de belangrijkste ideeën en termen uitgelegd
 
+Waarom meldingen in Home Assistant iets als Supernotify nodig hebben, lees je in [Waarom meldingen lastig zijn](why_notifications_are_hard.md).
+
 Er zijn ook [geavanceerde concepten](advanced_concepts.md) en veel [recepten](../../recipes/index.md) om uit te proberen.
 
 Bevalt het uiteindelijk niet, gebruik dan de uitleg over [verwijderen](removing.md) om alles op te ruimen en [laat als het kan een bericht achter](https://github.com/rhizomatics/supernotify/discussions/new/choose) over wat voor jou niet werkte.

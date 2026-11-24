@@ -16,6 +16,8 @@ Supernotify को बिना कोई YAML लिखे इंस्टॉ�
 3. [आगे क्या करें](next_steps.md) - शुरुआत एक ऑटोमेशन और एक डैशबोर्ड से
 4. [बुनियादी अवधारणाएँ](basic_concepts.md) - मुख्य विचार और शब्दावली की व्याख्या
 
+Home Assistant की सूचनाओं को Supernotify जैसी किसी चीज़ की ज़रूरत क्यों है, यह जानने के लिए [सूचनाएँ कठिन क्यों हैं](why_notifications_are_hard.md) देखें।
+
 इसके अलावा [उन्नत अवधारणाएँ](advanced_concepts.md) और आज़माने के लिए ढेर सारी [रेसिपी](../../recipes/index.md) भी हैं।
 
 अगर अंत में यह आपको पसंद न आए, तो सब कुछ साफ़ करने के लिए [हटाने](removing.md) की मार्गदर्शिका देखें, और हो सके तो [एक नोट छोड़ें](https://github.com/rhizomatics/supernotify/discussions/new/choose) कि आपके लिए क्या काम नहीं किया।

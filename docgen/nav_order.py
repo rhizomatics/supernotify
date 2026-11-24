@@ -25,6 +25,7 @@ SUBSECTION_ORDER = {"Developer": ["Design"]}
 PAGE_ORDER = {
     "Quick Start": [
         "index.md",
+        "why_notifications_are_hard.md",
         "installation.md",
         "first_notification.md",
         "next_steps.md",

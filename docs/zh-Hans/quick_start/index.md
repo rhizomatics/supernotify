@@ -16,6 +16,8 @@ description: 适用于 Home Assistant 的 Supernotify 快速入门 - 通过 Mark
 3. [接下来做什么](next_steps.md) - 从一个自动化和一个仪表盘开始
 4. [基本概念](basic_concepts.md) - 主要思路和术语的说明
 
+想了解为什么 Home Assistant 的通知需要 Supernotify 这样的工具，请参阅[为什么通知很难](why_notifications_are_hard.md)。
+
 另外还有[进阶概念](advanced_concepts.md)，以及许多可以尝试的[配方](../../recipes/index.md)。
 
 如果最后觉得不合适，可以按照[移除](removing.md)说明清理干净；方便的话，请[留言](https://github.com/rhizomatics/supernotify/discussions/new/choose)告诉我们哪里不好用。

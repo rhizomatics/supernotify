@@ -16,6 +16,8 @@ Supernotify se puede instalar y usar sin escribir nada de YAML. Estas páginas l
 3. [Qué hacer después](next_steps.md) - empezando por una automatización y un panel
 4. [Conceptos básicos](basic_concepts.md) - las ideas y los términos principales, explicados
 
+Para saber por qué las notificaciones de Home Assistant necesitan algo como Supernotify, consulta [Por qué las notificaciones son difíciles](why_notifications_are_hard.md).
+
 También hay [conceptos avanzados](advanced_concepts.md) y muchas [recetas](../../recipes/index.md) para probar.
 
 Si al final no te convence, sigue la guía de [desinstalación](removing.md) para dejarlo todo limpio y, si puedes, [deja una nota](https://github.com/rhizomatics/supernotify/discussions/new/choose) contando qué no te funcionó.

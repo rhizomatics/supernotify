@@ -338,7 +338,9 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Notifying People in Home Assistant Core
 
-Home Assistant is moving towards notifying a person rather than their devices, in architecture discussion [#1552](https://github.com/home-assistant/architecture/discussions/1552). Each person gets an optional `notify_entities` list, and `notify.send_message` takes `person.*` targets, which core expands to those entities. A frontend proposal for a notification action that shows the Companion App options was closed ([frontend#55722](https://github.com/home-assistant/frontend/pull/55722)), to wait for this to be done in core first. Nothing has been merged in core yet.
+Home Assistant is moving towards notifying a person rather than their devices, in architecture discussion [#1552](https://github.com/home-assistant/architecture/discussions/1552). Each person gets an optional `notify_entities` list, and `notify.send_message` takes `person.*` targets, which core expands to those entities. A frontend proposal for a notification action that shows the Companion App options was closed ([frontend#55722](https://github.com/home-assistant/frontend/pull/55722)), to wait for this to be done in core first. As of 24 November 2026 there is no core or frontend PR, and no release has been named.
+
+The user docs say it will be supported as soon as possible once released, in [People](../configuration/people.md) and [Why Notifications Are Hard](../quick_start/why_notifications_are_hard.md#notifying-a-person-not-a-device). That page also catalogs the notification action styles in Home Assistant 2026.11, and its integration table needs checking each release as integrations move to notify entities.
 
 Supernotify already works with this as it stands. A person's `notify.recipient_<name>` can go in their `notify_entities`, so `notify.send_message` to the person goes through Supernotify, as a Notify Group does today. When core supports this:
 
