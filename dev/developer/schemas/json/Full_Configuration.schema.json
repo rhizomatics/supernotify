@@ -436,6 +436,10 @@
                 "enabled": {
                   "type": "boolean",
                   "default": true
+                },
+                "in_use_entity": {},
+                "send_when_idle": {
+                  "type": "boolean"
                 }
               },
               "additionalProperties": false

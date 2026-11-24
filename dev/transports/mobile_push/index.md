@@ -213,6 +213,42 @@ A `notify.mobile_app_<device>` target, here or on a notification, is picked up b
 
 **Default delivery.** If at least one Companion App device is registered (a `mobile_app` config entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is generated automatically and fires on every notification, with targets resolved per-recipient from the HA Companion App at delivery time.
 
+## Devices Not in Use
+
+A recipient's mobile devices that nobody is using are left out, so a sleeping Mac doesn't show a pile of stale alerts when it wakes, and a watch on the bedside table doesn't buzz. Supernotify finds each device's in-use sensor from the Companion App itself, no configuration needed:
+
+| Device  | Sensor                          | Off when                                      |
+| ------- | ------------------------------- | --------------------------------------------- |
+| macOS   | `binary_sensor.<mac>_active`    | asleep, screensaver on, display off or locked |
+| Wear OS | `binary_sensor.<watch>_on_body` | the watch isn't being worn                    |
+
+- A device is left out only when its sensor is `off`. With no sensor, or one that's `unknown` or `unavailable`, it's notified as before
+- `critical` notifications go to every device
+- If every one of a person's devices would be left out, none is, so the notification still gets through
+- A device given directly as a target of the notification, rather than through a recipient, is always notified
+- Devices left out are listed in the notification's debug trace, as `idle_mobile_devices`
+
+Android's `is_interactive` sensor isn't used, since it's only whether the screen is on, so it's off for a phone in a pocket. It can be given for a device where that does mean nobody is using it, such as a tablet, as its `in_use_entity`, and so can any other `binary_sensor`, such as a template sensor for an iPad:
+
+```yaml
+recipients:
+  - person: person.bob
+    mobile_devices:
+      - mobile_app_id: mobile_app_bobs_tablet
+        in_use_entity: binary_sensor.bobs_tablet_is_interactive
+      - mobile_app_id: mobile_app_bobs_mac
+        send_when_idle: true
+```
+
+`send_when_idle` notifies a device whether in use or not, and can also be set on the recipient's form as *Notify even when not in use*. For a single notification, set `include_idle_devices: true`:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something happened
+        include_idle_devices: true
+```
+
 ## References
 
 ### Home Assistant Core

@@ -323,6 +323,10 @@
       "type": "boolean",
       "default": false
     },
+    "include_idle_devices": {
+      "type": "boolean",
+      "default": false
+    },
     "dry_run": {
       "type": "string",
       "enum": [
