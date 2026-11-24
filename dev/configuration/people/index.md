@@ -6,6 +6,10 @@ While Home Assistant has both a `Person` and `User`, neither are directly useful
 
 Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.
 
+Notifying a person in Home Assistant
+
+The Home Assistant team is working on notifying a person rather than their devices, proposed in [architecture discussion #1552](https://github.com/home-assistant/architecture/discussions/1552): each person gets a list of their notify entities, and `notify.send_message` can be sent to a `person`. Supernotify will support this as soon as possible once it is released. See [Why Notifications Are Hard](https://supernotify.rhizomatics.org.uk/latest/quick_start/why_notifications_are_hard/#notifying-a-person-not-a-device).
+
 With the `recipient` definition you can:
 
 - Define an email address just once, and then refer to the target as `person.joe_soap` in notification calls

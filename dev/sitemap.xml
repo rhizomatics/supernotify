@@ -131,6 +131,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -396,6 +401,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/fr/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -432,6 +442,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/removing/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/why_notifications_are_hard/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -496,6 +511,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/it/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -532,6 +552,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/removing/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/why_notifications_are_hard/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -576,6 +601,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/nl/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -612,6 +642,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/removing/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/why_notifications_are_hard/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -656,6 +691,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/pt/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -696,6 +736,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/why_notifications_are_hard/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
@@ -727,6 +772,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/why_notifications_are_hard/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -1137,6 +1187,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/removing/</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/why_notifications_are_hard/</loc>
         <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
     </url>
