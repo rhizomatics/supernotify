@@ -108,7 +108,7 @@ def _fit(text: str, limit: int, parse_mode: str) -> tuple[str, str]:
     return text[:limit], "plain_text"
 
 
-def _normalise_inline_keyboard(keyboard: list) -> list:
+def _normalise_inline_keyboard(keyboard: Any) -> list[Any]:  # ruff: ignore[any-type]
     """Normalise a user-supplied inline keyboard to the HA telegram_bot shape.
 
     Accepts:
@@ -123,11 +123,11 @@ def _normalise_inline_keyboard(keyboard: list) -> list:
     """
     if not isinstance(keyboard, list):
         return []
-    out: list = []
+    out: list[Any] = []
     for row in keyboard:
         if not isinstance(row, list):
             continue
-        out_row: list = []
+        out_row: list[Any] = []
         for btn in row:
             if isinstance(btn, list) and len(btn) >= 2:
                 # Already in HA shape: [label, callback_or_url]
@@ -142,7 +142,7 @@ def _normalise_inline_keyboard(keyboard: list) -> list:
     return out
 
 
-def _build_inline_keyboard(actions: list) -> list:
+def _build_inline_keyboard(actions: list[Any]) -> list[Any]:
     """Convert SuperNotify actions to HA telegram_bot inline keyboard format.
 
     SuperNotify actions are dicts with keys "title" (button label)

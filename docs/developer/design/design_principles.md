@@ -56,7 +56,7 @@ which Principle 7 applies here.
 
     Make Supernotify more accessible to more users, including non-technical ones who will never use YAML. Supernotify should itself make HomeAssistant more accessible, for example by simplifying mobile push setup.
 
-    Move towards Platinum quality scale level and maintain this quality
+    Keep the Platinum quality scale level, self-assessed in `quality_scale.yaml`, with each new rule met as it is added
 
     Note the tension with Principle #6
 

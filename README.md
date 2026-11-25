@@ -2,7 +2,7 @@
 
 # Supernotify - Unified Notifications for Home Assistant
 
-[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![managed by hq](https://raw.githubusercontent.com/rhizomatics/hq/main/assets/badge-managed-by-hq.svg)](https://hq.rhizomatics.org.uk/) [![Home Assistant Marketplace][marketplacebadge]][marketplace] [![Quality scale: Silver (self-assessed)](https://img.shields.io/badge/quality%20scale-silver%20(self--assessed)-a8a9ad)](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/quality_scale.yaml)
+[![Rhizomatics Open Source](https://img.shields.io/badge/rhizomatics%20open%20source-lightseagreen)](https://github.com/rhizomatics) [![managed by hq](https://raw.githubusercontent.com/rhizomatics/hq/main/assets/badge-managed-by-hq.svg)](https://hq.rhizomatics.org.uk/) [![Home Assistant Marketplace][marketplacebadge]][marketplace] [![Quality scale: Platinum (self-assessed)](https://img.shields.io/badge/quality%20scale-platinum%20(self--assessed)-e5e4e2)](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/quality_scale.yaml)
 
 ![py3.14](https://img.shields.io/badge/Python-3.14-blue)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)

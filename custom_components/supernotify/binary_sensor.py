@@ -182,7 +182,8 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._scenario.attributes(include_condition=False))
+        attributes: dict[str, object] = sanitize(self._scenario.attributes(include_condition=False))
+        return attributes
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -260,7 +261,8 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._recipient.attributes())
+        attributes: dict[str, object] = sanitize(self._recipient.attributes())
+        return attributes
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -297,7 +299,8 @@ class SupernotifyLegacyBinarySensor(BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._model.attributes())
+        attributes: dict[str, object] = sanitize(self._model.attributes())
+        return attributes
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()

@@ -253,7 +253,7 @@ def phone(value: str) -> str:
     return str(value)
 
 
-def validate_scenario_names(scenarios: dict) -> dict:
+def validate_scenario_names(scenarios: dict[str, Any]) -> dict[str, Any]:
     """Validate that scenario names are not reserved."""
     for name in scenarios:
         if name in RESERVED_SCENARIO_NAMES:
@@ -375,7 +375,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
 })
 
 
-def _migrate_condition(config: dict) -> dict:
+def _migrate_condition(config: dict[str, Any]) -> dict[str, Any]:
     """Migrate deprecated 'condition' key to 'conditions'."""
     if CONF_CONDITION in config:
         if CONF_CONDITIONS not in config:

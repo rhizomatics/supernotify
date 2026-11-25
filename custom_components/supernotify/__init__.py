@@ -143,7 +143,9 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
     }
 
 
-def async_add_recipient_subentries(hass: HomeAssistant, entry: SupernotifyConfigEntry, recipients: list[dict]) -> None:
+def async_add_recipient_subentries(
+    hass: HomeAssistant, entry: SupernotifyConfigEntry, recipients: list[dict[str, Any]]
+) -> None:
     """Add a recipient subentry for each of these validated recipients that has none yet,
     keyed by recipient_key(), and titled by its alias, else its person's name"""
     from types import MappingProxyType
@@ -274,7 +276,7 @@ def _async_import_yaml_recipients(hass: HomeAssistant, entry: SupernotifyConfigE
     from .const import CONF_RECIPIENTS
     from .repairs import async_check_yaml_recipients
 
-    recipients: list[dict] = hass.data.get(DOMAIN, {}).get(KEY_YAML_CONFIG, {}).get(CONF_RECIPIENTS) or []
+    recipients: list[dict[str, Any]] = hass.data.get(DOMAIN, {}).get(KEY_YAML_CONFIG, {}).get(CONF_RECIPIENTS) or []
     async_add_recipient_subentries(hass, entry, recipients)
     async_check_yaml_recipients(hass, bool(recipients))
 

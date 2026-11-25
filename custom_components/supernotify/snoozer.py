@@ -311,7 +311,7 @@ class Snoozer:
             if to_del:
                 self._persist()
         else:
-            _LOGGER.warning(  # type: ignore
+            _LOGGER.warning(  # type: ignore[unreachable]
                 "SUPERNOTIFY Invalid mobile cmd %s (target_type: %s, target: %s, recipient_type: %s)",
                 cmd,
                 target_type,

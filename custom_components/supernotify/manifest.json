@@ -43,7 +43,7 @@
     "integration_type": "service",
     "iot_class": "calculated",
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
-    "quality_scale": "silver",
+    "quality_scale": "platinum",
     "requirements": [
         "beautifulsoup4>=4.13.3",
         "aiofiles>=24.1.0"

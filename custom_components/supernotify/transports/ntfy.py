@@ -91,7 +91,7 @@ def _parse_delay(delay: str) -> str:
     return delay
 
 
-def _validate_actions(actions: list) -> list:
+def _validate_actions(actions: list[Any]) -> list[Any]:
     """Validate ntfy action buttons, dropping malformed entries with a warning."""
     valid = []
     for i, a in enumerate(actions):

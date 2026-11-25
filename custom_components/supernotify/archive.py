@@ -385,7 +385,8 @@ class ArchiveDirectory(ArchiveDestination):
                 # the whole id, as base_filename() puts it after the time, not just some part of it
                 if entry.name.endswith(f"_{notification_id}.json"):
                     async with aiofiles.open(entry.path, mode="r") as fh:
-                        return json.loads(await fh.read())
+                        entry_data: dict[str, Any] = json.loads(await fh.read())
+                        return entry_data
         except Exception as exc:
             _LOGGER.warning("SUPERNOTIFY Unable to read archive entry %s: %s", notification_id, exc)
         return None
