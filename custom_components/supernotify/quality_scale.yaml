@@ -252,17 +252,20 @@ rules:
     comment: Not applicable - integration does not support discovery.
 
   docs-data-update:
-    status: todo
+    status: done
     comment: |
-      Need a doc section explaining that diagnostic entities (e.g.
-      sensor.notifier_whisper_attivo) update on notification/scenario events,
-      not on a poll interval.
+      docs/usage/entities.md "How Entities Update": nothing is polled, and no outside service is
+      called to update entities, so no rate limits apply. Scenario condition binary_sensors are
+      re-evaluated on state changes of their condition entities and on a timer set in
+      scenario_control; the counters change as notifications are sent; switches when switched.
 
   docs-examples:
-    status: todo
+    status: done
     comment: |
-      Rule wants automation blueprints. docs/recipes/ (24 markdown recipes)
-      covers similar ground informally but isn't in blueprint-exchange format.
+      The rule accepts YAML automation examples as well as blueprints. docs/recipes/ has YAML
+      examples for common uses, including complete automations (someone_at_the_door,
+      restart_email, dishwasher_live_activity, voice_described_cctv), and docs/usage/notifying.md
+      shows the actions in automations.
 
   docs-known-limitations:
     status: done
@@ -275,16 +278,19 @@ rules:
       exempts this case.
 
   docs-supported-functions:
-    status: todo
+    status: done
     comment: |
-      Partially covered by docs/usage/actions.md and docs/transports/*, but not
-      organized as a single supported-functionality reference per the rule.
+      docs/usage/entities.md lists the entities on each platform (notify, switch, binary_sensor,
+      sensor, button) and what each does, alongside docs/usage/actions.md for the actions and
+      docs/transports/ for the transports.
 
   docs-troubleshooting:
-    status: todo
+    status: done
     comment: |
-      docs/help/troubleshooting.md lists the debugging tools (archive, diagnostics, debug mode,
-      enquire actions) but not common symptoms with their causes and fixes, which the rule asks for.
+      docs/help/troubleshooting.md "Common Problems" gives the symptom, cause and fix for the
+      problems users can solve themselves: notifications left out by a rule (by suppression
+      reason), actions when Supernotify isn't loaded, duplicate detection, email without a sender or with a missing attachment,
+      snapshot URLs, unrendered templates and unknown scenario binary_sensors.
 
   docs-use-cases:
     status: done

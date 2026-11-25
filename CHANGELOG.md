@@ -9,6 +9,9 @@
 ## 🐛 Bug fixes
 - *Actions*: the `supernotify.*` actions, such as `supernotify.notify` and `supernotify.snooze`, are there from when Home Assistant starts, rather than only once Supernotify has loaded, so an automation using them no longer fails to validate while it starts, or if it failed to start. Until it has loaded, they say so with an error. Home Assistant's [action-setup](https://contributors.home-assistant.io/core/quality-scale/action-setup/) rule, needed for its Bronze quality level
 
+## 📝 Other changes
+- *Documentation*: a page on [Supernotify's entities](https://supernotify.rhizomatics.org.uk/latest/usage/entities/), what each does and when it updates, and [common problems](https://supernotify.rhizomatics.org.uk/latest/help/troubleshooting/#common-problems) on the Troubleshooting page, each with its cause and fix
+
 # v2.19.1
 
 ## ✨ Enhancements
