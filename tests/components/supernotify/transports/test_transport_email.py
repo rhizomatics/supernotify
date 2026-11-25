@@ -666,6 +666,46 @@ def test_reuses_ha_smtp_connection_when_not_configured() -> None:
     assert uut.validate_action(None) is True
 
 
+def test_reuses_email_notifier_connection_when_no_ha_smtp() -> None:
+    context = Mock(custom_template_path=None)
+    # as saved by the Wheemer fork, which leaves out blank credentials for a local relay
+    email_notifier_data = {
+        "server": "relay.example.com",
+        CONF_PORT: 25,
+        CONF_ENCRYPTION: "none",
+        "recipients": "someone@example.com",
+        CONF_SENDER: "notifier@example.com",
+        OPTION_SENDER_NAME: "Email Notifier",
+        "timeout": 15,
+    }
+    context.hass_api.find_config_entry_data.side_effect = lambda domain: (
+        email_notifier_data if domain == "email_notifier" else None
+    )
+    uut = EmailTransport(context, {})
+
+    assert [c.args[0] for c in context.hass_api.find_config_entry_data.call_args_list] == ["smtp", "email_notifier"]
+    assert uut.host == "relay.example.com"
+    assert uut.port == 25
+    assert uut.encryption == "none"
+    assert uut.username is None
+    assert uut.password is None
+    assert uut.sender == "notifier@example.com"
+    assert uut.sender_name == "Email Notifier"
+    assert uut.validate_action(None) is True
+
+
+def test_ha_smtp_connection_preferred_over_email_notifier() -> None:
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.side_effect = lambda domain: {
+        "server": f"{domain}.example.com",
+        CONF_SENDER: "ha@example.com",
+    }
+    uut = EmailTransport(context, {})
+
+    context.hass_api.find_config_entry_data.assert_called_once_with("smtp")
+    assert uut.host == "smtp.example.com"
+
+
 def test_existing_connection_not_overridden_by_ha_smtp() -> None:
     context = Mock(custom_template_path=None)
     uut = EmailTransport(context, SMTP_TRANSPORT_CONFIG)

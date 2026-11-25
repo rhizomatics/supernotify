@@ -240,6 +240,30 @@ In addition, all of the other `email` options are available, such as for tuning 
 
 If no `connection` block is configured, this transport falls back to the connection details (server, port, encryption, username, password, `verify_ssl`, sender, sender name) from a configured [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) config entry, so you don't have to duplicate credentials. This only applies to ConfigFlow (UI) based SMTP integration setups, not the legacy YAML `platform: smtp` style. Omit `connection` entirely to use this.
 
+Where the Home Assistant SMTP integration isn't set up, the connection is taken in the same way from the
+custom [Email Notifier](https://github.com/microteq/email_notifier) integration, or its fork by
+[Wheemer](https://github.com/Wheemer/email_notifier). Only its connection is used, not the default recipients of its account.
+For other ways of sending email, see [Other Email Options](../configuration/email.md#other-email-options).
+
+### What to Look For in an Email Integration
+
+Before relying on a custom email integration, check that:
+
+- **Sending doesn't hold up Home Assistant.** Connecting to the mail server, sending, testing the connection
+  during setup, and reading attachment files should all happen in the background. If they don't, Home Assistant
+  pauses while an email goes out, and the log has `Detected blocking call` warnings.
+- **Each account's settings are kept apart.** With more than one account, two emails sent at the same time
+  should never mix up which login, sender or recipients are used.
+- **A failed send is reported as an error.** If an email can't be sent, the action should fail, so that the
+  automation, or Supernotify's delivery record, shows it, rather than the failure appearing only in the log.
+- **Home Assistant starts without the mail server.** If the mail server is down, startup shouldn't wait on it
+  or fail.
+- **Attachments are limited to allowed folders.** Local files should only come from folders Home Assistant
+  allows, such as `allowlist_external_dirs`. Files downloaded from a URL should use Home Assistant's shared web
+  session, with a timeout.
+- **Entity IDs don't change.** An account's entity ID shouldn't depend on the order in which accounts load.
+- **It's maintained.** Look for tests, Home Assistant's `hassfest` validation, and recent fixes to reported issues.
+
 
 ### Roadmap
 
