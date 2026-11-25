@@ -106,6 +106,9 @@ NULL_RETURN_PATH = "<>"
 # connection is configured here. "server" is smtp-specific; the rest match generic
 # homeassistant.const keys already imported above.
 HA_SMTP_DOMAIN = "smtp"
+# the custom Email Notifier integration (microteq/email_notifier and its forks), a UI-configured
+# SMTP alternative whose config entry uses the same keys as Home Assistant's smtp integration
+EMAIL_NOTIFIER_DOMAIN = "email_notifier"
 SMTP_SEND_MESSAGE = "send_message"
 # Duplicates of the constants in `homeassistant.components.smtp.const`, to be kept aligned with it,
 # since importing from there loads the smtp integration and so needs its `aiosmtplib` requirement,
@@ -252,12 +255,15 @@ class EmailTransport(Transport):
 
     def _reuse_ha_smtp_connection(self) -> None:
         """No direct SMTP connection configured here; fall back to a configured HA smtp
-        integration entry, if any."""
-        entry_data = self.hass_api.find_config_entry_data(HA_SMTP_DOMAIN)
-        if not entry_data:
-            _LOGGER.debug("SUPERNOTIFY No home assistant official smtp configuration to reuse")
+        integration entry, if any, or else a custom Email Notifier one."""
+        for domain in (HA_SMTP_DOMAIN, EMAIL_NOTIFIER_DOMAIN):
+            entry_data = self.hass_api.find_config_entry_data(domain)
+            if entry_data:
+                break
+        else:
+            _LOGGER.debug("SUPERNOTIFY No smtp or email_notifier configuration to reuse")
             return
-        _LOGGER.info("SUPERNOTIFY Email transport reusing connection from HA smtp integration for direct SMTP sends")
+        _LOGGER.info("SUPERNOTIFY Email transport reusing connection from %s integration for direct SMTP sends", domain)
         self.host = entry_data.get(CONF_SERVER)
         self.port = entry_data.get(CONF_PORT, self.port)
         self.encryption = entry_data.get(CONF_ENCRYPTION, self.encryption)

@@ -101,7 +101,7 @@ Amazon have more help on how to get their SMTP set up at [Set up email sending w
 ## Other Email Options
 
 * [ha-smtp](https://github.com/manjotsc/ha-smtp) - custom integration for SMTP that doesn't need YAML config
-* [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration
+* [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration, whose `email_notifier.send` action can send to any address. [Wheemer's fork](https://github.com/Wheemer/email_notifier) adds SMTP relays without a login. Supernotify can reuse its connection, see [Reusing the Home Assistant SMTP Integration Configuration](../transports/email.md#reusing-the-home-assistant-smtp-integration-configuration)
 * [MS365 Mail for Home Assistant](https://rogerselwyn.github.io/MS365-Mail/) - Microsoft based e-mail sending
 * Self Hosting
     * [Mail-in-a-Box](https://mailinabox.email) - Run on your own server, including receiving mail, running own webmail service
