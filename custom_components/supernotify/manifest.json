@@ -49,5 +49,5 @@
         "aiofiles>=24.1.0"
     ],
     "single_config_entry": true,
-    "version": "2.19.0"
+    "version": "2.19.1"
 }
