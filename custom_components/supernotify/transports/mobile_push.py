@@ -307,8 +307,9 @@ class MobilePushTransport(Transport):
             # wrap heavy bs4 parsing in a job to avoid blocking the event loop
             html = await self.context.hass_api.create_job(BeautifulSoup, body, "html.parser")
             if html.title and html.title.string:
-                self.action_titles[url] = html.title.string
-                return html.title.string
+                title: str = html.title.string
+                self.action_titles[url] = title
+                return title
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Failed to retrieve url title at %s: %s", url, e)
             self.action_title_failures[url] = time.time()

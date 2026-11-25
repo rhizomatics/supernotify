@@ -1,6 +1,7 @@
 ---
 # Quality Scale tracking for Supernotify integration
-# Updated: 2026-11-02 (previous updates: 2026-08-06, 2025-12-19)
+# Updated: 2026-11-25 (previous updates: 2026-11-02, 2026-08-06, 2025-12-19)
+# 2026-11-25: action-setup, the Gold docs rules and strict-typing done, so every rule is done or exempt
 # Rule set verified against https://contributors.home-assistant.io/core/quality-scale/rules/#checklist
 # (HA 2026.10.4; 54 rules). 2026-11-02: no rules added, removed, renamed or moved since 2026-08-06;
 # statuses re-checked against the code (2026-Q4 architecture review).
@@ -394,8 +395,12 @@ rules:
       Properly uses async_get_clientsession(hass) in media_grab.py.
 
   strict-typing:
-    status: todo
+    status: done
     comment: |
-      py.typed present and mypy passes, but not in strict mode (no strict settings in
-      pyproject.toml), and 14 "# type: ignore" remain (hass_api.py, notification.py,
-      media_grab.py, target.py, snoozer.py, scenario.py, llm.py).
+      A custom integration can't be listed in core's .strict-typing, so pyproject.toml [tool.mypy]
+      applies the same strict settings core gives the integrations listed there (no_implicit_reexport
+      aside, which core doesn't use either) to custom_components.supernotify, and mypy passes with
+      them, as does ty. py.typed is present, and entry setup is typed against SupernotifyConfigEntry.
+      Three "# type: ignore" remain, each with its error code: two for differences between the
+      Home Assistant versions supported (llm.py, scenario.py), and one for a defensive branch
+      (snoozer.py).

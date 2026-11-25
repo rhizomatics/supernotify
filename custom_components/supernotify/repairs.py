@@ -324,7 +324,8 @@ def _async_get_migration_lock(hass: HomeAssistant) -> asyncio.Lock:
     ConfigEntry's own setup_lock (which HA already uses internally to serialize a single
     entry's own setup/reload/unload) - this instead prevents two concurrent attempts at this
     flow (e.g. a double submit, or two admin sessions) from interleaving their file writes."""
-    return hass.data.setdefault(DOMAIN, {}).setdefault("migration_lock", asyncio.Lock())
+    lock: asyncio.Lock = hass.data.setdefault(DOMAIN, {}).setdefault("migration_lock", asyncio.Lock())
+    return lock
 
 
 def _load_configuration_yaml_dict(hass: HomeAssistant) -> dict[str, Any]:

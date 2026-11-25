@@ -94,6 +94,7 @@ class Target:
         | dict[str, Sequence[str]]
         | dict[str, list[str]]
         | dict[str, str | list[str]]
+        | object
         | None = None,
         target_data: dict[str, Any] | None = None,
         target_specific_data: bool = False,
@@ -259,7 +260,7 @@ class Target:
     @classmethod
     def is_email(cls, target: str) -> bool:
         try:
-            return vol.Email()(target) is not None  # type: ignore[call-arg]
+            return vol.Email()(target) is not None
         except vol.Invalid:
             return False
 

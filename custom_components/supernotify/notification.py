@@ -74,6 +74,7 @@ from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutco
 from .target import TargetEntityCategory
 
 if TYPE_CHECKING:
+    from anyio import Path
     from homeassistant.core import Context as HAContext
 
     from .context import Context
@@ -262,7 +263,9 @@ class Notification(ArchivableObject):
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self._suppression_reason: SuppressionReason | None = None
-        self._raw_image_path: Any = None
+        self._raw_image_path: Path | None = None
+        # the `reprocess` given with the snapshot URL that gave the image, if any
+        self._raw_image_reprocess: str | None = None
         self._delivery_error: list[str] | None = None
         self.condition_variables: ConditionVariables
         self.unknown_names: dict[str, list[str]] = self._unknown_names()
@@ -787,7 +790,7 @@ class Notification(ArchivableObject):
                     immediate_deliveries[delivery_name] = details
 
             # Start image grab immediately so PTZ runs while immediate deliveries execute
-            image_task: asyncio.Task | None = None
+            image_task: asyncio.Task[Any] | None = None
             if deferred_deliveries:
                 image_task = asyncio.create_task(_snap_notification_image(self, self.context, ha_context=self.ha_context))
 
@@ -1062,8 +1065,7 @@ class Notification(ArchivableObject):
             self.error_count += envelope.error_count
             self.deliveries.setdefault(delivery.name, {})
             if envelope.delivered:
-                self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
-                self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+                cast("list[Envelope]", self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])).append(envelope)
                 envelope.record_recipient_notifications(self._recorded_person_ids)
             else:
                 if suppression_reason:
@@ -1073,12 +1075,14 @@ class Notification(ArchivableObject):
                     if suppression_reason == SuppressionReason.DUPE:
                         self.dupe = True
                 if envelope.error_count:
-                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
-                    self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
+                    cast("list[Envelope]", self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])).append(
+                        envelope
+                    )
                     self.failed += 1
                 else:
-                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
-                    self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
+                    cast("list[Envelope]", self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])).append(
+                        envelope
+                    )
                     self.suppressed += 1
 
         if not envelope:
@@ -1271,7 +1275,7 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         return f"{self.created.isoformat()[:16].replace(':', '-')}_{self.id}"
 
-    def delivery_data(self, delivery: Delivery) -> dict[str, Any]:
+    def delivery_data(self, delivery: Delivery | None) -> dict[str, Any]:
         if delivery is None:
             return {}
         delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)

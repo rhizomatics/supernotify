@@ -74,11 +74,11 @@ def _build_extras(
     image_url: str | None,
     markdown: bool,
     intent_url: str | None,
-) -> dict | None:
+) -> dict[str, Any] | None:
     """Build Gotify extras dict. Returns None if no extras are needed."""
-    extras: dict = {}
+    extras: dict[str, Any] = {}
 
-    client_notification: dict = {}
+    client_notification: dict[str, Any] = {}
     if click_url:
         client_notification["click"] = {"url": click_url}
     if image_url:

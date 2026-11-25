@@ -344,7 +344,8 @@ def select_avail_camera(
     for alt_cam in alt_cams:
         if camera_available(hass_api, alt_cam):
             _LOGGER.info("SUPERNOTIFY Selecting available camera %s rather than %s", alt_cam[CONF_CAMERA], camera_entity_id)
-            return alt_cam[CONF_CAMERA]
+            selected: str = alt_cam[CONF_CAMERA]
+            return selected
 
     if avail_camera_entity_id is None:
         _LOGGER.warning("SUPERNOTIFY %s not available, finding best alternative available", camera_entity_id)
@@ -356,7 +357,8 @@ def select_avail_camera(
                 _LOGGER.info(
                     "SUPERNOTIFY Selecting alt camera %s with no known entity for %s", alt_cam[CONF_CAMERA], camera_entity_id
                 )
-                return alt_cam[CONF_CAMERA]
+                alt_selected: str = alt_cam[CONF_CAMERA]
+                return alt_selected
 
     return None
 
@@ -401,7 +403,7 @@ async def snap_notification_image(
     subsequent calls return the cached path immediately.
     """
     if getattr(notification, "_raw_image_path", None) is not None:
-        return notification._raw_image_path  # type: ignore[attr-defined]
+        return notification._raw_image_path
 
     if notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH) is not None:
         return Path(notification.media[ATTR_MEDIA_SNAPSHOT_PATH])
@@ -433,7 +435,7 @@ async def snap_notification_image(
             failures=reasons,
         )
         if raw_path is not None:
-            notification._raw_image_reprocess = source.get(MEDIA_OPTION_REPROCESS)  # type: ignore[attr-defined]  # ty: ignore[missing-attribute]
+            notification._raw_image_reprocess = source.get(MEDIA_OPTION_REPROCESS)
             if notification.media.get(ATTR_MEDIA_SNAPSHOT_URL) != url:
                 # deliveries that pass the URL on, rather than fetch it, get the one that worked
                 notification.media[ATTR_MEDIA_SNAPSHOT_URL] = url
@@ -506,7 +508,7 @@ async def snap_notification_image(
 
     if raw_path is None:
         _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", sources, camera_entity_id)
-    notification._raw_image_path = raw_path  # type: ignore[attr-defined]
+    notification._raw_image_path = raw_path
     return raw_path
 
 

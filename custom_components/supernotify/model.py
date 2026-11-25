@@ -144,7 +144,7 @@ class DeliveryCustomization:
 
 
 class SelectionRule:
-    def __init__(self, config: str | list[str] | dict | SelectionRule | None) -> None:
+    def __init__(self, config: str | list[str] | dict[str, Any] | SelectionRule | None) -> None:
         # local import: see TransportConfig.__init__ for why this can't be module-level
         from .options import SELECT_EXCLUDE, SELECT_INCLUDE
 
@@ -199,7 +199,7 @@ class DataFilter:
     include and exclude can be combined; any non-reserved key adds a sub-filter.
     """
 
-    def __init__(self, config: str | list[str] | dict | None) -> None:
+    def __init__(self, config: str | list[str] | dict[str, Any] | None) -> None:
         self._include: list[str] | None = None
         self._exclude: list[str] | None = None
         self._sub: dict[str, DataFilter] = {}
@@ -212,7 +212,7 @@ class DataFilter:
         else:
             self._init_from_dict(config)
 
-    def _init_from_dict(self, config: dict) -> None:
+    def _init_from_dict(self, config: dict[str, Any]) -> None:
         # local import: see TransportConfig.__init__ for why this can't be module-level
         from .options import SELECT_EXCLUDE, SELECT_INCLUDE
 
@@ -247,7 +247,7 @@ class DataFilter:
                     self._sub[k] = DataFilter(v)
 
     @staticmethod
-    def _parse_exclude_tree(tree: dict) -> tuple[list[str], dict[str, DataFilter]]:
+    def _parse_exclude_tree(tree: dict[str, Any]) -> tuple[list[str], dict[str, DataFilter]]:
         excludes: list[str] = []
         subs: dict[str, DataFilter] = {}
         for k, v in tree.items():
@@ -258,7 +258,7 @@ class DataFilter:
         return excludes, subs
 
     @staticmethod
-    def _exclude_tree_to_filter(tree: dict) -> DataFilter:
+    def _exclude_tree_to_filter(tree: dict[str, Any]) -> DataFilter:
         df = DataFilter(None)
         excludes, subs = DataFilter._parse_exclude_tree(tree)
         df._exclude = excludes or None

@@ -38,7 +38,7 @@ def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = No
     return probably_a_dict.get(key, default)
 
 
-def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> list[Any]:  # ruff: ignore[any-type]
+def safe_extend(target: list[Any] | Any, extension: list[Any] | tuple[Any] | Any) -> list[Any]:  # ruff: ignore[any-type]
     if target is None:
         target = []
     elif not isinstance(target, list):

@@ -248,6 +248,29 @@ addopts = [
     "no:respx",
 ]
 
+[tool.mypy]
+# Home Assistant core's strict settings, as for an integration listed in its .strict-typing
+# (Quality Scale strict-typing), which leave out mypy --strict's no_implicit_reexport
+local_partial_types = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+enable_error_code = ["ignore-without-code", "redundant-self", "truthy-iterable"]
+extra_checks = true
+
+[[tool.mypy.overrides]]
+module = ["custom_components.supernotify.*"]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+warn_return_any = true
+warn_unreachable = true
+
 [[tool.mypy.overrides]]
 module = ["pytest_homeassistant_custom_component.*"]
 follow_untyped_imports = true

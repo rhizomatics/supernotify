@@ -281,7 +281,7 @@ class HomeAssistantAPI:
                 _LOGGER.error("SUPERNOTIFY Failed to unsubscribe: %s", e)
         _LOGGER.debug("SUPERNOTIFY Disconnection complete")
 
-    def subscribe_event(self, event: EventType[Any] | str, callback: Callable) -> None:
+    def subscribe_event(self, event: EventType[Any] | str, callback: Callable[..., Any]) -> None:
         """Listen for an event on Home Assistant's bus, until disconnect()"""
         self.unsubscribes.append(self._hass.bus.async_listen(event, callback))
 
@@ -291,7 +291,9 @@ class HomeAssistantAPI:
         Re-pairing or renaming a phone changes its notify action, and HA registers that action a
         little after the device itself, so both kinds of change are debounced into one call
         """
-        debouncer: Debouncer = Debouncer(self._hass, _LOGGER, cooldown=cooldown, immediate=False, function=on_change)
+        debouncer: Debouncer[Awaitable[None]] = Debouncer(
+            self._hass, _LOGGER, cooldown=cooldown, immediate=False, function=on_change
+        )
 
         @callback
         def on_device(event: Event) -> None:
@@ -317,15 +319,15 @@ class HomeAssistantAPI:
         self.subscribe_event(EVENT_SERVICE_REMOVED, on_service)
         self.unsubscribes.append(debouncer.async_cancel)
 
-    def subscribe_state(self, entity_ids: str | Iterable[str], callback: Callable) -> None:
+    def subscribe_state(self, entity_ids: str | Iterable[str], callback: Callable[..., Any]) -> None:
         """Listen for state changes of these entities, until disconnect()"""
         self.unsubscribes.append(async_track_state_change_event(self._hass, entity_ids, callback))
 
-    def subscribe_time(self, hour: int, minute: int, second: int, callback: Callable) -> None:
+    def subscribe_time(self, hour: int, minute: int, second: int, callback: Callable[..., Any]) -> None:
         """Call back daily at this time of day, until disconnect()"""
         self.unsubscribes.append(async_track_time_change(self._hass, callback, hour=hour, minute=minute, second=second))
 
-    def subscribe_interval(self, seconds: int, callback: Callable) -> None:
+    def subscribe_interval(self, seconds: int, callback: Callable[..., Any]) -> None:
         """Call back every so many seconds, until disconnect()"""
         self.unsubscribes.append(async_track_time_interval(self._hass, callback, timedelta(seconds=seconds)))
 
@@ -492,7 +494,7 @@ class HomeAssistantAPI:
         return [s.entity_id for s in self._hass.states.async_all() if wanted in self.entity_spoken_names(s.entity_id)]
 
     def entity_ids_for_platform(
-        self, domain: str, platform: str, device_model_select: str | list[str] | dict | SelectionRule | None = None
+        self, domain: str, platform: str, device_model_select: str | list[str] | dict[str, Any] | SelectionRule | None = None
     ) -> list[str]:
         """entity_ids in `domain` (e.g. "notify") registered by a specific integration.
 
@@ -565,7 +567,7 @@ class HomeAssistantAPI:
             self._stores[key] = Store(self._hass, version, key)
         return self._stores[key]
 
-    def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
+    def create_job(self, func: Callable[..., Any], *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
         return self._hass.async_add_executor_job(func, *args)
 
@@ -657,7 +659,7 @@ class HomeAssistantAPI:
                     extra=vol.REMOVE_EXTRA if service_schema.extra == vol.PREVENT_EXTRA else service_schema.extra,
                     required=service_schema.required,
                 )
-                cleaned = coercing_schema(data)
+                cleaned: dict[str, Any] = coercing_schema(data)
             else:
                 return data
             if cleaned != data:
@@ -1071,7 +1073,7 @@ class HomeAssistantAPI:
         results: dict[str, str | None] = {ATTR_OS_NAME: None, ATTR_OS_VERSION: None, CONF_USER_ID: None, ATTR_APP_VERSION: None}
         try:
             # HA 2026.8+ restricts devices to a single config entry
-            config_entry_ids: Iterable[str] = (device.config_entry_id,)  # type: ignore[attr-defined]
+            config_entry_ids: Iterable[str] = (device.config_entry_id,)
         except AttributeError:
             # pre-2026.8: config_entry_id doesn't exist yet, fall back to deprecated plural set
             config_entry_ids = device.config_entries
@@ -1105,7 +1107,7 @@ class HomeAssistantAPI:
             # 2026.8 HA and prior
             all_ha_devices = dev_reg.devices.values()
         else:
-            all_ha_devices = dev_reg.devices  # type: ignore[assignment]
+            all_ha_devices = dev_reg.devices
         for dev in all_ha_devices:
             all_devs += 1
 
@@ -1160,9 +1162,7 @@ class HomeAssistantAPI:
                         # HomeKit has triples for identifiers, other domains may behave similarly
                         _LOGGER.debug("SUPERNOTIFY Ignoring device %s id: %s", dev.name, identifier)
                     else:
-                        _LOGGER.debug(  # type: ignore
-                            "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
-                        )
+                        _LOGGER.debug("SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name)
 
         _LOGGER.debug("SUPERNOTIFY %s device discovery, all=%s, enabled=%s", discover_domain, all_devs, enabled_devs)
         _LOGGER.debug("SUPERNOTIFY %s device discovery, skipped=%s, found=%s", discover_domain, skipped_devs, found_devs)
@@ -1207,7 +1207,7 @@ class HomeAssistantAPI:
         if reg is None:
             return None
         try:
-            return reg.async_get(device_id, include_child_devices=False)  # type: ignore[call-arg]
+            return reg.async_get(device_id, include_child_devices=False)
         except TypeError:
             # older HA
             return cast("DeviceEntry|None", reg.async_get(device_id))
@@ -1254,12 +1254,12 @@ class HomeAssistantAPI:
                 raise
 
 
-class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
+class ConditionErrorLoggingAdaptor(logging.LoggerAdapter[logging.Logger]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.condition_errors: list[ConditionError] = []
 
-    def capture(self, args: list | tuple | None) -> None:
+    def capture(self, args: list[Any] | tuple[Any, ...] | None) -> None:
         if args and isinstance(args, list | tuple):
             for arg in args:
                 if isinstance(arg, ConditionErrorContainer):
