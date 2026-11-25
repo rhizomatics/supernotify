@@ -17,15 +17,13 @@ rules:
   # ==================
 
   action-setup:
-    status: todo
+    status: done
     comment: |
-      Only supernotify.reload is registered in async_setup (__init__.py). The supernotify.*
-      engine actions (actions.py async_register_engine_actions) are registered from
-      async_setup_entry and removed in async_unload_entry, so while the entry is not loaded
-      they don't exist and automations using them fail validation. The rule wants them
-      registered once in async_setup, looking up the loaded entry and raising a translated
-      ServiceValidationError when it isn't loaded. notify.supernotify itself is the legacy
-      notify service, which follows the entry.
+      actions.py async_setup_actions registers the supernotify.* actions once, from async_setup,
+      so they exist whether or not the config entry is loaded. Each looks up the loaded entry's
+      engine when called (_loaded_engine), raising a translated ServiceValidationError
+      (not_loaded) when there is none. notify.supernotify itself is the legacy notify service,
+      which follows the entry.
 
   appropriate-polling:
     status: exempt

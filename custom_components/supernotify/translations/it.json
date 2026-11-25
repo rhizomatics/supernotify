@@ -629,6 +629,9 @@
         },
         "setup_failed": {
             "message": "Supernotify non è riuscito ad avviarsi e riproverà: {error}"
+        },
+        "not_loaded": {
+            "message": "Supernotify non è caricato, quindi questa azione non può essere eseguita finché non si avvia"
         }
     },
     "options": {

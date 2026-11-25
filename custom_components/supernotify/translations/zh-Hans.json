@@ -594,6 +594,9 @@
         },
         "setup_failed": {
             "message": "Supernotify 启动失败，将重试：{error}"
+        },
+        "not_loaded": {
+            "message": "Supernotify 尚未加载，因此在其启动之前无法运行此操作"
         }
     },
     "options": {

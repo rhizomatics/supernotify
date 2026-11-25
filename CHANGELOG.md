@@ -4,6 +4,11 @@
 
 [Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) automatic notifications from security cameras, so far supporting Frigate, OpenALPR and ANPR2MQTT. No blueprints, no automations, no YAML.
 
+# v2.19.2
+
+## 🐛 Bug fixes
+- *Actions*: the `supernotify.*` actions, such as `supernotify.notify` and `supernotify.snooze`, are there from when Home Assistant starts, rather than only once Supernotify has loaded, so an automation using them no longer fails to validate while it starts, or if it failed to start. Until it has loaded, they say so with an error. Home Assistant's [action-setup](https://contributors.home-assistant.io/core/quality-scale/action-setup/) rule, needed for its Bronze quality level
+
 # v2.19.1
 
 ## ✨ Enhancements

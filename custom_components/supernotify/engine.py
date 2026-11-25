@@ -125,6 +125,8 @@ class SupernotifyEngine:
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
+        # the full configuration it was built from, for supernotify.enquire_configuration - set by async_setup_entry
+        self.full_config: dict[str, Any] = {}
         self.housekeeping: dict[str, Any] = housekeeping or {}
         # The counts live only in these entities, which restore their own value across restarts;
         # sensor.py hands them to Home Assistant once its platform loads

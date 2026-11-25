@@ -744,6 +744,9 @@
         },
         "setup_failed": {
             "message": "Supernotify failed to start, and will retry: {error}"
+        },
+        "not_loaded": {
+            "message": "Supernotify isn't loaded, so this action can't run until it starts"
         }
     },
     "selector": {
