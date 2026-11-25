@@ -1,7 +1,24 @@
-/* The theme hides the top tabs below 76.25em, leaving the other pages only behind the
-   hamburger menu. Keep them visible down to tablet width; the tab list scrolls sideways. */
-@media screen and (min-width: 45em) and (max-width: 76.234375em) {
+/* The theme hides the top tabs below 60em (moved from 76.25em by docgen/sidebar_breakpoint.py), leaving
+   the other pages only behind the hamburger menu. Keep them visible down to tablet width; the tab list
+   scrolls sideways. */
+@media screen and (min-width: 45em) and (max-width: 59.984375em) {
   .md-tabs {
     display: block;
+  }
+}
+
+/* The button from javascripts/nav_toggle.js, shown only where the navigation sidebar is pinned,
+   with the theme's class as well to outrank its rule showing every header button */
+.md-header__button.sn-nav-toggle {
+  display: none;
+}
+
+@media screen and (min-width: 60em) {
+  .md-header__button.sn-nav-toggle {
+    display: inline-block;
+  }
+
+  .sn-nav-collapsed .md-sidebar--primary {
+    display: none;
   }
 }
