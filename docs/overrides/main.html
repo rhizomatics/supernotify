@@ -14,6 +14,12 @@ Click here to go to latest.
 {% endblock %}
 
 {% block extrahead %}
+  {#- Hide the navigation sidebar before the page is drawn, if hidden before, see javascripts/nav_toggle.js -#}
+  <script>
+    try {
+      if (localStorage.getItem("sn-nav-collapsed") === "1") document.documentElement.classList.add("sn-nav-collapsed")
+    } catch {}
+  </script>
   {#- One static social card per language, in place of the social plugin's card per page -#}
   {% if page %}
   {% set card_title = config.site_name if page.is_homepage else (page.meta.title or page.title) | striptags ~ " - " ~ config.site_name %}
