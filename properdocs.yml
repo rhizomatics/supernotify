@@ -218,11 +218,13 @@ extra_css:
 extra_javascript:
   - javascripts/markdown_actions.js
   - javascripts/nav_collapse.js
+  - javascripts/nav_toggle.js
   - javascripts/tag_filter.js
 
 hooks:
   - docgen/nav_order.py
   - docgen/tagged_index.py
+  - docgen/sidebar_breakpoint.py
 
 watch:
   - custom_components/supernotify
