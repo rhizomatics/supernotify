@@ -1126,6 +1126,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/usage/entities/</loc>
+        <lastmod>2026-11-25</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/</loc>
         <lastmod>2026-11-25</lastmod>
         <changefreq>daily</changefreq>

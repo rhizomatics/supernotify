@@ -511,6 +511,82 @@ alexa_inform:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/help/troubleshooting/
 
+## Common Problems
+
+### A notification doesn't arrive
+
+**Symptom**: the notification is sent, without an error, but nothing arrives, or it doesn't arrive by every delivery expected. The log has a warning like `SUPERNOTIFY No deliveries made for ...`, followed by the reasons.
+
+**Cause**: a rule left it out, as configured. The reasons are:
+
+| Reason               | Why                                                       | To fix                                                                                                                                                     |
+| -------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SNOOZED`            | The recipient, delivery or everything is snoozed          | List snoozes with `supernotify.enquire_snoozes`, and end them with `supernotify.unsnooze`                                                                  |
+| `PRIORITY`           | The notification's priority isn't one the delivery is for | Change the notification's `priority`, or the delivery's, see [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) |
+| `OCCUPANCY`          | The delivery is only for recipients at home, or only away | Check with `supernotify.enquire_occupancy`, see [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)              |
+| `DELIVERY_CONDITION` | The delivery's conditions don't hold                      | See [Conditions](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/index.md)                                                          |
+| `NO_SCENARIO`        | The delivery is only for a scenario that doesn't apply    | Check with `supernotify.enquire_active_scenarios`, see [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)         |
+| `TRANSPORT_DISABLED` | The transport is switched off                             | Switch it on, or press *Reset overrides*, see [Entities](https://supernotify.rhizomatics.org.uk/latest/usage/entities/index.md)                            |
+| `NO_TARGET`          | The delivery has no one to send to                        | Give the recipients the addresses or devices it needs, see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)           |
+
+`supernotify.enquire_last_notification` shows what happened to the last notification, and the [Archive](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md) to every one.
+
+### An action says Supernotify isn't loaded
+
+**Symptom**: a `supernotify.*` action, such as `supernotify.notify`, fails with *Supernotify isn't loaded*.
+
+**Cause**: Supernotify is still starting, failed to start, or is disabled. If it failed, the log has *Supernotify failed to start, and will retry*, with the reason, and it tries again by itself.
+
+**Fix**: check the reason in the log and on the integration's page, correct the configuration, and reload the integration, or enable it if it's disabled.
+
+### The same notification is only sent once
+
+**Symptom**: a notification sent again soon after, with the same message and title, doesn't arrive.
+
+**Cause**: duplicate detection, which leaves out a repeat of a recent notification at the same or a lower priority.
+
+**Fix**: send it with `force_resend: true`, or change the policy, see [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md).
+
+### No emails are sent
+
+**Symptom**: nothing goes by email, and the log has a warning at startup that there is no sender.
+
+**Cause**: a direct SMTP email needs a sender address, as Home Assistant's own SMTP integration does.
+
+**Fix**: set `sender` in the email transport's `options`, or set up the SMTP integration from the UI, for Supernotify to reuse, see [Email](https://supernotify.rhizomatics.org.uk/latest/transports/email/#configuring).
+
+### An image is missing from an email
+
+**Symptom**: the email arrives without its image, and the log has a warning that the attachment was skipped.
+
+**Cause**: only files in Supernotify's media path, or a folder Home Assistant allows files to be read from, are attached.
+
+**Fix**: save the image in the media path, `www`, a folder in `media_dirs` or one in `allowlist_external_dirs`, see [Email](https://supernotify.rhizomatics.org.uk/latest/transports/email/#image-attachments).
+
+### A snapshot URL gives no image
+
+**Symptom**: a notification with a `snapshot_url` arrives without the image, and there may be a repair listing why.
+
+**Cause**: the URL didn't give an image, it was bigger than the *Largest Snapshot Download* setting, or, with *Only Local Snapshot URLs* on, it isn't Home Assistant itself, on the same network, or in `allowlist_external_urls`.
+
+**Fix**: see [Snapshot URLs](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#snapshot-urls).
+
+### A template shows as text
+
+**Symptom**: a message has `{{ ... }}` in it, rather than what the template should give.
+
+**Cause**: the *Render Templates in Notify Calls* setting is off, as it is for new installs, so a template that reaches Supernotify unrendered, such as from AppDaemon or a `{% raw %}` block, is left as it is.
+
+**Fix**: switch the setting on, or move the template into a scenario's `message_template`, see [Automation and Templates](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#automation-and-templates).
+
+### A scenario's binary sensor is unknown
+
+**Symptom**: a *Scenario Condition* binary sensor stays *unknown*.
+
+**Cause**: `refresh` is off in `scenario_control`, so nothing keeps its state current, or the scenario has no conditions.
+
+**Fix**: switch on `refresh`, see [Entities](https://supernotify.rhizomatics.org.uk/latest/usage/entities/#how-entities-update) and [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md).
+
 ## Options
 
 - [AI Agents](https://supernotify.rhizomatics.org.uk/latest/help/ai_help/index.md) can give very good help these days, even the free one built into [Google Search](https://supernotify.rhizomatics.org.uk/latest/help/ai_help/#google-and-ai-assisted-help).
@@ -802,6 +878,67 @@ sequence:
 
 - [AI Agents for the Smart Home](https://www.home-assistant.io/blog/2024/06/07/ai-agents-for-the-smart-home/) - 2024 vision paper from Home Assistant team
 - [Home Assistant MCP](https://www.home-assistant.io/integrations/mcp/) - Official integrations
+
+# Entities
+
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/entities/
+
+Supernotify adds these entities to Home Assistant. Apart from the recipients' notify entities, they all belong to a single *SuperNotify* device, on the integration's page. Supernotify is a service, not a device integration, so the same entities are available whatever phones, speakers or other devices notifications go to.
+
+## Notify
+
+| Entity             | What it does                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Notify *recipient* | One for each recipient. Sending a message to it notifies that recipient, with all their usual deliveries, occupancy, scenarios, snoozes and duplicate checks applied. Only a message and title can be given, as for any notify entity; use the [`supernotify.notify`](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) action for anything more |
+
+## Switches
+
+Each switch turns something on or off at runtime, overriding its `enabled` in the configuration. The override is kept across a restart or reload, until the configured value itself changes. The *Reset overrides* button puts them all back. All are configuration entities.
+
+| Entity                        | What it does                                                                |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| Scenario *scenario*           | Whether the scenario is enabled, and so able to apply to notifications      |
+| Recipient *recipient* Enabled | Whether the recipient is enabled, and so able to be notified                |
+| Delivery *delivery* Enabled   | Whether the delivery is enabled, and so able to be used for notifications   |
+| *Transport* Enabled           | Whether the transport is enabled. When off, none of its deliveries are used |
+
+## Binary Sensors
+
+All are diagnostic entities.
+
+| Entity                        | What it shows                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scenario Condition *scenario* | Whether the scenario's conditions hold right now, evaluated at medium priority with the current occupancy. Read only: whether the scenario is enabled is its switch. It is *unknown* if `scenario_control` has `refresh` switched off, see [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) |
+| Scenario Manual *scenario*    | For a scenario with no conditions of its own. This one is the control: a script or automation sets it on or off, and the scenario applies while it's on. Kept across a restart                                                                                                                                                         |
+| Recipient *recipient*         | Whether the recipient is enabled. Deprecated, use the recipient's switch                                                                                                                                                                                                                                                               |
+| Delivery *delivery*           | Whether the delivery is enabled. Deprecated, use the delivery's switch, and disabled unless switched on                                                                                                                                                                                                                                |
+| Transport *transport*         | Whether the transport is enabled. Deprecated, use the transport's switch, and disabled unless switched on                                                                                                                                                                                                                              |
+
+## Sensors
+
+Both are diagnostic entities, counting up from when Supernotify was installed, and kept across a restart.
+
+| Entity                | What it counts                                                                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Notifications sent    | Notifications delivered by at least one delivery. A notification with `dry_run` isn't counted                                                                                                                                                    |
+| Notification failures | Notifications that stopped with an unexpected error. A delivery failing, or a notification skipped by a rule such as a snooze, isn't counted, see [Troubleshooting](https://supernotify.rhizomatics.org.uk/latest/help/troubleshooting/index.md) |
+
+## Button
+
+| Entity          | What it does                                                                                                                                                                                    |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reset overrides | Puts every scenario, recipient, delivery and transport switched on or off at runtime back to its configured state, the same as the `supernotify.reset_overrides` action. A configuration entity |
+
+## How Entities Update
+
+Supernotify doesn't poll anything, and has no requests to an outside service to update its entities, so no rate limits or quotas apply. Its entities change when something happens:
+
+- The **switches** change when switched, or when *Reset overrides* is pressed or the configuration changes
+- The **Scenario Condition** binary sensors are evaluated again straight away when an entity in their conditions changes state, and once a minute for conditions that depend on the time or date, or on something Home Assistant can't track. Both are set in `scenario_control`, see [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
+- The **counters** change as each notification is sent
+- **Recipient**, **delivery** and **transport** binary sensors change with their switches
+
+The `supernotify.refresh_entities` [action](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md) publishes the state of every entity again, if one ever looks out of date.
 
 # Mobile Actions and Action Groups
 
