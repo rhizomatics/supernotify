@@ -2,7 +2,15 @@
 
 [Appliance Auto Notify](https://appliance-autonotify.rhizomatics.org.uk) will discover your dishwashers and ovens (limited to HomeConnect enabled in first releases) and power monitors, and set up progress bar style live activities automatically on phones. No automations, no actions.
 
-[Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) automatic notifications from security cameras, so far supporting Frigate and ANPR2MQTT. No blueprints, no automations, no YAML.
+[Camera Auto Notify](https://camera-autonotify.rhizomatics.org.uk/) automatic notifications from security cameras, so far supporting Frigate, OpenALPR and ANPR2MQTT. No blueprints, no automations, no YAML.
+
+# v2.19.1
+
+## ✨ Enhancements
+- *Email*: where Home Assistant's SMTP integration isn't set up, a direct SMTP email uses the connection of the custom [Email Notifier](https://github.com/microteq/email_notifier) integration, or of [Wheemer's fork](https://github.com/Wheemer/email_notifier), if set up from the UI. Only the connection, sender and sender name are used, not the default recipients of its account, see [Reusing the Home Assistant SMTP Integration Configuration](https://supernotify.rhizomatics.org.uk/latest/transports/email/#reusing-the-home-assistant-smtp-integration-configuration)
+
+## 📝 Other changes
+- *Documentation*: a checklist of [what to look for in an email integration](https://supernotify.rhizomatics.org.uk/latest/transports/email/#what-to-look-for-in-an-email-integration)
 
 # v2.19.0
 
