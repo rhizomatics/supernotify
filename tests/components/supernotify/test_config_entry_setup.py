@@ -194,17 +194,36 @@ async def test_purge_media_removes_old_files(hass: HomeAssistant, tmp_path: Path
     assert new_file.exists()
 
 
-async def test_unload_entry_removes_engine_actions(hass: HomeAssistant) -> None:
+async def test_actions_registered_before_entry_loaded(hass: HomeAssistant) -> None:
+    """The supernotify.* actions are registered by async_setup, not the config entry, so that an
+    automation using them validates while the entry isn't loaded (Quality Scale action-setup)"""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, disabled_by=ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+    assert hass.services.has_service(DOMAIN, "notify")
+    assert hass.services.has_service(DOMAIN, "enquire_scenarios")
+    with pytest.raises(ServiceValidationError) as raised:
+        await hass.services.async_call(DOMAIN, "enquire_scenarios", blocking=True, return_response=True)
+    assert raised.value.translation_key == "not_loaded"
+
+
+async def test_unload_entry_keeps_actions_unavailable(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.services.has_service(DOMAIN, "enquire_configuration")
+    assert await hass.services.async_call(DOMAIN, "enquire_scenarios", blocking=True, return_response=True)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+    assert hass.services.has_service(DOMAIN, "enquire_scenarios")
+    with pytest.raises(ServiceValidationError) as raised:
+        await hass.services.async_call(DOMAIN, "enquire_scenarios", blocking=True, return_response=True)
+    assert raised.value.translation_key == "not_loaded"
 
 
 async def test_options_update_reloads_entry_with_new_archive_path(hass: HomeAssistant) -> None:
@@ -555,19 +574,6 @@ async def test_notify_action_rejects_mapping_target_with_invalid_value(hass: Hom
     assert entry.runtime_data.last_notification is None
 
 
-async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.services.has_service(DOMAIN, "notify")
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.services.has_service(DOMAIN, "notify")
-
-
 async def test_disable_then_enable_entry_rewires_notify_service(hass: HomeAssistant) -> None:
     """Disabling from the UI unloads the entry same as any other unload (async_set_disabled_by
     -> async_reload -> async_unload_entry), then re-enabling sets it up again. Both
@@ -584,7 +590,8 @@ async def test_disable_then_enable_entry_rewires_notify_service(hass: HomeAssist
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.services.has_service("notify", "supernotify")
-    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+    # registered by async_setup, so still there, but with nothing to act on
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
 
     await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
     await hass.async_block_till_done()
@@ -613,7 +620,8 @@ async def test_remove_then_readd_entry_recreates_notify_service(hass: HomeAssist
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.services.has_service("notify", "supernotify")
-    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+    # registered by async_setup, so still there, but with nothing to act on
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     new_entry.add_to_hass(hass)
@@ -625,6 +633,9 @@ async def test_remove_then_readd_entry_recreates_notify_service(hass: HomeAssist
     await hass.async_block_till_done()
     assert new_entry.runtime_data.last_notification is not None
     assert new_entry.runtime_data.last_notification.message == "post re-add check"
+    # and the supernotify.* actions act on the new entry's engine
+    await hass.services.async_call(DOMAIN, "notify", {"message": "action re-add check"}, blocking=True)
+    assert new_entry.runtime_data.last_notification.message == "action re-add check"
 
 
 async def test_ha_shutdown_unsubscribes_engine_listeners(hass: HomeAssistant) -> None:

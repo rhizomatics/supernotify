@@ -71,8 +71,9 @@ from .snoozer import SNOOZE_SCOPES, snooze_name_error
 from .target import Target
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.json import JsonObjectType
+
+    from . import SupernotifyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,27 +172,15 @@ ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_NAMES: Final[tuple[str, ...]] = (
-    "notify",
-    "enquire_archive",
-    "enquire_configuration",
-    "enquire_implicit_deliveries",
-    "enquire_deliveries_by_scenario",
-    "enquire_last_notification",
-    "enquire_active_scenarios",
-    "enquire_scenarios",
-    "enquire_occupancy",
-    "enquire_recipients",
-    "enquire_snoozes",
-    "clear_snoozes",
-    "snooze",
-    "silence",
-    "unsnooze",
-    "purge_archive",
-    "purge_media",
-    "refresh_entities",
-    "reset_overrides",
-)
+
+def _loaded_engine(hass: HomeAssistant) -> SupernotifyEngine:
+    """The engine of the loaded config entry - there is only ever one - for an action to act on,
+    or a ServiceValidationError when it isn't loaded, such as while it starts or after a failed setup."""
+    entries: list[SupernotifyConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_loaded")
+    return entries[0].runtime_data
+
 
 SNOOZE_MAX_MINUTES: Final[int] = 7 * 24 * 60
 SNOOZE_REASON: Final[str] = "Action"
@@ -235,20 +224,15 @@ def _json_safe(v: Any) -> Any:  # ruff: ignore[any-type]
 
 
 @callback
-def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine, config: ConfigType) -> None:
-    """Register the domain-scoped supplemental/debugging/admin services.
+def async_setup_actions(hass: HomeAssistant) -> None:
+    """Register the supernotify.* actions, once, from async_setup, so they exist whether or not the
+    config entry is loaded, and automations using them always validate. Each action looks up the
+    loaded entry's engine when called, see _loaded_engine().
 
-    Shared by the legacy YAML platform (async_get_service, below) and the config-entry setup
-    (async_setup_entry in __init__.py), so both setup paths expose the same services. These
-    are DOMAIN-scoped, not per config entry, so registration is guarded against being run
-    twice - see ACTION_NAMES/async_unregister_engine_actions for the
-    matching teardown.
-
-    enquire_configuration closes over the raw config dict rather than `service`, because
-    several of the fields it reports (delivery/transport/archive/dupe_check config, the full
-    set of configured scenarios/recipients) are either private on the registries after
-    initialize() or lossily reduced to derived values there - so `service` alone can't
-    reconstruct them.
+    enquire_configuration reports the raw config (SupernotifyEngine.full_config) rather than the
+    engine's state, because several of the fields it reports (delivery/transport/archive/dupe_check
+    config, the full set of configured scenarios/recipients) are either private on the registries
+    after initialize() or lossily reduced to derived values there.
     """
     if hass.services.has_service(DOMAIN, "enquire_configuration"):
         return
@@ -269,6 +253,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         for it here. Requesting a response (supports_response=OPTIONAL) returns the notification's
         contents either way.
         """
+        engine = _loaded_engine(hass)
         data = merge_delivery_fields(lift_legacy_nested_data(dict(call.data)))
         # extra_data is what Notification knows as `data`, and wins over any same-named key in a legacy `data`
         if extra_data := data.pop(ATTR_EXTRA_DATA, None):
@@ -303,6 +288,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return notification.contents() if notification else None
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
+        config = _loaded_engine(hass).full_config
         return redact_secrets(
             _json_safe({
                 CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
@@ -326,28 +312,34 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
 
     @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
+        engine = _loaded_engine(hass)
         # a callback, so run in the event loop - it writes entity state
         engine.refresh_entities()
 
     async def supplemental_action_reset_overrides(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         # a coroutine, so run in the event loop - it writes entity state - and not a callback, as an
         # admin action gives no response from one
         kind: str | None = call.data.get(ATTR_KIND)
         return {"reset": engine.reset_overrides((kind,) if kind else OVERRIDE_KINDS, call.context)}
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return engine.enquire_implicit_deliveries()
 
     def supplemental_action_enquire_deliveries_by_scenario(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return engine.enquire_deliveries_by_scenario()
 
     def supplemental_action_enquire_last_notification(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         diagnostics = call.data.get("diagnostics", False)
         if engine.last_notification is None:
             return {}
         return redact_secrets(engine.last_notification.contents(diagnostics=diagnostics))
 
     async def supplemental_action_enquire_active_scenarios(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         trace = call.data.get("trace", False)
         result: dict[str, Any] = {"scenarios": await engine.enquire_active_scenarios()}
         if trace:
@@ -355,15 +347,19 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return result
 
     def supplemental_action_enquire_scenarios(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return {"scenarios": engine.enquire_scenarios()}
 
     async def supplemental_action_enquire_occupancy(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return {"scenarios": await engine.enquire_occupancy()}
 
     def supplemental_action_enquire_snoozes(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return {"snoozes": engine.enquire_snoozes()}
 
     def supplemental_action_clear_snoozes(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return {"cleared": engine.clear_snoozes()}
 
     @callback
@@ -372,6 +368,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         unsnooze as a mobile action, voice sentence or the AI tool, for scripts, automations and dashboards,
         and open to any user, where firing the mobile action event over the API needs an admin. Run in the
         event loop like the others that change state."""
+        engine = _loaded_engine(hass)
         scope = SNOOZE_SCOPES[call.data["scope"]]
         name: str | None = call.data.get("name")
         if isinstance(scope, QualifiedTargetType):
@@ -402,9 +399,11 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return {"snoozes": engine.enquire_snoozes()}
 
     def supplemental_action_enquire_recipients(_call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         return {"recipients": engine.enquire_recipients()}
 
     async def supplemental_action_enquire_archive(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         archive = engine.context.archive
         if not archive.enabled or not archive.archive_directory:
             raise ServiceValidationError(
@@ -455,6 +454,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         days = call.data.get("days")
         if not engine.context.archive.enabled:
             raise ServiceValidationError(
@@ -470,6 +470,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         }
 
     async def supplemental_action_purge_media(call: ServiceCall) -> dict[str, Any]:
+        engine = _loaded_engine(hass)
         days = call.data.get("days")
         if not engine.context.media_storage.media_path:
             raise ServiceValidationError(
@@ -631,11 +632,3 @@ async def async_describe_configured_names(hass: HomeAssistant, engine: Supernoti
                 "select": {"options": scenarios, "multiple": True, "custom_value": True}
             }
     async_set_service_schema(hass, DOMAIN, "notify", notify)
-
-
-@callback
-def async_unregister_engine_actions(hass: HomeAssistant) -> None:
-    """Undo async_register_engine_actions."""
-    for name in ACTION_NAMES:
-        if hass.services.has_service(DOMAIN, name):
-            hass.services.async_remove(DOMAIN, name)

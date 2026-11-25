@@ -90,6 +90,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload)
 
+    from .actions import async_setup_actions
+
+    async_setup_actions(hass)
+
     if not hass.config_entries.async_entries(DOMAIN):
         from homeassistant.config_entries import SOURCE_IMPORT
 
@@ -301,7 +305,7 @@ def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
-    from .actions import async_describe_configured_names, async_register_engine_actions
+    from .actions import async_describe_configured_names
     from .const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
     from .engine import build_supernotify_engine
     from .notification import set_version
@@ -328,6 +332,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
             translation_domain=DOMAIN, translation_key="setup_failed", translation_placeholders={"error": str(err)}
         ) from err
 
+    engine.full_config = full_config
     entry.runtime_data = engine
     # every recipient discovered gets a subentry, so all are listed and can be changed, and
     # switched off with `enabled` - before the update listener, as the engine has them already
@@ -340,9 +345,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     # failure counter sensors (binary_sensor.py/sensor.py/switch.py) - see PLATFORMS above.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Only once the counter sensors have restored their last values, so nothing is counted
-    # before then and lost
-    async_register_engine_actions(hass, engine, full_config)
+    # The supernotify.* actions only act once setup is complete and the entry is loaded, so after
+    # the counter sensors have restored their last values, and nothing is counted before then and lost
     await async_describe_configured_names(hass, engine)
 
     if entry.options.get(CONF_LLM_TOOLS, {}).get(CONF_SENTENCE_COMMANDS):
@@ -384,11 +388,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: SupernotifyConfigEn
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
-    from .actions import async_unregister_engine_actions
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     engine: SupernotifyEngine | None = getattr(entry, "runtime_data", None)
     if engine is not None:
         engine.shutdown()
-        async_unregister_engine_actions(hass)
     return unload_ok

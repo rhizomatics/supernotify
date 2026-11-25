@@ -594,6 +594,9 @@
         },
         "setup_failed": {
             "message": "Supernotify の起動に失敗しました。再試行します: {error}"
+        },
+        "not_loaded": {
+            "message": "Supernotify が読み込まれていないため、起動するまでこのアクションは実行できません"
         }
     },
     "options": {
